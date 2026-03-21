@@ -10,7 +10,7 @@ st.set_page_config(layout="wide")
 # =========================
 
 url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
-key = "process.env.SUPABASE_KEY"
+key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 
 supabase = create_client(url, key)
 
