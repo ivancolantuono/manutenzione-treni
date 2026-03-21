@@ -1,31 +1,18 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
 from datetime import date, datetime
+from supabase import create_client
 
 st.set_page_config(layout="wide")
 
 # =========================
-# DATABASE
+# SUPABASE CONFIG
 # =========================
 
-conn = sqlite3.connect("manutenzione.db", check_same_thread=False)
-cursor = conn.cursor()
+url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
+key = "process.env.SUPABASE_KEY"
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS interventi (
-    chiave TEXT PRIMARY KEY,
-    treno TEXT,
-    data TEXT,
-    tecnico TEXT,
-    stato TEXT,
-    inizio TEXT,
-    fine TEXT,
-    durata TEXT,
-    note TEXT
-)
-""")
-conn.commit()
+supabase = create_client(url, key)
 
 # =========================
 # UTENTI
@@ -112,17 +99,22 @@ if st.session_state.get("mostra"):
 
     risultati = df[df["Scadenza"] == st.session_state.scadenza]
 
+    # PRENDE DATI DA SUPABASE
+    res = supabase.table("interventi").select("*").execute()
+    rows = res.data if res.data else []
+
     for i, r in risultati.iterrows():
 
         chiave = f"{r['Scheda']}_{r['Intervento']}_{treno}_{data_giorno}"
 
-        cursor.execute("SELECT * FROM interventi WHERE chiave=?", (chiave,))
-        row = cursor.fetchone()
+        record = next((x for x in rows if x["chiave"] == chiave), None)
 
-        tecnico, stato, inizio, fine, durata, note = "", "APERTO", "", "", "", ""
-
-        if row:
-            _, _, _, tecnico, stato, inizio, fine, durata, note = row
+        tecnico = record["tecnico"] if record else ""
+        stato = record["stato"] if record else "APERTO"
+        inizio = record["inizio"] if record else ""
+        fine = record["fine"] if record else ""
+        durata = record["durata"] if record else ""
+        note = record["note"] if record else ""
 
         if ruolo == "OPERATORE" and tecnico != utente:
             continue
@@ -144,7 +136,7 @@ if st.session_state.get("mostra"):
             note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
             # ======================
-            # CAPO
+            # CAPOSQUADRA
             # ======================
             if ruolo == "CAPOSQUADRA":
 
@@ -154,30 +146,40 @@ if st.session_state.get("mostra"):
 
                 if col1.button(f"Assegna_{i}"):
 
-                    inizio_now = datetime.now().strftime("%H:%M")
+                    supabase.table("interventi").upsert({
+                        "chiave": chiave,
+                        "treno": treno,
+                        "data": str(data_giorno),
+                        "tecnico": tecnico_input,
+                        "stato": "APERTO",
+                        "inizio": datetime.now().strftime("%H:%M"),
+                        "fine": "",
+                        "durata": "",
+                        "note": note_input
+                    }).execute()
 
-                    cursor.execute("""
-                    INSERT OR REPLACE INTO interventi VALUES (?,?,?,?,?,?,?,?,?)
-                    """, (chiave, treno, str(data_giorno), tecnico_input,
-                          "APERTO", inizio_now, "", "", note_input))
-
-                    conn.commit()
                     st.success("Assegnato")
 
                 if col2.button(f"Modifica_{i}"):
 
-                    cursor.execute("""
-                    INSERT OR REPLACE INTO interventi VALUES (?,?,?,?,?,?,?,?,?)
-                    """, (chiave, treno, str(data_giorno), tecnico_input,
-                          stato, inizio, fine, durata, note_input))
+                    supabase.table("interventi").upsert({
+                        "chiave": chiave,
+                        "treno": treno,
+                        "data": str(data_giorno),
+                        "tecnico": tecnico_input,
+                        "stato": stato,
+                        "inizio": inizio,
+                        "fine": fine,
+                        "durata": durata,
+                        "note": note_input
+                    }).execute()
 
-                    conn.commit()
                     st.success("Modificato")
 
                 if col3.button(f"Cancella_{i}"):
 
-                    cursor.execute("DELETE FROM interventi WHERE chiave=?", (chiave,))
-                    conn.commit()
+                    supabase.table("interventi").delete().eq("chiave", chiave).execute()
+
                     st.warning("Cancellato")
 
             # ======================
@@ -200,10 +202,16 @@ if st.session_state.get("mostra"):
                     except:
                         durata_calc = ""
 
-                    cursor.execute("""
-                    INSERT OR REPLACE INTO interventi VALUES (?,?,?,?,?,?,?,?,?)
-                    """, (chiave, treno, str(data_giorno), utente,
-                          "CHIUSO", inizio, str(fine_input), durata_calc, note_input))
+                    supabase.table("interventi").upsert({
+                        "chiave": chiave,
+                        "treno": treno,
+                        "data": str(data_giorno),
+                        "tecnico": utente,
+                        "stato": "CHIUSO",
+                        "inizio": inizio,
+                        "fine": str(fine_input),
+                        "durata": durata_calc,
+                        "note": note_input
+                    }).execute()
 
-                    conn.commit()
                     st.success("Chiuso")
