@@ -32,9 +32,10 @@ conn.commit()
 # =========================
 
 UTENTI = {
-    "ivan": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "marco": {"password": "1111", "ruolo": "OPERATORE"},
-    "luca": {"password": "2222", "ruolo": "OPERATORE"}
+    "IVAN COLANTUONO": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "DANIELE MORELLO": {"password": "1111", "ruolo": "CAPOSQUADRA"},
+    "RICCARDO CACACE": {"password": "2222", "ruolo": "CAPOSQUADRA"}
+    "CARMINE SANTORELLI": {"password": "3333", "ruolo": "OPERATORE"}
 }
 
 # =========================
