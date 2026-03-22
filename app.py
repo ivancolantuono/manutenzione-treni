@@ -293,7 +293,7 @@ if menu == "🚄 Manutenzione":
         c1, c2, c3 = st.columns(3)
 
         with c1:
-            treno = st.text_input("Treno")
+            treno = st.text_input("Treno", value=st.session_state.get("treno",""))
 
         with c2:
             scadenza = st.selectbox("Scadenza", df["Scadenza"].unique())
@@ -306,10 +306,13 @@ if menu == "🚄 Manutenzione":
             if not treno:
                 st.error("⚠️ Inserisci il treno")
             else:
-                st.session_state.mostra = True
+                st.session_state.treno = treno
+                st.session_state.mostra = True          
                 st.session_state.scadenza = scadenza
 
-        if st.session_state.get("mostra") and treno:
+        if st.session_state.get("mostra"):
+            
+            treno = st.session_state.get("treno")
 
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
 
