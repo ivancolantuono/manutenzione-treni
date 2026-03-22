@@ -137,7 +137,11 @@ ruolo = st.session_state.ruolo
 colA, colB = st.columns([6,2])
 
 with colA:
-    st.markdown(f"### 👤 {utente} ({ruolo})")
+    st.markdown(f"""
+    <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
+    👤 {utente} ({ruolo})
+    </div>
+    """, unsafe_allow_html=True)
 
 with colB:
     st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
