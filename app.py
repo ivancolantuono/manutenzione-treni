@@ -84,7 +84,7 @@ menu = st.radio(
 )
 
 # =========================
-# DATI
+# DATI BASE
 # =========================
 
 df = pd.read_excel("database_manutenzione.xlsx")
@@ -127,7 +127,6 @@ elif menu == "🚄 Manutenzione":
     with c3:
         data_giorno = st.date_input("Data", value=date.today())
 
-    # 🔴 BLOCCO IMPORTANTE
     if st.button("Genera"):
 
         if not treno:
@@ -172,7 +171,7 @@ elif menu == "🚄 Manutenzione":
 
                 note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
-                # CAPO
+                # CAPOSQUADRA
                 if ruolo == "CAPOSQUADRA":
 
                     tecnico_input = st.text_input("Tecnico", value=tecnico, key=f"t_{i}")
@@ -245,29 +244,34 @@ elif menu == "🚄 Manutenzione":
                         }).execute()
 
 # =========================
-# 📦 MAGAZZINO (ADATTATO)
+# 📦 MAGAZZINO
 # =========================
 
 elif menu == "📦 Magazzino":
 
-    st.title("📦 Ricerca Materiale")
+    st.title("📦 Magazzino")
 
-    ricerca = st.text_input("Cerca componente / codice")
+    ricerca = st.text_input("🔍 Cerca")
 
     res = supabase.table("magazzino").select("*").execute()
     materiali = res.data if res.data else []
 
     df_mag = pd.DataFrame(materiali)
 
-    if ricerca and not df_mag.empty:
-
-        df_mag = df_mag[
-            df_mag["COMPONENTE"].str.contains(ricerca, case=False, na=False) |
-            df_mag["ASSIEME"].str.contains(ricerca, case=False, na=False) |
-            df_mag["Part Number"].str.contains(ricerca, case=False, na=False)
-        ]
-
     if not df_mag.empty:
+
+        # Riempi eventuali null
+        for col in df_mag.columns:
+            df_mag[col] = df_mag[col].astype(str).fillna("")
+
+        if ricerca:
+            df_mag = df_mag[
+                df_mag["COMPONENTE"].str.contains(ricerca, case=False) |
+                df_mag["ASSIEME"].str.contains(ricerca, case=False) |
+                df_mag["Part_Number"].str.contains(ricerca, case=False)
+            ]
+
         st.dataframe(df_mag, use_container_width=True)
+
     else:
-        st.warning("Nessun materiale trovato")
+        st.warning("Magazzino vuoto")
