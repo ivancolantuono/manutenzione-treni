@@ -352,7 +352,6 @@ elif menu == "🚄 Manutenzione":
 
                         st.success("Chiuso")
                         st.rerun()
-
 # =========================
 # MAGAZZINO
 # =========================
