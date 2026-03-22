@@ -205,30 +205,30 @@ elif menu == "🚄 Manutenzione":
     
     if ruolo == "OPERATORE":
 
-    from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=5000, key="refresh_operatore")
+        from streamlit_autorefresh import st_autorefresh
+        st_autorefresh(interval=5000, key="refresh_operatore")
 
-    st.title("📋 Attività assegnate")
+        st.title("📋 Attività assegnate")
 
-    # carica dati aggiornati
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
+        # carica dati aggiornati
+        res = supabase.table("interventi").select("*").execute()
+        rows = res.data if res.data else []
 
-    risultati = []
+        risultati = []
 
-    for r in rows:
-        if r.get("tecnico") == utente and r.get("stato") != "CHIUSO":
-            risultati.append(r)
+        for r in rows:
+           if r.get("tecnico") == utente and r.get("stato") != "CHIUSO":
+              risultati.append(r)
 
-    if not risultati:
-        st.info("Nessuna attività assegnata")
-        st.stop()
+        if not risultati:
+           st.info("Nessuna attività assegnata")
+           st.stop()
 
-    for i, record in enumerate(risultati):
+        for i, record in enumerate(risultati):
 
-        colore = "🟡" if record["stato"] == "APERTO" else "🟢"
+           colore = "🟡" if record["stato"] == "APERTO" else "🟢"
 
-        with st.expander(f"{colore} {record.get('componente','')}"):
+           with st.expander(f"{colore} {record.get('componente','')}"):
 
             st.write(record.get("intervento", ""))
 
