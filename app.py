@@ -134,7 +134,7 @@ ruolo = st.session_state.ruolo
 # =========================
 # HEADER
 # =========================
-colA, colB = st.columns([8,2])
+colA, colB = st.columns([6,2])
 
 with colA:
     st.markdown(f"### 👤 {utente} ({ruolo})")
@@ -151,7 +151,7 @@ with colB:
 
 menu = st.radio(
     "",
-    ["📊 Storico", "🚄 Manutenzione", "📦 Magazzino"],
+    ["📊 Storico", "🚄 Manutenzione", "📦 Cerca Componente"],
     horizontal=True
 )
 
@@ -323,9 +323,9 @@ elif menu == "🚄 Manutenzione":
 # MAGAZZINO
 # =========================
 
-elif menu == "📦 Magazzino":
+elif menu == "📦 Cerca Componente":
 
-    st.title("📦 Magazzino")
+    st.title("📦 Cerca componente")
 
     ricerca = st.text_input("🔍 Cerca")
 
