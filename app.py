@@ -200,8 +200,7 @@ if menu == "📊 Storico":
 # =========================
 # MANUTENZIONE
 # =========================
-
-elif menu == "🚄 Manutenzione":
+lif menu == "🚄 Manutenzione":
     
     if ruolo == "OPERATORE":
 
