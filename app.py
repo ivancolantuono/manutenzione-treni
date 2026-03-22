@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from zoneinfo import ZoneInfo
 from datetime import date, datetime
 from supabase import create_client
 import urllib.parse
@@ -75,9 +76,15 @@ label {
 label {
     color: #000 !important;
     font-weight: bold;
-
+}
 </style>
 """, unsafe_allow_html=True)
+# =========================
+# ORAIO
+# =========================
+def ora_italia():
+    return datetime.now(ZoneInfo("Europe/Rome")).strftime("%H:%M")
+
 # =========================
 # SUPABASE
 # =========================
@@ -261,7 +268,7 @@ elif menu == "🚄 Manutenzione":
                             "data": str(data_giorno),
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
-                            "inizio": datetime.now().strftime("%H:%M"),
+                            "inizio": ora_italia(),
                             "note": note_input
                         }).execute()
 
