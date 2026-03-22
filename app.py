@@ -200,6 +200,7 @@ if menu == "📊 Storico":
 # =========================
 # MANUTENZIONE
 # =========================
+
 elif menu == "🚄 Manutenzione":
     
     from streamlit_autorefresh import st_autorefresh
@@ -351,6 +352,7 @@ elif menu == "🚄 Manutenzione":
 
                         st.success("Chiuso")
                         st.rerun()
+
 # =========================
 # MAGAZZINO
 # =========================
