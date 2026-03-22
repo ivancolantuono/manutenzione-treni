@@ -28,7 +28,7 @@ NUMERI = {
 }
 
 # =========================
-# LOGIN CENTRATO
+# LOGIN
 # =========================
 
 if "logged_in" not in st.session_state:
@@ -60,7 +60,7 @@ utente = st.session_state.utente
 ruolo = st.session_state.ruolo
 
 # =========================
-# HEADER FISSO
+# HEADER
 # =========================
 
 colA, colB, colC = st.columns([6,2,2])
@@ -127,11 +127,16 @@ elif menu == "🚄 Manutenzione":
     with c3:
         data_giorno = st.date_input("Data", value=date.today())
 
+    # 🔴 BLOCCO IMPORTANTE
     if st.button("Genera"):
-        st.session_state.mostra = True
-        st.session_state.scadenza = scadenza
 
-    if st.session_state.get("mostra"):
+        if not treno:
+            st.error("⚠️ Inserisci il treno prima di generare")
+        else:
+            st.session_state.mostra = True
+            st.session_state.scadenza = scadenza
+
+    if st.session_state.get("mostra") and treno:
 
         risultati = df[df["Scadenza"] == st.session_state.scadenza]
 
@@ -167,16 +172,13 @@ elif menu == "🚄 Manutenzione":
 
                 note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
-                # ======================
                 # CAPO
-                # ======================
                 if ruolo == "CAPOSQUADRA":
 
                     tecnico_input = st.text_input("Tecnico", value=tecnico, key=f"t_{i}")
 
                     col1, col2, col3 = st.columns(3)
 
-                    # ASSEGNA
                     if col1.button(f"Assegna_{i}"):
 
                         supabase.table("interventi").upsert({
@@ -189,14 +191,12 @@ elif menu == "🚄 Manutenzione":
                             "note": note_input
                         }).execute()
 
-                        # WHATSAPP
                         numero = NUMERI.get(tecnico_input.lower(), "")
                         if numero:
                             msg = f"Nuova attività 🚄\n{r['Intervento']}"
                             url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
                             st.markdown(f"[📱 Avvisa operatore]({url})")
 
-                    # MODIFICA
                     if col2.button(f"Modifica_{i}"):
 
                         supabase.table("interventi").upsert({
@@ -211,15 +211,12 @@ elif menu == "🚄 Manutenzione":
                             "note": note_input
                         }).execute()
 
-                    # CANCELLA
                     if col3.button(f"Cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
                         st.warning("Cancellato")
 
-                # ======================
                 # OPERATORE
-                # ======================
                 if ruolo == "OPERATORE":
 
                     st.text_input("Inizio", value=inizio, disabled=True)
@@ -248,22 +245,27 @@ elif menu == "🚄 Manutenzione":
                         }).execute()
 
 # =========================
-# 📦 MAGAZZINO (SUPABASE)
+# 📦 MAGAZZINO (ADATTATO)
 # =========================
 
 elif menu == "📦 Magazzino":
 
     st.title("📦 Ricerca Materiale")
 
-    ricerca = st.text_input("Cerca componente")
+    ricerca = st.text_input("Cerca componente / codice")
 
     res = supabase.table("magazzino").select("*").execute()
     materiali = res.data if res.data else []
 
     df_mag = pd.DataFrame(materiali)
 
-    if ricerca:
-        df_mag = df_mag[df_mag["nome"].str.contains(ricerca, case=False, na=False)]
+    if ricerca and not df_mag.empty:
+
+        df_mag = df_mag[
+            df_mag["COMPONENTE"].str.contains(ricerca, case=False, na=False) |
+            df_mag["ASSIEME"].str.contains(ricerca, case=False, na=False) |
+            df_mag["Part Number"].str.contains(ricerca, case=False, na=False)
+        ]
 
     if not df_mag.empty:
         st.dataframe(df_mag, use_container_width=True)
