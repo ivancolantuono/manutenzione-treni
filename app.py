@@ -255,7 +255,8 @@ elif menu == "🚄 Manutenzione":
                 st.success("Intervento chiuso")
                 st.rerun()
 
-    st.stop()
+        st.stop()
+    else:
     
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=5000, key="refresh_manutenzione")
