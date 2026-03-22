@@ -2,15 +2,35 @@ import streamlit as st
 import pandas as pd
 from datetime import date, datetime
 from supabase import create_client
+import urllib.parse
+
+# =========================
+# CONFIG PAGINA
+# =========================
 
 st.set_page_config(layout="wide")
 
 # =========================
-# SUPABASE CONFIG
+# STILE
+# =========================
+
+st.markdown("""
+<style>
+.stButton>button {
+    background-color: #e10600;
+    color: white;
+    border-radius: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
+# SUPABASE
 # =========================
 
 url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
 key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
+
 
 supabase = create_client(url, key)
 
@@ -19,10 +39,15 @@ supabase = create_client(url, key)
 # =========================
 
 UTENTI = {
-    "COLANTUONO": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "MORELLO": {"password": "1111", "ruolo": "CAPOSQUADRA"},
-    "CACACE": {"password": "2222", "ruolo": "CAPOSQUADRA"},
-    "SANTORELLI": {"password": "3333", "ruolo": "OPERATORE"},
+    "ivan": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "marco": {"password": "1111", "ruolo": "OPERATORE"},
+    "luca": {"password": "2222", "ruolo": "OPERATORE"}
+}
+
+# NUMERI WHATSAPP
+NUMERI = {
+    "marco": "393123456789",
+    "luca": "393987654321"
 }
 
 # =========================
@@ -46,7 +71,7 @@ if not st.session_state.logged_in:
             st.session_state.ruolo = UTENTI[u]["ruolo"]
             st.rerun()
         else:
-            st.error("Errore login")
+            st.error("Credenziali errate")
 
     st.stop()
 
@@ -61,6 +86,17 @@ if st.button("🔓 Disconnetti"):
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
 
+# =========================
+# HEADER
+# =========================
+
+st.image("frecciarossa.jpg", use_container_width=True)
+
+st.markdown("""
+# 🚄 Gestione Manutenzione Frecciarossa
+### Sistema Operativo Officina
+""")
+
 st.success(f"{utente} - {ruolo}")
 
 # =========================
@@ -73,8 +109,6 @@ df.columns = df.columns.str.strip()
 # =========================
 # INPUT
 # =========================
-
-st.title("🚄 Gestione Manutenzione")
 
 c1, c2, c3 = st.columns(3)
 
@@ -92,16 +126,32 @@ if st.button("Genera"):
     st.session_state.scadenza = scadenza
 
 # =========================
-# LOGICA
+# CARICA DATI SUPABASE
+# =========================
+
+res = supabase.table("interventi").select("*").execute()
+rows = res.data if res.data else []
+
+# =========================
+# DASHBOARD LIVE
+# =========================
+
+aperte = sum(1 for r in rows if r["stato"] == "APERTO")
+chiuse = sum(1 for r in rows if r["stato"] == "CHIUSO")
+
+col1, col2 = st.columns(2)
+col1.metric("🔴 Attività Aperte", aperte)
+col2.metric("🟢 Attività Chiuse", chiuse)
+
+st.divider()
+
+# =========================
+# LOGICA OPERATIVA
 # =========================
 
 if st.session_state.get("mostra"):
 
     risultati = df[df["Scadenza"] == st.session_state.scadenza]
-
-    # PRENDE DATI DA SUPABASE
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
 
     for i, r in risultati.iterrows():
 
@@ -142,9 +192,11 @@ if st.session_state.get("mostra"):
 
                 tecnico_input = st.text_input("Tecnico", value=tecnico, key=f"t_{i}")
 
-                col1, col2, col3 = st.columns(3)
+                colA, colB, colC = st.columns(3)
 
-                if col1.button(f"Assegna_{i}"):
+                if colA.button(f"Assegna_{i}"):
+
+                    inizio_now = datetime.now().strftime("%H:%M")
 
                     supabase.table("interventi").upsert({
                         "chiave": chiave,
@@ -152,7 +204,7 @@ if st.session_state.get("mostra"):
                         "data": str(data_giorno),
                         "tecnico": tecnico_input,
                         "stato": "APERTO",
-                        "inizio": datetime.now().strftime("%H:%M"),
+                        "inizio": inizio_now,
                         "fine": "",
                         "durata": "",
                         "note": note_input
@@ -160,7 +212,14 @@ if st.session_state.get("mostra"):
 
                     st.success("Assegnato")
 
-                if col2.button(f"Modifica_{i}"):
+                    # WHATSAPP
+                    numero = NUMERI.get(tecnico_input.lower(), "")
+                    if numero:
+                        msg = f"Nuova attività assegnata 🚄\nTreno: {treno}\n{r['Intervento']}"
+                        url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
+                        st.markdown(f"[📱 Avvisa operatore]({url})")
+
+                if colB.button(f"Modifica_{i}"):
 
                     supabase.table("interventi").upsert({
                         "chiave": chiave,
@@ -176,7 +235,7 @@ if st.session_state.get("mostra"):
 
                     st.success("Modificato")
 
-                if col3.button(f"Cancella_{i}"):
+                if colC.button(f"Cancella_{i}"):
 
                     supabase.table("interventi").delete().eq("chiave", chiave).execute()
 
