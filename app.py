@@ -12,14 +12,13 @@ st.set_page_config(layout="wide")
 
 st.markdown("""
 <style>
-body {
-    background-color: #f2f2f2;
-}
 
+/* SFONDO GENERALE */
 .stApp {
     background-color: #f2f2f2;
 }
 
+/* BOTTONI ROSSI */
 .stButton>button {
     background-color: #e10600;
     color: white;
@@ -27,12 +26,39 @@ body {
     font-weight: bold;
 }
 
+/* INPUT */
 .stTextInput>div>div>input {
     background-color: white;
+    border: 2px solid #ccc;
+    border-radius: 6px;
 }
+
+/* TEXT AREA (NOTE) */
+.stTextArea textarea {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 8px !important;
+    color: black !important;
+}
+
+/* LABEL NOTE */
+label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* EXPANDER */
+.streamlit-expanderHeader {
+    font-weight: bold;
+}
+
+/* BOX INTERVENTO */
+.block-container {
+    padding-top: 2rem;
+}
+
 </style>
 """, unsafe_allow_html=True)
-
 # =========================
 # SUPABASE
 # =========================
