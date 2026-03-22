@@ -235,7 +235,8 @@ elif menu == "🚄 Manutenzione":
 
             chiave = f"{r['Scheda']}_{r['Intervento']}_{treno}_{data_giorno}"
 
-            record = next((x for x in rows if x["chiave"] == chiave), None)
+            res = supabase.table("interventi").select("*").eq("chiave", chiave).execute()
+            record = res.data[0] if res.data else None
 
             if not record:
                 colore = "🔴"
