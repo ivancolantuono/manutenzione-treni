@@ -3,6 +3,7 @@ import pandas as pd
 from zoneinfo import ZoneInfo
 from datetime import date, datetime
 from supabase import create_client
+from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
 st.set_page_config(layout="wide")
@@ -137,7 +138,7 @@ if not st.session_state.logged_in:
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
-st.autorerefresh(interval=5000, key='refresh')
+st_autorefresh(interval=5000, key='refresh')
 # =========================
 # HEADER
 # =========================
