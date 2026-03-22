@@ -262,7 +262,20 @@ elif menu == "🚄 Manutenzione":
                 # CAPO
                 if ruolo == "CAPOSQUADRA":
 
-                    tecnico_input = st.text_input("Tecnico", value=tecnico, key=f"t_{i}")
+                    operatori = [u for u, info in UTENTI.items() if info["ruolo"] == "OPERATORE"]
+
+                    # gestisce caso vuoto o non presente
+                    if tecnico in operatori:
+                          index_default = operatori.index(tecnico)
+                    else:
+                          index_default = 0
+
+                    tecnico_input = st.selectbox(
+                        "Tecnico",
+                         operatori,
+                         index=index_default,
+                         key=f"t_{i}"
+                    )
 
                     col1, col2, col3 = st.columns(3)
 
