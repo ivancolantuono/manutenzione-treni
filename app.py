@@ -7,6 +7,33 @@ import urllib.parse
 st.set_page_config(layout="wide")
 
 # =========================
+# STILE
+# =========================
+
+st.markdown("""
+<style>
+body {
+    background-color: #f2f2f2;
+}
+
+.stApp {
+    background-color: #f2f2f2;
+}
+
+.stButton>button {
+    background-color: #e10600;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.stTextInput>div>div>input {
+    background-color: white;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
 # SUPABASE
 # =========================
 
@@ -84,7 +111,7 @@ menu = st.radio(
 )
 
 # =========================
-# DATI BASE
+# DATI
 # =========================
 
 df = pd.read_excel("database_manutenzione.xlsx")
@@ -94,7 +121,7 @@ res = supabase.table("interventi").select("*").execute()
 rows = res.data if res.data else []
 
 # =========================
-# 📊 STORICO
+# STORICO
 # =========================
 
 if menu == "📊 Storico":
@@ -109,7 +136,7 @@ if menu == "📊 Storico":
         st.warning("Nessun dato presente")
 
 # =========================
-# 🚄 MANUTENZIONE
+# MANUTENZIONE
 # =========================
 
 elif menu == "🚄 Manutenzione":
@@ -130,7 +157,7 @@ elif menu == "🚄 Manutenzione":
     if st.button("Genera"):
 
         if not treno:
-            st.error("⚠️ Inserisci il treno prima di generare")
+            st.error("⚠️ Inserisci il treno")
         else:
             st.session_state.mostra = True
             st.session_state.scadenza = scadenza
@@ -144,10 +171,6 @@ elif menu == "🚄 Manutenzione":
             chiave = f"{r['Scheda']}_{r['Intervento']}_{treno}_{data_giorno}"
 
             record = next((x for x in rows if x["chiave"] == chiave), None)
-
-            # =========================
-            # LOGICA COLORI
-            # =========================
 
             if not record:
                 colore = "🔴"
@@ -169,11 +192,8 @@ elif menu == "🚄 Manutenzione":
             with st.expander(f"{colore} {r['Componente']}"):
 
                 st.write(r["Intervento"])
-
                 if "Link" in r:
                     st.markdown(f"[Apri Scheda]({r['Link']})")
-
-                st.write(f"Stato: {stato}")
 
                 note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
@@ -196,11 +216,8 @@ elif menu == "🚄 Manutenzione":
                             "note": note_input
                         }).execute()
 
-                        numero = NUMERI.get(tecnico_input.lower(), "")
-                        if numero:
-                            msg = f"Nuova attività 🚄\n{r['Intervento']}"
-                            url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
-                            st.markdown(f"[📱 Avvisa operatore]({url})")
+                        st.success("Assegnato")
+                        st.rerun()
 
                     if col2.button(f"Modifica_{i}"):
 
@@ -216,10 +233,15 @@ elif menu == "🚄 Manutenzione":
                             "note": note_input
                         }).execute()
 
+                        st.success("Modificato")
+                        st.rerun()
+
                     if col3.button(f"Cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
+
                         st.warning("Cancellato")
+                        st.rerun()
 
                 # OPERATORE
                 if ruolo == "OPERATORE":
@@ -249,8 +271,11 @@ elif menu == "🚄 Manutenzione":
                             "note": note_input
                         }).execute()
 
+                        st.success("Chiuso")
+                        st.rerun()
+
 # =========================
-# 📦 MAGAZZINO (EXCEL)
+# MAGAZZINO
 # =========================
 
 elif menu == "📦 Magazzino":
@@ -268,8 +293,7 @@ elif menu == "📦 Magazzino":
     if ricerca:
         df_mag = df_mag[
             df_mag["COMPONENTE"].str.contains(ricerca, case=False) |
-            df_mag["ASSIEME"].str.contains(ricerca, case=False) |
-            df_mag["Part_Number"].str.contains(ricerca, case=False)
+            df_mag["ASSIEME"].str.contains(ricerca, case=False)
         ]
 
     st.dataframe(df_mag, use_container_width=True)
