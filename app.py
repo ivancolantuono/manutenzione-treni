@@ -273,7 +273,8 @@ elif menu == "🚄 Manutenzione":
 
         if ruolo == "CAPOSQUADRA":
             chiave = f"{r['Scheda']}_{r['Intervento']}_{treno}_{data_giorno}"
-            record = next((x for x in rows if x["chiave"] == chiave), None)
+            res = supabase.table("interventi").select("*").execute()
+            rows = res.data if res.data else []
             componente = r["Componente"]
             intervento = r["Intervento"]
 
