@@ -203,6 +203,60 @@ if menu == "📊 Storico":
 
 elif menu == "🚄 Manutenzione":
     
+    if ruolo == "OPERATORE":
+
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=5000, key="refresh_operatore")
+
+    st.title("📋 Attività assegnate")
+
+    # carica dati aggiornati
+    res = supabase.table("interventi").select("*").execute()
+    rows = res.data if res.data else []
+
+    risultati = []
+
+    for r in rows:
+        if r.get("tecnico") == utente and r.get("stato") != "CHIUSO":
+            risultati.append(r)
+
+    if not risultati:
+        st.info("Nessuna attività assegnata")
+        st.stop()
+
+    for i, record in enumerate(risultati):
+
+        colore = "🟡" if record["stato"] == "APERTO" else "🟢"
+
+        with st.expander(f"{colore} {record.get('componente','')}"):
+
+            st.write(record.get("intervento", ""))
+
+            # INFO IMPORTANTI
+            st.write(f"🚆 Treno: {record.get('treno','')}")
+            st.write(f"📅 Data: {record.get('data','')}")
+
+            note_input = st.text_area("Note", value=record.get("note",""), key=f"note_op_{i}")
+
+            st.text_input("Inizio", value=record.get("inizio",""), disabled=True)
+
+            fine_input = st.time_input("Fine", key=f"fine_op_{i}")
+
+            if st.button(f"Chiudi_{i}"):
+
+                supabase.table("interventi").upsert({
+                    "chiave": record["chiave"],
+                    "tecnico": utente,
+                    "stato": "CHIUSO",
+                    "fine": str(fine_input),
+                    "note": note_input
+                }).execute()
+
+                st.success("Intervento chiuso")
+                st.rerun()
+
+    st.stop()
+    
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=5000, key="refresh_manutenzione")
 
