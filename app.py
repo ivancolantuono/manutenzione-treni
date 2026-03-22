@@ -145,6 +145,17 @@ elif menu == "🚄 Manutenzione":
 
             record = next((x for x in rows if x["chiave"] == chiave), None)
 
+            # =========================
+            # LOGICA COLORI
+            # =========================
+
+            if not record:
+                colore = "🔴"
+            elif record["stato"] == "APERTO":
+                colore = "🟡"
+            else:
+                colore = "🟢"
+
             tecnico = record["tecnico"] if record else ""
             stato = record["stato"] if record else "APERTO"
             inizio = record["inizio"] if record else ""
@@ -155,8 +166,6 @@ elif menu == "🚄 Manutenzione":
             if ruolo == "OPERATORE" and tecnico != utente:
                 continue
 
-            colore = "🔴" if stato == "APERTO" else "🟢"
-
             with st.expander(f"{colore} {r['Componente']}"):
 
                 st.write(r["Intervento"])
@@ -165,13 +174,10 @@ elif menu == "🚄 Manutenzione":
                     st.markdown(f"[Apri Scheda]({r['Link']})")
 
                 st.write(f"Stato: {stato}")
-                st.write(f"Inizio: {inizio}")
-                st.write(f"Fine: {fine}")
-                st.write(f"Durata: {durata}")
 
                 note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
-                # CAPOSQUADRA
+                # CAPO
                 if ruolo == "CAPOSQUADRA":
 
                     tecnico_input = st.text_input("Tecnico", value=tecnico, key=f"t_{i}")
@@ -244,7 +250,7 @@ elif menu == "🚄 Manutenzione":
                         }).execute()
 
 # =========================
-# 📦 MAGAZZINO
+# 📦 MAGAZZINO (EXCEL)
 # =========================
 
 elif menu == "📦 Magazzino":
@@ -253,25 +259,17 @@ elif menu == "📦 Magazzino":
 
     ricerca = st.text_input("🔍 Cerca")
 
-    res = supabase.table("magazzino").select("*").execute()
-    materiali = res.data if res.data else []
+    df_mag = pd.read_excel("magazzino.xlsx")
+    df_mag.columns = df_mag.columns.str.strip()
 
-    df_mag = pd.DataFrame(materiali)
+    for col in df_mag.columns:
+        df_mag[col] = df_mag[col].astype(str).fillna("")
 
-    if not df_mag.empty:
+    if ricerca:
+        df_mag = df_mag[
+            df_mag["COMPONENTE"].str.contains(ricerca, case=False) |
+            df_mag["ASSIEME"].str.contains(ricerca, case=False) |
+            df_mag["Part_Number"].str.contains(ricerca, case=False)
+        ]
 
-        # Riempi eventuali null
-        for col in df_mag.columns:
-            df_mag[col] = df_mag[col].astype(str).fillna("")
-
-        if ricerca:
-            df_mag = df_mag[
-                df_mag["COMPONENTE"].str.contains(ricerca, case=False) |
-                df_mag["ASSIEME"].str.contains(ricerca, case=False) |
-                df_mag["Part_Number"].str.contains(ricerca, case=False)
-            ]
-
-        st.dataframe(df_mag, use_container_width=True)
-
-    else:
-        st.warning("Magazzino vuoto")
+    st.dataframe(df_mag, use_container_width=True)
