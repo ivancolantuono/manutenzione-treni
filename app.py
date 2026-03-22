@@ -10,8 +10,8 @@ import urllib.parse
 
 st.set_page_config(layout="wide")
 
-url = "TUO_URL"
-key = "TUA_KEY"
+url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
+key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
 # =========================
