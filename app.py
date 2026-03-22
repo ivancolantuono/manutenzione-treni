@@ -138,7 +138,7 @@ if not st.session_state.logged_in:
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
-st_autorefresh(interval=5000, key='refresh')
+
 # =========================
 # HEADER
 # =========================
@@ -182,7 +182,9 @@ rows = res.data if res.data else []
 # =========================
 
 if menu == "📊 Storico":
-
+    
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=5000, key="refresh_storico"
     st.title("📊 Storico Attività")
 
     df_storico = pd.DataFrame(rows)
@@ -197,6 +199,9 @@ if menu == "📊 Storico":
 # =========================
 
 elif menu == "🚄 Manutenzione":
+    
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=5000, key="refresh_manutenzione"
 
     st.title("🚄 Gestione Manutenzione")
 
