@@ -15,7 +15,7 @@ st.markdown("""
 
 /* SFONDO GENERALE */
 .stApp {
-    background-color: #f2f2f2;
+    background-color: #808080;
 }
 
 /* BOTTONI ROSSI */
@@ -56,6 +56,25 @@ label {
 .block-container {
     padding-top: 2rem;
 }
+/* SELECTBOX */
+.stSelectbox div[data-baseweb="select"] {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 6px;
+}
+
+/* DATE INPUT */
+.stDateInput input {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 6px;
+    color: black !important;
+}
+
+/* LABEL */
+label {
+    color: #000 !important;
+    font-weight: bold;
 
 </style>
 """, unsafe_allow_html=True)
@@ -115,13 +134,13 @@ ruolo = st.session_state.ruolo
 # =========================
 # HEADER
 # =========================
-
-colA, colB, colC = st.columns([6,2,2])
+colA, colB = st.columns([8,2])
 
 with colA:
     st.markdown(f"### 👤 {utente} ({ruolo})")
 
-with colC:
+with colB:
+    st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
     if st.button("🔓 Disconnetti"):
         st.session_state.clear()
         st.rerun()
