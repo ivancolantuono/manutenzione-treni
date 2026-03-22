@@ -98,12 +98,12 @@ supabase = create_client(url, key)
 # =========================
 
 UTENTI = {
-    "ivan": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "marco": {"password": "1111", "ruolo": "OPERATORE"},
+    "Massaro": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
 }
 
 NUMERI = {
-    "marco": "393123456789"
+    "Colantuono": "393477618059"
 }
 
 # =========================
@@ -137,7 +137,7 @@ if not st.session_state.logged_in:
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
-
+st.autorerefresh(interval=5000, key='refresh')
 # =========================
 # HEADER
 # =========================
