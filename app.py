@@ -4,14 +4,14 @@ from datetime import date, datetime
 from supabase import create_client
 import urllib.parse
 
-# =========================
-# CONFIG
-# =========================
-
 st.set_page_config(layout="wide")
 
-url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
-key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
+# =========================
+# SUPABASE
+# =========================
+
+url = "TUO_URL"
+key = "TUA_KEY"
 supabase = create_client(url, key)
 
 # =========================
@@ -40,7 +40,6 @@ if not st.session_state.logged_in:
 
     with col2:
         st.image("frecciarossa.jpg", use_container_width=True)
-
         st.markdown("## 🔐 Accesso Sistema")
 
         u = st.text_input("Utente")
@@ -61,11 +60,25 @@ utente = st.session_state.utente
 ruolo = st.session_state.ruolo
 
 # =========================
-# MENU PRINCIPALE
+# HEADER FISSO
+# =========================
+
+colA, colB, colC = st.columns([6,2,2])
+
+with colA:
+    st.markdown(f"### 👤 {utente} ({ruolo})")
+
+with colC:
+    if st.button("🔓 Disconnetti"):
+        st.session_state.clear()
+        st.rerun()
+
+# =========================
+# MENU
 # =========================
 
 menu = st.radio(
-    "Seleziona sezione",
+    "",
     ["📊 Storico", "🚄 Manutenzione", "📦 Magazzino"],
     horizontal=True
 )
@@ -118,16 +131,6 @@ elif menu == "🚄 Manutenzione":
         st.session_state.mostra = True
         st.session_state.scadenza = scadenza
 
-    # DASHBOARD
-    aperte = sum(1 for r in rows if r["stato"] == "APERTO")
-    chiuse = sum(1 for r in rows if r["stato"] == "CHIUSO")
-
-    d1, d2 = st.columns(2)
-    d1.metric("🔴 Aperte", aperte)
-    d2.metric("🟢 Chiuse", chiuse)
-
-    st.divider()
-
     if st.session_state.get("mostra"):
 
         risultati = df[df["Scadenza"] == st.session_state.scadenza]
@@ -164,12 +167,17 @@ elif menu == "🚄 Manutenzione":
 
                 note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
+                # ======================
                 # CAPO
+                # ======================
                 if ruolo == "CAPOSQUADRA":
 
                     tecnico_input = st.text_input("Tecnico", value=tecnico, key=f"t_{i}")
 
-                    if st.button(f"Assegna_{i}"):
+                    col1, col2, col3 = st.columns(3)
+
+                    # ASSEGNA
+                    if col1.button(f"Assegna_{i}"):
 
                         supabase.table("interventi").upsert({
                             "chiave": chiave,
@@ -188,7 +196,30 @@ elif menu == "🚄 Manutenzione":
                             url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
                             st.markdown(f"[📱 Avvisa operatore]({url})")
 
+                    # MODIFICA
+                    if col2.button(f"Modifica_{i}"):
+
+                        supabase.table("interventi").upsert({
+                            "chiave": chiave,
+                            "treno": treno,
+                            "data": str(data_giorno),
+                            "tecnico": tecnico_input,
+                            "stato": stato,
+                            "inizio": inizio,
+                            "fine": fine,
+                            "durata": durata,
+                            "note": note_input
+                        }).execute()
+
+                    # CANCELLA
+                    if col3.button(f"Cancella_{i}"):
+
+                        supabase.table("interventi").delete().eq("chiave", chiave).execute()
+                        st.warning("Cancellato")
+
+                # ======================
                 # OPERATORE
+                # ======================
                 if ruolo == "OPERATORE":
 
                     st.text_input("Inizio", value=inizio, disabled=True)
@@ -217,15 +248,24 @@ elif menu == "🚄 Manutenzione":
                         }).execute()
 
 # =========================
-# 📦 MAGAZZINO
+# 📦 MAGAZZINO (SUPABASE)
 # =========================
 
 elif menu == "📦 Magazzino":
 
-    st.title("📦 Ricerca Componenti")
+    st.title("📦 Ricerca Materiale")
 
     ricerca = st.text_input("Cerca componente")
 
+    res = supabase.table("magazzino").select("*").execute()
+    materiali = res.data if res.data else []
+
+    df_mag = pd.DataFrame(materiali)
+
     if ricerca:
-        risultati = df[df["Componente"].str.contains(ricerca, case=False, na=False)]
-        st.dataframe(risultati, use_container_width=True)
+        df_mag = df_mag[df_mag["nome"].str.contains(ricerca, case=False, na=False)]
+
+    if not df_mag.empty:
+        st.dataframe(df_mag, use_container_width=True)
+    else:
+        st.warning("Nessun materiale trovato")
