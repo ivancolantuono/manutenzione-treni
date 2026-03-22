@@ -101,6 +101,9 @@ supabase = create_client(url, key)
 UTENTI = {
     "Massaro": {"password": "1234", "ruolo": "CAPOSQUADRA"},
     "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
+    "Lucariello": {"password": "1111", "ruolo": "OPERATORE"},
+    "Santorelli": {"password": "1111", "ruolo": "OPERATORE"},
+    "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
 }
 
 NUMERI = {
