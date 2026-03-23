@@ -344,9 +344,7 @@ elif menu == "🚄 Manutenzione":
                         supabase.table("interventi").upsert({
                             "chiave": chiave,
                             "treno": treno,
-                            "data": str(data_giorno),
-                            "componente": r["componente"],
-                            "intervento": r["intervento"],
+                            "data": str(data_giorno),                          
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
