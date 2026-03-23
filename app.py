@@ -341,7 +341,7 @@ elif menu == "🚄 Manutenzione":
                     # 🔴 ASSEGNA
                     if col1.button(f"Assegna_{i}"):
 
-                        supabase.table("interventi").upsert({
+                        data_insert = {
                             "chiave": chiave,
                             "treno": treno,
                             "data": str(data_giorno),
@@ -355,7 +355,7 @@ elif menu == "🚄 Manutenzione":
                         }
                         st.write("DEBUG:", data_inser)
                         
-                        supabase.table("interventi").upsert({data_insert.execute()}
+                        supabase.table("interventi").upsert(data_insert.execute()
 
                         st.success("Assegnato")
                         st.rerun()
