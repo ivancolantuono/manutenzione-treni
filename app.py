@@ -232,8 +232,8 @@ elif menu == "🚄 Manutenzione":
 
             with st.expander(f"{colore} {record.get('componente','')}"):
 
-                st.write(f"🔧 {record.get('Componente','')}")
-                st.write(f"📋 {record.get('Intervento','')}")
+                st.write(f"🔧 {record.get('componente','')}")
+                st.write(f"📋 {record.get('intervento','')}")
 
                 link = record.get("link", "")
 
@@ -345,8 +345,8 @@ elif menu == "🚄 Manutenzione":
                             "chiave": chiave,
                             "treno": treno,
                             "data": str(data_giorno),
-                            "Componente": str(r.get("Componente","")),
-                            "Intervento": str(r.get("Intervento","")),
+                            "componente": str(r.get("componente","")),
+                            "intervento": str(r.get("intervento","")),
                             "link": r.get("Link",""),                            
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
