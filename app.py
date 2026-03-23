@@ -319,22 +319,22 @@ elif menu == "🚄 Manutenzione":
 {r['Componente']}
 """
 
-            # link scheda tecnica
-            if "Link" in r and pd.notna(r["Link"]):
-                messaggio += f"\n📄 Scheda tecnica:\n{r['Link']}"
+                               # link scheda tecnica
+                               if "Link" in r and pd.notna(r["Link"]):
+                                    messaggio += f"\n📄 Scheda tecnica:\n{r['Link']}"
 
-            # encode URL
-            messaggio_encoded = urllib.parse.quote(messaggio)
+                                # encode URL
+                                messaggio_encoded = urllib.parse.quote(messaggio)
 
-            url = f"https://wa.me/{numero}?text={messaggio_encoded}"
+                                url = f"https://wa.me/{numero}?text={messaggio_encoded}"
 
-            st.markdown(f"[📲 Invia WhatsApp]({url})", unsafe_allow_html=True)
+                                st.markdown(f"[📲 Invia WhatsApp]({url})", unsafe_allow_html=True)
 
-        st.success("Assegnato")
-        st.rerun()
+                            st.success("Assegnato")
+                            st.rerun()
 
-    except Exception as e:
-        st.error(f"Errore: {e}")
+                        except Exception as e:
+                            st.error(f"Errore: {e}")
 
                     # MODIFICA
                     if col2.button(f"Modifica_{i}") and record:
