@@ -232,8 +232,8 @@ elif menu == "🚄 Manutenzione":
 
             with st.expander(f"{colore} {record.get('componente','')}"):
 
-                st.write(f"🔧 {record.get('componente','')}")
-                st.write(f"📋 {record.get('intervento','')}")
+                st.write(f"🔧 {record.get('Componente','')}")
+                st.write(f"📋 {record.get('Intervento','')}")
 
                 link = record.get("link", "")
 
@@ -344,7 +344,8 @@ elif menu == "🚄 Manutenzione":
                         supabase.table("interventi").upsert({
                             "chiave": chiave,
                             "treno": treno,
-                            "data": str(data_giorno),                          
+                            "data": str(data_giorno),
+                            "link": r.get("Link",""),                            
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
