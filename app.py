@@ -345,6 +345,8 @@ elif menu == "🚄 Manutenzione":
                             "chiave": chiave,
                             "treno": treno,
                             "data": str(data_giorno),
+                            "Componente": str(r.grt("Componente","")),
+                            "Intervento": str(r.grt("Intervento","")),
                             "link": r.get("Link",""),                            
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
