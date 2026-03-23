@@ -232,9 +232,15 @@ elif menu == "🚄 Manutenzione":
 
             with st.expander(f"{colore} {record.get('componente','')}"):
 
-                st.write(record.get("intervento", ""))
-                st.write(f"🚆 Treno: {record.get('treno','')}")
-                st.write(f"📅 Data: {record.get('data','')}")
+                st.write(f"🔧 {record.get('componente','')}")
+                st.write(f"📋 {record.get('intervento','')}")
+
+                link = record.get("link", "")
+
+                if link:
+                   st.markdown(f"[📄 Apri scheda tecnica]({link})")
+                   st.write(f"🚆 Treno: {record.get('treno','')}")
+                   st.write(f"📅 Data: {record.get('data','')}")
 
                 note_input = st.text_area(
                     "Note",
@@ -339,7 +345,8 @@ elif menu == "🚄 Manutenzione":
                             "chiave": chiave,
                             "treno": treno,
                             "data": str(data_giorno),
-                            
+                            "componente": r["componente],
+                            "intervento": r["intervento],
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
