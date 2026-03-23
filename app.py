@@ -248,30 +248,34 @@ elif menu == "🚄 Manutenzione":
 
                 if st.button(f"Chiudi_{i}"):
 
+                    # 🔴 controllo sicurezza
+                    if not inizio:
+                        st.error("⚠️ Intervento non ancora iniziato")
+                        st.stop()
+
                     try:
                         t1 = datetime.strptime(inizio, "%H:%M")
                         t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
+
+                        if t2 < t1:
+                            st.error("⚠️ Orario fine non può essere prima dell'inizio")
+                            st.stop()
+
                         durata_calc = str(t2 - t1)
+
                     except:
                         durata_calc = ""
 
-                    supabase.table("interventi").upsert({
-                        "chiave": chiave,
-                        "treno": record.get("treno"),
-                        "data": record.get("data"),
-                        "componente": record.get("componente"),
-                        "intervento": record.get("intervento"),
-                        "tecnico": utente,
+                    # ✅ UPDATE (NON UPSERT)
+                    supabase.table("interventi").update({
                         "stato": "CHIUSO",
-                        "inizio": inizio,
                         "fine": str(fine_input),
                         "durata": durata_calc,
                         "note": note_input
-                    }).execute()
+                    }).eq("chiave", record["chiave"]).execute()
 
-                    st.success("Chiuso")
+                    st.success("✅ Intervento chiuso correttamente")
                     st.rerun()
-
         st.stop()
 
     # =========================
