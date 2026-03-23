@@ -354,7 +354,7 @@ elif menu == "🚄 Manutenzione":
                     numero = NUMERI.get(tecnico_input, "")
 
                     if numero:
-                        messaggio = f"Ti è stata assegnata attività:\n{r['Componente']} - {r['Intervento']}\nTreno {treno}"
+                        messaggio = f"Ti è stata assegnata una nuova attività:\n{r['Componente']} - {r['Intervento']}\nTreno {treno} - {r['Scheda']}_{r['Intervento']}"
                         link = f"https://wa.me/{numero}?text={urllib.parse.quote(messaggio)}"
                         st.markdown(f"[📲 Invia su WhatsApp]({link})")
 
