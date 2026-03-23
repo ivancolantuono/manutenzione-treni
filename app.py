@@ -200,13 +200,69 @@ if menu == "📊 Storico":
 # =========================
 # MANUTENZIONE
 # =========================
-
 elif menu == "🚄 Manutenzione":
-    
-    from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=5000, key="refresh_manutenzione")
 
     st.title("🚄 Gestione Manutenzione")
+
+    # =========================
+    # 👷 OPERATORE
+    # =========================
+    if ruolo == "OPERATORE":
+
+        st.subheader("📋 Attività assegnate")
+
+        res = supabase.table("interventi").select("*").execute()
+        rows = res.data if res.data else []
+
+        risultati = [
+            r for r in rows
+            if r.get("tecnico") == utente and r.get("stato") != "CHIUSO"
+        ]
+
+        if not risultati:
+            st.info("Nessuna attività assegnata")
+            st.stop()
+
+        for i, record in enumerate(risultati):
+
+            colore = "🟡" if record["stato"] == "APERTO" else "🟢"
+
+            with st.expander(f"{colore} {record.get('componente','')}"):
+
+                st.write(f"🔧 {record.get('componente','')}")
+                st.write(f"📋 {record.get('intervento','')}")
+
+                st.write(f"🚆 Treno: {record.get('treno','')}")
+                st.write(f"📅 Data: {record.get('data','')}")
+
+                link = record.get("link", "")
+                if link:
+                    st.markdown(f"[📄 Apri scheda tecnica]({link})")
+
+                note_input = st.text_area("Note", value=record.get("note",""), key=f"note_op_{i}")
+
+                st.text_input("Inizio", value=record.get("inizio",""), disabled=True)
+
+                fine_input = st.time_input("Fine", key=f"fine_op_{i}")
+
+                if st.button(f"Chiudi_{i}"):
+
+                    supabase.table("interventi").upsert({
+                        "chiave": record["chiave"],
+                        "tecnico": utente,
+                        "stato": "CHIUSO",
+                        "fine": str(fine_input),
+                        "note": note_input
+                    }).execute()
+
+                    st.success("Intervento chiuso")
+                    st.rerun()
+
+        st.stop()
+
+    # =========================
+    # 👨‍🔧 CAPOSQUADRA
+    # =========================
 
     c1, c2, c3 = st.columns(3)
 
@@ -238,120 +294,72 @@ elif menu == "🚄 Manutenzione":
             res = supabase.table("interventi").select("*").eq("chiave", chiave).execute()
             record = res.data[0] if res.data else None
 
-            if not record:
-                colore = "🔴"
-            elif record["stato"] == "APERTO":
-                colore = "🟡"
-            else:
-                colore = "🟢"
+            colore = "🔴" if not record else ("🟡" if record["stato"] == "APERTO" else "🟢")
 
             tecnico = record["tecnico"] if record else ""
-            stato = record["stato"] if record else "APERTO"
-            inizio = record["inizio"] if record else ""
-            fine = record["fine"] if record else ""
-            durata = record["durata"] if record else ""
             note = record["note"] if record else ""
-
-            if ruolo == "OPERATORE" and tecnico != utente:
-                continue
 
             with st.expander(f"{colore} {r['Componente']}"):
 
                 st.write(r["Intervento"])
-                if "Link" in r:
-                    st.markdown(f"[Apri Scheda]({r['Link']})")
+
+                link = r.get("Link", "")
+                if link:
+                    st.markdown(f"[📄 Apri scheda tecnica]({link})")
 
                 note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
-                # CAPO
-                if ruolo == "CAPOSQUADRA":
+                operatori = [u for u, info in UTENTI.items() if info["ruolo"] == "OPERATORE"]
 
-                    operatori = [u for u, info in UTENTI.items() if info["ruolo"] == "OPERATORE"]
+                tecnico_input = st.selectbox(
+                    "Tecnico",
+                    operatori,
+                    index=operatori.index(tecnico) if tecnico in operatori else 0,
+                    key=f"t_{i}"
+                )
 
-                    # gestisce caso vuoto o non presente
-                    if tecnico in operatori:
-                          index_default = operatori.index(tecnico)
-                    else:
-                          index_default = 0
+                col1, col2, col3, col4 = st.columns(4)
 
-                    tecnico_input = st.selectbox(
-                        "Tecnico",
-                         operatori,
-                         index=index_default,
-                         key=f"t_{i}"
-                    )
+                # ✅ ASSEGNA
+                if col1.button(f"Assegna_{i}"):
 
-                    col1, col2, col3 = st.columns(3)
+                    supabase.table("interventi").upsert({
+                        "chiave": chiave,
+                        "treno": treno,
+                        "data": str(data_giorno),
+                        "componente": r["Componente"],
+                        "intervento": r["Intervento"],
+                        "link": r.get("Link", ""),
+                        "tecnico": tecnico_input,
+                        "stato": "APERTO",
+                        "inizio": ora_italia(),
+                        "note": note_input
+                    }).execute()
 
-                    if col1.button(f"Assegna_{i}"):
+                    st.success("Assegnato")
+                    st.rerun()
 
-                        supabase.table("interventi").upsert({
-                            "chiave": chiave,
-                            "treno": treno,
-                            "data": str(data_giorno),
-                            "tecnico": tecnico_input,
-                            "stato": "APERTO",
-                            "inizio": ora_italia(),
-                            "note": note_input
-                        }).execute()
+                # ❌ CANCELLA
+                if col3.button(f"Cancella_{i}"):
 
-                        st.success("Assegnato")
-                        st.rerun()
+                    supabase.table("interventi").delete().eq("chiave", chiave).execute()
+                    st.warning("Cancellato")
+                    st.rerun()
 
-                    if col2.button(f"Modifica_{i}"):
+                # 📲 WHATSAPP
+                if col4.button(f"Invia_{i}"):
 
-                        supabase.table("interventi").upsert({
-                            "chiave": chiave,
-                            "treno": treno,
-                            "data": str(data_giorno),
-                            "tecnico": tecnico_input,
-                            "stato": stato,
-                            "inizio": inizio,
-                            "fine": fine,
-                            "durata": durata,
-                            "note": note_input
-                        }).execute()
+                    numero = NUMERI.get(tecnico_input, "")
 
-                        st.success("Modificato")
-                        st.rerun()
+                    messaggio = f"""Treno: {treno}
+Attività: {r['Intervento']}
+Componente: {r['Componente']}
+Data: {data_giorno}
+Scheda: {link}"""
 
-                    if col3.button(f"Cancella_{i}"):
+                    url = f"https://wa.me/{numero}?text={urllib.parse.quote(messaggio)}"
 
-                        supabase.table("interventi").delete().eq("chiave", chiave).execute()
-
-                        st.warning("Cancellato")
-                        st.rerun()
-
-                # OPERATORE
-                if ruolo == "OPERATORE":
-
-                    st.text_input("Inizio", value=inizio, disabled=True)
-
-                    fine_input = st.time_input("Fine", key=f"f_{i}")
-
-                    if st.button(f"Chiudi_{i}"):
-
-                        try:
-                            t1 = datetime.strptime(inizio, "%H:%M")
-                            t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
-                            durata_calc = str(t2 - t1)
-                        except:
-                            durata_calc = ""
-
-                        supabase.table("interventi").upsert({
-                            "chiave": chiave,
-                            "treno": treno,
-                            "data": str(data_giorno),
-                            "tecnico": utente,
-                            "stato": "CHIUSO",
-                            "inizio": inizio,
-                            "fine": str(fine_input),
-                            "durata": durata_calc,
-                            "note": note_input
-                        }).execute()
-
-                        st.success("Chiuso")
-                        st.rerun()
+                    st.markdown(f"[📲 Apri WhatsApp]({url})")
 
 # =========================
 # MAGAZZINO
