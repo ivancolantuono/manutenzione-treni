@@ -182,9 +182,7 @@ menu = st.radio(
 
 df = pd.read_excel("database_manutenzione.xlsx")
 df.columns = df.columns.str.strip()
-r["Componente"]
-r["Intervento"]
-r["Link"]
+
 
 res = supabase.table("interventi").select("*").execute()
 rows = res.data if res.data else []
