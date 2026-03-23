@@ -353,7 +353,7 @@ elif menu == "🚄 Manutenzione":
                             "inizio": ora_italia(),
                             "note": note_input
                         }
-                        st.write("DEBUG:", data_inser)
+                        st.write("DEBUG:", data_insert)
                         
                         supabase.table("interventi").upsert(data_insert).execute()
 
