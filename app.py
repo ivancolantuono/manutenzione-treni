@@ -234,6 +234,7 @@ elif menu == "🚄 Manutenzione":
 
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"📅 Data: {record.get('data','')}")
+                st.write(f" Scadenza: {record.get('scadenza','')}")
 
                 link = record.get("link", "")
                 if link:
@@ -327,6 +328,7 @@ elif menu == "🚄 Manutenzione":
                         "chiave": chiave,
                         "treno": treno,
                         "data": str(data_giorno),
+                        "scadenza": scadenza,
                         "componente": r["Componente"],
                         "intervento": r["Intervento"],
                         "link": r.get("Link", ""),
@@ -355,7 +357,7 @@ elif menu == "🚄 Manutenzione":
 Attività: {r['Intervento']}
 Componente: {r['Componente']}
 Data: {data_giorno}
-Scadenza: {r['scadenza']}
+Scadenza: {scadenza}
 Scheda: {link}"""
 
                     url = f"https://wa.me/{numero}?text={urllib.parse.quote(messaggio)}"
