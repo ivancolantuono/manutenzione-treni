@@ -248,15 +248,28 @@ elif menu == "🚄 Manutenzione":
 
                 if st.button(f"Chiudi_{i}"):
 
+                    try:
+                        t1 = datetime.strptime(inizio, "%H:%M")
+                        t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
+                        durata_calc = str(t2 - t1)
+                    except:
+                        durata_calc = ""
+
                     supabase.table("interventi").upsert({
-                        "chiave": record["chiave"],
+                        "chiave": chiave,
+                        "treno": record.get("treno"),
+                        "data": record.get("data"),
+                        "componente": record.get("componente"),
+                        "intervento": record.get("intervento"),
                         "tecnico": utente,
                         "stato": "CHIUSO",
+                        "inizio": inizio,
                         "fine": str(fine_input),
+                        "durata": durata_calc,
                         "note": note_input
                     }).execute()
 
-                    st.success("Intervento chiuso")
+                    st.success("Chiuso")
                     st.rerun()
 
         st.stop()
