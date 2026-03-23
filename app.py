@@ -205,14 +205,7 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     # =========================
-    # 👷 OPERATORE
-    # =========================
-elif menu == "🚄 Manutenzione":
-
-    st.title("🚄 Gestione Manutenzione")
-
-    # =========================
-    # CARICA DATI DB
+    # DATI DB
     # =========================
     res = supabase.table("interventi").select("*").execute()
     rows = res.data if res.data else []
@@ -278,7 +271,9 @@ elif menu == "🚄 Manutenzione":
 
                     col1, col2, col3 = st.columns(3)
 
-                    # ASSEGNA
+                    # =========================
+                    # ASSEGNA + WHATSAPP
+                    # =========================
                     if col1.button(f"Assegna_{i}"):
 
                         try:
@@ -296,10 +291,7 @@ elif menu == "🚄 Manutenzione":
                                 "note": note_input
                             }).execute()
 
-                            # =========================
                             # 📲 WHATSAPP
-                            # =========================
-
                             numero = NUMERI.get(tecnico_input)
 
                             if numero:
@@ -319,16 +311,12 @@ elif menu == "🚄 Manutenzione":
 {r['Componente']}
 """
 
-                               # link scheda tecnica
-                               if "Link" in r and pd.notna(r["Link"]):
+                                if "Link" in r and pd.notna(r["Link"]):
                                     messaggio += f"\n📄 Scheda tecnica:\n{r['Link']}"
 
-                                # encode URL
-                                messaggio_encoded = urllib.parse.quote(messaggio)
+                                url = f"https://wa.me/{numero}?text={urllib.parse.quote(messaggio)}"
 
-                                url = f"https://wa.me/{numero}?text={messaggio_encoded}"
-
-                                st.markdown(f"[📲 Invia WhatsApp]({url})", unsafe_allow_html=True)
+                                st.markdown(f"[📲 Invia WhatsApp]({url})")
 
                             st.success("Assegnato")
                             st.rerun()
@@ -339,17 +327,13 @@ elif menu == "🚄 Manutenzione":
                     # MODIFICA
                     if col2.button(f"Modifica_{i}") and record:
 
-                        try:
-                            supabase.table("interventi").update({
-                                "tecnico": tecnico_input,
-                                "note": note_input
-                            }).eq("chiave", chiave).execute()
+                        supabase.table("interventi").update({
+                            "tecnico": tecnico_input,
+                            "note": note_input
+                        }).eq("chiave", chiave).execute()
 
-                            st.success("Modificato")
-                            st.rerun()
-
-                        except Exception as e:
-                            st.error(f"Errore: {e}")
+                        st.success("Modificato")
+                        st.rerun()
 
                     # CANCELLA
                     if col3.button(f"Cancella_{i}"):
@@ -422,7 +406,6 @@ elif menu == "🚄 Manutenzione":
 
                     except Exception as e:
                         st.error(f"Errore chiusura: {e}")
-
 # =========================
 # MAGAZZINO
 # =========================
