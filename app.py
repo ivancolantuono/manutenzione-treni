@@ -339,8 +339,7 @@ elif menu == "🚄 Manutenzione":
                             "chiave": chiave,
                             "treno": treno,
                             "data": str(data_giorno),
-                            "componente": r["Componente"],
-                            "intervento": r["Intervento"],
+                            
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
