@@ -209,74 +209,50 @@ elif menu == "🚄 Manutenzione":
     # =========================
     if ruolo == "OPERATORE":
 
-        st.subheader("📋 Attività assegnate")
+    st.write(f"🚆 Treno: {record.get('treno','')}")
+    st.write(f"📅 Data: {record.get('data','')}")
+    st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
 
-        res = supabase.table("interventi").select("*").execute()
-        rows = res.data if res.data else []
+    if record.get("link"):
+        st.markdown(f"[📄 Apri scheda tecnica]({record.get('link')})")
 
-        risultati = [
-            r for r in rows
-            if r.get("tecnico") == utente and r.get("stato") != "CHIUSO"
-        ]
+    note_input = st.text_area("Note", value=record.get("note",""), key=f"note_op_{i}")
 
-        if not risultati:
-            st.info("Nessuna attività assegnata")
+    inizio = record.get("inizio","")
+
+    st.text_input("Inizio", value=inizio, disabled=True)
+
+    fine_input = st.time_input("Fine", key=f"fine_op_{i}")
+
+    if st.button(f"Chiudi_{i}"):
+
+        if not inizio:
+            st.error("⚠️ Intervento non iniziato")
             st.stop()
 
-        for i, record in enumerate(risultati):
+        try:
+            t1 = datetime.strptime(inizio, "%H:%M")
+            t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
 
-            colore = "🟡" if record["stato"] == "APERTO" else "🟢"
+            if t2 < t1:
+                st.error("⚠️ Orario non valido")
+                st.stop()
 
-            with st.expander(f"{colore} {record.get('componente','')}"):
+            durata_calc = str(t2 - t1)
 
-                st.write(f"🔧 {record.get('componente','')}")
-                st.write(f"📋 {record.get('intervento','')}")
+        except:
+            durata_calc = ""
 
-                st.write(f"🚆 Treno: {record.get('treno','')}")
-                st.write(f"📅 Data: {record.get('data','')}")
-                st.write(f" Scadenza: {record.get('scadenza','')}")
+        # ✅ QUI È LA CHIAVE GIUSTA
+        supabase.table("interventi").update({
+            "stato": "CHIUSO",
+            "fine": str(fine_input),
+            "durata": durata_calc,
+            "note": note_input
+        }).eq("chiave", record["chiave"]).execute()
 
-                link = record.get("link", "")
-                if link:
-                    st.markdown(f"[📄 Apri scheda tecnica]({link})")
-
-                note_input = st.text_area("Note", value=record.get("note",""), key=f"note_op_{i}")
-
-                st.text_input("Inizio", value=record.get("inizio",""), disabled=True)
-
-                fine_input = st.time_input("Fine", key=f"fine_op_{i}")
-
-                if st.button(f"Chiudi_{i}"):
-
-                    # 🔴 controllo sicurezza
-                    if not inizio:
-                        st.error("⚠️ Intervento non ancora iniziato")
-                        st.stop()
-
-                    try:
-                        t1 = datetime.strptime(inizio, "%H:%M")
-                        t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
-
-                        if t2 < t1:
-                            st.error("⚠️ Orario fine non può essere prima dell'inizio")
-                            st.stop()
-
-                        durata_calc = str(t2 - t1)
-
-                    except:
-                        durata_calc = ""
-
-                    # ✅ UPDATE (NON UPSERT)
-                    supabase.table("interventi").update({
-                        "stato": "CHIUSO",
-                        "fine": str(fine_input),
-                        "durata": durata_calc,
-                        "note": note_input
-                    }).eq("chiave", record["chiave"]).execute()
-
-                    st.success("✅ Intervento chiuso correttamente")
-                    st.rerun()
-        st.stop()
+        st.success("✅ Intervento chiuso")
+        st.rerun()
 
     # =========================
     # 👨‍🔧 CAPOSQUADRA
