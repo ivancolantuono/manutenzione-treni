@@ -380,7 +380,7 @@ elif menu == "🚄 Manutenzione":
                         "stato": "APERTO",
                         "inizio": ora_italia(),
                         "note": note_input
-                    }).execute()
+                    }, on_conflict="chiave").execute()
 
                     st.success("Assegnato")
                     st.rerun()
