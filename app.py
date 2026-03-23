@@ -355,7 +355,7 @@ elif menu == "🚄 Manutenzione":
                         }
                         st.write("DEBUG:", data_inser)
                         
-                        supabase.table("interventi").upsert(data_insert.execute()
+                        supabase.table("interventi").upsert(data_insert).execute()
 
                         st.success("Assegnato")
                         st.rerun()
