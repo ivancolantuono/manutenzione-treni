@@ -355,6 +355,7 @@ elif menu == "🚄 Manutenzione":
 Attività: {r['Intervento']}
 Componente: {r['Componente']}
 Data: {data_giorno}
+Scadenza: {r['scadenza']}
 Scheda: {link}"""
 
                     url = f"https://wa.me/{numero}?text={urllib.parse.quote(messaggio)}"
