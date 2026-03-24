@@ -209,22 +209,22 @@ elif menu == "🚄 Manutenzione":
 # =========================
     else:
 
-    st.subheader("📋 Attività assegnate")
+     st.subheader("📋 Attività assegnate")
 
-    # 🔄 CARICA DATI SEMPRE AGGIORNATI
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
+     # 🔄 CARICA DATI SEMPRE AGGIORNATI
+     res = supabase.table("interventi").select("*").execute()
+     rows = res.data if res.data else []
 
-    risultati = [
+     risultati = [
         r for r in rows
         if r.get("tecnico") == utente and r.get("stato") != "CHIUSO"
     ]
 
-    if not risultati:
+     if not risultati:
         st.info("Nessuna attività assegnata")
         st.stop()
 
-    for i, record in enumerate(risultati):
+     for i, record in enumerate(risultati):
 
         colore = "🟡" if record["stato"] == "APERTO" else "🟢"
 
