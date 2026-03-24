@@ -291,7 +291,7 @@ elif menu == "🚄 Manutenzione":
                     if not numero_row.empty:
                         numero = str(numero_row["Telefono"].values[0]
                         if pd.notna(numero):
-                            numero = str(numero).replace(".0, "").strip()
+                            numero = str(numero).replace(".0", "").strip()
                         else:
                             numero = None
                     else:
