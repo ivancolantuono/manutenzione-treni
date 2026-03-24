@@ -288,7 +288,14 @@ elif menu == "🚄 Manutenzione":
                     tecnico_input = scelta.split(" (")[0]
 
                     numero_row = df_operatori[df_operatori["Nominativo"] == tecnico_input]
-                    numero = numero_row["Codice"].values[0] if not numero_row.empty else None
+                    if not numero_row.empty:
+                        numero = str(numero_row["Telefono"].values[0]
+                        if pd.notna(numero):
+                            numero = str(numero).replace(".0, "").strip()
+                        else:
+                            numero = None
+                    else:
+                        numero = None
 
                     col1, col2, col3 = st.columns(3)
 
@@ -313,7 +320,7 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # WHATSAPP
-                    if numero:
+                    if numero and numero.isdigit()
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
