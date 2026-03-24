@@ -229,15 +229,18 @@ elif menu == "🚄 Manutenzione":
     # =========================
     if ruolo == "CAPOSQUADRA":
 
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(3)
 
         with c1:
             treno = st.text_input("Treno", key="input_treno")
-
+            
         with c2:
+            odl = st.text_input("ODL Padre", key="input_odl")
+        
+        with c3:
             scadenza = st.selectbox("Scadenza", df["Scadenza"].unique(), key="input_scadenza")
 
-        with c3:
+        with c4:
             data_giorno = st.date_input("Data", value=date.today(), key="input_data")
 
         # GENERA
@@ -246,6 +249,7 @@ elif menu == "🚄 Manutenzione":
                 st.error("Inserisci treno")
             else:
                 st.session_state["mostra"] = True
+                st.session_state["odl"] = odl
                 st.session_state["treno"] = treno
                 st.session_state["scadenza"] = scadenza
                 st.session_state["data"] = data_giorno
@@ -254,6 +258,7 @@ elif menu == "🚄 Manutenzione":
         if st.session_state.get("mostra"):
 
             treno = st.session_state["treno"]
+            odl = st.session_state["odl"]
             scadenza = st.session_state["scadenza"]
             data_giorno = st.session_state["data"]
 
@@ -313,7 +318,8 @@ elif menu == "🚄 Manutenzione":
                             "tecnico": tecnico_input,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
-                            "note": note_input
+                            "note": note_input,
+                            "odl": odl
                         }).execute()
 
                         st.success("Assegnato")
@@ -335,7 +341,7 @@ elif menu == "🚄 Manutenzione":
 
                         if "Link" in r and pd.notna(r["Link"]):
                             msg += f"\n📄 {r['Link']}"
-
+               
                         url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
                         st.markdown(f"[📲 Invia WhatsApp]({url})")
 
