@@ -207,7 +207,7 @@ elif menu == "🚄 Manutenzione":
     # =========================
 # 👷 OPERATORE
 # =========================
-else:
+    else:
 
     st.subheader("📋 Attività assegnate")
 
