@@ -214,6 +214,17 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     # =========================
+    # SESSION STATE SICURO
+    # =========================
+    if "mostra" not in st.session_state:
+        st.session_state.mostra = False
+
+    treno = st.session_state.get("treno", "")
+    odl = st.session_state.get("odl", "")
+    scadenza = st.session_state.get("scadenza", "")
+    data_giorno = st.session_state.get("data", date.today())
+
+    # =========================
     # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
@@ -235,16 +246,16 @@ elif menu == "🚄 Manutenzione":
         c1, c2, c3, c4 = st.columns(4)
 
         with c1:
-            treno = st.text_input("Treno", key="treno")
+            treno = st.text_input("Treno", value=treno)
 
         with c2:
-            odl = st.text_input("ODL Padre", key="odl")
+            odl = st.text_input("ODL Padre", value=odl)
 
         with c3:
-            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique(), key="scad")
+            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique())
 
         with c4:
-            data_giorno = st.date_input("Data", value=date.today(), key="data")
+            data_giorno = st.date_input("Data", value=data_giorno)
 
         if st.button("Genera"):
 
@@ -257,12 +268,7 @@ elif menu == "🚄 Manutenzione":
                 st.session_state.scadenza = scadenza
                 st.session_state.data = data_giorno
 
-        if st.session_state.get("mostra"):
-
-            treno = st.session_state.treno
-            odl = st.session_state.odl
-            scadenza = st.session_state.scadenza
-            data_giorno = st.session_state.data
+        if st.session_state.mostra:
 
             risultati = df[df["Scadenza"] == scadenza]
 
@@ -287,21 +293,19 @@ elif menu == "🚄 Manutenzione":
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
                     # =========================
-                    # MULTI TECNICI
+                    # TECNICI MULTI
                     # =========================
                     lista_tecnici = df_operatori.apply(
                         lambda x: f"{x['Nominativo']} ({x['Squadra']})", axis=1
                     )
 
                     scelte = st.multiselect("Tecnici", lista_tecnici, key=f"tec_{i}")
-
                     tecnici_input = [s.split(" (")[0] for s in scelte]
 
                     # =========================
-                    # NUMERI TELEFONO
+                    # NUMERI
                     # =========================
                     numeri = []
-
                     for tecnico in tecnici_input:
                         row = df_operatori[df_operatori["Nominativo"] == tecnico]
                         if not row.empty and "Telefono" in df_operatori.columns:
@@ -337,7 +341,7 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # =========================
-                    # WHATSAPP MULTI
+                    # WHATSAPP
                     # =========================
                     if numeri:
 
@@ -358,9 +362,6 @@ elif menu == "🚄 Manutenzione":
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
                             st.markdown(f"[📲 Invia a {num}]({url})")
-
-                    else:
-                        st.warning("⚠️ Nessun numero disponibile")
 
                     # =========================
                     # MODIFICA
@@ -391,10 +392,23 @@ elif menu == "🚄 Manutenzione":
 
         st.subheader("📋 Attività assegnate")
 
-        risultati = [
-            r for r in rows
-            if utente in (r.get("tecnico") or []) and r.get("stato") != "CHIUSO"
-        ]
+        import ast
+
+        risultati = []
+
+        for r in rows:
+            tecnici = r.get("tecnico", [])
+
+            # FIX dati sporchi
+            if isinstance(tecnici, str):
+                try:
+                    tecnici = ast.literal_eval(tecnici)
+                except:
+                    tecnici = [tecnici]
+
+            if utente in tecnici and r.get("stato") != "CHIUSO":
+                r["tecnico_fix"] = tecnici
+                risultati.append(r)
 
         if not risultati:
             st.info("Nessuna attività assegnata")
@@ -408,7 +422,7 @@ elif menu == "🚄 Manutenzione":
 
                 st.write(record.get("intervento",""))
 
-                st.write(f"👤 Tecnici: {', '.join(record.get('tecnico', []))}")
+                st.write(f"👤 Tecnici: {', '.join(record.get('tecnico_fix', []))}")
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
                 st.write(f"📅 Data: {record.get('data','')}")
