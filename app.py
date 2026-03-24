@@ -320,7 +320,7 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # WHATSAPP
-                    if numero and numero.isdigit()
+                    if numero and numero.isdigit():
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
