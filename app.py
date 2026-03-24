@@ -177,11 +177,14 @@ menu = st.radio(
 df = pd.read_excel("database_manutenzione.xlsx")
 df.columns = df.columns.str.strip()
 
+res = supabase.table("interventi").select("*").execute()
+rows = res.data if res.data else []
+
 df_operatori = pd.read_excel("operatori.xlsx")
 df_operatori.columns = df_operatori.columns.str.strip()
 
-res = supabase.table("interventi").select("*").execute()
-rows = res.data if res.data else []
+if "mostra" not in st.session_state:
+    st.session_state["mostra"] = False
 
 # =========================
 # STORICO
@@ -221,19 +224,34 @@ elif menu == "🚄 Manutenzione":
         c1, c2, c3 = st.columns(3)
 
         with c1:
-            treno = st.text_input("Treno")
+            treno = st.text_input("Treno", key="input_treno")
 
         with c2:
-            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique())
+            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique(), key="input_scadenza")
 
         with c3:
-            data_giorno = st.date_input("Data", value=date.today())
+            data_giorno = st.date_input("Data", value=date.today(), key="input_data")
 
+        # =========================
+        # GENERA (SALVA STATO)
+        # =========================
         if st.button("Genera"):
-
             if not treno:
                 st.error("Inserisci treno")
-                st.stop()
+            else:
+                st.session_state["mostra"] = True
+                st.session_state["treno"] = treno
+                st.session_state["scadenza"] = scadenza
+                st.session_state["data"] = data_giorno
+
+        # =========================
+        # MOSTRA LISTA (STABILE)
+        # =========================
+        if st.session_state.get("mostra"):
+
+            treno = st.session_state["treno"]
+            scadenza = st.session_state["scadenza"]
+            data_giorno = st.session_state["data"]
 
             risultati = df[df["Scadenza"] == scadenza]
 
@@ -255,7 +273,7 @@ elif menu == "🚄 Manutenzione":
                     if "Link" in r and pd.notna(r["Link"]):
                         st.markdown(f"[📄 Apri scheda]({r['Link']})")
 
-                    note = record.get("note","") if record else ""
+                    note = record.get("note", "") if record else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
                     # =========================
@@ -274,7 +292,7 @@ elif menu == "🚄 Manutenzione":
                     col1, col2, col3 = st.columns(3)
 
                     # =========================
-                    # ✅ ASSEGNA
+                    # ASSEGNA
                     # =========================
                     if col1.button(f"Assegna_{i}"):
 
@@ -296,7 +314,7 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # =========================
-                    # 📲 WHATSAPP (SEMPRE VISIBILE)
+                    # WHATSAPP (SEMPRE VISIBILE)
                     # =========================
                     if numero:
 
