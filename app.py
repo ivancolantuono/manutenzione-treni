@@ -193,7 +193,7 @@ if "mostra" not in st.session_state:
 if menu == "📊 Storico":
     
     from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=5000, key="refresh_storico")
+    st_autorefresh(interval=15000, key="refresh_storico")
     st.title("📊 Storico Attività")
 
     df_storico = pd.DataFrame(rows)
@@ -214,9 +214,9 @@ elif menu == "🚄 Manutenzione":
     # AUTO REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=5000, key="refresh_capo")
+        st_autorefresh(interval=10000, key="refresh_capo")
     else:
-        st_autorefresh(interval=5000, key="refresh_operatore")
+        st_autorefresh(interval=10000, key="refresh_operatore")
 
     # =========================
     # CARICA DATI
