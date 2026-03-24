@@ -211,6 +211,14 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     # =========================
+    # AUTO REFRESH
+    # =========================
+    if ruolo == "CAPOSQUADRA":
+        st_autorefresh(interval=5000, key="refresh_capo")
+    else:
+        st_autorefresh(interval=5000, key="refresh_operatore")
+
+    # =========================
     # CARICA DATI
     # =========================
     res = supabase.table("interventi").select("*").execute()
@@ -232,9 +240,7 @@ elif menu == "🚄 Manutenzione":
         with c3:
             data_giorno = st.date_input("Data", value=date.today(), key="input_data")
 
-        # =========================
-        # GENERA (SALVA STATO)
-        # =========================
+        # GENERA
         if st.button("Genera"):
             if not treno:
                 st.error("Inserisci treno")
@@ -244,9 +250,7 @@ elif menu == "🚄 Manutenzione":
                 st.session_state["scadenza"] = scadenza
                 st.session_state["data"] = data_giorno
 
-        # =========================
-        # MOSTRA LISTA (STABILE)
-        # =========================
+        # MOSTRA LISTA
         if st.session_state.get("mostra"):
 
             treno = st.session_state["treno"]
@@ -257,7 +261,6 @@ elif menu == "🚄 Manutenzione":
 
             for i, r in risultati.iterrows():
 
-                # 🔑 CHIAVE STABILE
                 chiave = f"{str(r['Scheda']).strip()}{str(treno).strip()}{str(data_giorno)}"
 
                 record = next((x for x in rows if str(x.get("chiave")) == str(chiave)), None)
@@ -276,9 +279,7 @@ elif menu == "🚄 Manutenzione":
                     note = record.get("note", "") if record else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
-                    # =========================
                     # TECNICI DA EXCEL
-                    # =========================
                     lista_tecnici = df_operatori.apply(
                         lambda x: f"{x['Nominativo']} (Squadra {x['Squadra']})", axis=1
                     )
@@ -291,9 +292,7 @@ elif menu == "🚄 Manutenzione":
 
                     col1, col2, col3 = st.columns(3)
 
-                    # =========================
                     # ASSEGNA
-                    # =========================
                     if col1.button(f"Assegna_{i}"):
 
                         supabase.table("interventi").upsert({
@@ -313,9 +312,7 @@ elif menu == "🚄 Manutenzione":
                         st.success("Assegnato")
                         st.rerun()
 
-                    # =========================
-                    # WHATSAPP (SEMPRE VISIBILE)
-                    # =========================
+                    # WHATSAPP
                     if numero:
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
@@ -333,12 +330,9 @@ elif menu == "🚄 Manutenzione":
                             msg += f"\n📄 {r['Link']}"
 
                         url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
-
                         st.markdown(f"[📲 Invia WhatsApp]({url})")
 
-                    # =========================
                     # MODIFICA
-                    # =========================
                     if col2.button(f"Modifica_{i}") and record:
 
                         supabase.table("interventi").update({
@@ -349,13 +343,10 @@ elif menu == "🚄 Manutenzione":
                         st.success("Modificato")
                         st.rerun()
 
-                    # =========================
                     # CANCELLA
-                    # =========================
                     if col3.button(f"Cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
-
                         st.warning("Cancellato")
                         st.rerun()
 
@@ -365,9 +356,6 @@ elif menu == "🚄 Manutenzione":
     else:
 
         st.subheader("📋 Attività assegnate")
-
-        res = supabase.table("interventi").select("*").execute()
-        rows = res.data if res.data else []
 
         risultati = [
             r for r in rows
