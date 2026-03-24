@@ -17,7 +17,7 @@ st.markdown("""
 
 /* SFONDO GENERALE */
 .stApp {
-    background-color: #808080;
+    background-color: #007fff;
 }
 
 /* BOTTONI ROSSI */
