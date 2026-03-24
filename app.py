@@ -211,7 +211,7 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     # =========================
-    # AUTO REFRESH
+    # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
         st_autorefresh(interval=7000, key="refresh_capo")
@@ -219,7 +219,7 @@ elif menu == "🚄 Manutenzione":
         st_autorefresh(interval=7000, key="refresh_operatore")
 
     # =========================
-    # CARICA DATI
+    # DATI DB
     # =========================
     res = supabase.table("interventi").select("*").execute()
     rows = res.data if res.data else []
@@ -232,34 +232,34 @@ elif menu == "🚄 Manutenzione":
         c1, c2, c3, c4 = st.columns(4)
 
         with c1:
-            treno = st.text_input("Treno", key="input_treno")
+            treno = st.text_input("Treno", key="treno")
 
         with c2:
-            odl = st.text_input("ODL Padre", key="input_odl")
+            odl = st.text_input("ODL Padre", key="odl")
 
         with c3:
-            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique(), key="input_scadenza")
+            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique(), key="scad")
 
         with c4:
-            data_giorno = st.date_input("Data", value=date.today(), key="input_data")
+            data_giorno = st.date_input("Data", value=date.today(), key="data")
 
         if st.button("Genera"):
 
             if not treno or not odl:
                 st.error("Inserisci Treno e ODL")
             else:
-                st.session_state["mostra"] = True
-                st.session_state["treno"] = treno
-                st.session_state["odl"] = odl
-                st.session_state["scadenza"] = scadenza
-                st.session_state["data"] = data_giorno
+                st.session_state.mostra = True
+                st.session_state.treno = treno
+                st.session_state.odl = odl
+                st.session_state.scadenza = scadenza
+                st.session_state.data = data_giorno
 
         if st.session_state.get("mostra"):
 
-            treno = st.session_state["treno"]
-            odl = st.session_state["odl"]
-            scadenza = st.session_state["scadenza"]
-            data_giorno = st.session_state["data"]
+            treno = st.session_state.treno
+            odl = st.session_state.odl
+            scadenza = st.session_state.scadenza
+            data_giorno = st.session_state.data
 
             risultati = df[df["Scadenza"] == scadenza]
 
@@ -284,22 +284,29 @@ elif menu == "🚄 Manutenzione":
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
                     # =========================
-                    # TECNICI DA EXCEL
+                    # MULTI TECNICI
                     # =========================
                     lista_tecnici = df_operatori.apply(
                         lambda x: f"{x['Nominativo']} ({x['Squadra']})", axis=1
                     )
 
-                    scelta = st.selectbox("Tecnico", lista_tecnici, key=f"t_{i}")
-                    tecnico_input = scelta.split(" (")[0]
+                    scelte = st.multiselect("Tecnici", lista_tecnici, key=f"tec_{i}")
 
-                    numero_row = df_operatori[df_operatori["Nominativo"] == tecnico_input]
+                    tecnici_input = [s.split(" (")[0] for s in scelte]
 
-                    numero = None
-                    if not numero_row.empty and "Telefono" in df_operatori.columns:
-                        val = numero_row["Telefono"].values[0]
-                        if pd.notna(val):
-                            numero = str(val).replace(".0", "").strip()
+                    # =========================
+                    # NUMERI TELEFONO
+                    # =========================
+                    numeri = []
+
+                    for tecnico in tecnici_input:
+                        row = df_operatori[df_operatori["Nominativo"] == tecnico]
+                        if not row.empty and "Telefono" in df_operatori.columns:
+                            val = row["Telefono"].values[0]
+                            if pd.notna(val):
+                                num = str(val).replace(".0", "").strip()
+                                if num.isdigit():
+                                    numeri.append(num)
 
                     col1, col2, col3 = st.columns(3)
 
@@ -316,8 +323,8 @@ elif menu == "🚄 Manutenzione":
                             "scadenza": scadenza,
                             "componente": r["Componente"],
                             "intervento": r["Intervento"],
-                            "link": r.get("Link",""),
-                            "tecnico": tecnico_input,
+                            "link": r.get("Link", ""),
+                            "tecnico": tecnici_input,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
                             "note": note_input
@@ -327,13 +334,12 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # =========================
-                    # WHATSAPP
+                    # WHATSAPP MULTI
                     # =========================
-                    if numero and numero.isdigit():
+                    if numeri:
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
-👤 Tecnico: {tecnico_input}
 🚆 Treno: {treno}
 🧾 ODL: {odl}
 📅 Data: {data_giorno}
@@ -346,11 +352,12 @@ elif menu == "🚄 Manutenzione":
                         if "Link" in r and pd.notna(r["Link"]):
                             msg += f"\n📄 {r['Link']}"
 
-                        url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
-                        st.markdown(f"[📲 Invia WhatsApp]({url})")
+                        for num in numeri:
+                            url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
+                            st.markdown(f"[📲 Invia a {num}]({url})")
 
                     else:
-                        st.warning("⚠️ Nessun numero per questo operatore")
+                        st.warning("⚠️ Nessun numero disponibile")
 
                     # =========================
                     # MODIFICA
@@ -358,7 +365,7 @@ elif menu == "🚄 Manutenzione":
                     if col2.button(f"Modifica_{i}") and record:
 
                         supabase.table("interventi").update({
-                            "tecnico": tecnico_input,
+                            "tecnico": tecnici_input,
                             "note": note_input
                         }).eq("chiave", chiave).execute()
 
@@ -383,7 +390,7 @@ elif menu == "🚄 Manutenzione":
 
         risultati = [
             r for r in rows
-            if r.get("tecnico") == utente and r.get("stato") != "CHIUSO"
+            if utente in (r.get("tecnico") or []) and r.get("stato") != "CHIUSO"
         ]
 
         if not risultati:
@@ -398,6 +405,7 @@ elif menu == "🚄 Manutenzione":
 
                 st.write(record.get("intervento",""))
 
+                st.write(f"👤 Tecnici: {', '.join(record.get('tecnico', []))}")
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
                 st.write(f"📅 Data: {record.get('data','')}")
