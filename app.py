@@ -17,13 +17,13 @@ st.markdown("""
 
 /* SFONDO GENERALE */
 .stApp {
-    background-color: #007fff;
+    background-color: #D3D3D3;
 }
 
 /* BOTTONI ROSSI */
 .stButton>button {
     background-color: #e10600;
-    color: white;
+    color: black;
     border-radius: 8px;
     font-weight: bold;
 }
