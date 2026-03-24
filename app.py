@@ -205,61 +205,81 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     # =========================
-    # 👷 OPERATORE
-    # =========================
-    if ruolo == "OPERATORE":
+# 👷 OPERATORE
+# =========================
+else:
 
-        st.subheader("📋 Attività assegnate")
+    st.subheader("📋 Attività assegnate")
 
-        res = supabase.table("interventi").select("*").execute()
-        rows = res.data if res.data else []
+    # 🔄 CARICA DATI SEMPRE AGGIORNATI
+    res = supabase.table("interventi").select("*").execute()
+    rows = res.data if res.data else []
 
-        risultati = [
-            r for r in rows
-            if r.get("tecnico") == utente and r.get("stato") != "CHIUSO"
-        ]
+    risultati = [
+        r for r in rows
+        if r.get("tecnico") == utente and r.get("stato") != "CHIUSO"
+    ]
 
-        if not risultati:
-            st.info("Nessuna attività assegnata")
-            st.stop()
-
-        for i, record in enumerate(risultati):
-
-            colore = "🟡" if record["stato"] == "APERTO" else "🟢"
-
-            with st.expander(f"{colore} {record.get('componente','')}"):
-
-                st.write(f"🔧 {record.get('componente','')}")
-                st.write(f"📋 {record.get('intervento','')}")
-
-                st.write(f"🚆 Treno: {record.get('treno','')}")
-                st.write(f"📅 Data: {record.get('data','')}")
-
-                link = record.get("link", "")
-                if link:
-                    st.markdown(f"[📄 Apri scheda tecnica]({link})")
-
-                note_input = st.text_area("Note", value=record.get("note",""), key=f"note_op_{i}")
-
-                st.text_input("Inizio", value=record.get("inizio",""), disabled=True)
-
-                fine_input = st.time_input("Fine", key=f"fine_op_{i}")
-
-                if st.button(f"Chiudi_{i}"):
-
-                    supabase.table("interventi").upsert({
-                        "chiave": record["chiave"],
-                        "tecnico": utente,
-                        "stato": "CHIUSO",
-                        "fine": str(fine_input),
-                        "note": note_input
-                    }).execute()
-
-                    st.success("Intervento chiuso")
-                    st.rerun()
-
+    if not risultati:
+        st.info("Nessuna attività assegnata")
         st.stop()
 
+    for i, record in enumerate(risultati):
+
+        colore = "🟡" if record["stato"] == "APERTO" else "🟢"
+
+        with st.expander(f"{colore} {record.get('componente','')}"):
+
+            st.write(record.get("intervento", ""))
+
+            st.write(f"👤 Tecnico: {record.get('tecnico','')}")
+            st.write(f"🚆 Treno: {record.get('treno','')}")
+            st.write(f"📅 Data: {record.get('data','')}")
+            st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
+
+            if record.get("link"):
+                st.markdown(f"[📄 Apri scheda tecnica]({record.get('link')})")
+
+            note_input = st.text_area(
+                "Note",
+                value=record.get("note",""),
+                key=f"note_op_{i}"
+            )
+
+            inizio = record.get("inizio","")
+
+            st.text_input("Inizio", value=inizio, disabled=True)
+
+            fine_input = st.time_input("Fine", key=f"fine_{i}")
+
+            if st.button(f"Chiudi_{i}"):
+
+                try:
+                    # 🔧 controllo sicurezza
+                    if not inizio:
+                        st.error("Errore: inizio mancante")
+                        st.stop()
+
+                    t1 = datetime.strptime(inizio, "%H:%M")
+                    t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
+
+                    durata = str(t2 - t1) if t2 >= t1 else "Errore orario"
+
+                    # ✅ UPDATE (NON UPSERT)
+                    supabase.table("interventi").update({
+                        "stato": "CHIUSO",
+                        "fine": str(fine_input),
+                        "durata": durata,
+                        "note": note_input
+                    }).eq("chiave", record["chiave"]).execute()
+
+                    st.success("Intervento chiuso")
+
+                    # 🔄 refresh immediato
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"Errore chiusura: {e}")
     # =========================
     # 👨‍🔧 CAPOSQUADRA
     # =========================
