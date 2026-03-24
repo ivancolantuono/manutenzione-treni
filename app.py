@@ -17,7 +17,7 @@ st.markdown("""
 
 /* SFONDO GENERALE */
 .stApp {
-    background-color: #D3D3D3;
+    background-color: #808080;
 }
 
 /* BOTTONI ROSSI */
@@ -100,8 +100,11 @@ supabase = create_client(url, key)
 
 UTENTI = {
     "Massaro": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Morello": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Cacace": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Dentice": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Basco": {"password": "1234", "ruolo": "CAPOSQUADRA"},
     "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
-    "Lucariello": {"password": "1111", "ruolo": "OPERATORE"},
     "Santorelli": {"password": "1111", "ruolo": "OPERATORE"},
     "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
 }
