@@ -467,7 +467,7 @@ elif menu == "🚄 Manutenzione":
                 fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
 
                 # CHIUSURA
-                if st.button(f"Chiudi"):
+                if st.button(f"Chiudi_{i}"):
 
                     if not note_input:
                         st.warning("Inserisci una nota")
