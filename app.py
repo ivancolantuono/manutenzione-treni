@@ -209,8 +209,7 @@ if menu == "📊 Storico":
 # =========================
 # MANUTENZIONE
 # =========================
-[18:42, 25/03/2026] Ivan Colantuono:         st_autorefresh(interval=8…
-[18:48, 25/03/2026] Ivan Colantuono: elif menu == "🚄 Manutenzione":
+elif menu == "🚄 Manutenzione":
 
     st.title("🚄 Gestione Manutenzione")
 
