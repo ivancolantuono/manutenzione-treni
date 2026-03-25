@@ -348,7 +348,7 @@ elif menu == "🚄 Manutenzione":
 🧾 ODL: {odl}
 📅 Data: {data_giorno}
 ⏱️ Scadenza: {scadenza}
-👷 Caposquadra: {caposquadra}
+
 🔧 {r['Intervento']}
 🔧 {r['Componente']}
 """
