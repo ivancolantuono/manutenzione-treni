@@ -190,24 +190,31 @@ if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
 
 # =========================
-# STORICO
+# 📊 STORICO
 # =========================
+elif menu == "📊 Storico":
 
-if menu == "📊 Storico":
-    
-    from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=15000, key="refresh_storico")
     st.title("📊 Storico Attività")
+
+    res = supabase.table("interventi").select("*").execute()
+    rows = res.data if res.data else []
 
     df_storico = pd.DataFrame(rows)
 
     if not df_storico.empty:
+
+        # 🔥 FIX PYARROW
+        for col in df_storico.columns:
+            df_storico[col] = df_storico[col].astype(str)
+
         st.dataframe(df_storico, use_container_width=True)
+
     else:
         st.warning("Nessun dato presente")
 
+
 # =========================
-# MANUTENZIONE
+# 🚄 MANUTENZIONE
 # =========================
 elif menu == "🚄 Manutenzione":
 
@@ -320,7 +327,7 @@ elif menu == "🚄 Manutenzione":
 
                     st.write(r["Intervento"])
 
-                    # 🔥 LINK MULTIPLI (Excel con |)
+                    # 🔥 LINK MULTIPLI
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
 
@@ -341,9 +348,7 @@ elif menu == "🚄 Manutenzione":
 
                     colA, colB, colC = st.columns(3)
 
-                    # =========================
                     # ASSEGNA
-                    # =========================
                     if colA.button(f"Assegna_{i}"):
 
                         supabase.table("interventi").upsert({
@@ -365,9 +370,7 @@ elif menu == "🚄 Manutenzione":
                         st.success("Assegnato")
                         st.rerun()
 
-                    # =========================
                     # WHATSAPP
-                    # =========================
                     numeri = []
 
                     for t in tecnici_input:
@@ -391,17 +394,14 @@ elif menu == "🚄 Manutenzione":
 """
 
                         for link in links:
-                            link = link.strip()
-                            if link:
-                                msg += f"\n📄 {link}"
+                            if link.strip():
+                                msg += f"\n📄 {link.strip()}"
 
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
                             st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
 
-                    # =========================
                     # CANCELLA
-                    # =========================
                     if colC.button(f"Cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
@@ -444,22 +444,17 @@ elif menu == "🚄 Manutenzione":
                 st.write(record.get("intervento",""))
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
-                st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
                 st.write(f"👷 Caposquadra: {record.get('caposquadra','')}")
 
-                # 🔥 LINK MULTIPLI
+                # LINK MULTIPLI
                 link_raw = record.get("link", "")
                 links = str(link_raw).split("|") if link_raw else []
 
                 for idx, link in enumerate(links):
-                    link = link.strip()
-                    if link:
-                        st.markdown(f"[📄 Scheda {idx+1}]({link})")
+                    if link.strip():
+                        st.markdown(f"[📄 Scheda {idx+1}]({link.strip()})")
 
-                st.write(f"🕒 Inizio: {record.get('inizio','')}")
-                st.write(f"📝 Note:\n{record.get('note','')}")
-
-                note_input = st.text_area("Aggiungi nota", key=f"note_op_{i}")
+                note_input = st.text_area("Nota", key=f"note_op_{i}")
                 fine_input = st.time_input("Fine", key=f"fine_{i}")
 
                 if st.button(f"Chiudi_{i}"):
@@ -472,7 +467,7 @@ elif menu == "🚄 Manutenzione":
                         "note": str(nuove_note)
                     }).eq("chiave", record["chiave"]).execute()
 
-                    st.success("Attività chiusa")
+                    st.success("Chiuso")
                     st.rerun()
 # =========================
 # MAGAZZINO
