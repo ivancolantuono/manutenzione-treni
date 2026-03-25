@@ -5,6 +5,7 @@ from datetime import date, datetime
 from supabase import create_client
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
+import pandas as pd
 
 st.set_page_config(layout="wide")
 
@@ -95,55 +96,69 @@ key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
 # =========================
-# UTENTI
+# LOGIN DA EXCEL (COMPLETO)
 # =========================
 
-UTENTI = {
-    "Massaro": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Morello": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Cacace": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Dentice": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Basco": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
-    "Santorelli": {"password": "1111", "ruolo": "OPERATORE"},
-    "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
-}
+import pandas as pd
 
-NUMERI = {
-    "Colantuono": "393477618059"
-}
+df_operatori = pd.read_excel("operatori.xlsx")
+df_operatori.columns = df_operatori.columns.str.strip()
+
+# pulizia dati
+for col in df_operatori.columns:
+    df_operatori[col] = df_operatori[col].astype(str).str.strip().str.lower()
+
+# =========================
+# SESSION
+# =========================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
 # =========================
 # LOGIN
 # =========================
-
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
 if not st.session_state.logged_in:
 
     col1, col2, col3 = st.columns([1,2,1])
 
     with col2:
+
         st.image("frecciarossa.jpg", use_container_width=True)
         st.markdown("## 🔐 Accesso Sistema")
 
-        u = st.text_input("Utente")
-        p = st.text_input("Password", type="password")
+        username = st.text_input("Utente").strip().lower()
+        password = st.text_input("Password", type="password").strip().lower()
 
         if st.button("Accedi"):
-            if u in UTENTI and UTENTI[u]["password"] == p:
+
+            user = df_operatori[
+                (df_operatori["Nominativo"] == username) &
+                (df_operatori["Password"] == password)
+            ]
+
+            if not user.empty:
+
                 st.session_state.logged_in = True
-                st.session_state.utente = u
-                st.session_state.ruolo = UTENTI[u]["ruolo"]
+                st.session_state.utente = user.iloc[0]["Nominativo"]
+                st.session_state.ruolo = user.iloc[0]["Ruolo"]
+                st.session_state.squadra = user.iloc[0]["Squadra"]
+                st.session_state.telefono = user.iloc[0]["Telefono"]
+                st.session_state.codice = user.iloc[0]["Codice"]
+
+                st.success("Accesso riuscito")
                 st.rerun()
+
             else:
                 st.error("Credenziali errate")
 
     st.stop()
 
+# =========================
+# DATI UTENTE
+# =========================
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
+squadra = st.session_state.squadra
 
 # =========================
 # HEADER
@@ -152,17 +167,17 @@ colA, colB = st.columns([6,2])
 
 with colA:
     st.markdown(f"""
-    <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
-    👤 {utente} ({ruolo})
+    <div style='margin-top:20px; font-size:22px; font-weight:bold;'>
+    👤 {utente} ({ruolo}) - Squadra {squadra}
     </div>
     """, unsafe_allow_html=True)
 
 with colB:
-    st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
     if st.button("🔓 Disconnetti"):
         st.session_state.clear()
         st.rerun()
-
 # =========================
 # MENU
 # =========================
