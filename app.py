@@ -114,93 +114,36 @@ NUMERI = {
 }
 
 # =========================
-# LOGIN SUPABASE PRO
+# LOGIN
 # =========================
 
-import time
-
-# =========================
-# SESSION
-# =========================
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-if "tentativi" not in st.session_state:
-    st.session_state.tentativi = 0
-
-if "blocco_fino" not in st.session_state:
-    st.session_state.blocco_fino = 0
-
-# =========================
-# BLOCCO SICUREZZA
-# =========================
-if time.time() < st.session_state.blocco_fino:
-    st.error("⛔ Troppi tentativi. Attendi 30 secondi")
-    st.stop()
-
-# =========================
-# LOGIN UI
-# =========================
 if not st.session_state.logged_in:
 
     col1, col2, col3 = st.columns([1,2,1])
 
     with col2:
-
         st.image("frecciarossa.jpg", use_container_width=True)
         st.markdown("## 🔐 Accesso Sistema")
 
-        username = st.text_input("Utente").strip().lower()
-        password = st.text_input("Password", type="password").strip().lower()
+        u = st.text_input("Utente")
+        p = st.text_input("Password", type="password")
 
         if st.button("Accedi"):
-
-            try:
-                res = supabase.table("utenti") \
-                    .select("*") \
-                    .eq("nominativo", username) \
-                    .eq("password", password) \
-                    .execute()
-
-                user = res.data
-
-                if user:
-
-                    user = user[0]
-
-                    # reset tentativi
-                    st.session_state.tentativi = 0
-
-                    # salva sessione
-                    st.session_state.logged_in = True
-                    st.session_state.utente = user["nominativo"]
-                    st.session_state.ruolo = user["ruolo"]
-                    st.session_state.squadra = user.get("squadra","")
-                    st.session_state.telefono = user.get("telefono","")
-                    st.session_state.codice = user.get("codice","")
-
-                    st.success("Accesso riuscito")
-                    st.rerun()
-
-                else:
-                    st.session_state.tentativi += 1
-                    st.error("Credenziali errate")
-
-                    if st.session_state.tentativi >= 3:
-                        st.session_state.blocco_fino = time.time() + 30
-                        st.warning("Bloccato per 30 secondi")
-
-            except Exception as e:
-                st.error("Errore connessione database")
+            if u in UTENTI and UTENTI[u]["password"] == p:
+                st.session_state.logged_in = True
+                st.session_state.utente = u
+                st.session_state.ruolo = UTENTI[u]["ruolo"]
+                st.rerun()
+            else:
+                st.error("Credenziali errate")
 
     st.stop()
 
-# =========================
-# DATI UTENTE
-# =========================
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
-squadra = st.session_state.squadra
 
 # =========================
 # HEADER
@@ -209,14 +152,13 @@ colA, colB = st.columns([6,2])
 
 with colA:
     st.markdown(f"""
-    <div style='margin-top:20px; font-size:22px; font-weight:bold;'>
-    👤 {utente} ({ruolo}) - Squadra {squadra}
+    <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
+    👤 {utente} ({ruolo})
     </div>
     """, unsafe_allow_html=True)
 
 with colB:
-    st.markdown("<br><br>", unsafe_allow_html=True)
-
+    st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
     if st.button("🔓 Disconnetti"):
         st.session_state.clear()
         st.rerun()
