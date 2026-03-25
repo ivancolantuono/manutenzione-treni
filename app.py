@@ -218,29 +218,23 @@ elif menu == "🚄 Manutenzione":
     # =========================
     # SESSION STATE
     # =========================
-    if "treno_input" not in st.session_state:
-        st.session_state.treno_input = ""
+    if "treno" not in st.session_state:
+        st.session_state.treno = ""
 
-    if "odl_input" not in st.session_state:
-        st.session_state.odl_input = ""
+    if "odl" not in st.session_state:
+        st.session_state.odl = ""
 
-    if "mostra" not in st.session_state:
-        st.session_state.mostra = False
+    if "scadenza" not in st.session_state:
+        st.session_state.scadenza = None
 
-    # =========================
-    # REFRESH
-    # =========================
-    if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=6000, key="refresh_capo")
-    else:
-        st_autorefresh(interval=6000, key="refresh_operatore")
+    if "data" not in st.session_state:
+        st.session_state.data = date.today()
 
     # =========================
     # DATI
     # =========================
     df_operatori = pd.read_excel("operatori.xlsx")
     df_operatori.columns = df_operatori.columns.str.strip()
-
     operatori = df_operatori["Nominativo"].dropna().tolist()
 
     # =========================
@@ -251,50 +245,46 @@ elif menu == "🚄 Manutenzione":
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.text_input("Treno", key="treno_input")
+            st.session_state.treno = st.text_input("Treno", value=st.session_state.treno)
 
         with col2:
-            st.text_input("ODL Padre", key="odl_input")
+            st.session_state.odl = st.text_input("ODL Padre", value=st.session_state.odl)
 
         with col3:
-            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique())
+            st.session_state.scadenza = st.selectbox(
+                "Scadenza",
+                df["Scadenza"].unique(),
+                index=0 if st.session_state.scadenza is None else list(df["Scadenza"].unique()).index(st.session_state.scadenza)
+            )
 
-        data_giorno = st.date_input("Data", value=date.today())
+        st.session_state.data = st.date_input("Data", value=st.session_state.data)
 
-        if st.button("Genera"):
+        colA, colB = st.columns(2)
 
-            if not st.session_state.treno_input or not st.session_state.odl_input:
-                st.error("⚠️ Inserisci Treno e ODL")
+        if colA.button("Genera"):
+            if not st.session_state.treno or not st.session_state.odl:
+                st.error("Inserisci Treno e ODL")
             else:
                 st.session_state.mostra = True
-                st.session_state.treno = st.session_state.treno_input
-                st.session_state.odl = st.session_state.odl_input
-                st.session_state.scadenza = scadenza
-                st.session_state.data = data_giorno
 
-        if st.session_state.mostra:
+        if colB.button("🔄 Aggiorna"):
+            st.rerun()
 
-            # 🔥 sempre dati aggiornati
+        if st.session_state.get("mostra"):
+
             rows = supabase.table("interventi").select("*").execute().data
-
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
 
             for i, r in risultati.iterrows():
 
-                treno = st.session_state.treno
-                odl = st.session_state.odl
-                data_giorno = st.session_state.data
-
-                chiave = f"{r['Scheda']}{r['Intervento']}{treno}{odl}{data_giorno}"
+                chiave = f"{r['Scheda']}{r['Intervento']}{st.session_state.treno}{st.session_state.odl}{st.session_state.data}"
 
                 rec = next((x for x in rows if x["chiave"] == chiave), None)
 
-                if not rec:
-                    colore = "🔴"
-                    tecnici = []
-                else:
-                    colore = "🟡" if rec["stato"] == "APERTO" else "🟢"
+                colore = "🔴" if not rec else ("🟡" if rec["stato"] == "APERTO" else "🟢")
 
+                tecnici = []
+                if rec:
                     tecnici = rec.get("tecnico", [])
                     if isinstance(tecnici, str):
                         try:
@@ -309,29 +299,22 @@ elif menu == "🚄 Manutenzione":
                     if r.get("Link"):
                         st.markdown(f"[📄 Scheda tecnica]({r['Link']})")
 
-                    note = rec.get("note", "") if rec else ""
+                    note = rec.get("note","") if rec else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
-                    tecnici_input = st.multiselect(
-                        "Tecnici",
-                        operatori,
-                        default=tecnici,
-                        key=f"tec_{i}"
-                    )
+                    tecnici_input = st.multiselect("Tecnici", operatori, default=tecnici, key=f"tec_{i}")
 
-                    colA, colB, colC = st.columns(3)
+                    col1, col2 = st.columns(2)
 
-                    # =========================
                     # ASSEGNA
-                    # =========================
-                    if colA.button(f"Assegna_{i}"):
+                    if col1.button(f"Assegna_{i}"):
 
                         supabase.table("interventi").upsert({
                             "chiave": chiave,
-                            "treno": treno,
-                            "odl": odl,
+                            "treno": st.session_state.treno,
+                            "odl": st.session_state.odl,
                             "scadenza": st.session_state.scadenza,
-                            "data": str(data_giorno),
+                            "data": str(st.session_state.data),
                             "componente": r["Componente"],
                             "intervento": r["Intervento"],
                             "link": r.get("Link",""),
@@ -343,48 +326,12 @@ elif menu == "🚄 Manutenzione":
                         }).execute()
 
                         st.success("Assegnato")
-                        st.rerun()
 
-                    # =========================
-                    # WHATSAPP
-                    # =========================
-                    numeri = []
-
-                    for t in tecnici_input:
-                        row = df_operatori[df_operatori["Nominativo"] == t]
-                        if not row.empty and "Telefono" in df_operatori.columns:
-                            num = str(row["Telefono"].values[0]).replace(".0","").strip()
-                            if num.isdigit():
-                                numeri.append(num)
-
-                    if numeri:
-
-                        msg = f"""🚄 NUOVA ATTIVITÀ
-
-🚆 Treno: {treno}
-🧾 ODL: {odl}
-📅 Data: {data_giorno}
-⏱️ Scadenza: {st.session_state.scadenza}
-
-🔧 {r['Intervento']}
-🔧 {r['Componente']}
-"""
-
-                        if r.get("Link"):
-                            msg += f"\n📄 {r['Link']}"
-
-                        for num in numeri:
-                            url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
-                            st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
-
-                    # =========================
                     # CANCELLA
-                    # =========================
-                    if colC.button(f"Cancella_{i}"):
+                    if col2.button(f"Cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
                         st.warning("Cancellato")
-                        st.rerun()
 
     # =========================
     # 👷 OPERATORE
@@ -392,6 +339,9 @@ elif menu == "🚄 Manutenzione":
     else:
 
         st.subheader("📋 Attività assegnate")
+
+        if st.button("🔄 Aggiorna"):
+            st.rerun()
 
         rows = supabase.table("interventi").select("*").execute().data
 
@@ -422,28 +372,19 @@ elif menu == "🚄 Manutenzione":
             with st.expander(f"🟡 {record.get('componente','')}"):
 
                 st.write(record.get("intervento",""))
-                st.write(f"🚆 Treno: {record.get('treno','')}")
-                st.write(f"🧾 ODL: {record.get('odl','')}")
-                st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
-                st.write(f"👷 Caposquadra: {record.get('caposquadra','')}")
+                st.write(f"🚆 {record.get('treno','')} | 🧾 {record.get('odl','')}")
+                st.write(f"👷 {record.get('caposquadra','')}")
 
                 if record.get("link"):
                     st.markdown(f"[📄 Scheda tecnica]({record.get('link')})")
 
                 st.write(f"🕒 Inizio: {record.get('inizio','')}")
-                st.write(f"📝 Note precedenti:\n{record.get('note','')}")
+                st.write(f"📝 Note:\n{record.get('note','')}")
 
                 note_input = st.text_area("Aggiorna Note", key=f"note_op_{i}")
                 fine_input = st.time_input("Fine", key=f"fine_{i}")
 
                 if st.button(f"Chiudi_{i}"):
-
-                    try:
-                        t1 = datetime.strptime(record.get("inizio",""), "%H:%M")
-                        t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
-                        durata = str(t2 - t1)
-                    except:
-                        durata = ""
 
                     vecchie_note = record.get("note","")
                     nuove_note = f"{vecchie_note}\n---\n{utente}: {note_input}"
@@ -451,15 +392,10 @@ elif menu == "🚄 Manutenzione":
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
-                        "durata": durata,
                         "note": nuove_note
                     }).eq("chiave", record["chiave"]).execute()
 
-                    st.success("Intervento chiuso")
-
-                    # 🔥 aggiorna davvero
-                    st.cache_data.clear()
-                    st.rerun()
+                    st.success("Chiuso")
 # =========================
 # MAGAZZINO
 # =========================
