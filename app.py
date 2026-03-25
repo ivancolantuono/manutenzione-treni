@@ -460,7 +460,7 @@ elif menu == "🚄 Manutenzione":
                     }).eq("chiave", record["chiave"]).execute()
 
                     st.success("Chiuso")
-                    st.rerun(
+                    st.rerun()
 # =========================
 # MAGAZZINO
 # =========================
