@@ -319,6 +319,7 @@ elif menu == "🚄 Manutenzione":
                             "intervento": r["Intervento"],
                             "link": r.get("Link",""),
                             "tecnico": tecnici_input,
+                            "caposquadra": utente,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
                             "note": note_input
@@ -347,9 +348,9 @@ elif menu == "🚄 Manutenzione":
 🧾 ODL: {odl}
 📅 Data: {data_giorno}
 ⏱️ Scadenza: {scadenza}
-
+👷 Caposquadra: {caposquadra}
 🔧 {r['Intervento']}
-📦 {r['Componente']}
+🔧 {r['Componente']}
 """
 
                         if r.get("Link"):
@@ -407,6 +408,7 @@ elif menu == "🚄 Manutenzione":
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
+                st.write(f"👷‍♂️ Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
 
                 if record.get("link"):
                     st.markdown(f"[📄 Scheda tecnica]({record.get('link')})")
