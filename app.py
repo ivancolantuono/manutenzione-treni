@@ -245,9 +245,9 @@ elif menu == "🚄 Manutenzione":
     # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=7000, key="refresh_capo")
+        st_autorefresh(interval=10000, key="refresh_capo")
     else:
-        st_autorefresh(interval=7000, key="refresh_operatore")
+        st_autorefresh(interval=10000, key="refresh_operatore")
 
     # =========================
     # DATI
