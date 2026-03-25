@@ -216,7 +216,7 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     # =========================
-    # SESSION STATE INPUT
+    # SESSION STATE
     # =========================
     if "treno_input" not in st.session_state:
         st.session_state.treno_input = ""
@@ -224,19 +224,23 @@ elif menu == "🚄 Manutenzione":
     if "odl_input" not in st.session_state:
         st.session_state.odl_input = ""
 
+    if "mostra" not in st.session_state:
+        st.session_state.mostra = False
+
     # =========================
     # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=5000, key="refresh_capo")
+        st_autorefresh(interval=6000, key="refresh_capo")
     else:
-        st_autorefresh(interval=5000, key="refresh_operatore")
+        st_autorefresh(interval=6000, key="refresh_operatore")
 
     # =========================
     # DATI
     # =========================
     df_operatori = pd.read_excel("operatori.xlsx")
     df_operatori.columns = df_operatori.columns.str.strip()
+
     operatori = df_operatori["Nominativo"].dropna().tolist()
 
     # =========================
@@ -268,9 +272,9 @@ elif menu == "🚄 Manutenzione":
                 st.session_state.scadenza = scadenza
                 st.session_state.data = data_giorno
 
-        if st.session_state.get("mostra"):
+        if st.session_state.mostra:
 
-            # 🔥 ricarica dati sempre aggiornati
+            # 🔥 sempre dati aggiornati
             rows = supabase.table("interventi").select("*").execute().data
 
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
@@ -305,7 +309,7 @@ elif menu == "🚄 Manutenzione":
                     if r.get("Link"):
                         st.markdown(f"[📄 Scheda tecnica]({r['Link']})")
 
-                    note = rec.get("note","") if rec else ""
+                    note = rec.get("note", "") if rec else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
                     tecnici_input = st.multiselect(
@@ -441,7 +445,8 @@ elif menu == "🚄 Manutenzione":
                     except:
                         durata = ""
 
-                    nuove_note = f"{record.get('note','')}\n---\n{utente}: {note_input}"
+                    vecchie_note = record.get("note","")
+                    nuove_note = f"{vecchie_note}\n---\n{utente}: {note_input}"
 
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
@@ -451,6 +456,9 @@ elif menu == "🚄 Manutenzione":
                     }).eq("chiave", record["chiave"]).execute()
 
                     st.success("Intervento chiuso")
+
+                    # 🔥 aggiorna davvero
+                    st.cache_data.clear()
                     st.rerun()
 # =========================
 # MAGAZZINO
