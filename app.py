@@ -222,7 +222,6 @@ elif menu == "🚄 Manutenzione":
 
     import ast
     import urllib.parse
-    import time
 
     # =========================
     # SESSION STATE
@@ -242,20 +241,20 @@ elif menu == "🚄 Manutenzione":
     if "mostra" not in st.session_state:
         st.session_state.mostra = False
 
-    if "last_update" not in st.session_state:
-        st.session_state.last_update = 0
-
     # =========================
     # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=4000, key="refresh_capo")
+        st_autorefresh(interval=7000, key="refresh_capo")
     else:
-        st_autorefresh(interval=4000, key="refresh_operatore")
+        st_autorefresh(interval=7000, key="refresh_operatore")
 
     # =========================
-    # DATI BASE
+    # DATI
     # =========================
+    res = supabase.table("interventi").select("*").execute()
+    rows = res.data if res.data else []
+
     df_operatori = pd.read_excel("operatori.xlsx")
     df_operatori.columns = df_operatori.columns.str.strip()
 
@@ -291,17 +290,13 @@ elif menu == "🚄 Manutenzione":
         st.session_state.data = st.date_input("Data", value=st.session_state.data)
 
         if st.button("Genera"):
+
             if not st.session_state.treno or not st.session_state.odl:
                 st.error("⚠️ Inserisci Treno e ODL")
             else:
                 st.session_state.mostra = True
 
         if st.session_state.mostra:
-
-            # 🔥 QUERY SEMPRE AGGIORNATA (REALTIME)
-            _ = st.session_state.last_update
-            res = supabase.table("interventi").select("*").execute()
-            rows = res.data if res.data else []
 
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
 
@@ -332,13 +327,14 @@ elif menu == "🚄 Manutenzione":
 
                     st.write(r["Intervento"])
 
-                    # LINK MULTIPLI
+                    # 🔥 LINK MULTIPLI
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
 
                     for idx, link in enumerate(links):
-                        if link.strip():
-                            st.markdown(f"[📄 Scheda {idx+1}]({link.strip()})")
+                        link = link.strip()
+                        if link:
+                            st.markdown(f"[📄 Scheda {idx+1}]({link})")
 
                     note = rec.get("note","") if rec else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
@@ -371,12 +367,12 @@ elif menu == "🚄 Manutenzione":
                             "note": str(note_input)
                         }).execute()
 
-                        st.session_state.last_update = time.time()
                         st.success("Assegnato")
                         st.rerun()
 
                     # WHATSAPP
                     numeri = []
+
                     for t in tecnici_input:
                         row = df_operatori[df_operatori["Nominativo"] == t]
                         if not row.empty and "Telefono" in df_operatori.columns:
@@ -385,6 +381,7 @@ elif menu == "🚄 Manutenzione":
                                 numeri.append(num)
 
                     if numeri:
+
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
 🚆 Treno: {treno}
@@ -395,18 +392,19 @@ elif menu == "🚄 Manutenzione":
 🔧 {r['Intervento']}
 🔧 {r['Componente']}
 """
+
                         for link in links:
                             if link.strip():
                                 msg += f"\n📄 {link.strip()}"
 
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
-                            st.markdown(f"[📲 WhatsApp {num}]({url})")
+                            st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
 
                     # CANCELLA
                     if colC.button(f"Cancella_{i}"):
+
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
-                        st.session_state.last_update = time.time()
                         st.warning("Cancellato")
                         st.rerun()
 
@@ -416,11 +414,6 @@ elif menu == "🚄 Manutenzione":
     else:
 
         st.subheader("📋 Attività assegnate")
-
-        # 🔥 QUERY SEMPRE AGGIORNATA
-        _ = st.session_state.last_update
-        res = supabase.table("interventi").select("*").execute()
-        rows = res.data if res.data else []
 
         risultati = []
 
@@ -444,18 +437,21 @@ elif menu == "🚄 Manutenzione":
             st.info("Nessuna attività assegnata")
             st.stop()
 
-        for record in risultati:
+        for i, record in enumerate(risultati):
 
             with st.expander(f"🟡 {record.get('componente','')}"):
 
                 st.write(record.get("intervento",""))
+
+                # INFO COMPLETE
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
                 st.write(f"📅 Data: {record.get('data','')}")
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
-                st.write(f"👷 Caposquadra: {record.get('caposquadra','')}")
+                st.write(f"👷 Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
                 st.write(f"🕒 Inizio: {record.get('inizio','')}")
 
+                # LINK MULTIPLI
                 link_raw = record.get("link", "")
                 links = str(link_raw).split("|") if link_raw else []
 
@@ -463,12 +459,15 @@ elif menu == "🚄 Manutenzione":
                     if link.strip():
                         st.markdown(f"[📄 Scheda {idx+1}]({link.strip()})")
 
-                st.write(f"📝 Note:\n{record.get('note','')}")
+                # STORICO NOTE
+                st.write(f"📝 Storico:\n{record.get('note','')}")
 
+                # INPUT
                 note_input = st.text_area("Nota", key=f"note_{record['chiave']}")
                 fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
 
-                if st.button(f"Chiudi_{record['chiave']}"):
+                # CHIUSURA
+                if st.button(f"Chiudi_{i}"):
 
                     note_vecchie = record.get("note") or ""
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
@@ -479,7 +478,6 @@ elif menu == "🚄 Manutenzione":
                         "note": nuove_note
                     }).eq("chiave", record["chiave"]).execute()
 
-                    st.session_state.last_update = time.time()
                     st.success("Chiuso")
                     st.rerun()
 # =========================
