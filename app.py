@@ -95,26 +95,7 @@ key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
 # =========================
-# UTENTI
-# =========================
-
-UTENTI = {
-    "Massaro": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Morello": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Cacace": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Dentice": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Basco": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
-    "Santorelli": {"password": "1111", "ruolo": "OPERATORE"},
-    "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
-}
-
-NUMERI = {
-    "Colantuono": "393477618059"
-}
-
-# =========================
-# LOGIN
+# LOGIN (SUPABASE)
 # =========================
 
 if "logged_in" not in st.session_state:
@@ -132,19 +113,42 @@ if not st.session_state.logged_in:
         p = st.text_input("Password", type="password")
 
         if st.button("Accedi"):
-            if u in UTENTI and UTENTI[u]["password"] == p:
-                st.session_state.logged_in = True
-                st.session_state.utente = u
-                st.session_state.ruolo = UTENTI[u]["ruolo"]
-                st.rerun()
+
+            if not u or not p:
+                st.warning("Inserisci utente e password")
+
             else:
-                st.error("Credenziali errate")
+                try:
+                    res = supabase.table("utenti") \
+                        .select("*") \
+                        .ilike("nominativo", u) \
+                        .eq("password", p) \
+                        .execute()
+
+                    if res.data:
+
+                        user_db = res.data[0]
+
+                        st.session_state.logged_in = True
+                        st.session_state.utente = user_db["nominativo"]
+                        st.session_state.ruolo = user_db["ruolo"]
+                        st.session_state.squadra = user_db.get("squadra", "")
+                        st.session_state.telefono = user_db.get("telefono", "")
+
+                        st.success("Accesso effettuato")
+                        st.rerun()
+
+                    else:
+                        st.error("Credenziali errate")
+
+                except Exception as e:
+                    st.error("Errore connessione database")
+                    st.write(e)
 
     st.stop()
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
-
 # =========================
 # HEADER
 # =========================
