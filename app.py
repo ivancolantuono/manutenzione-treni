@@ -251,7 +251,7 @@ elif menu == "🚄 Manutenzione":
     df_operatori = pd.read_excel("operatori.xlsx")
     df_operatori.columns = df_operatori.columns.str.strip()
 
-    df.columns = df.columns.str.strip()  # 🔥 IMPORTANTE
+    df.columns = df.columns.str.strip()
 
     operatori = df_operatori["Nominativo"].dropna().tolist()
 
@@ -320,17 +320,14 @@ elif menu == "🚄 Manutenzione":
 
                     st.write(r["Intervento"])
 
-                    # =========================
-                    # LINK DINAMICI (FUNZIONA SEMPRE)
-                    # =========================
-                    link1 = r.get("Link") or r.get("link")
-                    link2 = r.get("Link2") or r.get("Link 2") or r.get("link2")
+                    # 🔥 LINK MULTIPLI (Excel con |)
+                    link_raw = r.get("Link", "")
+                    links = str(link_raw).split("|") if link_raw else []
 
-                    if link1:
-                        st.markdown(f"[📄 Scheda 1]({link1})")
-
-                    if link2:
-                        st.markdown(f"[📄 Scheda 2]({link2})")
+                    for idx, link in enumerate(links):
+                        link = link.strip()
+                        if link:
+                            st.markdown(f"[📄 Scheda {idx+1}]({link})")
 
                     note = rec.get("note","") if rec else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
@@ -345,32 +342,31 @@ elif menu == "🚄 Manutenzione":
                     colA, colB, colC = st.columns(3)
 
                     # =========================
-                    # ASSEGNA (FIX BUG)
+                    # ASSEGNA
                     # =========================
                     if colA.button(f"Assegna_{i}"):
 
                         supabase.table("interventi").upsert({
-                            "chiave": chiave,
-                            "treno": treno,
-                            "odl": odl,
-                            "scadenza": st.session_state.scadenza,
+                            "chiave": str(chiave),
+                            "treno": str(treno),
+                            "odl": str(odl),
+                            "scadenza": str(st.session_state.scadenza),
                             "data": str(data_giorno),
-                            "componente": r["Componente"],
-                            "intervento": r["Intervento"],
-                            "link": link1,
-                            "link2": link2,
-                            "tecnico": str(tecnici_input),  # 🔥 FIX
-                            "caposquadra": utente,
+                            "componente": str(r["Componente"]),
+                            "intervento": str(r["Intervento"]),
+                            "link": str(link_raw),
+                            "tecnico": str(tecnici_input),
+                            "caposquadra": str(utente),
                             "stato": "APERTO",
-                            "inizio": ora_italia(),
-                            "note": note_input
+                            "inizio": str(ora_italia()),
+                            "note": str(note_input)
                         }).execute()
 
                         st.success("Assegnato")
                         st.rerun()
 
                     # =========================
-                    # WHATSAPP (TUO + FIX)
+                    # WHATSAPP
                     # =========================
                     numeri = []
 
@@ -394,11 +390,10 @@ elif menu == "🚄 Manutenzione":
 🔧 {r['Componente']}
 """
 
-                        if link1:
-                            msg += f"\n📄 {link1}"
-
-                        if link2:
-                            msg += f"\n📄 {link2}"
+                        for link in links:
+                            link = link.strip()
+                            if link:
+                                msg += f"\n📄 {link}"
 
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
@@ -449,15 +444,22 @@ elif menu == "🚄 Manutenzione":
                 st.write(record.get("intervento",""))
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
-                st.write(f"👷 {record.get('caposquadra','')}")
+                st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
+                st.write(f"👷 Caposquadra: {record.get('caposquadra','')}")
 
-                if record.get("link"):
-                    st.markdown(f"[📄 Scheda 1]({record.get('link')})")
+                # 🔥 LINK MULTIPLI
+                link_raw = record.get("link", "")
+                links = str(link_raw).split("|") if link_raw else []
 
-                if record.get("link2"):
-                    st.markdown(f"[📄 Scheda 2]({record.get('link2')})")
+                for idx, link in enumerate(links):
+                    link = link.strip()
+                    if link:
+                        st.markdown(f"[📄 Scheda {idx+1}]({link})")
 
-                note_input = st.text_area("Note", key=f"note_op_{i}")
+                st.write(f"🕒 Inizio: {record.get('inizio','')}")
+                st.write(f"📝 Note:\n{record.get('note','')}")
+
+                note_input = st.text_area("Aggiungi nota", key=f"note_op_{i}")
                 fine_input = st.time_input("Fine", key=f"fine_{i}")
 
                 if st.button(f"Chiudi_{i}"):
@@ -467,10 +469,10 @@ elif menu == "🚄 Manutenzione":
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
-                        "note": nuove_note
+                        "note": str(nuove_note)
                     }).eq("chiave", record["chiave"]).execute()
 
-                    st.success("Chiuso")
+                    st.success("Attività chiusa")
                     st.rerun()
 # =========================
 # MAGAZZINO
