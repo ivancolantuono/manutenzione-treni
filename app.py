@@ -224,7 +224,7 @@ elif menu == "🚄 Manutenzione":
     import urllib.parse
 
     # =========================
-    # SESSION STATE
+    # SESSION STATE (ANTI RESET)
     # =========================
     if "treno" not in st.session_state:
         st.session_state.treno = ""
@@ -245,16 +245,13 @@ elif menu == "🚄 Manutenzione":
     # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=8000, key="refresh_capo")
+        st_autorefresh(interval=5000, key="refresh_capo")
     else:
-        st_autorefresh(interval=8000, key="refresh_operatore")
+        st_autorefresh(interval=5000, key="refresh_operatore")
 
     # =========================
-    # DATI
+    # DATI BASE
     # =========================
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
-
     df_operatori = pd.read_excel("operatori.xlsx")
     df_operatori.columns = df_operatori.columns.str.strip()
 
@@ -296,7 +293,13 @@ elif menu == "🚄 Manutenzione":
             else:
                 st.session_state.mostra = True
 
+        # =========================
+        # 🔥 DATI REALTIME
+        # =========================
         if st.session_state.mostra:
+
+            res = supabase.table("interventi").select("*").execute()
+            rows = res.data if res.data else []
 
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
 
@@ -327,15 +330,15 @@ elif menu == "🚄 Manutenzione":
 
                     st.write(r["Intervento"])
 
-                    # 🔥 LINK MULTIPLI
+                    # LINK MULTIPLI
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
 
                     for idx, link in enumerate(links):
-                        link = link.strip()
-                        if link:
-                            st.markdown(f"[📄 Scheda {idx+1}]({link})")
+                        if link.strip():
+                            st.markdown(f"[📄 Scheda {idx+1}]({link.strip()})")
 
+                    # NOTE
                     note = rec.get("note","") if rec else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
@@ -415,6 +418,10 @@ elif menu == "🚄 Manutenzione":
 
         st.subheader("📋 Attività assegnate")
 
+        # 🔥 DATI REALTIME
+        res = supabase.table("interventi").select("*").execute()
+        rows = res.data if res.data else []
+
         risultati = []
 
         for r in rows:
@@ -437,18 +444,16 @@ elif menu == "🚄 Manutenzione":
             st.info("Nessuna attività assegnata")
             st.stop()
 
-        for i, record in enumerate(risultati):
+        for record in risultati:
 
             with st.expander(f"🟡 {record.get('componente','')}"):
 
                 st.write(record.get("intervento",""))
-
-                # INFO COMPLETE
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
                 st.write(f"📅 Data: {record.get('data','')}")
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
-                st.write(f"👷 Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
+                st.write(f"👷 Caposquadra: {record.get('caposquadra','')}")
                 st.write(f"🕒 Inizio: {record.get('inizio','')}")
 
                 # LINK MULTIPLI
@@ -459,15 +464,12 @@ elif menu == "🚄 Manutenzione":
                     if link.strip():
                         st.markdown(f"[📄 Scheda {idx+1}]({link.strip()})")
 
-                # STORICO NOTE
                 st.write(f"📝 Storico:\n{record.get('note','')}")
 
-                # INPUT
                 note_input = st.text_area("Nota", key=f"note_{record['chiave']}")
                 fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
 
-                # CHIUSURA
-                if st.button(f"Chiudi_{i}"):
+                if st.button(f"Chiudi_{record['chiave']}"):
 
                     note_vecchie = record.get("note") or ""
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
