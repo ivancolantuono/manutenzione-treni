@@ -253,8 +253,7 @@ elif menu == "🚄 Manutenzione":
         if not val:
             return []
         val = str(val).strip()
-        links = val.split("|")
-        return [l.strip() for l in links if l.strip()]
+        return [l.strip() for l in val.split("|") if l.strip()]
 
     # =========================
     # 👨‍🔧 CAPOSQUADRA
@@ -296,7 +295,8 @@ elif menu == "🚄 Manutenzione":
 
             for i, r in risultati.iterrows():
 
-                chiave = f"{treno}_{odl}_{r['Intervento']}_{data_giorno}"
+                # 🔥 CHIAVE UNIVOCA (FIX)
+                chiave = f"{treno}_{odl}_{r['Componente']}_{r['Intervento']}_{data_giorno}_{i}"
 
                 rec = next((x for x in rows if str(x.get("chiave")) == str(chiave)), None)
 
@@ -310,7 +310,7 @@ elif menu == "🚄 Manutenzione":
                     st.write(f"🔧 {r['Intervento']}")
 
                     # =========================
-                    # MULTI LINK
+                    # LINK MULTIPLI
                     # =========================
                     links = get_links(r.get("Link"))
 
@@ -356,7 +356,7 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # =========================
-                    # WHATSAPP MULTI LINK
+                    # WHATSAPP
                     # =========================
                     numeri = []
 
@@ -429,45 +429,7 @@ elif menu == "🚄 Manutenzione":
 
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
-                st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
-                st.write(f"👨‍✈️ Caposquadra: {record.get('caposquadra','')}")
-
-                # =========================
-                # MULTI LINK OPERATORE
-                # =========================
-                links = get_links(record.get("link"))
-
-                if links:
-                    st.write("📄 Schede:")
-                    for l in links:
-                        st.markdown(f"- [Apri scheda]({l})")
-
-                st.write(f"🕒 Inizio: {record.get('inizio','')}")
-                st.write(f"📝 Storico:\n{record.get('note','')}")
-
-                note_input = st.text_area("Note", key=f"note_op_{i}")
-                fine_input = st.time_input("Fine", key=f"fine_op_{i}")
-
-                if st.button("Chiudi attività", key=f"close_{i}"):
-
-                    try:
-                        t1 = datetime.strptime(record.get("inizio",""), "%H:%M")
-                        t2 = datetime.strptime(str(fine_input), "%H:%M:%S")
-                        durata = str(t2 - t1)
-                    except:
-                        durata = ""
-
-                    nuove_note = f"{record.get('note','')}\n---\n{utente}: {note_input}"
-
-                    supabase.table("interventi").update({
-                        "stato": "CHIUSO",
-                        "fine": str(fine_input),
-                        "durata": durata,
-                        "note": nuove_note
-                    }).eq("chiave", record["chiave"]).execute()
-
-                    st.success("Chiuso")
-                    st.rerun()
+                st.write(f"⏱️ Scadenza: {record.get
 # =========================
 # MAGAZZINO
 # =========================
