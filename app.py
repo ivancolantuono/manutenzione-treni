@@ -209,7 +209,8 @@ if menu == "📊 Storico":
 # =========================
 # MANUTENZIONE
 # =========================
-elif menu == "🚄 Manutenzione":
+[18:42, 25/03/2026] Ivan Colantuono:         st_autorefresh(interval=8…
+[18:48, 25/03/2026] Ivan Colantuono: elif menu == "🚄 Manutenzione":
 
     st.title("🚄 Gestione Manutenzione")
 
@@ -217,7 +218,7 @@ elif menu == "🚄 Manutenzione":
     import urllib.parse
 
     # =========================
-    # SESSION STATE (NON PERDI DATI)
+    # SESSION STATE
     # =========================
     if "treno" not in st.session_state:
         st.session_state.treno = ""
@@ -235,7 +236,7 @@ elif menu == "🚄 Manutenzione":
         st.session_state.mostra = False
 
     # =========================
-    # REFRESH LEGGERO
+    # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
         st_autorefresh(interval=8000, key="refresh_capo")
@@ -250,6 +251,9 @@ elif menu == "🚄 Manutenzione":
 
     df_operatori = pd.read_excel("operatori.xlsx")
     df_operatori.columns = df_operatori.columns.str.strip()
+
+    df.columns = df.columns.str.strip()  # 🔥 IMPORTANTE
+
     operatori = df_operatori["Nominativo"].dropna().tolist()
 
     # =========================
@@ -266,9 +270,18 @@ elif menu == "🚄 Manutenzione":
             st.session_state.odl = st.text_input("ODL Padre", value=st.session_state.odl)
 
         with col3:
-            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique())
+            scelte = list(df["Scadenza"].unique())
 
-        data_giorno = st.date_input("Data", value=st.session_state.data)
+            if st.session_state.scadenza not in scelte:
+                st.session_state.scadenza = scelte[0]
+
+            st.session_state.scadenza = st.selectbox(
+                "Scadenza",
+                scelte,
+                index=scelte.index(st.session_state.scadenza)
+            )
+
+        st.session_state.data = st.date_input("Data", value=st.session_state.data)
 
         if st.button("Genera"):
 
@@ -276,8 +289,6 @@ elif menu == "🚄 Manutenzione":
                 st.error("⚠️ Inserisci Treno e ODL")
             else:
                 st.session_state.mostra = True
-                st.session_state.scadenza = scadenza
-                st.session_state.data = data_giorno
 
         if st.session_state.mostra:
 
@@ -311,13 +322,16 @@ elif menu == "🚄 Manutenzione":
                     st.write(r["Intervento"])
 
                     # =========================
-                    # DOPPIO LINK
+                    # LINK DINAMICI (FUNZIONA SEMPRE)
                     # =========================
-                    if r.get("Link"):
-                        st.markdown(f"[📄 Scheda 1]({r['Link']})")
+                    link1 = r.get("Link") or r.get("link")
+                    link2 = r.get("Link2") or r.get("Link 2") or r.get("link2")
 
-                    if r.get("Link2"):
-                        st.markdown(f"[📄 Scheda 2]({r['Link2']})")
+                    if link1:
+                        st.markdown(f"[📄 Scheda 1]({link1})")
+
+                    if link2:
+                        st.markdown(f"[📄 Scheda 2]({link2})")
 
                     note = rec.get("note","") if rec else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
@@ -332,7 +346,7 @@ elif menu == "🚄 Manutenzione":
                     colA, colB, colC = st.columns(3)
 
                     # =========================
-                    # ASSEGNA
+                    # ASSEGNA (FIX BUG)
                     # =========================
                     if colA.button(f"Assegna_{i}"):
 
@@ -340,13 +354,13 @@ elif menu == "🚄 Manutenzione":
                             "chiave": chiave,
                             "treno": treno,
                             "odl": odl,
-                            "scadenza": scadenza,
+                            "scadenza": st.session_state.scadenza,
                             "data": str(data_giorno),
                             "componente": r["Componente"],
                             "intervento": r["Intervento"],
-                            "link": r.get("Link",""),
-                            "link2": r.get("Link2",""),
-                            "tecnico": tecnici_input,
+                            "link": link1,
+                            "link2": link2,
+                            "tecnico": str(tecnici_input),  # 🔥 FIX
                             "caposquadra": utente,
                             "stato": "APERTO",
                             "inizio": ora_italia(),
@@ -357,7 +371,7 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # =========================
-                    # WHATSAPP (IDENTICO + LINK2)
+                    # WHATSAPP (TUO + FIX)
                     # =========================
                     numeri = []
 
@@ -375,17 +389,17 @@ elif menu == "🚄 Manutenzione":
 🚆 Treno: {treno}
 🧾 ODL: {odl}
 📅 Data: {data_giorno}
-⏱️ Scadenza: {scadenza}
+⏱️ Scadenza: {st.session_state.scadenza}
 
 🔧 {r['Intervento']}
 🔧 {r['Componente']}
 """
 
-                        if r.get("Link"):
-                            msg += f"\n📄 {r['Link']}"
+                        if link1:
+                            msg += f"\n📄 {link1}"
 
-                        if r.get("Link2"):
-                            msg += f"\n📄 {r['Link2']}"
+                        if link2:
+                            msg += f"\n📄 {link2}"
 
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
@@ -436,10 +450,8 @@ elif menu == "🚄 Manutenzione":
                 st.write(record.get("intervento",""))
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
-                st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
                 st.write(f"👷 {record.get('caposquadra','')}")
 
-                # DOPPIO LINK
                 if record.get("link"):
                     st.markdown(f"[📄 Scheda 1]({record.get('link')})")
 
