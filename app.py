@@ -214,9 +214,11 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     import ast
+    import urllib.parse
+    from datetime import datetime, date
 
     # =========================
-    # REFRESH SOLO VISIVO
+    # REFRESH
     # =========================
     if ruolo == "CAPOSQUADRA":
         st_autorefresh(interval=8000, key="refresh_capo")
@@ -235,6 +237,24 @@ elif menu == "🚄 Manutenzione":
     operatori = df_operatori["Nominativo"].dropna().tolist()
 
     # =========================
+    # FUNZIONI
+    # =========================
+    def fix_lista(val):
+        if isinstance(val, list):
+            return val
+        if isinstance(val, str):
+            try:
+                return ast.literal_eval(val)
+            except:
+                return [val]
+        return []
+
+    def get_links(val):
+        if not val:
+            return []
+        return [l.strip() for l in str(val).split("|") if l.strip()]
+
+    # =========================
     # 👨‍🔧 CAPOSQUADRA
     # =========================
     if ruolo == "CAPOSQUADRA":
@@ -242,17 +262,17 @@ elif menu == "🚄 Manutenzione":
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            treno = st.text_input("Treno")
+            treno = st.text_input("🚆 Treno")
 
         with col2:
-            odl = st.text_input("ODL Padre")
+            odl = st.text_input("🧾 ODL Padre")
 
         with col3:
-            scadenza = st.selectbox("Scadenza", df["Scadenza"].unique())
+            scadenza = st.selectbox("⏱️ Scadenza", df["Scadenza"].unique())
 
-        data_giorno = st.date_input("Data", value=date.today())
+        data_giorno = st.date_input("📅 Data", value=date.today())
 
-        if st.button("Genera"):
+        if st.button("🔍 Genera"):
 
             if not treno or not odl:
                 st.error("⚠️ Inserisci Treno e ODL")
@@ -265,32 +285,37 @@ elif menu == "🚄 Manutenzione":
 
         if st.session_state.get("mostra"):
 
-            risultati = df[df["Scadenza"] == st.session_state.scadenza]
+            treno = st.session_state.treno
+            odl = st.session_state.odl
+            scadenza = st.session_state.scadenza
+            data_giorno = st.session_state.data
+
+            risultati = df[df["Scadenza"] == scadenza]
 
             for i, r in risultati.iterrows():
 
-                chiave = f"{r['Scheda']}_{r['Intervento']}_{treno}_{odl}_{data_giorno}"
+                chiave = f"{treno}_{odl}_{r['Intervento']}_{data_giorno}"
 
-                rec = next((x for x in rows if x["chiave"] == chiave), None)
+                rec = next((x for x in rows if str(x.get("chiave")) == str(chiave)), None)
 
-                if not rec:
-                    colore = "🔴"
-                    tecnici = []
-                else:
-                    colore = "🟡" if rec["stato"] == "APERTO" else "🟢"
+                tecnici = fix_lista(rec.get("tecnico")) if rec else []
 
-                    tecnici = rec.get("tecnico", [])
-                    if isinstance(tecnici, str):
-                        try:
-                            tecnici = ast.literal_eval(tecnici)
-                        except:
-                            tecnici = [tecnici]
+                stato = rec.get("stato") if rec else None
+                colore = "🔴" if not rec else ("🟡" if stato == "APERTO" else "🟢")
 
                 with st.expander(f"{colore} {r['Componente']}"):
 
-                    st.write(r["Intervento"])
-                    if "Link" in r:
-                        st.markdown(f"[📄 Scheda tecnica]({r['Link']})")
+                    st.write(f"🔧 {r['Intervento']}")
+
+                    # =========================
+                    # LINK MULTIPLI
+                    # =========================
+                    links = get_links(r.get("Link"))
+
+                    if links:
+                        st.write("📄 Schede tecniche:")
+                        for l in links:
+                            st.markdown(f"- [Apri scheda]({l})")
 
                     note = rec.get("note","") if rec else ""
                     note_input = st.text_area("Note", value=note, key=f"note_{i}")
@@ -307,7 +332,7 @@ elif menu == "🚄 Manutenzione":
                     # =========================
                     # ASSEGNA
                     # =========================
-                    if colA.button(f"Assegna_{i}"):
+                    if colA.button("Assegna", key=f"ass_{i}"):
 
                         supabase.table("interventi").upsert({
                             "chiave": chiave,
@@ -350,20 +375,22 @@ elif menu == "🚄 Manutenzione":
 ⏱️ Scadenza: {scadenza}
 
 🔧 {r['Intervento']}
-🔧 {r['Componente']}
+📦 {r['Componente']}
 """
 
-                        if r.get("Link"):
-                            msg += f"\n📄 {r['Link']}"
+                        if links:
+                            msg += "\n📄 Schede:\n"
+                            for l in links:
+                                msg += f"{l}\n"
 
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
-                            st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
+                            colB.markdown(f"[📲 WhatsApp {num}]({url})")
 
                     # =========================
                     # CANCELLA
                     # =========================
-                    if colC.button(f"Cancella_{i}"):
+                    if colC.button("Cancella", key=f"del_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
                         st.warning("Cancellato")
@@ -383,13 +410,7 @@ elif menu == "🚄 Manutenzione":
             if r.get("stato") == "CHIUSO":
                 continue
 
-            tecnici = r.get("tecnico", [])
-
-            if isinstance(tecnici, str):
-                try:
-                    tecnici = ast.literal_eval(tecnici)
-                except:
-                    tecnici = [tecnici]
+            tecnici = fix_lista(r.get("tecnico"))
 
             if utente in tecnici:
                 risultati.append(r)
@@ -400,26 +421,29 @@ elif menu == "🚄 Manutenzione":
 
         for i, record in enumerate(risultati):
 
-            colore = "🟡"
-
-            with st.expander(f"{colore} {record.get('componente','')}"):
+            with st.expander(f"🟡 {record.get('componente','')}"):
 
                 st.write(record.get("intervento",""))
+
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
-                st.write(f"👷‍♂️ Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
+                st.write(f"👨‍✈️ Caposquadra: {record.get('caposquadra','')}")
 
-                if record.get("link"):
-                    st.markdown(f"[📄 Scheda tecnica]({record.get('link')})")
+                # LINK MULTIPLI
+                links = get_links(record.get("link"))
+                if links:
+                    st.write("📄 Schede:")
+                    for l in links:
+                        st.markdown(f"- [Apri scheda]({l})")
 
                 st.write(f"🕒 Inizio: {record.get('inizio','')}")
                 st.write(f"📝 Storico:\n{record.get('note','')}")
 
                 note_input = st.text_area("Note", key=f"note_op_{i}")
-                fine_input = st.time_input("Fine", key=f"fine_{i}")
+                fine_input = st.time_input("Fine", key=f"fine_op_{i}")
 
-                if st.button(f"Chiudi_{i}"):
+                if st.button("Chiudi attività", key=f"close_{i}"):
 
                     try:
                         t1 = datetime.strptime(record.get("inizio",""), "%H:%M")
@@ -428,7 +452,7 @@ elif menu == "🚄 Manutenzione":
                     except:
                         durata = ""
 
-                    nuove_note = f"{record.get('note','')}\n---\n{utente}: CHIUSO {note_input}"
+                    nuove_note = f"{record.get('note','')}\n---\n{utente}: {note_input}"
 
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
