@@ -15,69 +15,64 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
-/* SFONDO GENERALE */
+/* SFONDO */
 .stApp {
-    background-color: #808080;
+    background-color: #f2f4f7;
 }
 
-/* BOTTONI ROSSI */
+/* HEADER UTENTE */
+.user-box {
+    background-color: white;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+}
+
+/* CARD INTERVENTI */
+.card {
+    background-color: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
+}
+
+/* COLORI STATO */
+.aperto {
+    border-left: 6px solid #e10600;
+}
+
+.chiuso {
+    border-left: 6px solid #2ecc71;
+}
+
+/* BOTTONI */
 .stButton>button {
     background-color: #e10600;
-    color: black;
+    color: white;
     border-radius: 8px;
     font-weight: bold;
+    border: none;
 }
 
 /* INPUT */
-.stTextInput>div>div>input {
-    background-color: white;
-    border: 2px solid #ccc;
-    border-radius: 6px;
-}
-
-/* TEXT AREA (NOTE) */
-.stTextArea textarea {
+.stTextInput input, .stTextArea textarea, .stSelectbox div {
     background-color: white !important;
-    border: 2px solid #999 !important;
-    border-radius: 8px !important;
-    color: black !important;
-}
-
-/* LABEL NOTE */
-label {
-    font-weight: bold;
-    color: #333;
-}
-
-/* EXPANDER */
-.streamlit-expanderHeader {
-    font-weight: bold;
-}
-
-/* BOX INTERVENTO */
-.block-container {
-    padding-top: 2rem;
-}
-/* SELECTBOX */
-.stSelectbox div[data-baseweb="select"] {
-    background-color: white !important;
-    border: 2px solid #999 !important;
-    border-radius: 6px;
-}
-
-/* DATE INPUT */
-.stDateInput input {
-    background-color: white !important;
-    border: 2px solid #999 !important;
-    border-radius: 6px;
-    color: black !important;
+    border-radius: 6px !important;
 }
 
 /* LABEL */
 label {
-    color: #000 !important;
+    color: #333 !important;
     font-weight: bold;
 }
+
+/* EXPANDER */
+.streamlit-expanderHeader {
+    font-size: 16px;
+    font-weight: bold;
+}
+
 </style>
 """, unsafe_allow_html=True)
 # =========================
