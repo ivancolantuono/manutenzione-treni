@@ -444,7 +444,8 @@ elif menu == "🚄 Manutenzione":
                 st.write(record.get("intervento",""))
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
-                st.write(f"👷 Caposquadra: {record.get('caposquadra','')}")
+                st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
+                st.write(f"👷‍♂️ Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
 
                 # LINK MULTIPLI
                 link_raw = record.get("link", "")
