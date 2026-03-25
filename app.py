@@ -252,7 +252,9 @@ elif menu == "🚄 Manutenzione":
     def get_links(val):
         if not val:
             return []
-        return [l.strip() for l in str(val).split("|") if l.strip()]
+        val = str(val).strip()
+        links = val.split("|")
+        return [l.strip() for l in links if l.strip()]
 
     # =========================
     # 👨‍🔧 CAPOSQUADRA
@@ -308,7 +310,7 @@ elif menu == "🚄 Manutenzione":
                     st.write(f"🔧 {r['Intervento']}")
 
                     # =========================
-                    # LINK MULTIPLI
+                    # MULTI LINK
                     # =========================
                     links = get_links(r.get("Link"))
 
@@ -354,7 +356,7 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # =========================
-                    # WHATSAPP
+                    # WHATSAPP MULTI LINK
                     # =========================
                     numeri = []
 
@@ -430,8 +432,11 @@ elif menu == "🚄 Manutenzione":
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
                 st.write(f"👨‍✈️ Caposquadra: {record.get('caposquadra','')}")
 
-                # LINK MULTIPLI
+                # =========================
+                # MULTI LINK OPERATORE
+                # =========================
                 links = get_links(record.get("link"))
+
                 if links:
                     st.write("📄 Schede:")
                     for l in links:
