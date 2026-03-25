@@ -226,11 +226,8 @@ elif menu == "🚄 Manutenzione":
         st_autorefresh(interval=8000, key="refresh_operatore")
 
     # =========================
-    # DATI
+    # DATI BASE
     # =========================
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
-
     df_operatori = pd.read_excel("operatori.xlsx")
     df_operatori.columns = df_operatori.columns.str.strip()
 
@@ -252,8 +249,7 @@ elif menu == "🚄 Manutenzione":
     def get_links(val):
         if not val:
             return []
-        val = str(val).strip()
-        return [l.strip() for l in val.split("|") if l.strip()]
+        return [l.strip() for l in str(val).split("|") if l.strip()]
 
     # =========================
     # 👨‍🔧 CAPOSQUADRA
@@ -296,9 +292,11 @@ elif menu == "🚄 Manutenzione":
             for i, r in risultati.iterrows():
 
                 # 🔥 CHIAVE UNIVOCA
-                chiave = f"{treno}_{odl}_{r['Componente']}_{r['Intervento']}_{data_giorno}_{i}"
+                chiave = f"{treno}{odl}{r['Componente']}{r['Intervento']}{data_giorno}_{i}"
 
-                rec = next((x for x in rows if str(x.get("chiave")) == str(chiave)), None)
+                # 🔥 LETTURA LIVE DB (FIX NOTE)
+                res = supabase.table("interventi").select("*").eq("chiave", chiave).limit(1).execute()
+                rec = res.data[0] if res.data else None
 
                 tecnici = fix_lista(rec.get("tecnico")) if rec else []
 
@@ -320,7 +318,9 @@ elif menu == "🚄 Manutenzione":
                             st.markdown(f"- [Apri scheda]({l})")
 
                     note = rec.get("note","") if rec else ""
-                    note_input = st.text_area("Note", value=note, key=f"note_{i}")
+                    st.write(f"📝 Note aggiornate:\n{note}")
+
+                    note_input = st.text_area("Modifica note", value=note, key=f"note_{i}")
 
                     tecnici_input = st.multiselect(
                         "Tecnici",
@@ -405,6 +405,9 @@ elif menu == "🚄 Manutenzione":
 
         st.subheader("📋 Attività assegnate")
 
+        res = supabase.table("interventi").select("*").execute()
+        rows = res.data if res.data else []
+
         risultati = []
 
         for r in rows:
@@ -432,7 +435,6 @@ elif menu == "🚄 Manutenzione":
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
                 st.write(f"👨‍✈️ Caposquadra: {record.get('caposquadra','')}")
 
-                # LINK MULTIPLI
                 links = get_links(record.get("link"))
 
                 if links:
@@ -466,7 +468,6 @@ elif menu == "🚄 Manutenzione":
 
                     st.success("Chiuso")
                     st.rerun()
-
 # =========================
 # MAGAZZINO
 # =========================
