@@ -214,17 +214,11 @@ elif menu == "🚄 Manutenzione":
     st.title("🚄 Gestione Manutenzione")
 
     import ast
+    from datetime import datetime, date
+    import urllib.parse
 
     # =========================
-    # REFRESH
-    # =========================
-    if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=8000, key="refresh_capo")
-    else:
-        st_autorefresh(interval=8000, key="refresh_operatore")
-
-    # =========================
-    # DATI
+    # CARICA DATI
     # =========================
     res = supabase.table("interventi").select("*").execute()
     rows = res.data if res.data else []
@@ -235,9 +229,24 @@ elif menu == "🚄 Manutenzione":
     operatori = df_operatori["Nominativo"].dropna().tolist()
 
     # =========================
+    # FUNZIONE FIX TECNICI
+    # =========================
+    def fix_tecnici(val):
+        if isinstance(val, list):
+            return val
+        if isinstance(val, str):
+            try:
+                return ast.literal_eval(val)
+            except:
+                return [val]
+        return []
+
+    # =========================
     # 👨‍🔧 CAPOSQUADRA
     # =========================
     if ruolo == "CAPOSQUADRA":
+
+        st.subheader("📋 Nuova assegnazione")
 
         col1, col2, col3 = st.columns(3)
 
@@ -245,7 +254,7 @@ elif menu == "🚄 Manutenzione":
             treno = st.text_input("Treno")
 
         with col2:
-            odl = st.text_input("ODL Padre")
+            odl = st.text_input("ODL")
 
         with col3:
             scadenza = st.selectbox("Scadenza", df["Scadenza"].unique())
@@ -255,52 +264,47 @@ elif menu == "🚄 Manutenzione":
         if st.button("Genera"):
 
             if not treno or not odl:
-                st.error("⚠️ Inserisci Treno e ODL")
-            else:
-                st.session_state.mostra = True
-                st.session_state.treno = treno
-                st.session_state.odl = odl
-                st.session_state.scadenza = scadenza
-                st.session_state.data = data_giorno
+                st.error("Inserisci Treno e ODL")
+                st.stop()
 
-        if st.session_state.get("mostra"):
-
-            risultati = df[df["Scadenza"] == st.session_state.scadenza]
+            risultati = df[df["Scadenza"] == scadenza]
 
             for i, r in risultati.iterrows():
 
-                chiave = f"{r['Scheda']}{r['Intervento']}{treno}{odl}{data_giorno}"
+                # CHIAVE UNIVOCA STABILE
+                chiave = f"{treno}{odl}{r['Intervento']}_{data_giorno}"
 
-                rec = next((x for x in rows if x["chiave"] == chiave), None)
+                # CERCA RECORD
+                rec = None
+                for x in rows:
+                    if str(x.get("chiave")) == str(chiave):
+                        rec = x
+                        break
 
-                if not rec:
-                    colore = "🔴"
-                    tecnici = []
-                else:
-                    colore = "🟡" if rec["stato"] == "APERTO" else "🟢"
+                tecnici = fix_tecnici(rec.get("tecnico")) if rec else []
 
-                    tecnici = rec.get("tecnico", [])
-                    if isinstance(tecnici, str):
-                        try:
-                            tecnici = ast.literal_eval(tecnici)
-                        except:
-                            tecnici = [tecnici]
+                colore = "🔴"
+                if rec:
+                    colore = "🟡" if rec.get("stato") == "APERTO" else "🟢"
 
                 with st.expander(f"{colore} {r['Componente']}"):
 
                     st.write(r["Intervento"])
 
-                    if "Link" in r:
+                    if r.get("Link"):
                         st.markdown(f"[📄 Scheda tecnica]({r['Link']})")
-
-                    note = rec.get("note","") if rec else ""
-                    note_input = st.text_area("Note", value=note, key=f"note_{i}")
 
                     tecnici_input = st.multiselect(
                         "Tecnici",
                         operatori,
                         default=tecnici,
                         key=f"tec_{i}"
+                    )
+
+                    note_input = st.text_area(
+                        "Note",
+                        value=rec.get("note","") if rec else "",
+                        key=f"note_{i}"
                     )
 
                     colA, colB, colC = st.columns(3)
@@ -319,10 +323,10 @@ elif menu == "🚄 Manutenzione":
                             "componente": r["Componente"],
                             "intervento": r["Intervento"],
                             "link": r.get("Link",""),
-                            "tecnico": tecnici_input,
+                            "tecnico": list(tecnici_input),
                             "caposquadra": utente,
                             "stato": "APERTO",
-                            "inizio": ora_italia(),
+                            "inizio": datetime.now().strftime("%H:%M"),
                             "note": note_input
                         }).execute()
 
@@ -336,49 +340,43 @@ elif menu == "🚄 Manutenzione":
 
                     for t in tecnici_input:
                         row = df_operatori[df_operatori["Nominativo"] == t]
-                        if not row.empty and "Telefono" in df_operatori.columns:
+                        if not row.empty:
                             num = str(row["Telefono"].values[0]).replace(".0","").strip()
                             if num.isdigit():
                                 numeri.append(num)
 
                     if numeri:
-
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
 🚆 Treno: {treno}
 🧾 ODL: {odl}
-📅 Data: {data_giorno}
 ⏱️ Scadenza: {scadenza}
 
 🔧 {r['Intervento']}
 📦 {r['Componente']}
 """
 
-                        if r.get("Link"):
-                            msg += f"\n📄 {r['Link']}"
-
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
-                            st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
+                            st.markdown(f"[📲 WhatsApp {num}]({url})")
 
                     # =========================
-                    # MODIFICA / CHIUSURA CAPO
+                    # MODIFICA + CHIUSURA
                     # =========================
                     if rec:
 
-                        st.write(f"🕒 Inizio: {rec.get('inizio','')}")
-                        st.write(f"🕒 Fine: {rec.get('fine','')}")
+                        inizio = rec.get("inizio","08:00")
 
                         inizio_edit = st.time_input(
-                            "Modifica Inizio",
-                            value=datetime.strptime(rec.get("inizio","08:00"), "%H:%M").time(),
-                            key=f"inizio_edit_{i}"
+                            "Inizio",
+                            value=datetime.strptime(inizio,"%H:%M").time(),
+                            key=f"in_{i}"
                         )
 
                         fine_edit = st.time_input(
-                            "Modifica Fine",
+                            "Fine",
                             value=datetime.now().time(),
-                            key=f"fine_edit_{i}"
+                            key=f"fi_{i}"
                         )
 
                         colX, colY = st.columns(2)
@@ -393,7 +391,7 @@ elif menu == "🚄 Manutenzione":
                             st.success("Aggiornato")
                             st.rerun()
 
-                        if colY.button(f"Chiudi_forzato_{i}"):
+                        if colY.button(f"Chiudi_{i}"):
 
                             supabase.table("interventi").update({
                                 "stato": "CHIUSO",
@@ -401,7 +399,7 @@ elif menu == "🚄 Manutenzione":
                                 "note": f"{rec.get('note','')}\n---\nCHIUSO DA CAPO {utente}"
                             }).eq("chiave", chiave).execute()
 
-                            st.warning("Chiuso dal caposquadra")
+                            st.warning("Chiuso")
                             st.rerun()
 
                     # =========================
@@ -410,7 +408,7 @@ elif menu == "🚄 Manutenzione":
                     if colC.button(f"Cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
-                        st.warning("Cancellato")
+                        st.warning("Eliminato")
                         st.rerun()
 
     # =========================
@@ -427,19 +425,13 @@ elif menu == "🚄 Manutenzione":
             if r.get("stato") == "CHIUSO":
                 continue
 
-            tecnici = r.get("tecnico", [])
-
-            if isinstance(tecnici, str):
-                try:
-                    tecnici = ast.literal_eval(tecnici)
-                except:
-                    tecnici = [tecnici]
+            tecnici = fix_tecnici(r.get("tecnico"))
 
             if utente in tecnici:
                 risultati.append(r)
 
         if not risultati:
-            st.info("Nessuna attività assegnata")
+            st.info("Nessuna attività")
             st.stop()
 
         for i, record in enumerate(risultati):
@@ -450,16 +442,15 @@ elif menu == "🚄 Manutenzione":
                 st.write(f"👨‍✈️ Caposquadra: {record.get('caposquadra','')}")
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
-                st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
 
                 if record.get("link"):
-                    st.markdown(f"[📄 Scheda tecnica]({record.get('link')})")
+                    st.markdown(f"[📄 Scheda]({record.get('link')})")
 
                 st.write(f"🕒 Inizio: {record.get('inizio','')}")
-                st.write(f"📝 Storico:\n{record.get('note','')}")
+                st.write(f"📝 Note:\n{record.get('note','')}")
 
-                note_input = st.text_area("Note", key=f"note_op_{i}")
-                fine_input = st.time_input("Fine", key=f"fine_{i}")
+                note_input = st.text_area("Note", key=f"n_{i}")
+                fine_input = st.time_input("Fine", key=f"f_{i}")
 
                 if st.button(f"Chiudi_{i}"):
 
