@@ -15,64 +15,69 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
-/* SFONDO */
+/* SFONDO GENERALE */
 .stApp {
-    background-color: #f2f4f7;
+    background-color: #808080;
 }
 
-/* HEADER UTENTE */
-.user-box {
-    background-color: white;
-    padding: 12px;
-    border-radius: 10px;
-    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-}
-
-/* CARD INTERVENTI */
-.card {
-    background-color: white;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
-}
-
-/* COLORI STATO */
-.aperto {
-    border-left: 6px solid #e10600;
-}
-
-.chiuso {
-    border-left: 6px solid #2ecc71;
-}
-
-/* BOTTONI */
+/* BOTTONI ROSSI */
 .stButton>button {
     background-color: #e10600;
-    color: white;
+    color: black;
     border-radius: 8px;
     font-weight: bold;
-    border: none;
 }
 
 /* INPUT */
-.stTextInput input, .stTextArea textarea, .stSelectbox div {
-    background-color: white !important;
-    border-radius: 6px !important;
+.stTextInput>div>div>input {
+    background-color: white;
+    border: 2px solid #ccc;
+    border-radius: 6px;
 }
 
-/* LABEL */
+/* TEXT AREA (NOTE) */
+.stTextArea textarea {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 8px !important;
+    color: black !important;
+}
+
+/* LABEL NOTE */
 label {
-    color: #333 !important;
     font-weight: bold;
+    color: #333;
 }
 
 /* EXPANDER */
 .streamlit-expanderHeader {
-    font-size: 16px;
     font-weight: bold;
 }
 
+/* BOX INTERVENTO */
+.block-container {
+    padding-top: 2rem;
+}
+/* SELECTBOX */
+.stSelectbox div[data-baseweb="select"] {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 6px;
+}
+
+/* DATE INPUT */
+.stDateInput input {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 6px;
+    color: black !important;
+}
+
+/* LABEL */
+label {
+    color: #000 !important;
+    font-weight: bold;
+}
 </style>
 """, unsafe_allow_html=True)
 # =========================
