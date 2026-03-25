@@ -442,10 +442,14 @@ elif menu == "🚄 Manutenzione":
             with st.expander(f"🟡 {record.get('componente','')}"):
 
                 st.write(record.get("intervento",""))
+
+                # INFO COMPLETE
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
+                st.write(f"📅 Data: {record.get('data','')}")
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
-                st.write(f"👷‍♂️ Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
+                st.write(f"👷 Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
+                st.write(f"🕒 Inizio: {record.get('inizio','')}")
 
                 # LINK MULTIPLI
                 link_raw = record.get("link", "")
@@ -455,17 +459,27 @@ elif menu == "🚄 Manutenzione":
                     if link.strip():
                         st.markdown(f"[📄 Scheda {idx+1}]({link.strip()})")
 
-                note_input = st.text_area("Nota", key=f"note_op_{i}")
-                fine_input = st.time_input("Fine", key=f"fine_{i}")
+                # STORICO NOTE
+                st.write(f"📝 Storico:\n{record.get('note','')}")
 
-                if st.button(f"Chiudi_{i}"):
+                # INPUT
+                note_input = st.text_area("Nota", key=f"note_{record['chiave']}")
+                fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
 
-                    nuove_note = f"{record.get('note','')}\n---\n{utente}: {note_input}"
+                # CHIUSURA
+                if st.button(f"Chiudi_{record['chiave']}"):
+
+                    if not note_input:
+                        st.warning("Inserisci una nota")
+                        st.stop()
+
+                    note_vecchie = record.get("note") or ""
+                    nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
 
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
-                        "note": str(nuove_note)
+                        "note": nuove_note
                     }).eq("chiave", record["chiave"]).execute()
 
                     st.success("Chiuso")
