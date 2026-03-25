@@ -469,10 +469,6 @@ elif menu == "🚄 Manutenzione":
                 # CHIUSURA
                 if st.button(f"Chiudi_{i}"):
 
-                    if not note_input:
-                        st.warning("Inserisci una nota")
-                        st.stop()
-
                     note_vecchie = record.get("note") or ""
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
 
