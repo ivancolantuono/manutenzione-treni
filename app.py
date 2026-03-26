@@ -579,8 +579,8 @@ elif menu == "🚄 Manutenzione":
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
-                        "note": nuove_note
-                         "allegato": file_url 
+                        "note": nuove_note,
+                        "allegato": file_url 
                     }).eq("chiave", record["chiave"]).execute()
 
                     st.success("Chiuso")
