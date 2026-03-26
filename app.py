@@ -679,8 +679,7 @@ if stato == "APERTO":
         st.success("Attività chiusa da dashboard")
         st.rerun()
 
-st.divider()
-
+                st.divider()                    
 # =========================
 # MAGAZZINO
 # =========================
