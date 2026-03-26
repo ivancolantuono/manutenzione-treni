@@ -173,12 +173,17 @@ with colB:
 # =========================
 # MENU
 # =========================
-
-menu = st.radio(
-    "",
-    ["📊 Storico", "🚄️ Manutenzione", "Dashboard", "📦 Cerca Componente"],
-    horizontal=True
+if ruolo == "CAPOSQUADRA":
+    menu = st.radio(
+         "",
+         ["📊 Storico", "🚄 Manutenzione", "Dashboard", "📦 Cerca Componente"],
+         horizontal=True
 )
+else:
+    menu = st.radio(
+         "",
+         ["📊 Storico", "🚄 Manutenzione", "📦 Cerca Componente"],
+         horizontal=True
 
 # =========================
 # DATI
@@ -558,7 +563,7 @@ elif menu == "🚄 Manutenzione":
 elif menu == "Dashboard":
 
     from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=5000, key="refresh_dashboard")
+    st_autorefresh(interval=8000, key="refresh_dashboard")
 
     st.title("📊 Dashboard Caposquadra")
 
