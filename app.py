@@ -176,7 +176,7 @@ with colB:
 if ruolo == "CAPOSQUADRA":
     menu = st.radio(
          "",
-         ["📊 Storico", "🚄 Manutenzione", "Dashboard", "📦 Cerca Componente"],
+         ["📊 Storico", "🚄 Manutenzione", "📊 Dashboard", "📦 Cerca Componente"],
          horizontal=True
 )
 else:
@@ -560,7 +560,7 @@ elif menu == "🚄 Manutenzione":
                     st.rerun()
                     
                     
-elif menu == "Dashboard":
+elif menu == "📊 Dashboard":
 
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=8000, key="refresh_dashboard")
@@ -644,7 +644,6 @@ elif menu == "Dashboard":
 📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
 🧾 ODL: {r.get('odl','')}
 🕒 Inizio: {r.get('inizio','')}
-
 """)
 
                 st.divider()                    
