@@ -543,12 +543,31 @@ elif menu == "🚄 Manutenzione":
                 # INPUT
                 note_input = st.text_area("Nota", key=f"note_{record['chiave']}")
                 fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
-
+             
+                   # 📎 UPLOAD FILE
+                file = st.file_uploader(
+                    "📎 Allega foto/documento",
+                    type=["jpg", "png", "pdf"],
+                    key=f"file_{record['chiave']}"
+                )
+                
                 # CHIUSURA
                 if st.button(f"Chiudi_{i}"):
 
                     note_vecchie = record.get("note") or ""
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
+
+                    file_url = ""
+
+                    if file:
+                        file_bytes = file.read()
+                        nome_file = f"{record['chiave']}_{file.name}"
+
+                        supabase.storage.from_("allegati").upload(nome_file, file_bytes)
+
+                        file_url = supabase.storage.from_("allegati").get_public_url(nome_file)
+
+                        nuove_note += f"\n📎 Allegato: {file_url}"
 
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
