@@ -111,7 +111,7 @@ UTENTI = {
 }
 
 # =========================
-# LOGIN DA EXCEL
+# LOGIN EXCEL FIX DEFINITIVO
 # =========================
 
 import pandas as pd
@@ -121,7 +121,10 @@ df_utenti.columns = df_utenti.columns.str.strip()
 
 # pulizia
 for col in df_utenti.columns:
-    df_utenti[col] = df_utenti[col].astype(str).str.strip().str.lower()
+    df_utenti[col] = df_utenti[col].astype(str).str.strip()
+
+# fix password Excel
+df_utenti["Password"] = df_utenti["Password"].str.replace(".0","")
 
 # =========================
 # SESSION
@@ -138,12 +141,12 @@ if not st.session_state.logged_in:
         st.markdown("## 🔐 Accesso Sistema")
 
         u = st.text_input("Utente").strip().lower()
-        p = st.text_input("Password", type="password").strip().lower()
+        p = st.text_input("Password", type="password").strip()
 
         if st.button("Accedi"):
 
             user = df_utenti[
-                (df_utenti["Nominativo"] == u) &
+                (df_utenti["Nominativo"].str.lower() == u) &
                 (df_utenti["Password"] == p)
             ]
 
@@ -165,7 +168,6 @@ if not st.session_state.logged_in:
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo.upper()
-
 # =========================
 # HEADER
 # =========================
