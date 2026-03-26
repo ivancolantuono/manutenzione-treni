@@ -413,7 +413,7 @@ elif menu == "🚄 Manutenzione":
                             st.markdown(f"[📄 Scheda {idx+1}]({link})")
 
                     note = rec.get("note","") if rec else ""
-                    note_input = st.text_area("Note", value=note, key=f"note_{i}")
+                    st.write(f"📝 Note operatore:\n{note if note else '—'}")
 
                     tecnici_input = st.multiselect(
                         "Tecnici",
