@@ -114,7 +114,7 @@ NUMERI = {
 }
 
 # =========================
-# LOGIN SUPABASE COMPLETO
+# LOGIN
 # =========================
 
 if "logged_in" not in st.session_state:
@@ -132,49 +132,16 @@ if not st.session_state.logged_in:
         p = st.text_input("Password", type="password")
 
         if st.button("Accedi"):
-
-            if not u or not p:
-                st.warning("Inserisci utente e password")
-
+            if u in UTENTI and UTENTI[u]["password"] == p:
+                st.session_state.logged_in = True
+                st.session_state.utente = u
+                st.session_state.ruolo = UTENTI[u]["ruolo"]
+                st.rerun()
             else:
-                try:
-                    # 👉 prende tutti gli utenti
-                    res = supabase.table("utenti").select("*").execute()
-                    utenti_db = res.data if res.data else []
-
-                    trovato = None
-
-                    # 👉 confronto SICURO
-                    for user in utenti_db:
-                        nome_db = str(user.get("nominativo","")).strip().lower()
-                        pass_db = str(user.get("password","")).strip()
-
-                        if nome_db == u.strip().lower() and pass_db == p.strip():
-                            trovato = user
-                            break
-
-                    if trovato:
-                        st.session_state.logged_in = True
-                        st.session_state.utente = trovato["nominativo"]
-                        st.session_state.ruolo = trovato["ruolo"]
-                        st.session_state.squadra = trovato.get("squadra","")
-                        st.session_state.telefono = trovato.get("telefono","")
-
-                        st.success("Accesso effettuato")
-                        st.rerun()
-
-                    else:
-                        st.error("Credenziali errate")
-
-                except Exception as e:
-                    st.error("Errore connessione Supabase")
-                    st.write(e)
+                st.error("Credenziali errate")
 
     st.stop()
 
-# =========================
-# DATI UTENTE
-# =========================
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
 
