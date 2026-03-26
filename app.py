@@ -476,6 +476,8 @@ elif menu == "🚄 Manutenzione":
 📅 Data: {data_giorno}
 ⏱️ Scadenza: {st.session_state.scadenza}
 
+👷‍♂️ Caposquadra: {utente}
+
 🔧 {r['Intervento']}
 🔧 {r['Componente']}
 """
