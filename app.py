@@ -111,9 +111,21 @@ UTENTI = {
 }
 
 # =========================
-# LOGIN
+# LOGIN DA EXCEL
 # =========================
 
+import pandas as pd
+
+df_utenti = pd.read_excel("operatori.xlsx")
+df_utenti.columns = df_utenti.columns.str.strip()
+
+# pulizia
+for col in df_utenti.columns:
+    df_utenti[col] = df_utenti[col].astype(str).str.strip().str.lower()
+
+# =========================
+# SESSION
+# =========================
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -123,24 +135,36 @@ if not st.session_state.logged_in:
 
     with col2:
         st.image("frecciarossa.jpg", use_container_width=True)
-        st.markdown("## 🔐 LOGIN")
+        st.markdown("## 🔐 Accesso Sistema")
 
-        u = st.text_input("Utente")
-        p = st.text_input("Password", type="password")
+        u = st.text_input("Utente").strip().lower()
+        p = st.text_input("Password", type="password").strip().lower()
 
         if st.button("Accedi"):
-            if u in UTENTI and UTENTI[u]["password"] == p:
+
+            user = df_utenti[
+                (df_utenti["Nominativo"] == u) &
+                (df_utenti["Password"] == p)
+            ]
+
+            if not user.empty:
+
                 st.session_state.logged_in = True
-                st.session_state.utente = u
-                st.session_state.ruolo = UTENTI[u]["ruolo"]
+                st.session_state.utente = user.iloc[0]["Nominativo"]
+                st.session_state.ruolo = user.iloc[0]["Ruolo"]
+                st.session_state.squadra = user.iloc[0]["Squadra"]
+                st.session_state.telefono = user.iloc[0]["Telefono"]
+
+                st.success("Accesso riuscito")
                 st.rerun()
+
             else:
                 st.error("Credenziali errate")
 
     st.stop()
 
 utente = st.session_state.utente
-ruolo = st.session_state.ruolo
+ruolo = st.session_state.ruolo.upper()
 
 # =========================
 # HEADER
@@ -186,30 +210,93 @@ df_operatori.columns = df_operatori.columns.str.strip()
 if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
 
-# =========================
-# 📊 STORICO
-# =========================
-elif menu == "📊 Storico":
-    st_autorefresh(interval=10000, key="refresh_storico")
+if menu == "📊 Storico":
+
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=5000, key="refresh_storico")
 
     st.title("📊 Storico Attività")
 
+    # 🔥 RICARICA DATI SEMPRE
     res = supabase.table("interventi").select("*").execute()
     rows = res.data if res.data else []
 
-    df_storico = pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
 
-    if not df_storico.empty:
-
-        # 🔥 FIX PYARROW
-        for col in df_storico.columns:
-            df_storico[col] = df_storico[col].astype(str)
-
-        st.dataframe(df_storico, use_container_width=True)
-
-    else:
+    if df.empty:
         st.warning("Nessun dato presente")
+        st.stop()
 
+    # 🔥 CONVERSIONE SICURA
+    for col in df.columns:
+        df[col] = df[col].astype(str)
+
+    # =========================
+    # FILTRI
+    # =========================
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        filtro_treno = st.text_input("🚆 Treno")
+
+    with col2:
+        filtro_odl = st.text_input("🧾 ODL")
+
+    with col3:
+        filtro_tecnico = st.text_input("👷 Tecnico")
+
+    stato = st.selectbox("📌 Stato", ["Tutti", "APERTO", "CHIUSO"])
+
+    # =========================
+    # FILTRAGGIO
+    # =========================
+
+    if filtro_treno:
+        df = df[df["treno"].str.contains(filtro_treno, case=False)]
+
+    if filtro_odl:
+        df = df[df["odl"].str.contains(filtro_odl, case=False)]
+
+    if filtro_tecnico:
+        df = df[df["tecnico"].str.contains(filtro_tecnico, case=False)]
+
+    if stato != "Tutti":
+        df = df[df["stato"] == stato]
+
+    # =========================
+    # ORDINAMENTO
+    # =========================
+    if "data" in df.columns:
+        df = df.sort_values(by="data", ascending=False)
+
+    # =========================
+    # METRICHE
+    # =========================
+    colA, colB, colC = st.columns(3)
+
+    colA.metric("Totale", len(df))
+    colB.metric("Aperti", len(df[df["stato"] == "APERTO"]))
+    colC.metric("Chiusi", len(df[df["stato"] == "CHIUSO"]))
+
+    # =========================
+    # VISUALIZZAZIONE
+    # =========================
+    st.dataframe(df, use_container_width=True)
+
+    # =========================
+    # DOWNLOAD EXCEL
+    # =========================
+    import io
+    buffer = io.BytesIO()
+    df.to_excel(buffer, index=False)
+
+    st.download_button(
+        label="📥 Scarica Excel",
+        data=buffer.getvalue(),
+        file_name="storico.xlsx",
+        mime="application/vnd.ms-excel"
+    )
 
 # =========================
 # 🚄 MANUTENZIONE
