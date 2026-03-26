@@ -175,8 +175,8 @@ with colB:
 # =========================
 
 menu = st.radio(
-    "Menu",
-    ["📊 Storico", "🚄️ Manutenzione", "Dasboard", "📦 Cerca Componente"],
+    "",
+    ["📊 Storico", "🚄️ Manutenzione", "Dashboard", "📦 Cerca Componente"],
     horizontal=True
 )
 
