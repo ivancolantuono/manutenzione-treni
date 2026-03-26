@@ -440,7 +440,7 @@ elif menu == "🚄 Manutenzione":
                             "caposquadra": str(utente),
                             "stato": "APERTO",
                             "inizio": str(ora_italia()),
-                            "note": str(note_input)
+                            "note": rec.get("note","") if rec else ""
                         }).execute()
 
                         st.success("Assegnato")
