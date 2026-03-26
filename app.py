@@ -636,28 +636,14 @@ elif menu == "Dashboard":
                 # =========================
                 tecnici = r.get("tecnico","")
 
-                # =========================
-                # RITARDO SEMPLICE
-                # =========================
-                ritardo = ""
-
-                try:
-                    data_task = pd.to_datetime(r.get("data",""), errors="coerce")
-                    oggi = pd.Timestamp.today()
-
-                    if stato == "APERTO" and data_task < oggi:
-                        ritardo = "⏰ RITARDO"
-                except:
-                    pass
-
                 st.markdown(f"""
 {colore} *{r.get("componente","")}*  
 🔧 {r.get("intervento","")}  
 👷 {tecnici}  
 👨‍✈️ {r.get("caposquadra","")}  
 📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
-🧾 ODL: {r.get('odl','')}..
-🕒 Inizio: {r.get('inizio','')}..
+🧾 ODL: {r.get('odl','')}
+🕒 Inizio: {r.get('inizio','')}
 {ritardo}
 """)
 
