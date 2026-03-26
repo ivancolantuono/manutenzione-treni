@@ -558,22 +558,25 @@ elif menu == "🚄 Manutenzione":
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
 
                     file = st.file_uploader("Allega file")
-                    
+
                     file_url = ""
-
+                    
                     if file is not None:
+                    
+                        import re
+                    
                         nome_file = f"{record['chiave']}_{file.name}"
-
-                        # 🔥 upload corretto
-                        supabase.storage.from_("allegati").upload(
+                        nome_file = re.sub(r'[^a-zA-Z0-9_.-]', '_', nome_file)
+                    
+                        response = supabase.storage.from_("allegati").upload(
                             nome_file,
-                            file.getvalue()   # 👈 NON read()
+                            file.getvalue()
                         )
                     
-                        # 🔥 prendi URL pubblico
+                        st.write(response)  # DEBUG
+                    
                         file_url = supabase.storage.from_("allegati").get_public_url(nome_file)
                     
-                        # aggiungi alle note
                         nuove_note += f"\n📎 Allegato: {file_url}"
 
                     supabase.table("interventi").update({
