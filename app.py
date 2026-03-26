@@ -551,45 +551,48 @@ elif menu == "🚄 Manutenzione":
                     key=f"file_{record['chiave']}"
                 )
                 
+                # 📎 UPLOAD FILE
+                file = st.file_uploader(
+                    "📎 Allega foto/documento",
+                    type=["jpg", "png", "pdf"],
+                    key=f"file_{record['chiave']}"
+                )
+                
                 # CHIUSURA
                 if st.button(f"Chiudi_{i}"):
-
+                
                     note_vecchie = record.get("note") or ""
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
-
-                    file = st.file_uploader("Allega file")
-
+                
                     file_url = ""
-                    
+                
                     if file is not None:
-                    
+                
                         import re
-                    
+                
                         nome_file = f"{record['chiave']}_{file.name}"
                         nome_file = re.sub(r'[^a-zA-Z0-9_.-]', '_', nome_file)
-                    
+                
                         response = supabase.storage.from_("allegati").upload(
                             nome_file,
                             file.getvalue()
                         )
-                    
+                
                         st.write(response)  # DEBUG
-                    
+                
                         file_url = supabase.storage.from_("allegati").get_public_url(nome_file)
-                    
+                
                         nuove_note += f"\n📎 Allegato: {file_url}"
-
+                
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
                         "note": nuove_note,
                         "allegato": file_url 
                     }).eq("chiave", record["chiave"]).execute()
-
+                
                     st.success("Chiuso")
-                    st.rerun()
-                    
-                    
+                    st.rerun()    
 elif menu == "📊 Dashboard":
 
     from streamlit_autorefresh import st_autorefresh
