@@ -278,8 +278,8 @@ if menu == "📊 Storico":
     colA, colB, colC = st.columns(3)
 
     colA.metric("Totale", len(df))
-    colB.metric("Aperti", len(df[df["stato"] == "APERTO"]))
-    colC.metric("Chiusi", len(df[df["stato"] == "CHIUSO"]))
+    colB.metric("🔓 Aperti", len(df[df["stato"] == "APERTO"]))
+    colC.metric("🔒 Chiusi", len(df[df["stato"] == "CHIUSO"]))
 
     # =========================
     # VISUALIZZAZIONE
@@ -357,13 +357,13 @@ elif menu == "🚄 Manutenzione":
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.session_state.treno = st.text_input("Treno", value=st.session_state.treno)
+            st.session_state.treno = st.text_input("🚄 Treno", value=st.session_state.treno)
 
         with col2:
-            st.session_state.odl = st.text_input("ODL Padre", value=st.session_state.odl)
+            st.session_state.odl = st.text_input("📝 ODL Padre", value=st.session_state.odl)
 
         with col3:
-            scelte = list(df["Scadenza"].unique())
+            scelte = list(df["📋 Scadenza"].unique())
 
             if st.session_state.scadenza not in scelte:
                 st.session_state.scadenza = scelte[0]
