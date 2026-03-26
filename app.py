@@ -644,7 +644,7 @@ elif menu == "Dashboard":
 📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
 🧾 ODL: {r.get('odl','')}
 🕒 Inizio: {r.get('inizio','')}
-{ritardo}
+
 """)
 
                 st.divider()                    
