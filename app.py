@@ -646,6 +646,41 @@ elif menu == "📊 Dashboard":
 🕒 Inizio: {r.get('inizio','')}
 """)
 
+# =========================
+# INPUT CHIUSURA
+# =========================
+if stato == "APERTO":
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        fine_input = st.time_input(
+            "Ora fine",
+            key=f"fine_dash_{r['chiave']}"
+        )
+
+    with col2:
+        note_input = st.text_input(
+            "Nota chiusura",
+            key=f"note_dash_{r['chiave']}"
+        )
+
+    if st.button(f"✅ Chiudi {r['chiave']}"):
+
+        note_vecchie = r.get("note") or ""
+        nuove_note = f"{note_vecchie}\n---\nCHIUSO DA CAPO: {note_input}"
+
+        supabase.table("interventi").update({
+            "stato": "CHIUSO",
+            "fine": str(fine_input),
+            "note": nuove_note
+        }).eq("chiave", r["chiave"]).execute()
+
+        st.success("Attività chiusa da dashboard")
+        st.rerun()
+
+st.divider()
+
                 st.divider()                    
 # =========================
 # MAGAZZINO
