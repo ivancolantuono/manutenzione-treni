@@ -656,6 +656,8 @@ elif menu == "Dashboard":
 👷 {tecnici}  
 👨‍✈️ {r.get("caposquadra","")}  
 📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
+🧾 ODL: {r.get('odl','')}..
+🕒 Inizio: {record.get('inizio','')}..
 {ritardo}
 """)
 
