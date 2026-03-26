@@ -657,7 +657,7 @@ elif menu == "Dashboard":
 👨‍✈️ {r.get("caposquadra","")}  
 📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
 🧾 ODL: {r.get('odl','')}..
-🕒 Inizio: {record.get('inizio','')}..
+🕒 Inizio: {r.get('inizio','')}..
 {ritardo}
 """)
 
