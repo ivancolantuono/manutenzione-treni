@@ -574,7 +574,7 @@ elif menu == "🚄 Manutenzione":
                         file_url = supabase.storage.from_("allegati").get_public_url(nome_file)
                     
                         # aggiungi alle note
-                        nuove_note += f"\n📎 Allegato: {file_
+                        nuove_note += f"\n📎 Allegato: {file_url}"
 
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
