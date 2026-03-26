@@ -666,14 +666,14 @@ elif menu == "📊 Dashboard":
 🏁 Fine: {r.get("fine","")}
 """)
 
-# =========================
-# 📎 ALLEGATO
-# =========================
-allegato = r.get("allegato", "")
-
-if allegato:
-    st.markdown(f"📎 [Apri allegato]({allegato})")
-
+                # =========================
+                # 📎 ALLEGATO
+                # =========================
+                allegato = r.get("allegato", "")
+                
+                if allegato:
+                    st.markdown(f"📎 [Apri allegato]({allegato})")
+                
                 st.divider()                    
 # =========================
 # MAGAZZINO
