@@ -192,7 +192,7 @@ with colB:
 
 menu = st.radio(
     "",
-    ["📊 Storico", "🚄 Manutenzione", "📦 Cerca Componente"],
+    ["📊 Storico", "🛠️ Manutenzione", "📊 Dasboard Capo", "📦 Cerca Componente"],
     horizontal=True
 )
 
@@ -569,6 +569,106 @@ elif menu == "🚄 Manutenzione":
 
                     st.success("Chiuso")
                     st.rerun()
+elif menu == "📊 Dashboard Capo":
+
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=5000, key="refresh_dashboard")
+
+    st.title("📊 Dashboard Caposquadra")
+
+    # =========================
+    # DATI
+    # =========================
+    res = supabase.table("interventi").select("*").execute()
+    rows = res.data if res.data else []
+
+    df = pd.DataFrame(rows)
+
+    if df.empty:
+        st.warning("Nessuna attività")
+        st.stop()
+
+    # pulizia
+    for col in df.columns:
+        df[col] = df[col].astype(str)
+
+    # =========================
+    # FILTRI
+    # =========================
+    col1, col2 = st.columns(2)
+
+    with col1:
+        filtro_treno = st.text_input("🚆 Filtra Treno")
+
+    with col2:
+        filtro_stato = st.selectbox("📌 Stato", ["Tutti", "APERTO", "CHIUSO"])
+
+    if filtro_treno:
+        df = df[df["treno"].str.contains(filtro_treno, case=False)]
+
+    if filtro_stato != "Tutti":
+        df = df[df["stato"] == filtro_stato]
+
+    # =========================
+    # METRICHE
+    # =========================
+    colA, colB, colC = st.columns(3)
+
+    colA.metric("Totale", len(df))
+    colB.metric("Aperti", len(df[df["stato"] == "APERTO"]))
+    colC.metric("Chiusi", len(df[df["stato"] == "CHIUSO"]))
+
+    st.divider()
+
+    # =========================
+    # RAGGRUPPA PER TRENO
+    # =========================
+    treni = df["treno"].unique()
+
+    for treno in treni:
+
+        df_treno = df[df["treno"] == treno]
+
+        with st.expander(f"🚆 Treno {treno} ({len(df_treno)} attività)"):
+
+            for i, r in df_treno.iterrows():
+
+                stato = r.get("stato","")
+
+                if stato == "APERTO":
+                    colore = "🟡"
+                else:
+                    colore = "🟢"
+
+                # =========================
+                # TECNICI
+                # =========================
+                tecnici = r.get("tecnico","")
+
+                # =========================
+                # RITARDO SEMPLICE
+                # =========================
+                ritardo = ""
+
+                try:
+                    data_task = pd.to_datetime(r.get("data",""), errors="coerce")
+                    oggi = pd.Timestamp.today()
+
+                    if stato == "APERTO" and data_task < oggi:
+                        ritardo = "⏰ RITARDO"
+                except:
+                    pass
+
+                st.markdown(f"""
+{colore} *{r.get("componente","")}*  
+🔧 {r.get("intervento","")}  
+👷 {tecnici}  
+👨‍✈️ {r.get("caposquadra","")}  
+📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
+{ritardo}
+""")
+
+                st.divider()                    
 # =========================
 # MAGAZZINO
 # =========================
