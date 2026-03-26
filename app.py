@@ -107,6 +107,7 @@ UTENTI = {
     "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
     "Santorelli": {"password": "1111", "ruolo": "OPERATORE"},
     "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
+    "Lettieri": {"password": "1234", "ruolo": "CAPOSQUADRA"},
 }
 
 # =========================
@@ -122,7 +123,7 @@ if not st.session_state.logged_in:
 
     with col2:
         st.image("frecciarossa.jpg", use_container_width=True)
-        st.markdown("## 🔐 Accesso Sistema")
+        st.markdown("## 🔐 LOGIN")
 
         u = st.text_input("Utente")
         p = st.text_input("Password", type="password")
