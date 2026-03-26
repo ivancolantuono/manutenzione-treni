@@ -593,7 +593,7 @@ elif menu == "📊 Dashboard":
 
     with col2:
         filtro_stato = st.selectbox("📌 Stato", ["Tutti", "APERTO", "CHIUSO"])
-        index=0
+
     if filtro_treno:
         df = df[df["treno"].str.contains(filtro_treno, case=False)]
 
