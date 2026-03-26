@@ -540,28 +540,18 @@ elif menu == "🚄 Manutenzione":
                 # STORICO NOTE
                 st.write(f"📝 Storico:\n{record.get('note','')}")
 
-                # INPUT
-                note_input = st.text_area("Nota", key=f"note_{record['chiave']}")
-                fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
-             
-                   # 📎 UPLOAD FILE
-                file = st.file_uploader(
-                    "📎 Allega foto/documento",
-                    type=["jpg", "png", "pdf"],
-                    key=f"file_{record['chiave']}"
-                )
                 # =========================
                 # 📎 UPLOAD FILE
                 # =========================
                 file = st.file_uploader(
                     "📎 Allega foto/documento",
                     type=["jpg", "png", "pdf"],
-                    key=f"file_{record['chiave']}"
+                    key=f"file_{record['chiave']}_{i}"
                 )
                 
                 # INPUT
-                note_input = st.text_area("Nota", key=f"note_{record['chiave']}")
-                fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
+                note_input = st.text_area("Nota", key=f"note_{record['chiave']}_{i}")
+                fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}_{i}")
                 
                 # =========================
                 # CHIUSURA ATTIVITÀ
