@@ -553,6 +553,7 @@ elif menu == "🚄 Manutenzione":
 
                     st.success("Chiuso")
                     st.rerun()
+                    
 elif menu == "Dashboard":
 
     from streamlit_autorefresh import st_autorefresh
