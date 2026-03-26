@@ -580,6 +580,7 @@ elif menu == "🚄 Manutenzione":
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
                         "note": nuove_note
+                         "allegato": file_url 
                     }).eq("chiave", record["chiave"]).execute()
 
                     st.success("Chiuso")
