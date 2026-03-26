@@ -550,15 +550,22 @@ elif menu == "🚄 Manutenzione":
                     type=["jpg", "png", "pdf"],
                     key=f"file_{record['chiave']}"
                 )
-                
+                # =========================
                 # 📎 UPLOAD FILE
+                # =========================
                 file = st.file_uploader(
                     "📎 Allega foto/documento",
                     type=["jpg", "png", "pdf"],
                     key=f"file_{record['chiave']}"
                 )
                 
-                # CHIUSURA
+                # INPUT
+                note_input = st.text_area("Nota", key=f"note_{record['chiave']}")
+                fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}")
+                
+                # =========================
+                # CHIUSURA ATTIVITÀ
+                # =========================
                 if st.button(f"Chiudi_{i}"):
                 
                     note_vecchie = record.get("note") or ""
@@ -566,33 +573,42 @@ elif menu == "🚄 Manutenzione":
                 
                     file_url = ""
                 
+                    # DEBUG
+                    st.write("FILE:", file)
+                
                     if file is not None:
+                        import time, re
                 
-                        import re
-                
-                        nome_file = f"{record['chiave']}_{file.name}"
+                        # nome file sicuro e unico
+                        nome_file = f"{record['chiave']}{int(time.time())}{file.name}"
                         nome_file = re.sub(r'[^a-zA-Z0-9_.-]', '_', nome_file)
                 
-                        response = supabase.storage.from_("allegati").upload(
-                            nome_file,
-                            file.getvalue()
-                        )
+                        try:
+                            response = supabase.storage.from_("allegati").upload(
+                                nome_file,
+                                file.getvalue()
+                            )
                 
-                        st.write(response)  # DEBUG
+                            st.write("UPLOAD:", response)
                 
-                        file_url = supabase.storage.from_("allegati").get_public_url(nome_file)
+                            file_url = supabase.storage.from_("allegati").get_public_url(nome_file)
                 
-                        nuove_note += f"\n📎 Allegato: {file_url}"
+                            nuove_note += f"\n📎 Allegato: {file_url}"
                 
+                        except Exception as e:
+                            st.error(f"Errore upload: {e}")
+                
+                    # salva su database
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
                         "note": nuove_note,
-                        "allegato": file_url 
+                        "allegato": file_url
                     }).eq("chiave", record["chiave"]).execute()
                 
-                    st.success("Chiuso")
-                    st.rerun()    
+                    st.success("Attività chiusa")
+                    st.rerun()
+               
 elif menu == "📊 Dashboard":
 
     from streamlit_autorefresh import st_autorefresh
