@@ -109,10 +109,6 @@ UTENTI = {
     "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
 }
 
-NUMERI = {
-    "Colantuono": "393477618059"
-}
-
 # =========================
 # LOGIN
 # =========================
