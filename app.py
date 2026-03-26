@@ -95,7 +95,26 @@ key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
 # =========================
-# LOGIN (SUPABASE)
+# UTENTI
+# =========================
+
+UTENTI = {
+    "Massaro": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Morello": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Cacace": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Dentice": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Basco": {"password": "1234", "ruolo": "CAPOSQUADRA"},
+    "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
+    "Santorelli": {"password": "1111", "ruolo": "OPERATORE"},
+    "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
+}
+
+NUMERI = {
+    "Colantuono": "393477618059"
+}
+
+# =========================
+# LOGIN SUPABASE COMPLETO
 # =========================
 
 if "logged_in" not in st.session_state:
@@ -119,21 +138,27 @@ if not st.session_state.logged_in:
 
             else:
                 try:
-                    res = supabase.table("utenti") \
-                        .select("*") \
-                        .ilike("nominativo", u) \
-                        .eq("password", p) \
-                        .execute()
+                    # 👉 prende tutti gli utenti
+                    res = supabase.table("utenti").select("*").execute()
+                    utenti_db = res.data if res.data else []
 
-                    if res.data:
+                    trovato = None
 
-                        user_db = res.data[0]
+                    # 👉 confronto SICURO
+                    for user in utenti_db:
+                        nome_db = str(user.get("nominativo","")).strip().lower()
+                        pass_db = str(user.get("password","")).strip()
 
+                        if nome_db == u.strip().lower() and pass_db == p.strip():
+                            trovato = user
+                            break
+
+                    if trovato:
                         st.session_state.logged_in = True
-                        st.session_state.utente = user_db["nominativo"]
-                        st.session_state.ruolo = user_db["ruolo"]
-                        st.session_state.squadra = user_db.get("squadra", "")
-                        st.session_state.telefono = user_db.get("telefono", "")
+                        st.session_state.utente = trovato["nominativo"]
+                        st.session_state.ruolo = trovato["ruolo"]
+                        st.session_state.squadra = trovato.get("squadra","")
+                        st.session_state.telefono = trovato.get("telefono","")
 
                         st.success("Accesso effettuato")
                         st.rerun()
@@ -142,13 +167,17 @@ if not st.session_state.logged_in:
                         st.error("Credenziali errate")
 
                 except Exception as e:
-                    st.error("Errore connessione database")
+                    st.error("Errore connessione Supabase")
                     st.write(e)
 
     st.stop()
 
+# =========================
+# DATI UTENTE
+# =========================
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo
+
 # =========================
 # HEADER
 # =========================
