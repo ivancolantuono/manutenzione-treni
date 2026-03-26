@@ -639,11 +639,12 @@ elif menu == "📊 Dashboard":
                 st.markdown(f"""
 {colore} *{r.get("componente","")}*  
 🔧 {r.get("intervento","")}  
-👷 {tecnici}  
-👨‍✈️ {r.get("caposquadra","")}  
+👷 TECNICO: {tecnici}  
+👨‍✈️ CAPOSQUADRA: {r.get("caposquadra","")}  
 📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
 🧾 ODL: {r.get('odl','')}
 🕒 Inizio: {r.get('inizio','')}
+🏁 Fine: {r.get("fine","")}
 """)
 
                 st.divider()                    
