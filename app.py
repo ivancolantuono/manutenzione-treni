@@ -681,7 +681,6 @@ if stato == "APERTO":
 
 st.divider()
 
-                st.divider()                    
 # =========================
 # MAGAZZINO
 # =========================
