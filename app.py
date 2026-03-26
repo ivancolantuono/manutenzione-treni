@@ -363,13 +363,13 @@ elif menu == "🚄 Manutenzione":
             st.session_state.odl = st.text_input("📝 ODL Padre", value=st.session_state.odl)
 
         with col3:
-            scelte = list(df["📋 Scadenza"].unique())
+            scelte = list(df["Scadenza"].unique())
 
             if st.session_state.scadenza not in scelte:
                 st.session_state.scadenza = scelte[0]
 
             st.session_state.scadenza = st.selectbox(
-                "Scadenza",
+                "📋 Scadenza",
                 scelte,
                 index=scelte.index(st.session_state.scadenza)
             )
