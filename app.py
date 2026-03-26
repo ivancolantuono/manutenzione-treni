@@ -193,6 +193,7 @@ if "mostra" not in st.session_state:
 # 📊 STORICO
 # =========================
 elif menu == "📊 Storico":
+    st_autorefresh(interval=10000, key="refresh_storico")
 
     st.title("📊 Storico Attività")
 
