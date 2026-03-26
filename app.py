@@ -184,7 +184,7 @@ else:
          "",
          ["📊 Storico", "🚄 Manutenzione", "📦 Cerca Componente"],
          horizontal=True
-
+)
 # =========================
 # DATI
 # =========================
