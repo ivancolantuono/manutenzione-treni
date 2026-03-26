@@ -95,22 +95,6 @@ key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
 # =========================
-# UTENTI
-# =========================
-
-UTENTI = {
-    "Massaro": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Morello": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Cacace": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Dentice": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Basco": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-    "Colantuono": {"password": "1111", "ruolo": "OPERATORE"},
-    "Santorelli": {"password": "1111", "ruolo": "OPERATORE"},
-    "Dubbioso": {"password": "1111", "ruolo": "OPERATORE"},
-    "Lettieri": {"password": "1234", "ruolo": "CAPOSQUADRA"},
-}
-
-# =========================
 # LOGIN EXCEL FIX DEFINITIVO
 # =========================
 
@@ -192,7 +176,7 @@ with colB:
 
 menu = st.radio(
     "Menu",
-    ["📊 Storico", "🛠️ Manutenzione", "📊 Dasboard Capo", "📦 Cerca Componente"],
+    ["📊 Storico", "🚄️ Manutenzione", "Dasboard", "📦 Cerca Componente"],
     horizontal=True
 )
 
@@ -569,7 +553,7 @@ elif menu == "🚄 Manutenzione":
 
                     st.success("Chiuso")
                     st.rerun()
-elif menu == "📊 Dashboard Capo":
+elif menu == "Dashboard":
 
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=5000, key="refresh_dashboard")
