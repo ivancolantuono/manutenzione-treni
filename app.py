@@ -560,22 +560,21 @@ elif menu == "🚄 Manutenzione":
                 if st.button(f"Chiudi_{i}"):
 
                     note_vecchie = record.get("note") or ""
-            
                     note_input = note_input.strip()
-            
-                if note_input:
-                    nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
-                else:
-                    nuove_note = note_vecchie
-            
-                supabase.table("interventi").update({
-                    "stato": "CHIUSO",
-                    "fine": str(fine_input),
-                    "note": nuove_note
-                }).eq("chiave", record["chiave"]).execute()
-            
-                st.success("Attività chiusa")
-                st.rerun()
+                
+                    if note_input:
+                        nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
+                    else:
+                        nuove_note = note_vecchie
+                
+                    supabase.table("interventi").update({
+                        "stato": "CHIUSO",
+                        "fine": str(fine_input),
+                        "note": nuove_note
+                    }).eq("chiave", record["chiave"]).execute()
+                
+                    st.success("Attività chiusa")
+                    st.rerun()
     
 elif menu == "📊 Dashboard":
 
