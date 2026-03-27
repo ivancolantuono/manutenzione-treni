@@ -547,53 +547,28 @@ elif menu == "🚄 Manutenzione":
 
                 # STORICO NOTE
                 st.write(f"📝 Storico:\n{record.get('note','')}")
-
-                # =========================
-                # 📎 UPLOAD FILE
-                # =========================
-                file = st.file_uploader(
-                    "📎 Allega foto/documento",
-                    type=["jpg", "png", "pdf"],
-                    key=f"file_{record['chiave']}_{i}"
-                )
                 
                 # INPUT
                 note_input = st.text_area("Nota", key=f"note_{record['chiave']}_{i}")
                 fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}_{i}")
                 
                 # =========================
-                # CHIUSURA ATTIVITÀ
                 # =========================
-                if st.button(f"Chiudi_{i}"):
+                # CHIUSURA ATTIVITÀ
+ 
+                 if st.button(f"Chiudi_{i}"):
                 
                     note_vecchie = record.get("note") or ""
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
                 
-                    file_url = ""
+                    supabase.table("interventi").update({
+                        "stato": "CHIUSO",
+                        "fine": str(fine_input),
+                        "note": nuove_note
+                    }).eq("chiave", record["chiave"]).execute()
                 
-                    # DEBUG
-                    st.write("FILE:", file)
-                
-                    if file is not None:
-                        import time, re
-                
-                        # nome file sicuro e unico
-                        nome_file = f"{record['chiave']}{int(time.time())}{file.name}"
-                        nome_file = re.sub(r'[^a-zA-Z0-9_.-]', '_', nome_file)
-                
-                        try:
-                            response = supabase.storage.from_("allegati").upload(
-                                nome_file,
-                                file.getvalue()
-                            )
-                
-                            st.write("UPLOAD:", response)
-                
-                            file_url = supabase.storage.from_("allegati").get_public_url(nome_file)["publicUrl"]
-                            nuove_note += f"\n📎 Allegato: {file_url}"
-                            
-                        except Exception as e:
-                            st.error(f"Errore upload: {e}")
+                    st.success("Chiuso")
+                    st.rerun()
                 
                     # salva su database
                     supabase.table("interventi").update({
