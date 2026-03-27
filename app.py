@@ -571,16 +571,7 @@ elif menu == "🚄 Manutenzione":
                     st.success("Chiuso")
                     st.rerun()
                 
-                    # salva su database
-                    supabase.table("interventi").update({
-                        "stato": "CHIUSO",
-                        "fine": str(fine_input),
-                        "note": nuove_note,
-                        "allegato": file_url
-                    }).eq("chiave", record["chiave"]).execute()
-                
-                    st.success("Attività chiusa")
-                    st.rerun()
+                    
                
 elif menu == "📊 Dashboard":
 
