@@ -412,7 +412,7 @@ elif menu == "🚄 Manutenzione":
                         if link:
                             st.markdown(f"[📄 Scheda {idx+1}]({link})")
 
-                    note = rec.get("note","")
+                    note = r.get("note","")
 
                     # pulizia note (toglie link allegato)
                     if "📎 Allegato:" in note:
@@ -431,7 +431,7 @@ elif menu == "🚄 Manutenzione":
                     # =========================
                     # 📎 ALLEGATO
                     # =========================
-                    allegato = rec.get("allegato", "") if rec else ""
+                    allegato = r.get("allegato", "") if rec else ""
                     
                     if allegato:
                         st.markdown(
