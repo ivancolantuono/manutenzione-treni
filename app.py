@@ -474,34 +474,34 @@ elif menu == "🚄 Manutenzione":
                 st.markdown(f"**🛠️ {r['Intervento']}**")
     
                     # 🔗 LINK
-                    link_raw = r.get("Link", "")
-                    links = str(link_raw).split("|") if link_raw else []
+                 link_raw = r.get("Link", "")
+                 links = str(link_raw).split("|") if link_raw else []
     
-                    for idx, link in enumerate(links):
-                        link = link.strip()
-                        if link:
-                            st.markdown(f"[📄 Scheda {idx+1}]({link})")
+                 for idx, link in enumerate(links):
+                      link = link.strip()
+                      if link:
+                          st.markdown(f"[📄 Scheda {idx+1}]({link})")
     
-                    # 📝 NOTE (DAL DB!)
-                    "note" = record.get("note", "") if record else ""
+                  # 📝 NOTE (DAL DB!)
+                  "note" = record.get("note", "") if record else ""
     
-                    if note and "📎 Allegato:" in note:
-                        note_pulite = note.split("📎 Allegato:")[0]
-                    else:
-                        note_pulite = note
+                  if note and "📎 Allegato:" in note:
+                      note_pulite = note.split("📎 Allegato:")[0]
+                  else:
+                      note_pulite = note
     
-                        st.markdown("*📝 Note operatore*")
-                        st.info(note_pulite if note_pulite else "Nessuna nota")
+                  st.markdown("*📝 Note operatore*")
+                  st.info(note_pulite if note_pulite else "Nessuna nota")
     
-                    # 👷 TECNICI
-                    tecnici_input = st.multiselect(
+                  # 👷 TECNICI
+                  tecnici_input = st.multiselect(
                         "Tecnici",
                         operatori,
                         default=tecnici,
                         key=f"tec_{i}"
-                    )
+                  )
     
-                    colA, colB, colC = st.columns(3)
+                  colA, colB, colC = st.columns(3)
                     # ASSEGNA
                     if colA.button(f"Assegna_{i}"):
 
