@@ -345,35 +345,60 @@ elif menu == "🚄 Manutenzione":
     # 👨‍🔧 CAPOSQUADRA
     # =========================
     if ruolo == "CAPOSQUADRA":
-        
-        col1, col2, col3 = st.columns(3)
+
+        # 🚄 HEADER
+        st.markdown("""
+        <h1 style='margin-bottom:0;'>🚄 Gestione Manutenzione</h1>
+        <p style='color:gray; margin-top:0;'>Pianificazione interventi</p>
+        """, unsafe_allow_html=True)
     
-        with col1:
-            st.session_state.treno = st.text_input("🚄 Treno", value=st.session_state.treno)
+        st.markdown("---")
     
-        with col2:
-            st.session_state.odl = st.text_input("📝 ODL Padre", value=st.session_state.odl)
+        # 🔧 BOX PARAMETRI
+        with st.container():
     
-        with col3:
-            scelte = list(df["Scadenza"].unique())
+            st.markdown("### 🔧 Parametri")
     
-            if st.session_state.scadenza not in scelte:
-                st.session_state.scadenza = scelte[0]
+            col1, col2, col3 = st.columns(3)
     
-            st.session_state.scadenza = st.selectbox(
-                "📋 Scadenza",
-                scelte,
-                index=scelte.index(st.session_state.scadenza)
+            with col1:
+                st.session_state.treno = st.text_input(
+                    "🚄 Treno",
+                    value=st.session_state.treno
+                )
+    
+            with col2:
+                st.session_state.odl = st.text_input(
+                    "📝 ODL Padre",
+                    value=st.session_state.odl
+                )
+    
+            with col3:
+                scelte = list(df["Scadenza"].unique())
+    
+                if st.session_state.scadenza not in scelte:
+                    st.session_state.scadenza = scelte[0]
+    
+                st.session_state.scadenza = st.selectbox(
+                    "📋 Scadenza",
+                    scelte,
+                    index=scelte.index(st.session_state.scadenza)
+                )
+    
+            st.session_state.data = st.date_input(
+                "📅 Data",
+                value=st.session_state.data
             )
     
-        st.session_state.data = st.date_input("Data", value=st.session_state.data)
+            st.markdown("<br>", unsafe_allow_html=True)
     
-        if st.button("Genera"):
+            # 🚀 BOTTONE GRANDE
+            if st.button("🚀 Genera", use_container_width=True):
     
-            if not st.session_state.treno or not st.session_state.odl:
-                st.error("⚠️ Inserisci Treno e ODL")
-            else:
-                st.session_state.mostra = True
+                if not st.session_state.treno or not st.session_state.odl:
+                    st.error("⚠️ Inserisci Treno e ODL")
+                else:
+                    st.session_state.mostra = True
     
         if st.session_state.mostra:
     
