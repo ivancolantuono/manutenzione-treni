@@ -581,10 +581,9 @@ elif menu == "🚄 Manutenzione":
                 
                             st.write("UPLOAD:", response)
                 
-                            file_url = supabase.storage.from_("allegati").get_public_url(nome_file)
-                
-                            nuove_note += f"\n📎 Allegato: {file_url}"
-                
+                            file_url = supabase.storage.from_("allegati").get_public_url(nome_file)["publicUrl"]
+
+                             nuove_note += f"\n📎 Allegato: {file_url}"
                         except Exception as e:
                             st.error(f"Errore upload: {e}")
                 
