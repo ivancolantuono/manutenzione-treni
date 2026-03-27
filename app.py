@@ -413,8 +413,23 @@ elif menu == "🚄 Manutenzione":
                             st.markdown(f"[📄 Scheda {idx+1}]({link})")
 
                     note = rec.get("note","") if rec else ""
-                    st.write(f"📝 Note operatore:\n{note if note else '—'}")
 
+                    # pulizia note (toglie link allegato)
+                    if "📎 Allegato:" in note:
+                        note_pulite = note.split("📎 Allegato:")[0]
+                    else:
+                        note_pulite = note
+                    
+                    st.write(f"📝 Note operatore:\n{note_pulite if note_pulite else '—'}")
+                    
+                    # =========================
+                    # 📎 ALLEGATO
+                    # =========================
+                    allegato = rec.get("allegato", "") if rec else ""
+                    
+                    if allegato:
+                        st.markdown(f"📎 [Apri allegato]({allegato})")
+                        
                     tecnici_input = st.multiselect(
                         "Tecnici",
                         operatori,
@@ -582,8 +597,8 @@ elif menu == "🚄 Manutenzione":
                             st.write("UPLOAD:", response)
                 
                             file_url = supabase.storage.from_("allegati").get_public_url(nome_file)["publicUrl"]
-
-                             nuove_note += f"\n📎 Allegato: {file_url}"
+                            nuove_note += f"\n📎 Allegato: {file_url}"
+                            
                         except Exception as e:
                             st.error(f"Errore upload: {e}")
                 
