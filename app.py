@@ -433,7 +433,7 @@ elif menu == "🚄 Manutenzione":
                      # =========================
                      allegato = rec.get("allegato", "") if rec else ""
                     
-                     if allegato:
+                    if allegato:
                         st.markdown(
                             f'<a href="{allegato}" target="_blank">📎 Apri allegato</a>',
                             unsafe_allow_html=True
