@@ -346,15 +346,7 @@ elif menu == "🚄 Manutenzione":
     # =========================
     if ruolo == "CAPOSQUADRA":
 
-        # 🚄 HEADER
-        st.markdown("""
-        <h1 style='margin-bottom:0;'>🚄 Gestione Manutenzione</h1>
-        <p style='color:gray; margin-top:0;'>Pianificazione interventi</p>
-        """, unsafe_allow_html=True)
-    
-        st.markdown("---")
-    
-        # 🔧 BOX PARAMETRI
+             # 🔧 BOX PARAMETRI
         with st.container():
     
             st.markdown("### 🔧 Parametri")
