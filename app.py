@@ -445,9 +445,9 @@ elif menu == "🚄 Manutenzione":
                     colore = "🟢"
                 # 🎨 STATO VISIVO (NUOVO)
                 if not record:
-                    stato_html = "<span class="pallino rosso"></span> ATTIVITA' DA ESEGUIRE"
+                    stato_html = '<span class="pallino rosso"></span> ATTIVITA\' DA ESEGUIRE'
                 elif record.get("stato") == "APERTO":
-                    stato_html = "<span class="pallino giallo"></span> ATTIVITA' IN CORSO"
+                    stato_html = '<span class="pallino giallo"></span> ATTIVITA\' IN CORSO'
                 else:
                     stato_html = "<span class="pallino verde"></span> ATTIVITA'ESEGUITA"
     
