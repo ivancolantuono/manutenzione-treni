@@ -558,21 +558,25 @@ elif menu == "🚄 Manutenzione":
                 # CHIUSURA ATTIVITÀ
  
                 if st.button(f"Chiudi_{i}"):
-                
-                    note_vecchie = record.get("note") or ""
+
+                note_vecchie = record.get("note") or ""
+            
+                note_input = note_input.strip()
+            
+                if note_input:
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
-                
-                    supabase.table("interventi").update({
-                        "stato": "CHIUSO",
-                        "fine": str(fine_input),
-                        "note": nuove_note
-                    }).eq("chiave", record["chiave"]).execute()
-                
-                    st.success("Chiuso")
-                    st.rerun()
-                
-                    
-               
+                else:
+                    nuove_note = note_vecchie
+            
+                supabase.table("interventi").update({
+                    "stato": "CHIUSO",
+                    "fine": str(fine_input),
+                    "note": nuove_note
+                }).eq("chiave", record["chiave"]).execute()
+            
+                st.success("Attività chiusa")
+                st.rerun()
+    
 elif menu == "📊 Dashboard":
 
     from streamlit_autorefresh import st_autorefresh
