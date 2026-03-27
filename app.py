@@ -13,33 +13,70 @@ st.set_page_config(layout="wide")
 # =========================
 st.markdown("""
 <style>
-.card {
-    background-color: #f5f5f5;
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
+
+/* SFONDO GENERALE */
+.stApp {
+    background-color: #FFFFFF;
 }
-.card-title {
-    font-size: 18px;
+
+/* BOTTONI ROSSI */
+.stButton>button {
+    background-color: #e10600;
+    color: black;
+    border-radius: 8px;
     font-weight: bold;
 }
-.card-sub {
-    color: gray;
-    font-size: 14px;
-}
-.badge {
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: white;
-}
-.badge-red { background-color: #d9534f; }
-.badge-yellow { background-color: #f0ad4e; }
-.badge-green { background-color: #5cb85c; }
-</style>
 
+/* INPUT */
+.stTextInput>div>div>input {
+    background-color: white;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+}
 
+/* TEXT AREA (NOTE) */
+.stTextArea textarea {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 8px !important;
+    color: black !important;
+}
+
+/* LABEL NOTE */
+label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* EXPANDER */
+.streamlit-expanderHeader {
+    font-weight: bold;
+}
+
+/* BOX INTERVENTO */
+.block-container {
+    padding-top: 2rem;
+}
+/* SELECTBOX */
+.stSelectbox div[data-baseweb="select"] {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 6px;
+}
+
+/* DATE INPUT */
+.stDateInput input {
+    background-color: white !important;
+    border: 2px solid #999 !important;
+    border-radius: 6px;
+    color: black !important;
+}
+
+/* LABEL */
+label {
+    color: #000 !important;
+    font-weight: bold;
+}
 </style>
 """, unsafe_allow_html=True)
 # =========================
@@ -390,81 +427,63 @@ elif menu == "🚄 Manutenzione":
                         except:
                             tecnici = [tecnici]
     
-                # 🎨 STATO VISIVO
-                if not record:
-                    badge = '<span class="badge badge-red">Non assegnato</span>'
-                elif record.get("stato") == "APERTO":
-                    badge = '<span class="badge badge-yellow">In corso</span>'
-                else:
-                    badge = '<span class="badge badge-green">Completato</span>'
-                
-                # 📦 CARD
-                st.markdown(f"""
-                <div class="card">
-                    <div class="card-title">{r['Componente']}</div>
-                    <div class="card-sub">{badge}</div>
-                    <hr>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown(f"*🛠️ {r['Intervento']}*")
-                
-                # 🔗 LINK
-                link_raw = r.get("Link", "")
-                links = str(link_raw).split("|") if link_raw else []
-                
-                for idx, link in enumerate(links):
-                    link = link.strip()
-                    if link:
-                        st.markdown(f"[📄 Scheda {idx+1}]({link})")
-                
-                # 📝 NOTE (DAL DB!)
-                note = record.get("note", "") if record else ""
-                
-                if note and "📎 Allegato:" in note:
-                    note_pulite = note.split("📎 Allegato:")[0]
-                else:
-                    note_pulite = note
-                
-                # 👉 FUORI dall'if
-                st.markdown("*📝 Note operatore*")
-                st.info(note_pulite if note_pulite else "Nessuna nota")
-                
-               # 👷 TECNICI
-                tecnici_input = st.multiselect(
-                    "Tecnici",
-                    operatori,
-                    default=tecnici,
-                    key=f"tec_{i}"
-                )
-                
-                colA, colB, colC = st.columns(3)
-                
-                # ✅ ASSEGNA
-                if colA.button(f"Assegna_{i}"):
-                
-                    # recupera eventuali note già presenti
-                    note_vecchie = record.get("note", "") if record else ""
-                
-                    supabase.table("interventi").upsert({
-                        "chiave": str(chiave),
-                        "treno": str(treno),
-                        "odl": str(odl),
-                        "scadenza": str(st.session_state.scadenza),
-                        "data": str(data_giorno),
-                        "componente": str(r["Componente"]),
-                        "intervento": str(r["Intervento"]),
-                        "link": str(link_raw),
-                        "tecnico": str(tecnici_input),
-                        "caposquadra": str(utente),
-                        "stato": "APERTO",
-                        "inizio": str(ora_italia()),
-                        "note": note_vecchie  # mantiene le note
-                    }).execute()
-                
-                    st.success("Assegnato")
-                    st.rerun()
+                with st.expander(f"{colore} {r['Componente']}"):
+    
+                    st.write(r["Intervento"])
+    
+                    # 🔗 LINK
+                    link_raw = r.get("Link", "")
+                    links = str(link_raw).split("|") if link_raw else []
+    
+                    for idx, link in enumerate(links):
+                        link = link.strip()
+                        if link:
+                            st.markdown(f"[📄 Scheda {idx+1}]({link})")
+    
+                    # 📝 NOTE (DAL DB!)
+                    note = record.get("note", "") if record else ""
+    
+                    if note and "📎 Allegato:" in note:
+                        note_pulite = note.split("📎 Allegato:")[0]
+                    else:
+                        note_pulite = note
+    
+                    st.markdown("<b><u>📝 Note operatore</u></b>", unsafe_allow_html=True)
+                    st.write(note_pulite if note_pulite else "—")
+    
+                    # 👷 TECNICI
+                    tecnici_input = st.multiselect(
+                        "Tecnici",
+                        operatori,
+                        default=tecnici,
+                        key=f"tec_{i}"
+                    )
+    
+                    colA, colB, colC = st.columns(3)
+                    # ASSEGNA
+                    if colA.button(f"Assegna_{i}"):
+
+                        # 🔁 recupera eventuali note già presenti
+                        note_vecchie = record.get("note", "") if record else ""
+                    
+                        supabase.table("interventi").upsert({
+                            "chiave": str(chiave),
+                            "treno": str(treno),
+                            "odl": str(odl),
+                            "scadenza": str(st.session_state.scadenza),
+                            "data": str(data_giorno),
+                            "componente": str(r["Componente"]),
+                            "intervento": str(r["Intervento"]),
+                            "link": str(link_raw),
+                            "tecnico": str(tecnici_input),
+                            "caposquadra": str(utente),
+                            "stato": "APERTO",
+                            "inizio": str(ora_italia()),
+                            "note": note_vecchie  # ✅ mantiene le note esistenti
+                        }).execute()
+                    
+                        st.success("Assegnato")
+                        st.rerun()
 
                     # WHATSAPP
                     numeri = []
