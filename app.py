@@ -294,8 +294,11 @@ if menu == "📊 Storico":
 # =========================
 elif menu == "🚄 Manutenzione":
 
-    st.title("🚄 Gestione Manutenzione")
-
+    st.markdown("""
+    <h1 style='margin-bottom:0;'>🚄 Gestione Manutenzione</h1>
+    <p style='color:gray; margin-top:0;'>Pianificazione e controllo attività</p>
+    """, unsafe_allow_html=True)
+    
     import ast
     import urllib.parse
 
