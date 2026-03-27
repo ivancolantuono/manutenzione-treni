@@ -449,7 +449,7 @@ elif menu == "🚄 Manutenzione":
                 elif record.get("stato") == "APERTO":
                     stato_html = '<span class="pallino giallo"></span> IN CORSO'
                 else:
-                    stato_html = "<span class="pallino verde"></span> ESEGUITA"
+                    stato_html = '<span class="pallino verde"></span> ESEGUITA'
     
                     tecnici = record.get("tecnico", [])
                     if isinstance(tecnici, str):
