@@ -503,30 +503,30 @@ elif menu == "🚄 Manutenzione":
                 )
                 
                 colA, colB, colC = st.columns(3)
-                    # ASSEGNA
-                    if colA.button(f"Assegna_{i}"):
-
-                        # 🔁 recupera eventuali note già presenti
-                        note_vecchie = record.get("note", "") if record else ""
-                    
-                        supabase.table("interventi").upsert({
-                            "chiave": str(chiave),
-                            "treno": str(treno),
-                            "odl": str(odl),
-                            "scadenza": str(st.session_state.scadenza),
-                            "data": str(data_giorno),
-                            "componente": str(r["Componente"]),
-                            "intervento": str(r["Intervento"]),
-                            "link": str(link_raw),
-                            "tecnico": str(tecnici_input),
-                            "caposquadra": str(utente),
-                            "stato": "APERTO",
-                            "inizio": str(ora_italia()),
-                            "note": note_vecchie  # ✅ mantiene le note esistenti
-                        }).execute()
-                    
-                        st.success("Assegnato")
-                        st.rerun()
+               # ASSEGNA
+               if colA.button(f"Assegna_{i}"):
+            
+                                    # 🔁 recupera eventuali note già presenti
+                                    note_vecchie = record.get("note", "") if record else ""
+                                
+                                    supabase.table("interventi").upsert({
+                                        "chiave": str(chiave),
+                                        "treno": str(treno),
+                                        "odl": str(odl),
+                                        "scadenza": str(st.session_state.scadenza),
+                                        "data": str(data_giorno),
+                                        "componente": str(r["Componente"]),
+                                        "intervento": str(r["Intervento"]),
+                                        "link": str(link_raw),
+                                        "tecnico": str(tecnici_input),
+                                        "caposquadra": str(utente),
+                                        "stato": "APERTO",
+                                        "inizio": str(ora_italia()),
+                                        "note": note_vecchie  # ✅ mantiene le note esistenti
+                                    }).execute()
+                                
+                                    st.success("Assegnato")
+                                    st.rerun()                    
 
                     # WHATSAPP
                     numeri = []
