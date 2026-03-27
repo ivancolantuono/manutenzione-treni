@@ -444,6 +444,9 @@ elif menu == "🚄 Manutenzione":
                     # ASSEGNA
                     if colA.button(f"Assegna_{i}"):
 
+                        # 🔁 recupera eventuali note già presenti
+                        note_vecchie = record.get("note", "") if record else ""
+                    
                         supabase.table("interventi").upsert({
                             "chiave": str(chiave),
                             "treno": str(treno),
@@ -457,9 +460,9 @@ elif menu == "🚄 Manutenzione":
                             "caposquadra": str(utente),
                             "stato": "APERTO",
                             "inizio": str(ora_italia()),
-                            "note": r.get("note","") if rec else ""
+                            "note": note_vecchie  # ✅ mantiene le note esistenti
                         }).execute()
-
+                    
                         st.success("Assegnato")
                         st.rerun()
 
