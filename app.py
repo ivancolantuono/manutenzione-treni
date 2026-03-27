@@ -375,16 +375,22 @@ elif menu == "🚄 Manutenzione":
         if st.session_state.mostra:
 
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
-
+            interventi_db = supabase.table("interventi").select("*").execute().data
+            
             for i, r in risultati.iterrows():
+                
+               chiave = f"{r['Scheda']}{r['Intervento']}{st.session_state.treno}{st.session_state.odl}{st.session_state.data}"
 
+                record = next(
+                    (x for x in interventi_db if str(x["chiave"]) == str(chiave)),
+                    None
+                )
+               
                 treno = st.session_state.treno
                 odl = st.session_state.odl
                 data_giorno = st.session_state.data
 
                 chiave = f"{r['Scheda']}{r['Intervento']}{treno}{odl}{data_giorno}"
-
-                rec = next((x for x in rows if x["chiave"] == chiave), None)
 
                 if not rec:
                     colore = "🔴"
@@ -413,7 +419,7 @@ elif menu == "🚄 Manutenzione":
                             st.markdown(f"[📄 Scheda {idx+1}]({link})")
                 
                     # 📝 NOTE
-                    note = r.get("note", "")
+                    note = record.get("note", "")
 
                     if note and "📎 Allegato:" in note:
                         note_pulite = note.split("📎 Allegato:")[0]
