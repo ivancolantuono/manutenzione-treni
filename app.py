@@ -14,29 +14,6 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
-.pallino {
-    height: 12px;
-    width: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 6px;
-}
-
-.rosso { background-color: red; }
-
-.verde { background-color: green; }
-
-.giallo {
-    background-color: orange;
-    animation: lampeggio 1s infinite;
-}
-
-@keyframes lampeggio {
-    0% { opacity: 1; }
-    50% { opacity: 0.2; }
-    100% { opacity: 1; }
-}
-
 /* SFONDO GENERALE */
 .stApp {
     background-color: #FFFFFF;
@@ -439,17 +416,9 @@ elif menu == "🚄 Manutenzione":
                 # ✅ STATO
                 if not record:
                     colore = "🔴"
-                elif record.get("stato") == "APERTO":
-                    colore = "🟡"
+                    tecnici = []
                 else:
-                    colore = "🟢"
-                # 🎨 STATO VISIVO (NUOVO)
-                if not record:
-                    stato_html = '<span class="pallino rosso"></span> DA ESEGUIRE'
-                elif record.get("stato") == "APERTO":
-                    stato_html = '<span class="pallino giallo"></span> IN CORSO'
-                else:
-                    stato_html = '<span class="pallino verde"></span> ESEGUITA'
+                    colore = "🟡" if record.get("stato") == "APERTO" else "🟢"
     
                     tecnici = record.get("tecnico", [])
                     if isinstance(tecnici, str):
@@ -460,10 +429,8 @@ elif menu == "🚄 Manutenzione":
     
                 with st.expander(f"{colore} {r['Componente']}"):
     
-                    st.markdown(f"""
-                    🛠️ {r['Intervento']} — {stato_html}
-                    """, unsafe_allow_html=True)
-                               
+                    st.write(r["Intervento"])
+    
                     # 🔗 LINK
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
@@ -486,6 +453,7 @@ elif menu == "🚄 Manutenzione":
     
                     # 👷 TECNICI
                     tecnici_input = st.multiselect(
+                        "Tecnici",
                         operatori,
                         default=tecnici,
                         key=f"tec_{i}"
