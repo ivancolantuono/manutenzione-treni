@@ -13,6 +13,32 @@ st.set_page_config(layout="wide")
 # =========================
 st.markdown("""
 <style>
+.card {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+.card-sub {
+    color: gray;
+    font-size: 14px;
+}
+.badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: white;
+}
+.badge-red { background-color: #d9534f; }
+.badge-yellow { background-color: #f0ad4e; }
+.badge-green { background-color: #5cb85c; }
+</style>
+
 
 /* SFONDO GENERALE */
 .stApp {
@@ -427,9 +453,25 @@ elif menu == "🚄 Manutenzione":
                         except:
                             tecnici = [tecnici]
     
-                with st.expander(f"{colore} {r['Componente']}"):
-    
-                    st.write(r["Intervento"])
+                # 🎨 STATO VISIVO
+                if not record:
+                    badge = '<span class="badge badge-red">Non assegnato</span>'
+                elif record.get("stato") == "APERTO":
+                    badge = '<span class="badge badge-yellow">In corso</span>'
+                else:
+                    badge = '<span class="badge badge-green">Completato</span>'
+                
+                # 📦 CARD
+                st.markdown(f"""
+                <div class="card">
+                    <div class="card-title">{r['Componente']}</div>
+                    <div class="card-sub">{badge}</div>
+                    <hr>
+                </div>
+                """, unsafe_allow_html=True)
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(f"**🛠️ {r['Intervento']}**")
     
                     # 🔗 LINK
                     link_raw = r.get("Link", "")
@@ -441,15 +483,15 @@ elif menu == "🚄 Manutenzione":
                             st.markdown(f"[📄 Scheda {idx+1}]({link})")
     
                     # 📝 NOTE (DAL DB!)
-                    note = record.get("note", "") if record else ""
+                    "note" = record.get("note", "") if record else ""
     
                     if note and "📎 Allegato:" in note:
                         note_pulite = note.split("📎 Allegato:")[0]
                     else:
                         note_pulite = note
     
-                    st.markdown("<b><u>📝 Note operatore</u></b>", unsafe_allow_html=True)
-                    st.write(note_pulite if note_pulite else "—")
+                    st.markdown("*📝 Note operatore*")
+                    st.info(note_pulite if note_pulite else "Nessuna nota")
     
                     # 👷 TECNICI
                     tecnici_input = st.multiselect(
