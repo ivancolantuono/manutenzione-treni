@@ -11,9 +11,33 @@ st.set_page_config(layout="wide")
 # =========================
 # STILE
 # =========================
-
 st.markdown("""
 <style>
+.card {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+.card-sub {
+    color: gray;
+    font-size: 14px;
+}
+.badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: white;
+}
+.badge-red { background-color: #d9534f; }
+.badge-yellow { background-color: #f0ad4e; }
+.badge-green { background-color: #5cb85c; }
+</style>
 
 /* SFONDO GENERALE */
 .stApp {
