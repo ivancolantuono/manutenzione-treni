@@ -423,7 +423,7 @@ elif menu == "🚄 Manutenzione":
                     st.write(f"📝 Note operatore:\n{note_pulite if note_pulite else '—'}")
                     allegato = r.get("allegato", "")
 
-                     if allegato:
+                    if allegato:
                          st.markdown(
                              f'<a href="{allegato}" target="_blank">📎 Apri allegato</a>',
                              unsafe_allow_html=True
