@@ -556,7 +556,7 @@ elif menu == "🚄 Manutenzione":
                 # =========================
                 # CHIUSURA ATTIVITÀ
  
-                 if st.button(f"Chiudi_{i}"):
+                if st.button(f"Chiudi_{i}"):
                 
                     note_vecchie = record.get("note") or ""
                     nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
