@@ -417,12 +417,12 @@ elif menu == "🚄 Manutenzione":
 
                     if note and "📎 Allegato:" in note:
                         note_pulite = note.split("📎 Allegato:")[0]
-                     else:
+                    else:
                         note_pulite = note
                     
-                     st.markdown("<b><u>📝 Note operatore</u></b>", unsafe_allow_html=True)
-                     st.write(note_pulite if note_pulite else "—")
-                     )
+                    st.markdown("<b><u>📝 Note operatore</u></b>", unsafe_allow_html=True)
+                    st.write(note_pulite if note_pulite else "—")
+                    )
                                                                     
                     tecnici_input = st.multiselect(
                         "Tecnici",
