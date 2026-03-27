@@ -470,8 +470,8 @@ elif menu == "🚄 Manutenzione":
                 </div>
                 """, unsafe_allow_html=True)
 
-                 st.markdown("<br>", unsafe_allow_html=True)
-                 st.markdown(f"**🛠️ {r['Intervento']}**")
+             st.markdown("<br>", unsafe_allow_html=True)
+             st.markdown(f"**🛠️ {r['Intervento']}**")
     
                     # 🔗 LINK
                     link_raw = r.get("Link", "")
