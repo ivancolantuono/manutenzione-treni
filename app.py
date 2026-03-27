@@ -382,7 +382,7 @@ elif menu == "🚄 Manutenzione":
                chiave = f"{r['Scheda']}{r['Intervento']}{st.session_state.treno}{st.session_state.odl}{st.session_state.data}"
 
                 record = next(
-                    (x for x in interventi_db if str(x["chiave"]) == str(chiave)),
+                    (x for x in interventi_db if str(r["Intervento"]) in str(x)),
                     None
                 )
                
