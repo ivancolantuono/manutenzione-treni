@@ -392,7 +392,7 @@ elif menu == "🚄 Manutenzione":
                 else:
                     colore = "🟡" if rec["stato"] == "APERTO" else "🟢"
 
-                    tecnici = rec.get("tecnico", [])
+                    tecnici = r.get("tecnico", [])
                     if isinstance(tecnici, str):
                         try:
                             tecnici = ast.literal_eval(tecnici)
@@ -449,7 +449,7 @@ elif menu == "🚄 Manutenzione":
                             "caposquadra": str(utente),
                             "stato": "APERTO",
                             "inizio": str(ora_italia()),
-                            "note": rec.get("note","") if rec else ""
+                            "note": r.get("note","") if rec else ""
                         }).execute()
 
                         st.success("Assegnato")
