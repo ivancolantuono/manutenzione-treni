@@ -343,104 +343,104 @@ elif menu == "🚄 Manutenzione":
     # =========================
     if ruolo == "CAPOSQUADRA":
 
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.session_state.treno = st.text_input("🚄 Treno", value=st.session_state.treno)
-
-    with col2:
-        st.session_state.odl = st.text_input("📝 ODL Padre", value=st.session_state.odl)
-
-    with col3:
-        scelte = list(df["Scadenza"].unique())
-
-        if st.session_state.scadenza not in scelte:
-            st.session_state.scadenza = scelte[0]
-
-        st.session_state.scadenza = st.selectbox(
-            "📋 Scadenza",
-            scelte,
-            index=scelte.index(st.session_state.scadenza)
-        )
-
-    st.session_state.data = st.date_input("Data", value=st.session_state.data)
-
-    if st.button("Genera"):
-
-        if not st.session_state.treno or not st.session_state.odl:
-            st.error("⚠️ Inserisci Treno e ODL")
-        else:
-            st.session_state.mostra = True
-
-    if st.session_state.mostra:
-
-        risultati = df[df["Scadenza"] == st.session_state.scadenza]
-
-        # ✅ PRENDE I DATI DAL DB
-        interventi_db = supabase.table("interventi").select("*").execute().data
-
-        for i, r in risultati.iterrows():
-
-            treno = st.session_state.treno
-            odl = st.session_state.odl
-            data_giorno = st.session_state.data
-
-            # ✅ CHIAVE UNICA
-            chiave = f"{r['Scheda']}{r['Intervento']}{treno}{odl}{data_giorno}"
-
-            # ✅ CERCA RECORD CORRETTO
-            record = next(
-                (x for x in interventi_db if str(x.get("chiave")) == str(chiave)),
-                None
+        col1, col2, col3 = st.columns(3)
+    
+        with col1:
+            st.session_state.treno = st.text_input("🚄 Treno", value=st.session_state.treno)
+    
+        with col2:
+            st.session_state.odl = st.text_input("📝 ODL Padre", value=st.session_state.odl)
+    
+        with col3:
+            scelte = list(df["Scadenza"].unique())
+    
+            if st.session_state.scadenza not in scelte:
+                st.session_state.scadenza = scelte[0]
+    
+            st.session_state.scadenza = st.selectbox(
+                "📋 Scadenza",
+                scelte,
+                index=scelte.index(st.session_state.scadenza)
             )
-
-            # ✅ STATO
-            if not record:
-                colore = "🔴"
-                tecnici = []
+    
+        st.session_state.data = st.date_input("Data", value=st.session_state.data)
+    
+        if st.button("Genera"):
+    
+            if not st.session_state.treno or not st.session_state.odl:
+                st.error("⚠️ Inserisci Treno e ODL")
             else:
-                colore = "🟡" if record.get("stato") == "APERTO" else "🟢"
-
-                tecnici = record.get("tecnico", [])
-                if isinstance(tecnici, str):
-                    try:
-                        tecnici = ast.literal_eval(tecnici)
-                    except:
-                        tecnici = [tecnici]
-
-            with st.expander(f"{colore} {r['Componente']}"):
-
-                st.write(r["Intervento"])
-
-                # 🔗 LINK
-                link_raw = r.get("Link", "")
-                links = str(link_raw).split("|") if link_raw else []
-
-                for idx, link in enumerate(links):
-                    link = link.strip()
-                    if link:
-                        st.markdown(f"[📄 Scheda {idx+1}]({link})")
-
-                # 📝 NOTE (DAL DB!)
-                note = record.get("note", "") if record else ""
-
-                if note and "📎 Allegato:" in note:
-                    note_pulite = note.split("📎 Allegato:")[0]
-                else:
-                    note_pulite = note
-
-                st.markdown("<b><u>📝 Note operatore</u></b>", unsafe_allow_html=True)
-                st.write(note_pulite if note_pulite else "—")
-
-                # 👷 TECNICI
-                tecnici_input = st.multiselect(
-                    "Tecnici",
-                    operatori,
-                    default=tecnici,
-                    key=f"tec_{i}"
+                st.session_state.mostra = True
+    
+        if st.session_state.mostra:
+    
+            risultati = df[df["Scadenza"] == st.session_state.scadenza]
+    
+            # ✅ PRENDE I DATI DAL DB
+            interventi_db = supabase.table("interventi").select("*").execute().data
+    
+            for i, r in risultati.iterrows():
+    
+                treno = st.session_state.treno
+                odl = st.session_state.odl
+                data_giorno = st.session_state.data
+    
+                # ✅ CHIAVE UNICA
+                chiave = f"{r['Scheda']}{r['Intervento']}{treno}{odl}{data_giorno}"
+    
+                # ✅ CERCA RECORD CORRETTO
+                record = next(
+                    (x for x in interventi_db if str(x.get("chiave")) == str(chiave)),
+                    None
                 )
-
-                colA, colB, colC = st.columns(3)
+    
+                # ✅ STATO
+                if not record:
+                    colore = "🔴"
+                    tecnici = []
+                else:
+                    colore = "🟡" if record.get("stato") == "APERTO" else "🟢"
+    
+                    tecnici = record.get("tecnico", [])
+                    if isinstance(tecnici, str):
+                        try:
+                            tecnici = ast.literal_eval(tecnici)
+                        except:
+                            tecnici = [tecnici]
+    
+                with st.expander(f"{colore} {r['Componente']}"):
+    
+                    st.write(r["Intervento"])
+    
+                    # 🔗 LINK
+                    link_raw = r.get("Link", "")
+                    links = str(link_raw).split("|") if link_raw else []
+    
+                    for idx, link in enumerate(links):
+                        link = link.strip()
+                        if link:
+                            st.markdown(f"[📄 Scheda {idx+1}]({link})")
+    
+                    # 📝 NOTE (DAL DB!)
+                    note = record.get("note", "") if record else ""
+    
+                    if note and "📎 Allegato:" in note:
+                        note_pulite = note.split("📎 Allegato:")[0]
+                    else:
+                        note_pulite = note
+    
+                    st.markdown("<b><u>📝 Note operatore</u></b>", unsafe_allow_html=True)
+                    st.write(note_pulite if note_pulite else "—")
+    
+                    # 👷 TECNICI
+                    tecnici_input = st.multiselect(
+                        "Tecnici",
+                        operatori,
+                        default=tecnici,
+                        key=f"tec_{i}"
+                    )
+    
+                    colA, colB, colC = st.columns(3)
                     # ASSEGNA
                     if colA.button(f"Assegna_{i}"):
 
