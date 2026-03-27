@@ -342,7 +342,7 @@ elif menu == "🚄 Manutenzione":
     # 👨‍🔧 CAPOSQUADRA
     # =========================
     if ruolo == "CAPOSQUADRA":
-
+        st.title("🚄 Gestione Manutenzione")
         col1, col2, col3 = st.columns(3)
     
         with col1:
