@@ -415,29 +415,14 @@ elif menu == "🚄 Manutenzione":
                     # 📝 NOTE
                     note = r.get("note", "")
                 
-                    # pulizia note (toglie link allegato)
+                    # pulizia note (toglie eventuale vecchio allegato scritto dentro)
                     if "📎 Allegato:" in note:
                         note_pulite = note.split("📎 Allegato:")[0]
                     else:
                         note_pulite = note
                 
                     st.write(f"📝 Note operatore:\n{note_pulite if note_pulite else '—'}")
-                
-                    # 📎 ALLEGATO
-                    allegato = r.get("allegato", "")
-                
-                    if allegato:
-                        st.markdown(
-                            f'<a href="{allegato}" target="_blank">📎 Apri allegato</a>',
-                            unsafe_allow_html=True
-                        )
-                
-                        # preview immagine (facoltativo)
-                        if allegato.endswith((".png", ".jpg", ".jpeg")):
-                            st.image(allegato, width=250)
-                     
-                    
-                        
+                                        
                     tecnici_input = st.multiselect(
                         "Tecnici",
                         operatori,
