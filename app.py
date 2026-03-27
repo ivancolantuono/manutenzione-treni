@@ -402,47 +402,39 @@ elif menu == "🚄 Manutenzione":
                 with st.expander(f"{colore} {r['Componente']}"):
 
                     st.write(r["Intervento"])
-
+                
                     # 🔥 LINK MULTIPLI
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
-
+                
                     for idx, link in enumerate(links):
                         link = link.strip()
                         if link:
                             st.markdown(f"[📄 Scheda {idx+1}]({link})")
-
-                    note = r.get("note","")
-
+                
+                    # 📝 NOTE
+                    note = r.get("note", "")
+                
                     # pulizia note (toglie link allegato)
                     if "📎 Allegato:" in note:
                         note_pulite = note.split("📎 Allegato:")[0]
                     else:
                         note_pulite = note
-                    
+                
                     st.write(f"📝 Note operatore:\n{note_pulite if note_pulite else '—'}")
-                    allegato = r.get("allegato", "")
-
-                    if allegato:
-                         st.markdown(
-                             f'<a href="{allegato}" target="_blank">📎 Apri allegato</a>',
-                             unsafe_allow_html=True
-                         )
-                    # =========================
+                
                     # 📎 ALLEGATO
-                    # =========================
-                    allegato = r.get("allegato", "") if rec else ""
-                    
+                    allegato = r.get("allegato", "")
+                
                     if allegato:
                         st.markdown(
                             f'<a href="{allegato}" target="_blank">📎 Apri allegato</a>',
                             unsafe_allow_html=True
                         )
-                    
-                        # preview immagine (facoltativo ma consigliato)
+                
+                        # preview immagine (facoltativo)
                         if allegato.endswith((".png", ".jpg", ".jpeg")):
                             st.image(allegato, width=250)
-                        
                      
                     
                         
