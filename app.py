@@ -456,8 +456,8 @@ elif menu == "🚄 Manutenzione":
     
                     st.markdown(f"""
                     🛠️ {r['Intervento']} — {stato_html}
-                    """, unsafe_allow_html=True
-    
+                    """, unsafe_allow_html=True)
+                               
                     # 🔗 LINK
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
