@@ -14,6 +14,29 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
+.pallino {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.rosso { background-color: red; }
+
+.verde { background-color: green; }
+
+.giallo {
+    background-color: orange;
+    animation: lampeggio 1s infinite;
+}
+
+@keyframes lampeggio {
+    0% { opacity: 1; }
+    50% { opacity: 0.2; }
+    100% { opacity: 1; }
+}
+
 /* SFONDO GENERALE */
 .stApp {
     background-color: #FFFFFF;
@@ -414,11 +437,13 @@ elif menu == "🚄 Manutenzione":
                 )
     
                 # ✅ STATO
+                # 🎨 STATO VISIVO (NUOVO)
                 if not record:
-                    colore = "🔴"
-                    tecnici = []
+                    stato_html = '<span class="pallino rosso"></span> Da eseguire'
+                elif record.get("stato") == "APERTO":
+                    stato_html = '<span class="pallino giallo"></span> In corso'
                 else:
-                    colore = "🟡" if record.get("stato") == "APERTO" else "🟢"
+                    stato_html = '<span class="pallino verde"></span> Eseguito'
     
                     tecnici = record.get("tecnico", [])
                     if isinstance(tecnici, str):
