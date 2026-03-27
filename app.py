@@ -454,7 +454,9 @@ elif menu == "🚄 Manutenzione":
     
                 with st.expander(f"{colore} {r['Componente']}"):
     
-                    st.write(r["Intervento"])
+                    st.markdown(f"""
+                    🛠️ {r['Intervento']} — {stato_html}
+                    """, unsafe_allow_html=True
     
                     # 🔗 LINK
                     link_raw = r.get("Link", "")
