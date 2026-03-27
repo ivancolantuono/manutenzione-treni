@@ -412,7 +412,7 @@ elif menu == "🚄 Manutenzione":
                         if link:
                             st.markdown(f"[📄 Scheda {idx+1}]({link})")
 
-                    note = rec.get("note","") if rec else ""
+                    note = rec.get("note","")
 
                     # pulizia note (toglie link allegato)
                     if "📎 Allegato:" in note:
@@ -421,7 +421,13 @@ elif menu == "🚄 Manutenzione":
                         note_pulite = note
                     
                     st.write(f"📝 Note operatore:\n{note_pulite if note_pulite else '—'}")
-                    
+                    allegato = r.get("allegato", "")
+
+                     if allegato:
+                         st.markdown(
+                             f'<a href="{allegato}" target="_blank">📎 Apri allegato</a>',
+                             unsafe_allow_html=True
+                         )
                     # =========================
                      # 📎 ALLEGATO
                      # =========================
