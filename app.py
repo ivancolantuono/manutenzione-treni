@@ -486,7 +486,6 @@ elif menu == "🚄 Manutenzione":
     
                     # 👷 TECNICI
                     tecnici_input = st.multiselect(
-                        
                         operatori,
                         default=tecnici,
                         key=f"tec_{i}"
