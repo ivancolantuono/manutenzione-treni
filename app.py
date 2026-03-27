@@ -429,9 +429,9 @@ elif menu == "🚄 Manutenzione":
                              unsafe_allow_html=True
                          )
                     # =========================
-                     # 📎 ALLEGATO
-                     # =========================
-                     allegato = rec.get("allegato", "") if rec else ""
+                    # 📎 ALLEGATO
+                    # =========================
+                    allegato = rec.get("allegato", "") if rec else ""
                     
                     if allegato:
                         st.markdown(
