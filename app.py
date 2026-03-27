@@ -40,69 +40,6 @@ st.markdown("""
 </style>
 
 
-/* SFONDO GENERALE */
-.stApp {
-    background-color: #FFFFFF;
-}
-
-/* BOTTONI ROSSI */
-.stButton>button {
-    background-color: #e10600;
-    color: black;
-    border-radius: 8px;
-    font-weight: bold;
-}
-
-/* INPUT */
-.stTextInput>div>div>input {
-    background-color: white;
-    border: 2px solid #ccc;
-    border-radius: 6px;
-}
-
-/* TEXT AREA (NOTE) */
-.stTextArea textarea {
-    background-color: white !important;
-    border: 2px solid #999 !important;
-    border-radius: 8px !important;
-    color: black !important;
-}
-
-/* LABEL NOTE */
-label {
-    font-weight: bold;
-    color: #333;
-}
-
-/* EXPANDER */
-.streamlit-expanderHeader {
-    font-weight: bold;
-}
-
-/* BOX INTERVENTO */
-.block-container {
-    padding-top: 2rem;
-}
-/* SELECTBOX */
-.stSelectbox div[data-baseweb="select"] {
-    background-color: white !important;
-    border: 2px solid #999 !important;
-    border-radius: 6px;
-}
-
-/* DATE INPUT */
-.stDateInput input {
-    background-color: white !important;
-    border: 2px solid #999 !important;
-    border-radius: 6px;
-    color: black !important;
-}
-
-/* LABEL */
-label {
-    color: #000 !important;
-    font-weight: bold;
-}
 </style>
 """, unsafe_allow_html=True)
 # =========================
