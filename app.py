@@ -490,8 +490,8 @@ elif menu == "🚄 Manutenzione":
                     else:
                         note_pulite = note
     
-                    st.markdown("*📝 Note operatore*")
-                    st.info(note_pulite if note_pulite else "Nessuna nota")
+                        st.markdown("*📝 Note operatore*")
+                        st.info(note_pulite if note_pulite else "Nessuna nota")
     
                     # 👷 TECNICI
                     tecnici_input = st.multiselect(
