@@ -736,13 +736,13 @@ elif menu == "📚 Schede SR":
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
-    # 📌 COLONNE STANDARD
+    # 📌 COLONNE
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
 
-    # 🔎 TROVA SOTTOGRUPPO AUTOMATICO
+    # 🔎 trova sottogruppo
     col_sottogruppo = None
     for col in df_sr.columns:
         if "sotto" in col:
@@ -766,7 +766,7 @@ elif menu == "📚 Schede SR":
             df_filtrato = df_filtrato[mask_testo | mask_titolo]
 
     # =========================
-    # 📂 FILTRO SOTTOGRUPPO DINAMICO
+    # 📂 FILTRO SOTTOGRUPPO
     # =========================
     if col_sottogruppo:
         gruppi = sorted(df_filtrato[col_sottogruppo].dropna().unique())
@@ -774,9 +774,6 @@ elif menu == "📚 Schede SR":
     else:
         gruppo_sel = "Tutti"
 
-    # =========================
-    # 📊 RISULTATI FINALI
-    # =========================
     risultati = df_filtrato.copy()
 
     if gruppo_sel != "Tutti":
@@ -786,27 +783,25 @@ elif menu == "📚 Schede SR":
 
     st.write(f"🔎 Risultati trovati: {len(risultati)}")
 
-    # =========================
-    # 📦 RAGGRUPPA SCHEDE (NO DOPPIONI)
-    # =========================
     if risultati.empty:
         st.info("Nessuna scheda trovata")
         st.stop()
 
+    # =========================
+    # 📄 OUTPUT (SOLO PAGINE FILTRATE)
+    # =========================
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
     for (titolo, manuale), gruppo in gruppi:
 
         sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo else ""
-
-        # tutte le pagine della stessa scheda
         pagine = gruppo[col_pagina].astype(str).tolist()
 
         with st.expander(f"🔧 {titolo}"):
 
-            st.write(f"📘 {manuale}")
+            st.write(f"📘 Manuale: {manuale}")
 
             if sottogruppo:
                 st.write(f"📂 {sottogruppo}")
 
-            st.write(f"📄 Pagine: {', '.join(pagine)}")
+            st.write(f"📄 Pagine trovate: {', '.join(pagine)}")
