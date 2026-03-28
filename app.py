@@ -600,7 +600,7 @@ elif menu == "🚄 Manutenzione":
                 # =========================
                 # CHIUSURA ATTIVITÀ
  
-                if st.button(f"Chiudi_{i}"):
+                if colC.button("✅ Chiudi", key=f"chiudi_{i}"):
 
                     note_vecchie = record.get("note") or ""
                     note_input = note_input.strip()
