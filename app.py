@@ -791,7 +791,7 @@ elif menu == "📚 Schede SR":
         sottogruppo = str(r.get(col_sottogruppo, "")) if col_sottogruppo else ""
 
         st.markdown(f"""
-        📘 {manuale} — Pag. {pagina}  
+        📘 **{manuale} — Pag. {pagina}**  
         🔧 **{titolo}**  
-        📂 {sottogruppo}
+        📂 **{sottogruppo}**
         """)
