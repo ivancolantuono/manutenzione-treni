@@ -576,10 +576,11 @@ elif menu == "🚄 Manutenzione":
                 for idx, link in enumerate(links):
                     link = link.strip()
                     if link:
-                        nome = r.get("NomeScheda", "")
                 
-                        if not nome:
-                            nome = f"Scheda {idx+1}"
+                        nome = r.get("NomeScheda")
+                
+                        if nome is None or nome == "":
+                            nome = "Apri scheda tecnica"
                 
                         st.markdown(f"[📄 {nome}]({link})")
                         
