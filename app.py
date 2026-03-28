@@ -582,7 +582,7 @@ elif menu == "🚄 Manutenzione":
                     link = link.strip()
                     if link:
                 
-                        nome = r.get("Scheda")
+                        nome = record.get("Scheda")
 
                         if not nome:
                             nome = "Apri scheda tecnica"
