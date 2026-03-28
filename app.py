@@ -598,8 +598,7 @@ elif menu == "🚄 Manutenzione":
                 
                 # =========================
                 # =========================
-                # CHIUSURA ATTIVITÀ
- 
+                # CHIUSURA ATTIVIT
                 if colC.button("✅ Chiudi", key=f"chiudi_{i}"):
 
                     note_vecchie = record.get("note") or ""
