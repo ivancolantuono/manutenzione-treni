@@ -467,7 +467,7 @@ elif menu == "🚄 Manutenzione":
     
                     colA, colB, colC = st.columns(3)
                     # ASSEGNA
-                    if colA.button(f"Assegna_{i}"):
+                    if colA.button("🔧 Assegna", key=f"assegna_{i}"):
 
                         # 🔁 recupera eventuali note già presenti
                         note_vecchie = record.get("note", "") if record else ""
