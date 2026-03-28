@@ -438,7 +438,8 @@ elif menu == "🚄 Manutenzione":
                     for idx, link in enumerate(links):
                         link = link.strip()
                         if link:
-                            st.markdown(f"[📄 Scheda {idx+1}]({link})")
+                            nome_file = link.split("/")[-1]  # prende il nome finale
+                            st.markdown(f"[📄 {nome_file}]({link})")
     
                     # 📝 NOTE (DAL DB!)
                     note = record.get("note", "") if record else ""
