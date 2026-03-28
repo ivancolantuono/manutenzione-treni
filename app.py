@@ -174,9 +174,9 @@ with colB:
 # =========================
 if ruolo == "CAPOSQUADRA":
     menu = st.radio(
-        "",
-        ["📊 Storico", "🚄 Manutenzione", "📦 Cerca Componente", "📚 Schede SR"],
-        horizontal=True
+         "",
+         ["🚄 Manutenzione", "📊 Dashboard", "📊 Storico", "📚 Schede SR", "📦 Cerca Componente"],
+         horizontal=True
 )
 else:
     menu = st.radio(
