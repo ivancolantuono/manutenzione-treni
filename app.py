@@ -525,7 +525,7 @@ elif menu == "🚄 Manutenzione":
                             st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
 
                     # CANCELLA
-                    if colC.button(f"Cancella_{i}"):
+                    if colB.button("🗑️ Cancella", key=f"cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
                         st.warning("Cancellato")
