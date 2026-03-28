@@ -728,7 +728,7 @@ elif menu == "📚 Schede SR":
     st.title("📚 Ricerca Schede SR")
 
     df_sr = pd.read_excel("schede_sr.xlsx")
-    df_sr.columns = df_sr.columns.str.strip()
+    df_sr.columns = df_sr.columns.str.strip().str.lower()
 
     ricerca = st.text_input("🔍 Cerca (es. compressore, valvola...)")
 
