@@ -578,8 +578,8 @@ elif menu == "🚄 Manutenzione":
                     if link:
                         nome = r.get("NomeScheda", f"Scheda {idx+1}")
                 
-                        st.markdown(f"[📄 {nome}]({link})")
-
+                        st.markdown(f"[📄 Scheda tecnica]({link})")
+                        
                 # STORICO NOTE
                 st.write(f"📝 Storico:\n{record.get('note','')}")
                 
