@@ -805,7 +805,7 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {titolo}"):
 
-            st.write(f"📘 Manuale: {manuale}")
+            st.write(f"📘 {manuale}")
 
             if sottogruppo:
                 st.write(f"📂 {sottogruppo}")
