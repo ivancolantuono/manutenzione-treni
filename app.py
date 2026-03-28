@@ -174,9 +174,10 @@ with colB:
 # =========================
 if ruolo == "CAPOSQUADRA":
     menu = st.radio(
-         "",
-         ["🚄 Manutenzione", "📊 Dashboard", "📊 Storico", "📦 Cerca Componente"],
-         horizontal=True
+        "",
+        ["📊 Storico", "🚄 Manutenzione", "📦 Cerca Componente", "📚 Schede SR"],
+        horizontal=True
+)
 )
 else:
     menu = st.radio(
@@ -719,3 +720,40 @@ elif menu == "📦 Cerca Componente":
         ]
 
     st.dataframe(df_mag, use_container_width=True)
+
+# =========================
+# 📚 SCHEDE SR (EXCEL)
+# =========================
+elif menu == "📚 Schede SR":
+
+    st.title("📚 Ricerca Schede SR")
+
+    df_sr = pd.read_excel("schede_sr.xlsx")
+    df_sr.columns = df_sr.columns.str.strip()
+
+    ricerca = st.text_input("🔍 Cerca (es. compressore, valvola...)")
+
+    if ricerca:
+        risultati = df_sr[
+            df_sr["testo"].str.contains(ricerca, case=False, na=False)
+        ]
+    else:
+        risultati = df_sr
+
+    st.write(f"🔎 Risultati trovati: {len(risultati)}")
+
+    for i, r in risultati.iterrows():
+
+        with st.expander(f"📄 {r['manuale']} | Pagina {r['pagina']}"):
+
+            testo = str(r["testo"])
+
+            # evidenzia parola
+            if ricerca:
+                testo = testo.replace(
+                    ricerca,
+                    f"*{ricerca.upper()}*"
+                )
+                st.markdown(testo[:500] + "...", unsafe_allow_html=True)
+            else:
+                st.write(testo[:500] + "..." if len(testo) > 500 else testo)
