@@ -178,7 +178,6 @@ if ruolo == "CAPOSQUADRA":
         ["📊 Storico", "🚄 Manutenzione", "📦 Cerca Componente", "📚 Schede SR"],
         horizontal=True
 )
-)
 else:
     menu = st.radio(
          "",
