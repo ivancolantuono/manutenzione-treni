@@ -729,36 +729,47 @@ elif menu == "📚 Schede SR":
 
     import pandas as pd
 
+    # 📥 carica Excel
     df_sr = pd.read_excel("schede_sr.xlsx")
 
     # 🔥 pulizia colonne
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
-    # 🔍 colonne
+    # 🔍 individua colonne
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
-    col_sottogruppo = "sottogruppo"
 
-    # 🧠 filtro sottogruppo
-    if col_sottogruppo in df_sr.columns:
+    # 🔎 trova sottogruppo anche se scritto male
+    col_sottogruppo = None
+    for col in df_sr.columns:
+        if "sotto" in col:
+            col_sottogruppo = col
+            break
+
+    # 📂 FILTRO SOTTOGRUPPO
+    if col_sottogruppo:
         gruppi = sorted(df_sr[col_sottogruppo].dropna().unique())
         gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
     else:
+        st.warning("⚠️ Colonna sottogruppo non trovata")
         gruppo_sel = "Tutti"
 
     # 🔍 ricerca
     ricerca = st.text_input("🔍 Cerca componente")
 
+    # 📊 BASE DATI
     risultati = df_sr.copy()
 
-    # filtro gruppo
+    # ✅ filtro sottogruppo
     if gruppo_sel != "Tutti":
-        risultati = risultati[risultati[col_sottogruppo] == gruppo_sel]
+        risultati = risultati[
+            risultati[col_sottogruppo] == gruppo_sel
+        ]
 
-    # filtro testo + titolo
+    # ✅ filtro ricerca (DOPO il gruppo)
     if ricerca:
         parole = ricerca.lower().split()
 
@@ -776,10 +787,10 @@ elif menu == "📚 Schede SR":
         manuale = str(r.get(col_manuale, "—"))
         pagina = str(r.get(col_pagina, "—"))
         titolo = str(r.get(col_titolo, "—"))
-        sottogruppo = str(r.get(col_sottogruppo, ""))
+        sottogruppo = str(r.get(col_sottogruppo, "")) if col_sottogruppo else ""
 
         st.markdown(f"""
-        🔧 *{titolo}*  
         📘 {manuale} — Pag. {pagina}  
+        🔧 *{titolo}*  
         📂 {sottogruppo}
         """)
