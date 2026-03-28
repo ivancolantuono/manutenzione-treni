@@ -731,25 +731,42 @@ elif menu == "📚 Schede SR":
 
     df_sr = pd.read_excel("schede_sr.xlsx")
 
-    # pulizia colonne
+    # 🔥 pulizia colonne
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
-    ricerca = st.text_input("🔍 Cerca componente")
-
-    # colonne
+    # 🔍 colonne
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
+    col_sottogruppo = "sottogruppo"
 
-    # filtro
-    if ricerca:
-        risultati = df_sr[
-            df_sr[col_testo].astype(str).str.contains(ricerca, case=False, na=False)
-        ]
+    # 🧠 filtro sottogruppo
+    if col_sottogruppo in df_sr.columns:
+        gruppi = sorted(df_sr[col_sottogruppo].dropna().unique())
+        gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
     else:
-        risultati = df_sr
+        gruppo_sel = "Tutti"
+
+    # 🔍 ricerca
+    ricerca = st.text_input("🔍 Cerca componente")
+
+    risultati = df_sr.copy()
+
+    # filtro gruppo
+    if gruppo_sel != "Tutti":
+        risultati = risultati[risultati[col_sottogruppo] == gruppo_sel]
+
+    # filtro testo + titolo
+    if ricerca:
+        parole = ricerca.lower().split()
+
+        for parola in parole:
+            mask_testo = risultati[col_testo].astype(str).str.lower().str.contains(parola, na=False)
+            mask_titolo = risultati[col_titolo].astype(str).str.lower().str.contains(parola, na=False)
+
+            risultati = risultati[mask_testo | mask_titolo]
 
     st.write(f"🔎 Risultati trovati: {len(risultati)}")
 
@@ -759,8 +776,10 @@ elif menu == "📚 Schede SR":
         manuale = str(r.get(col_manuale, "—"))
         pagina = str(r.get(col_pagina, "—"))
         titolo = str(r.get(col_titolo, "—"))
+        sottogruppo = str(r.get(col_sottogruppo, ""))
 
         st.markdown(f"""
         🔧 *{titolo}*  
-        📘 {manuale} — Pag. {pagina}
+        📘 {manuale} — Pag. {pagina}  
+        📂 {sottogruppo}
         """)
