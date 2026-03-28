@@ -736,52 +736,53 @@ elif menu == "📚 Schede SR":
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
-    # 🔍 individua colonne
+    # colonne
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
 
-    # 🔎 trova sottogruppo anche se scritto male
+    # 🔎 trova sottogruppo
     col_sottogruppo = None
     for col in df_sr.columns:
         if "sotto" in col:
             col_sottogruppo = col
             break
 
-    # 📂 FILTRO SOTTOGRUPPO
-    if col_sottogruppo:
-        gruppi = sorted(df_sr[col_sottogruppo].dropna().unique())
-        gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
-    else:
-        st.warning("⚠️ Colonna sottogruppo non trovata")
-        gruppo_sel = "Tutti"
-
     # 🔍 ricerca
     ricerca = st.text_input("🔍 Cerca componente")
 
-    # 📊 BASE DATI
-    risultati = df_sr.copy()
+    # 🔥 BASE PER FILTRO DINAMICO
+    df_filtrato = df_sr.copy()
 
-    # ✅ filtro sottogruppo
+    if ricerca:
+        parole = ricerca.lower().split()
+
+        for parola in parole:
+            mask_testo = df_filtrato[col_testo].astype(str).str.lower().str.contains(parola, na=False)
+            mask_titolo = df_filtrato[col_titolo].astype(str).str.lower().str.contains(parola, na=False)
+
+            df_filtrato = df_filtrato[mask_testo | mask_titolo]
+
+    # 📂 SOTTOGRUPPI DINAMICI (FILTRATI!)
+    if col_sottogruppo:
+        gruppi = sorted(df_filtrato[col_sottogruppo].dropna().unique())
+        gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
+    else:
+        gruppo_sel = "Tutti"
+
+    # 📊 RISULTATI FINALI
+    risultati = df_filtrato.copy()
+
+    # filtro gruppo DOPO
     if gruppo_sel != "Tutti":
         risultati = risultati[
             risultati[col_sottogruppo] == gruppo_sel
         ]
 
-    # ✅ filtro ricerca (DOPO il gruppo)
-    if ricerca:
-        parole = ricerca.lower().split()
-
-        for parola in parole:
-            mask_testo = risultati[col_testo].astype(str).str.lower().str.contains(parola, na=False)
-            mask_titolo = risultati[col_titolo].astype(str).str.lower().str.contains(parola, na=False)
-
-            risultati = risultati[mask_testo | mask_titolo]
-
     st.write(f"🔎 Risultati trovati: {len(risultati)}")
 
-    # 📄 RISULTATI
+    # 📄 OUTPUT
     for i, r in risultati.iterrows():
 
         manuale = str(r.get(col_manuale, "—"))
@@ -791,6 +792,6 @@ elif menu == "📚 Schede SR":
 
         st.markdown(f"""
         📘 {manuale} — Pag. {pagina}  
-        🔧 *{titolo}*  
+        🔧 **{titolo}**  
         📂 {sottogruppo}
         """)
