@@ -727,87 +727,80 @@ elif menu == "📦 Cerca Componente":
     st.dataframe(df_mag, use_container_width=True)
 
 # =========================
-# 📚 SCHEDE SR (EXCEL)
+# 📚 SCHEDE SR (RICERCA GOOGLE STYLE)
 # =========================
 elif menu == "📚 Schede SR":
 
+    import pandas as pd
+    import streamlit as st
+
     st.title("📚 Ricerca Schede SR")
 
-    import pandas as pd
-
-    # 📥 CARICA FILE
+    # =========================
+    # 📥 CARICAMENTO
+    # =========================
     df_sr = pd.read_excel("schede_sr.xlsx")
-
-    # 🔥 PULIZIA COLONNE
-    df_sr.columns = df_sr.columns.astype(str)
-    df_sr.columns = df_sr.columns.str.strip().str.lower()
-
-    # 📌 COLONNE
-    col_manuale = "manuale"
-    col_pagina = "pagina"
-    col_titolo = "titolo"
-    col_testo = "testo"
-
-    # 🔎 trova sottogruppo
-    col_sottogruppo = None
-    for col in df_sr.columns:
-        if "sotto" in col:
-            col_sottogruppo = col
-            break
+    df_sr.columns = df_sr.columns.str.strip()
 
     # =========================
-    # 🔍 RICERCA
+    # 🔍 INPUT RICERCA
     # =========================
-    ricerca = st.text_input("🔍 Cerca componente")
+    ricerca = st.text_input("🔍 Cerca componente (es. compressore aria)")
 
+    # =========================
+    # 📁 FILTRO SOTTOGRUPPO
+    # =========================
+    if "sottogruppo" in df_sr.columns:
+        sottogruppi = sorted(df_sr["sottogruppo"].dropna().unique())
+        sottogruppo_sel = st.selectbox("📁 Sottogruppo", ["Tutti"] + list(sottogruppi))
+    else:
+        sottogruppo_sel = "Tutti"
+
+    # =========================
+    # 🔎 FUNZIONE RICERCA SMART
+    # =========================
+    def match(row, query):
+        testo = " ".join(row.astype(str)).lower()
+        parole = query.lower().split()
+
+        return all(p in testo for p in parole)
+
+    # =========================
+    # 🔎 FILTRI
+    # =========================
     df_filtrato = df_sr.copy()
 
+    # 🔍 ricerca stile Google
     if ricerca:
-        parole = ricerca.lower().split()
-
-        for parola in parole:
-            mask_testo = df_filtrato[col_testo].astype(str).str.lower().str.contains(parola, na=False)
-            mask_titolo = df_filtrato[col_titolo].astype(str).str.lower().str.contains(parola, na=False)
-
-            df_filtrato = df_filtrato[mask_testo | mask_titolo]
-
-    # =========================
-    # 📂 FILTRO SOTTOGRUPPO
-    # =========================
-    if col_sottogruppo:
-        gruppi = sorted(df_filtrato[col_sottogruppo].dropna().unique())
-        gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
-    else:
-        gruppo_sel = "Tutti"
-
-    risultati = df_filtrato.copy()
-
-    if gruppo_sel != "Tutti":
-        risultati = risultati[
-            risultati[col_sottogruppo] == gruppo_sel
+        df_filtrato = df_filtrato[
+            df_filtrato.apply(lambda row: match(row, ricerca), axis=1)
         ]
 
-    st.write(f"🔎 Risultati trovati: {len(risultati)}")
-
-    if risultati.empty:
-        st.info("Nessuna scheda trovata")
-        st.stop()
+    # 📁 filtro sottogruppo
+    if sottogruppo_sel != "Tutti":
+        df_filtrato = df_filtrato[
+            df_filtrato["sottogruppo"] == sottogruppo_sel
+        ]
 
     # =========================
-    # 📄 OUTPUT (SOLO PAGINE FILTRATE)
+    # 📊 RISULTATI
     # =========================
-    gruppi = risultati.groupby([col_titolo, col_manuale])
+    st.write(f"🔎 Risultati trovati: {len(df_filtrato)}")
 
-    for (titolo, manuale), gruppo in gruppi:
+    # =========================
+    # 📄 VISUALIZZAZIONE
+    # =========================
+    for i, r in df_filtrato.iterrows():
 
-        sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo else ""
-        pagine = gruppo[col_pagina].astype(str).tolist()
+        titolo = r.get("titolo", "Scheda")
 
-        with st.expander(f"🔧 {titolo}"):
+        with st.expander(f"📄 {titolo}"):
 
-            st.write(f"📘 {manuale}")
+            st.markdown(f"📘 **Manuale:** {r.get('manuale','-')}")
+            st.markdown(f"📄 **Pagina:** {r.get('pagina','-')}")
+            st.markdown(f"📁 **Sottogruppo:** {r.get('sottogruppo','-')}")
 
-            if sottogruppo:
-                st.write(f"📂 {sottogruppo}")
-
-            st.write(f"📄 Pagine trovate: {', '.join(pagine)}")
+            # 🔗 LINK (quando lo avrai)
+            link = r.get("link", "")
+            if link:
+                st.markdown(f"[📄 Apri scheda tecnica]({link})")
