@@ -743,7 +743,7 @@ elif menu == "📚 Schede SR":
 
     for i, r in risultati.iterrows():
 
-        with st.expander(f"📄 {r['manuale']} | Pagina {r['pagina']}"):
+        with st.expander(f"📄 {r['manuale']} | pagina {r['pagina']}"):
 
             testo = str(r["testo"])
 
