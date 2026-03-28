@@ -581,13 +581,7 @@ elif menu == "🚄 Manutenzione":
                 for idx, link in enumerate(links):
                     link = link.strip()
                     if link:
-                
-                        nome = record.get("Scheda")
-
-                        if not nome:
-                            nome = "Apri scheda tecnica"
-                        
-                        st.markdown(f"[📄 {nome}]({link})")
+                       st.markdown(f"[📄 Apri scheda tecnica]({link})")
                         
                 # STORICO NOTE
                 st.write(f"📝 Storico:\n{record.get('note','')}")
