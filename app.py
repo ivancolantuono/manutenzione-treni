@@ -582,11 +582,11 @@ elif menu == "🚄 Manutenzione":
                     link = link.strip()
                     if link:
                 
-                        nome = r.get("NomeScheda")
-                
-                        if nome is None or nome == "":
+                        nome = r.get("Scheda")
+
+                        if not nome:
                             nome = "Apri scheda tecnica"
-                
+                        
                         st.markdown(f"[📄 {nome}]({link})")
                         
                 # STORICO NOTE
