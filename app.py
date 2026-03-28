@@ -729,30 +729,31 @@ elif menu == "📚 Schede SR":
 
     import pandas as pd
 
-    # 📥 carica Excel
+    # 📥 CARICA FILE
     df_sr = pd.read_excel("schede_sr.xlsx")
 
-    # 🔥 pulizia colonne
+    # 🔥 PULIZIA COLONNE
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
-    # colonne
+    # 📌 COLONNE STANDARD
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
 
-    # 🔎 trova sottogruppo
+    # 🔎 TROVA SOTTOGRUPPO AUTOMATICO
     col_sottogruppo = None
     for col in df_sr.columns:
         if "sotto" in col:
             col_sottogruppo = col
             break
 
-    # 🔍 ricerca
+    # =========================
+    # 🔍 RICERCA
+    # =========================
     ricerca = st.text_input("🔍 Cerca componente")
 
-    # 🔥 BASE PER FILTRO DINAMICO
     df_filtrato = df_sr.copy()
 
     if ricerca:
@@ -764,17 +765,20 @@ elif menu == "📚 Schede SR":
 
             df_filtrato = df_filtrato[mask_testo | mask_titolo]
 
-    # 📂 SOTTOGRUPPI DINAMICI (FILTRATI!)
+    # =========================
+    # 📂 FILTRO SOTTOGRUPPO DINAMICO
+    # =========================
     if col_sottogruppo:
         gruppi = sorted(df_filtrato[col_sottogruppo].dropna().unique())
         gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
     else:
         gruppo_sel = "Tutti"
 
+    # =========================
     # 📊 RISULTATI FINALI
+    # =========================
     risultati = df_filtrato.copy()
 
-    # filtro gruppo DOPO
     if gruppo_sel != "Tutti":
         risultati = risultati[
             risultati[col_sottogruppo] == gruppo_sel
@@ -782,16 +786,27 @@ elif menu == "📚 Schede SR":
 
     st.write(f"🔎 Risultati trovati: {len(risultati)}")
 
-    # 📄 OUTPUT
-    for i, r in risultati.iterrows():
+    # =========================
+    # 📦 RAGGRUPPA SCHEDE (NO DOPPIONI)
+    # =========================
+    if risultati.empty:
+        st.info("Nessuna scheda trovata")
+        st.stop()
 
-        manuale = str(r.get(col_manuale, "—"))
-        pagina = str(r.get(col_pagina, "—"))
-        titolo = str(r.get(col_titolo, "—"))
-        sottogruppo = str(r.get(col_sottogruppo, "")) if col_sottogruppo else ""
+    gruppi = risultati.groupby([col_titolo, col_manuale])
 
-        st.markdown(f"""
-        📘 **{manuale} — Pag. {pagina}**  
-        🔧 **{titolo}**  
-        📂 **{sottogruppo}**
-        """)
+    for (titolo, manuale), gruppo in gruppi:
+
+        sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo else ""
+
+        # tutte le pagine della stessa scheda
+        pagine = gruppo[col_pagina].astype(str).tolist()
+
+        with st.expander(f"🔧 {titolo}"):
+
+            st.write(f"📘 Manuale: {manuale}")
+
+            if sottogruppo:
+                st.write(f"📂 {sottogruppo}")
+
+            st.write(f"📄 Pagine: {', '.join(pagine)}")
