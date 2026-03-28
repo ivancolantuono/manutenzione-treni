@@ -727,32 +727,57 @@ elif menu == "📚 Schede SR":
 
     st.title("📚 Ricerca Schede SR")
 
-    df_sr = pd.read_excel("schede_sr.xlsx")
-    df_sr.columns = df_sr.columns.str.strip().str.lower()
+    import pandas as pd
 
+    # 📥 carica Excel
+    df_sr = pd.read_excel("schede_sr.xlsx")
+
+    # 🔥 pulizia colonne (fondamentale)
+    df_sr.columns = df_sr.columns.astype(str)
+    df_sr.columns = df_sr.columns.str.strip()
+    df_sr.columns = df_sr.columns.str.lower()
+
+    # 🧪 DEBUG (puoi toglierlo dopo)
+    st.write("Colonne trovate:", df_sr.columns)
+
+    # 🔍 input ricerca
     ricerca = st.text_input("🔍 Cerca (es. compressore, valvola...)")
 
+    # 🛡️ sicurezza colonne (non crasha mai)
+    col_manuale = "manuale" if "manuale" in df_sr.columns else df_sr.columns[0]
+    col_pagina = "pagina" if "pagina" in df_sr.columns else df_sr.columns[1]
+    col_testo = "testo" if "testo" in df_sr.columns else df_sr.columns[-1]
+
+    # 🔎 filtro
     if ricerca:
         risultati = df_sr[
-            df_sr["testo"].str.contains(ricerca, case=False, na=False)
+            df_sr[col_testo].astype(str).str.contains(ricerca, case=False, na=False)
         ]
     else:
         risultati = df_sr
 
     st.write(f"🔎 Risultati trovati: {len(risultati)}")
 
+    # 📄 risultati
     for i, r in risultati.iterrows():
 
-        with st.expander(f"📄 {r['manuale']} | Pagina {r['pagina']}"):
+        manuale = str(r.get(col_manuale, "—"))
+        pagina = str(r.get(col_pagina, "—"))
+        testo = str(r.get(col_testo, ""))
 
-            testo = str(r["testo"])
+        with st.expander(f"📄 {manuale} | Pagina {pagina}"):
 
-            # evidenzia parola
+            # evidenzia parola cercata
             if ricerca:
-                testo = testo.replace(
+                testo_evidenziato = testo.replace(
                     ricerca,
                     f"*{ricerca.upper()}*"
                 )
-                st.markdown(testo[:500] + "...", unsafe_allow_html=True)
+                st.markdown(
+                    testo_evidenziato[:500] + ("..." if len(testo) > 500 else ""),
+                    unsafe_allow_html=True
+                )
             else:
-                st.write(testo[:500] + "..." if len(testo) > 500 else testo)
+                st.write(
+                    testo[:500] + ("..." if len(testo) > 500 else "")
+                )
