@@ -766,13 +766,20 @@ elif menu == "📚 Schede SR":
         parole = ricerca.lower().split()
 
         def match(row):
-            testo = str(row[col_testo]).lower()
-            titolo = str(row[col_titolo]).lower()
-            contenuto = titolo + " " + testo
+            try:
+                testo = str(row.get(col_testo, "")).lower()
+                titolo = str(row.get(col_titolo, "")).lower()
+                manuale = str(row.get(col_manuale, "")).lower()
 
-            return all(parola in contenuto for parola in parole)
+                contenuto = titolo + " " + testo + " " + manuale
 
-        df_filtrato = df_filtrato[df_filtrato.apply(match, axis=1)]
+                return all(parola in contenuto for parola in parole)
+            except:
+                return False
+
+        df_filtrato = df_filtrato[
+            df_filtrato.apply(match, axis=1)
+        ]
 
     # =========================
     # 📂 FILTRO SOTTOGRUPPO
