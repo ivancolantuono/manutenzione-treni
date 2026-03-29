@@ -731,18 +731,24 @@ elif menu == "📦 Cerca Componente":
 # =========================
 elif menu == "📚 Schede SR":
 
+    import pandas as pd
+    import streamlit as st
+    import re
+
     st.title("📚 Ricerca Schede SR")
 
-    import pandas as pd
-
+    # =========================
     # 📥 CARICA FILE
+    # =========================
     df_sr = pd.read_excel("schede_sr.xlsx")
 
-    # 🔥 PULIZIA COLONNE
+    # 🔥 pulizia colonne
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
+    # =========================
     # 📌 COLONNE
+    # =========================
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
@@ -756,22 +762,33 @@ elif menu == "📚 Schede SR":
             break
 
     # =========================
-    # 🔍 RICERCA
+    # 🔍 RICERCA INPUT
     # =========================
     ricerca = st.text_input("🔍 Cerca componente")
 
     df_filtrato = df_sr.copy()
 
+    # =========================
+    # 🔧 FUNZIONI SMART
+    # =========================
+    def pulisci(testo):
+        testo = str(testo).lower()
+        testo = re.sub(r"[^a-z0-9]", " ", testo)
+        return testo
+
+    # =========================
+    # 🔎 RICERCA GOOGLE STYLE
+    # =========================
     if ricerca:
-        parole = ricerca.lower().split()
+        parole = [pulisci(p) for p in ricerca.split()]
 
         def match(row):
             try:
-                testo = str(row.get(col_testo, "")).lower()
-                titolo = str(row.get(col_titolo, "")).lower()
-                manuale = str(row.get(col_manuale, "")).lower()
-
-                contenuto = titolo + " " + testo + " " + manuale
+                contenuto = " ".join([
+                    pulisci(row.get(col_testo, "")),
+                    pulisci(row.get(col_titolo, "")),
+                    pulisci(row.get(col_manuale, ""))
+                ])
 
                 return all(parola in contenuto for parola in parole)
             except:
@@ -797,6 +814,9 @@ elif menu == "📚 Schede SR":
             risultati[col_sottogruppo] == gruppo_sel
         ]
 
+    # =========================
+    # 📊 RISULTATI
+    # =========================
     st.write(f"🔎 Risultati trovati: {len(risultati)}")
 
     if risultati.empty:
@@ -804,7 +824,7 @@ elif menu == "📚 Schede SR":
         st.stop()
 
     # =========================
-    # 📄 OUTPUT (SOLO PAGINE FILTRATE)
+    # 📄 OUTPUT (RAGGRUPPATO)
     # =========================
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
