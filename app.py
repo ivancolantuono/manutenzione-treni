@@ -918,16 +918,13 @@ elif menu == "📚 Schede SR":
     st.title("📚 Ricerca Schede SR")
 
     # =========================
-    # 📥 CARICA FILE
+    # 📥 CARICA FILE SCHEDE
     # =========================
     df_sr = pd.read_excel("schede_sr.xlsx")
 
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
-    # =========================
-    # 📌 COLONNE
-    # =========================
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
@@ -943,15 +940,31 @@ elif menu == "📚 Schede SR":
             break
 
     # =========================
-    # 👷 OPERATORI
+    # 👷 CARICA OPERATORI (FIX)
     # =========================
     df_operatori = pd.read_excel("operatori.xlsx")
-    df_operatori.columns = df_operatori.columns.str.strip()
 
-    operatori = df_operatori["Nominativo"].dropna().tolist()
+    df_operatori.columns = df_operatori.columns.astype(str)
+    df_operatori.columns = df_operatori.columns.str.strip().str.lower()
+
+    # trova colonne automaticamente
+    col_nome = None
+    col_tel = None
+
+    for col in df_operatori.columns:
+        if "nomin" in col:
+            col_nome = col
+        if "telefon" in col:
+            col_tel = col
+
+    if not col_nome:
+        st.error("❌ Colonna nominativo non trovata in operatori.xlsx")
+        st.stop()
+
+    operatori = df_operatori[col_nome].dropna().astype(str).tolist()
 
     # =========================
-    # 📱 INPUT MOBILE
+    # 📱 INPUT (MOBILE FRIENDLY)
     # =========================
     col1, col2 = st.columns(2)
 
@@ -1039,11 +1052,11 @@ elif menu == "📚 Schede SR":
             # =========================
             # 📲 INVIO WHATSAPP
             # =========================
-            row_op = df_operatori[df_operatori["Nominativo"] == operatore_sel]
+            row_op = df_operatori[df_operatori[col_nome] == operatore_sel]
 
-            if not row_op.empty and "Telefono" in df_operatori.columns:
+            if not row_op.empty and col_tel:
 
-                numero = str(row_op["Telefono"].values[0]).replace(".0", "").strip()
+                numero = str(row_op[col_tel].values[0]).replace(".0", "").strip()
 
                 if numero.isdigit():
 
