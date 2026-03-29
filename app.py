@@ -913,26 +913,27 @@ elif menu == "📚 Schede SR":
 
     import pandas as pd
     import re
-    import urllib.parse
 
     st.title("📚 Ricerca Schede SR")
 
     # =========================
-    # 📥 CARICA FILE SCHEDE
+    # 📥 CARICA FILE
     # =========================
     df_sr = pd.read_excel("schede_sr.xlsx")
 
+    # 🔥 pulizia colonne
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
+    # =========================
+    # 📌 COLONNE
+    # =========================
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
 
-    # =========================
-    # 🔎 TROVA SOTTOGRUPPO
-    # =========================
+    # 🔎 trova sottogruppo
     col_sottogruppo = None
     for col in df_sr.columns:
         if "sotto" in col:
@@ -940,31 +941,7 @@ elif menu == "📚 Schede SR":
             break
 
     # =========================
-    # 👷 CARICA OPERATORI (FIX)
-    # =========================
-    df_operatori = pd.read_excel("operatori.xlsx")
-
-    df_operatori.columns = df_operatori.columns.astype(str)
-    df_operatori.columns = df_operatori.columns.str.strip().str.lower()
-
-    # trova colonne automaticamente
-    col_nome = None
-    col_tel = None
-
-    for col in df_operatori.columns:
-        if "nomin" in col:
-            col_nome = col
-        if "telefon" in col:
-            col_tel = col
-
-    if not col_nome:
-        st.error("❌ Colonna nominativo non trovata in operatori.xlsx")
-        st.stop()
-
-    operatori = df_operatori[col_nome].dropna().astype(str).tolist()
-
-    # =========================
-    # 📱 INPUT (MOBILE FRIENDLY)
+    # 📱 INPUT COMPATTO MOBILE
     # =========================
     col1, col2 = st.columns(2)
 
@@ -975,25 +952,30 @@ elif menu == "📚 Schede SR":
         )
 
     with col2:
-        operatore_sel = st.selectbox("👷 Invia a", operatori)
+        if col_sottogruppo:
+            gruppi = sorted(df_sr[col_sottogruppo].dropna().unique())
+            gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
+        else:
+            gruppo_sel = "Tutti"
+
+    df_filtrato = df_sr.copy()
 
     # =========================
-    # 🔧 FUNZIONE PULIZIA
+    # 🔧 FUNZIONE NORMALIZZAZIONE
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
         testo = re.sub(r"[^a-z0-9]", " ", testo)
         return testo
 
-    df_filtrato = df_sr.copy()
-
     # =========================
-    # 🔎 RICERCA GOOGLE STYLE
+    # 🔎 RICERCA GOOGLE STYLE (VELOCIZZATA)
     # =========================
     if ricerca:
 
         parole = [pulisci(p) for p in ricerca.split()]
 
+        # 👉 concatena colonne UNA VOLTA (molto più veloce)
         df_filtrato["__search__"] = (
             df_filtrato[col_testo].astype(str) + " " +
             df_filtrato[col_titolo].astype(str) + " " +
@@ -1008,13 +990,7 @@ elif menu == "📚 Schede SR":
     # =========================
     # 📂 FILTRO SOTTOGRUPPO
     # =========================
-    if col_sottogruppo:
-        gruppi = sorted(df_filtrato[col_sottogruppo].dropna().unique())
-        gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
-    else:
-        gruppo_sel = "Tutti"
-
-    if gruppo_sel != "Tutti":
+    if gruppo_sel != "Tutti" and col_sottogruppo:
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo] == gruppo_sel
         ]
@@ -1031,7 +1007,7 @@ elif menu == "📚 Schede SR":
         st.stop()
 
     # =========================
-    # 📄 OUTPUT
+    # 📄 OUTPUT COMPATTO MOBILE
     # =========================
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
@@ -1048,27 +1024,3 @@ elif menu == "📚 Schede SR":
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
-            # =========================
-            # 📲 INVIO WHATSAPP
-            # =========================
-            row_op = df_operatori[df_operatori[col_nome] == operatore_sel]
-
-            if not row_op.empty and col_tel:
-
-                numero = str(row_op[col_tel].values[0]).replace(".0", "").strip()
-
-                if numero.isdigit():
-
-                    msg = f"""📚 SCHEDA MANUTENZIONE
-
-🔧 {titolo}
-📘 {manuale}
-📄 Pagine: {', '.join(pagine)}
-
-👨‍✈️ Inviato da: {utente}
-"""
-
-                    url = f"https://wa.me/{numero}?text={urllib.parse.quote(msg)}"
-
-                    st.markdown(f"[📲 Invia scheda a {operatore_sel}]({url})")
