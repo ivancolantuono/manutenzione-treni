@@ -8,6 +8,14 @@ import urllib.parse
 
 st.set_page_config(layout="wide")
 
+st.markdown("""
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
 # =========================
 # STILE
 # =========================
