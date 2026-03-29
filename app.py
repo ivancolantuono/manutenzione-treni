@@ -772,7 +772,7 @@ elif menu == "📚 Schede SR":
 
             return all(parola in contenuto for parola in parole)
 
-    df_filtrato = df_filtrato[df_filtrato.apply(match, axis=1)]
+        df_filtrato = df_filtrato[df_filtrato.apply(match, axis=1)]
 
     # =========================
     # 📂 FILTRO SOTTOGRUPPO
