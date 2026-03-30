@@ -181,10 +181,9 @@ with colB:
 # MENU
 # =========================
 if ruolo == "CAPOSQUADRA":
-    menu = st.radio(
-         "",
-         ["🚄 Manutenzione", "📊 Dashboard", "📊 Storico", "📚 Schede SR", "📦 Cerca Componente"],
-         horizontal=True
+    menu = st.sidebar.selectbox(
+    "📂 Menu",
+    ["🚄 Manutenzione", "📊 Dashboard", "📊 Storico", "📚 Schede SR", "📦 Cerca Componente"]
 )
 else:
     menu = st.radio(
