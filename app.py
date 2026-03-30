@@ -375,7 +375,7 @@ elif menu == "🚄 Manutenzione":
              # 🔧 BOX PARAMETRI
         with st.container():
     
-            st.markdown("### 🔧 Parametri")
+            st.markdown("### 🔧 DATI")
     
             col1, col2, col3 = st.columns(3)
     
