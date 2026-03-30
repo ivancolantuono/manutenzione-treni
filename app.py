@@ -261,25 +261,6 @@ else:
         if st.button("🔓 Logout", use_container_width=True):
             st.session_state.clear()
             st.rerun()
-
-# =========================
-# 🎯 PRIORITÀ SCELTA
-# =========================
-# se selezioni da sidebar usa quella
-# altrimenti usa mobile
-
-if "menu" not in st.session_state:
-    st.session_state.menu = opzioni[0]
-
-# aggiorna da sidebar
-if 'menu_sidebar' in locals():
-    st.session_state.menu = menu_sidebar
-
-# fallback mobile
-elif menu_mobile:
-    st.session_state.menu = menu_mobile
-
-menu = st.session_state.menu
         
 # =========================
 # DATI
