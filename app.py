@@ -181,7 +181,7 @@ with colB:
         st.rerun()
 
 # =========================
-# 📂 MENU LATERALE
+# 📂 MENU LATERALE PRO
 # =========================
 
 with st.sidebar:
@@ -193,9 +193,6 @@ with st.sidebar:
 
     st.divider()
 
-    # =========================
-    # MENU
-    # =========================
     if ruolo == "CAPOSQUADRA":
         menu = st.radio(
             "📂 Menu",
@@ -219,10 +216,7 @@ with st.sidebar:
 
     st.divider()
 
-    # =========================
-    # LOGOUT
-    # =========================
-    if st.button("🔓 Disconnetti", use_container_width=True):
+    if st.button("🔓 Logout", use_container_width=True):
         st.session_state.clear()
         st.rerun()
 # =========================
