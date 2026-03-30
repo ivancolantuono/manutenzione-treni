@@ -178,42 +178,45 @@ with colB:
         st.rerun()
 
 # =========================
-# 📱 MENU SMART (PC + MOBILE)
+# 📂 MENU LATERALE PRO
 # =========================
 
-import streamlit as st
+with st.sidebar:
 
-# ⚙️ toggle manuale (utile per test)
-mobile = st.checkbox("📱 Modalità mobile", value=False)
+    st.markdown("## 🚄 Manutenzione")
 
-st.markdown("### 📂 Menu")
+    st.markdown(f"👤 **{utente}**")
+    st.markdown(f"🔐 {ruolo}")
 
-if ruolo == "CAPOSQUADRA":
-    opzioni = [
-        "🚄 Manutenzione",
-        "📊 Dashboard",
-        "📊 Storico",
-        "📚 Schede SR",
-        "📦 Cerca Componente"
-    ]
-else:
-    opzioni = [
-        "🚄 Manutenzione",
-        "📊 Storico",
-        "📦 Cerca Componente"
-    ]
+    st.divider()
 
-# =========================
-# 📱 MOBILE → SELECTBOX
-# =========================
-if mobile:
-    menu = st.selectbox("", opzioni)
+    if ruolo == "CAPOSQUADRA":
+        menu = st.radio(
+            "📂 Menu",
+            [
+                "🚄 Manutenzione",
+                "📊 Dashboard",
+                "📊 Storico",
+                "📚 Schede SR",
+                "📦 Cerca Componente"
+            ]
+        )
+    else:
+        menu = st.radio(
+            "📂 Menu",
+            [
+                "🚄 Manutenzione",
+                "📊 Storico",
+                "📦 Cerca Componente"
+            ]
+        )
 
-# =========================
-# 💻 PC → RADIO ORIZZONTALE
-# =========================
-else:
-    menu = st.radio("", opzioni, horizontal=True)
+    st.divider()
+
+    if st.button("🔓 Logout", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
+        
 # =========================
 # DATI
 # =========================
