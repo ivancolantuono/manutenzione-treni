@@ -131,7 +131,7 @@ if not st.session_state.logged_in:
 
     with col2:
         st.image("frecciarossa.jpg", use_container_width=True)
-        st.markdown("## 🔐 Accesso Sistema")
+        st.markdown("## 🔐 LOGIN")
 
         u = st.text_input("Utente").strip().lower()
         p = st.text_input("Password", type="password").strip()
@@ -207,7 +207,7 @@ with st.sidebar:
             ]
         )
 
-    if st.button("🔓 Disconnetti"):
+    if st.button("🔓 LOGOUT"):
         st.session_state.clear()
         st.rerun()
 # =========================
