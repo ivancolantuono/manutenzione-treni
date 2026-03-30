@@ -9,6 +9,23 @@ import urllib.parse
 st.set_page_config(layout="wide")
 
 st.markdown("""
+<script>
+function sendWidth() {
+    const width = window.innerWidth;
+    const streamlitDoc = window.parent.document;
+    const inputs = streamlitDoc.querySelectorAll('input[type="text"]');
+    if (inputs.length > 0) {
+        inputs[0].value = width;
+        inputs[0].dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+window.addEventListener("load", sendWidth);
+window.addEventListener("resize", sendWidth);
+</script>
+""", unsafe_allow_html=True)
+screen_width = st.text_input("", key="screen_width", label_visibility="collapsed")
+
+st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -178,12 +195,12 @@ with colB:
         st.rerun()
 
 # =========================
-# 📱 MENU RESPONSIVE
+# 📱 MENU RESPONSIVE AUTO
 # =========================
 
 st.markdown("### 📂 Navigazione")
 
-# elenco opzioni
+# opzioni
 if ruolo == "CAPOSQUADRA":
     opzioni = [
         "🚄 Manutenzione",
@@ -199,29 +216,51 @@ else:
         "📦 Cerca Componente"
     ]
 
-# =========================
-# 📱 MOBILE → MENU VISIBILE
-# =========================
-menu_mobile = st.selectbox("📂 Menu", opzioni)
+# default
+if "menu" not in st.session_state:
+    st.session_state.menu = opzioni[0]
+
+# prova a capire dimensione
+try:
+    width = int(screen_width)
+except:
+    width = 1200  # fallback PC
 
 # =========================
-# 💻 PC → SIDEBAR
+# 📱 MOBILE
 # =========================
-with st.sidebar:
+if width < 768:
 
-    st.markdown("## 🚄 Manutenzione")
-    st.markdown(f"👤 **{utente}**")
-    st.markdown(f"🔐 {ruolo}")
+    menu = st.selectbox("📂 Menu", opzioni)
 
-    st.divider()
+    st.session_state.menu = menu
 
-    menu_sidebar = st.radio("📂 Menu", opzioni)
+# =========================
+# 💻 PC
+# =========================
+else:
 
-    st.divider()
+    with st.sidebar:
 
-    if st.button("🔓 Logout", use_container_width=True):
-        st.session_state.clear()
-        st.rerun()
+        st.markdown("## 🚄 Manutenzione")
+        st.markdown(f"👤 **{utente}**")
+        st.markdown(f"🔐 {ruolo}")
+
+        st.divider()
+
+        menu = st.radio(
+            "📂 Menu",
+            opzioni,
+            index=opzioni.index(st.session_state.menu)
+        )
+
+        st.session_state.menu = menu
+
+        st.divider()
+
+        if st.button("🔓 Logout", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
 
 # =========================
 # 🎯 PRIORITÀ SCELTA
