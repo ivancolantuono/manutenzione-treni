@@ -178,75 +178,31 @@ with colB:
         st.rerun()
 
 # =========================
-# 📱 MENU HAMBURGER (☰)
+# 📱 MENU SEMPLICE
 # =========================
 
-# stato menu
-if "menu_open" not in st.session_state:
-    st.session_state.menu_open = False
+st.markdown("### 📂 Menu")
 
-if "menu" not in st.session_state:
-    st.session_state.menu = "🚄 Manutenzione"
-
-# =========================
-# ☰ BOTTONE MENU
-# =========================
-col1, col2 = st.columns([1,8])
-
-with col1:
-    if st.button("☰"):
-        st.session_state.menu_open = not st.session_state.menu_open
-
-with col2:
-    st.markdown(f"### 📍 {st.session_state.menu}")
-
-# =========================
-# 📂 MENU A TENDINA
-# =========================
-if st.session_state.menu_open:
-
-    st.markdown("### 📱 Menu")
-
-    if ruolo == "CAPOSQUADRA":
-        scelta = st.selectbox(
-            "",
-            [
-                "🚄 Manutenzione",
-                "📊 Dashboard",
-                "📊 Storico",
-                "📚 Schede SR",
-                "📦 Cerca Componente"
-            ],
-            index=[
-                "🚄 Manutenzione",
-                "📊 Dashboard",
-                "📊 Storico",
-                "📚 Schede SR",
-                "📦 Cerca Componente"
-            ].index(st.session_state.menu)
-        )
-
-    else:
-        scelta = st.selectbox(
-            "",
-            [
-                "🚄 Manutenzione",
-                "📊 Storico",
-                "📦 Cerca Componente"
-            ],
-            index=[
-                "🚄 Manutenzione",
-                "📊 Storico",
-                "📦 Cerca Componente"
-            ].index(st.session_state.menu)
-        )
-
-    st.session_state.menu = scelta
-
-# =========================
-# 🎯 MENU ATTIVO
-# =========================
-menu = st.session_state.menu
+if ruolo == "CAPOSQUADRA":
+    menu = st.selectbox(
+        "",
+        [
+            "🚄 Manutenzione",
+            "📊 Dashboard",
+            "📊 Storico",
+            "📚 Schede SR",
+            "📦 Cerca Componente"
+        ]
+    )
+else:
+    menu = st.selectbox(
+        "",
+        [
+            "🚄 Manutenzione",
+            "📊 Storico",
+            "📦 Cerca Componente"
+        ]
+    )
 
 # =========================
 # DATI
