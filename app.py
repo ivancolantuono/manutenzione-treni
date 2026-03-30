@@ -181,21 +181,15 @@ with colB:
         st.rerun()
 
 # =========================
-# 📂 MENU LATERALE PRO
+# MENU SIDEBAR SICURO
 # =========================
-
 with st.sidebar:
 
-    st.markdown("## 🚄 Manutenzione")
-
-    st.markdown(f"👤 **{utente}**")
-    st.markdown(f"🔐 {ruolo}")
-
-    st.divider()
+    st.markdown("## 🚄 Menu")
 
     if ruolo == "CAPOSQUADRA":
         menu = st.radio(
-            "📂 Menu",
+            "Seleziona",
             [
                 "🚄 Manutenzione",
                 "📊 Dashboard",
@@ -206,7 +200,7 @@ with st.sidebar:
         )
     else:
         menu = st.radio(
-            "📂 Menu",
+            "Seleziona",
             [
                 "🚄 Manutenzione",
                 "📊 Storico",
@@ -214,9 +208,7 @@ with st.sidebar:
             ]
         )
 
-    st.divider()
-
-    if st.button("🔓 Logout", use_container_width=True):
+    if st.button("🔓 Disconnetti"):
         st.session_state.clear()
         st.rerun()
 # =========================
