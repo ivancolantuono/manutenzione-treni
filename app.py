@@ -176,52 +176,76 @@ with colB:
     if st.button("🔓 Disconnetti"):
         st.session_state.clear()
         st.rerun()
-# =========================
-# 📱 MENU STILE APP
-# =========================
-
-
-col1, col2 = st.columns(2)
-
-menu_click = None
-
-if ruolo == "CAPOSQUADRA":
-
-    with col1:
-        if st.button("🚄 Manutenzione", use_container_width=True):
-            menu_click = "🚄 Manutenzione"
-        if st.button("📊 Dashboard", use_container_width=True):
-            menu_click = "📊 Dashboard"
-        if st.button("📊 Storico", use_container_width=True):
-            menu_click = "📊 Storico"
-
-    with col2:
-        if st.button("📚 Schede SR", use_container_width=True):
-            menu_click = "📚 Schede SR"
-        if st.button("📦 Cerca Componente", use_container_width=True):
-            menu_click = "📦 Cerca Componente"
-
-else:
-
-    with col1:
-        if st.button("🚄 Manutenzione", use_container_width=True):
-            menu_click = "🚄 Manutenzione"
-        if st.button("📊 Storico", use_container_width=True):
-            menu_click = "📊 Storico"
-
-    with col2:
-        if st.button("📦 Cerca Componente", use_container_width=True):
-            menu_click = "📦 Cerca Componente"
 
 # =========================
-# 💾 MEMORIA MENU
+# 📱 MENU HAMBURGER (☰)
 # =========================
+
+# stato menu
+if "menu_open" not in st.session_state:
+    st.session_state.menu_open = False
+
 if "menu" not in st.session_state:
     st.session_state.menu = "🚄 Manutenzione"
 
-if menu_click:
-    st.session_state.menu = menu_click
+# =========================
+# ☰ BOTTONE MENU
+# =========================
+col1, col2 = st.columns([1,8])
 
+with col1:
+    if st.button("☰"):
+        st.session_state.menu_open = not st.session_state.menu_open
+
+with col2:
+    st.markdown(f"### 📍 {st.session_state.menu}")
+
+# =========================
+# 📂 MENU A TENDINA
+# =========================
+if st.session_state.menu_open:
+
+    st.markdown("### 📱 Menu")
+
+    if ruolo == "CAPOSQUADRA":
+        scelta = st.selectbox(
+            "",
+            [
+                "🚄 Manutenzione",
+                "📊 Dashboard",
+                "📊 Storico",
+                "📚 Schede SR",
+                "📦 Cerca Componente"
+            ],
+            index=[
+                "🚄 Manutenzione",
+                "📊 Dashboard",
+                "📊 Storico",
+                "📚 Schede SR",
+                "📦 Cerca Componente"
+            ].index(st.session_state.menu)
+        )
+
+    else:
+        scelta = st.selectbox(
+            "",
+            [
+                "🚄 Manutenzione",
+                "📊 Storico",
+                "📦 Cerca Componente"
+            ],
+            index=[
+                "🚄 Manutenzione",
+                "📊 Storico",
+                "📦 Cerca Componente"
+            ].index(st.session_state.menu)
+        )
+
+    st.session_state.menu = scelta
+
+# =========================
+# 🎯 MENU ATTIVO
+# =========================
 menu = st.session_state.menu
 
 # =========================
