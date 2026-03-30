@@ -175,7 +175,7 @@ with colA:
 
 with colB:
     st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
-    if st.button("🔓 Disconnetti"):
+    if st.button("## 🔓 LOGOUT ##"):
         st.session_state.clear()
         st.rerun()
 
