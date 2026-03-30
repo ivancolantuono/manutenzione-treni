@@ -89,16 +89,6 @@ label {
 }
 </style>
 """, unsafe_allow_html=True)
-st.markdown("""
-<style>
-
-/* NASCONDE SOLO ICONA GITHUB */
-a[href*="github"] {
-    display: none !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
 
 # =========================
 # ORAIO
