@@ -176,21 +176,60 @@ with colB:
     if st.button("🔓 Disconnetti"):
         st.session_state.clear()
         st.rerun()
+# =========================
+# 📱 MENU STILE APP
+# =========================
+
+st.markdown("## 📱 Navigazione")
+
+col1, col2 = st.columns(2)
+
+menu_click = None
+
+if ruolo == "CAPOSQUADRA":
+
+    with col1:
+        if st.button("🚄 Manutenzione", use_container_width=True):
+            menu_click = "🚄 Manutenzione"
+        if st.button("📊 Dashboard", use_container_width=True):
+            menu_click = "📊 Dashboard"
+        if st.button("📊 Storico", use_container_width=True):
+            menu_click = "📊 Storico"
+
+    with col2:
+        if st.button("📚 Schede SR", use_container_width=True):
+            menu_click = "📚 Schede SR"
+        if st.button("📦 Cerca Componente", use_container_width=True):
+            menu_click = "📦 Cerca Componente"
+
+else:
+
+    with col1:
+        if st.button("🚄 Manutenzione", use_container_width=True):
+            menu_click = "🚄 Manutenzione"
+        if st.button("📊 Storico", use_container_width=True):
+            menu_click = "📊 Storico"
+
+    with col2:
+        if st.button("📦 Cerca Componente", use_container_width=True):
+            menu_click = "📦 Cerca Componente"
 
 # =========================
-# MENU
+# 💾 MEMORIA MENU
 # =========================
-if ruolo == "CAPOSQUADRA":
-    menu = st.sidebar.selectbox(
-    "📂 Menu",
-    ["🚄 Manutenzione", "📊 Dashboard", "📊 Storico", "📚 Schede SR", "📦 Cerca Componente"]
-)
-else:
-    menu = st.radio(
-         "",
-         ["🚄 Manutenzione", "📊 Storico", "📦 Cerca Componente"],
-         horizontal=True
-)
+if "menu" not in st.session_state:
+    st.session_state.menu = "🚄 Manutenzione"
+
+if menu_click:
+    st.session_state.menu = menu_click
+
+menu = st.session_state.menu
+
+# =========================
+# 📌 INDICATORE ATTIVO
+# =========================
+st.markdown(f"### 👉 Sezione: {menu}")
+
 # =========================
 # DATI
 # =========================
