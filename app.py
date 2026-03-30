@@ -387,7 +387,7 @@ elif menu == "🚄 Manutenzione":
     
             with col2:
                 st.session_state.odl = st.text_input(
-                    "##📝 ODL Padre##",
+                    "📝 ODL Padre",
                     value=st.session_state.odl
                 )
     
