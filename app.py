@@ -131,7 +131,7 @@ if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1,2,1])
 
     with col2:
-        st.image(https://github.com/ivancolantuono/manutenzione-treni/blob/main/frecciarossa.jpg)
+        st.image("https://github.com/ivancolantuono/manutenzione-treni/blob/main/frecciarossa.jpg", use_container_width=True)
         st.markdown("## 🔐 LOGIN")
 
         u = st.text_input("Utente").strip().lower()
