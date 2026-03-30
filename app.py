@@ -179,29 +179,12 @@ with colB:
         st.session_state.clear()
         st.rerun()
 
-# 🔽 BOTTONE APRI MENU (mobile + visibilità)
-st.markdown("""
-<style>
-.menu-btn {
-    background-color: #e10600;
-    color: white;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="menu-btn">⬅️ Apri Menu (barra laterale)</div>', unsafe_allow_html=True)
-
 # =========================
 # MENU SIDEBAR SICURO
 # =========================
 with st.sidebar:
 
-    st.markdown("## 🚄 Menu")
+    st.markdown("## Menu ##")
 
     if ruolo == "CAPOSQUADRA":
         menu = st.radio(
