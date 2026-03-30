@@ -6,7 +6,10 @@ from supabase import create_client
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 st.markdown("""
 <style>
