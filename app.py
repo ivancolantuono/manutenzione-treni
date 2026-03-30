@@ -178,44 +178,69 @@ with colB:
         st.rerun()
 
 # =========================
-# 📂 MENU LATERALE PRO
+# 📱 MENU RESPONSIVE
 # =========================
 
+st.markdown("### 📂 Navigazione")
+
+# elenco opzioni
+if ruolo == "CAPOSQUADRA":
+    opzioni = [
+        "🚄 Manutenzione",
+        "📊 Dashboard",
+        "📊 Storico",
+        "📚 Schede SR",
+        "📦 Cerca Componente"
+    ]
+else:
+    opzioni = [
+        "🚄 Manutenzione",
+        "📊 Storico",
+        "📦 Cerca Componente"
+    ]
+
+# =========================
+# 📱 MOBILE → MENU VISIBILE
+# =========================
+menu_mobile = st.selectbox("📂 Menu", opzioni)
+
+# =========================
+# 💻 PC → SIDEBAR
+# =========================
 with st.sidebar:
 
     st.markdown("## 🚄 Manutenzione")
-
     st.markdown(f"👤 **{utente}**")
     st.markdown(f"🔐 {ruolo}")
 
     st.divider()
 
-    if ruolo == "CAPOSQUADRA":
-        menu = st.radio(
-            "📂 Menu",
-            [
-                "🚄 Manutenzione",
-                "📊 Dashboard",
-                "📊 Storico",
-                "📚 Schede SR",
-                "📦 Cerca Componente"
-            ]
-        )
-    else:
-        menu = st.radio(
-            "📂 Menu",
-            [
-                "🚄 Manutenzione",
-                "📊 Storico",
-                "📦 Cerca Componente"
-            ]
-        )
+    menu_sidebar = st.radio("📂 Menu", opzioni)
 
     st.divider()
 
     if st.button("🔓 Logout", use_container_width=True):
         st.session_state.clear()
         st.rerun()
+
+# =========================
+# 🎯 PRIORITÀ SCELTA
+# =========================
+# se selezioni da sidebar usa quella
+# altrimenti usa mobile
+
+if "menu" not in st.session_state:
+    st.session_state.menu = opzioni[0]
+
+# aggiorna da sidebar
+if 'menu_sidebar' in locals():
+    st.session_state.menu = menu_sidebar
+
+# fallback mobile
+elif menu_mobile:
+    st.session_state.menu = menu_mobile
+
+menu = st.session_state.menu
         
 # =========================
 # DATI
