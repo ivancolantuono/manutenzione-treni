@@ -180,7 +180,6 @@ with colB:
 # 📱 MENU STILE APP
 # =========================
 
-st.markdown("## 📱 Navigazione")
 
 col1, col2 = st.columns(2)
 
@@ -224,11 +223,6 @@ if menu_click:
     st.session_state.menu = menu_click
 
 menu = st.session_state.menu
-
-# =========================
-# 📌 INDICATORE ATTIVO
-# =========================
-st.markdown(f"### 👉 Sezione: {menu}")
 
 # =========================
 # DATI
