@@ -9,23 +9,6 @@ import urllib.parse
 st.set_page_config(layout="wide")
 
 st.markdown("""
-<script>
-function sendWidth() {
-    const width = window.innerWidth;
-    const streamlitDoc = window.parent.document;
-    const inputs = streamlitDoc.querySelectorAll('input[type="text"]');
-    if (inputs.length > 0) {
-        inputs[0].value = width;
-        inputs[0].dispatchEvent(new Event('change', { bubbles: true }));
-    }
-}
-window.addEventListener("load", sendWidth);
-window.addEventListener("resize", sendWidth);
-</script>
-""", unsafe_allow_html=True)
-screen_width = st.text_input("", key="screen_width", label_visibility="collapsed")
-
-st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -195,73 +178,50 @@ with colB:
         st.rerun()
 
 # =========================
-# 📱 MENU RESPONSIVE AUTO
+# 📂 MENU LATERALE
 # =========================
 
-st.markdown("### 📂 Navigazione")
+with st.sidebar:
 
-# opzioni
-if ruolo == "CAPOSQUADRA":
-    opzioni = [
-        "🚄 Manutenzione",
-        "📊 Dashboard",
-        "📊 Storico",
-        "📚 Schede SR",
-        "📦 Cerca Componente"
-    ]
-else:
-    opzioni = [
-        "🚄 Manutenzione",
-        "📊 Storico",
-        "📦 Cerca Componente"
-    ]
+    st.markdown("## 🚄 Manutenzione")
 
-# default
-if "menu" not in st.session_state:
-    st.session_state.menu = opzioni[0]
+    st.markdown(f"👤 **{utente}**")
+    st.markdown(f"🔐 {ruolo}")
 
-# prova a capire dimensione
-try:
-    width = int(screen_width)
-except:
-    width = 1200  # fallback PC
+    st.divider()
 
-# =========================
-# 📱 MOBILE
-# =========================
-if width < 768:
-
-    menu = st.selectbox("📂 Menu", opzioni)
-
-    st.session_state.menu = menu
-
-# =========================
-# 💻 PC
-# =========================
-else:
-
-    with st.sidebar:
-
-        st.markdown("## 🚄 Manutenzione")
-        st.markdown(f"👤 **{utente}**")
-        st.markdown(f"🔐 {ruolo}")
-
-        st.divider()
-
+    # =========================
+    # MENU
+    # =========================
+    if ruolo == "CAPOSQUADRA":
         menu = st.radio(
             "📂 Menu",
-            opzioni,
-            index=opzioni.index(st.session_state.menu)
+            [
+                "🚄 Manutenzione",
+                "📊 Dashboard",
+                "📊 Storico",
+                "📚 Schede SR",
+                "📦 Cerca Componente"
+            ]
+        )
+    else:
+        menu = st.radio(
+            "📂 Menu",
+            [
+                "🚄 Manutenzione",
+                "📊 Storico",
+                "📦 Cerca Componente"
+            ]
         )
 
-        st.session_state.menu = menu
+    st.divider()
 
-        st.divider()
-
-        if st.button("🔓 Logout", use_container_width=True):
-            st.session_state.clear()
-            st.rerun()
-        
+    # =========================
+    # LOGOUT
+    # =========================
+    if st.button("🔓 Disconnetti", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
 # =========================
 # DATI
 # =========================
