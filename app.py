@@ -519,38 +519,37 @@ elif menu == "🚄 Manutenzione":
                         st.rerun()
 
                     # WHATSAPP
-                    numeri = []
+                    import urllib.parse
 
+                    numeri = []
+                    
                     for t in tecnici_input:
                         row = df_operatori[df_operatori["Nominativo"] == t]
                         if not row.empty and "Telefono" in df_operatori.columns:
                             num = str(row["Telefono"].values[0]).replace(".0","").strip()
                             if num.isdigit():
                                 numeri.append(num)
-
+                    
                     if numeri:
-
+                    
                         msg = f"""🚄 NUOVA ATTIVITÀ
-
-🚆 Treno: {treno}
-🧾 ODL: {odl}
-📅 Data: {data_giorno}
-⏱️ Scadenza: {st.session_state.scadenza}
-
-👷‍♂️ Caposquadra: {utente}
-
-🔧 {r['Intervento']}
-🔧 {r['Componente']}
-"""
-
-                        for link in links:
-                            if link.strip():
-                                msg += f"\n📄 {link.strip()}"
-
+                    
+                    🚆 Treno: {treno}
+                    🧾 ODL: {odl}
+                    📅 Data: {data_giorno}
+                    ⏱️ Scadenza: {st.session_state.scadenza}
+                    
+                    👷 Caposquadra: {utente}
+                    
+                    🔧 {r['Intervento']}
+                    🔧 {r['Componente']}
+                    """
+                    
+                        # 🔥 BOTTONI BELLI (NON LINK BRUTTI)
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
-                            st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
-
+                            
+                            st.link_button(f"📲 Invia a {num}", url)
                     # CANCELLA
                     if colB.button("🗑️ Cancella", key=f"cancella_{i}"):
 
