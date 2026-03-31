@@ -6,20 +6,6 @@ from supabase import create_client
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
-import requests
-
-def invia_telegram(msg):
-    token = "8659167427:AAEZ0nTcPt4UaM5I3lVix20l3_Lx2FPaTkc"
-    chat_id = "449970509"
-
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-
-    requests.post(url, data={
-        "chat_id": chat_id,
-        "text": msg
-    })
-
-
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
@@ -510,8 +496,9 @@ elif menu == "🚄 Manutenzione":
                     # ASSEGNA
                     if colA.button("🔧 Assegna", key=f"assegna_{i}"):
 
+                        # 🔁 recupera eventuali note già presenti
                         note_vecchie = record.get("note", "") if record else ""
-
+                    
                         supabase.table("interventi").upsert({
                             "chiave": str(chiave),
                             "treno": str(treno),
@@ -525,22 +512,44 @@ elif menu == "🚄 Manutenzione":
                             "caposquadra": str(utente),
                             "stato": "APERTO",
                             "inizio": str(ora_italia()),
-                            "note": note_vecchie
+                            "note": note_vecchie  # ✅ mantiene le note esistenti
                         }).execute()
-
-                        # 🔔 NOTIFICA TELEGRAM
-                        msg = f"""🚄 NUOVA ATTIVITÀ
-
-                    🚆 Treno: {treno}
-                    🧾 ODL: {odl}
-                    👷 Caposquadra: {utente}
-
-                    🔧 {r['Intervento']}
-                    """
-                        invia_telegram(msg)
-
+                    
                         st.success("Assegnato")
                         st.rerun()
+
+                    # WHATSAPP
+                    numeri = []
+
+                    for t in tecnici_input:
+                        row = df_operatori[df_operatori["Nominativo"] == t]
+                        if not row.empty and "Telefono" in df_operatori.columns:
+                            num = str(row["Telefono"].values[0]).replace(".0","").strip()
+                            if num.isdigit():
+                                numeri.append(num)
+
+                    if numeri:
+
+                        msg = f"""🚄 NUOVA ATTIVITÀ
+
+🚆 Treno: {treno}
+🧾 ODL: {odl}
+📅 Data: {data_giorno}
+⏱️ Scadenza: {st.session_state.scadenza}
+
+👷‍♂️ Caposquadra: {utente}
+
+🔧 {r['Intervento']}
+🔧 {r['Componente']}
+"""
+
+                        for link in links:
+                            if link.strip():
+                                msg += f"\n📄 {link.strip()}"
+
+                        for num in numeri:
+                            url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
+                            st.markdown(f"[📲 Invia WhatsApp a {num}]({url})")
 
                     # CANCELLA
                     if colB.button("🗑️ Cancella", key=f"cancella_{i}"):
