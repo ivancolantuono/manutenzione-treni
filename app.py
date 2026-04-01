@@ -758,7 +758,7 @@ elif menu == "📦 Cerca Componente":
     import re
 
     # =========================
-    # CACHE (veloce)
+    # CACHE (fondamentale)
     # =========================
     @st.cache_data
     def carica_magazzino():
@@ -773,53 +773,49 @@ elif menu == "📦 Cerca Componente":
     # =========================
     # INPUT
     # =========================
-    ricerca = st.text_input("🔍 Cerca", placeholder="es. compressore aria")
+    col1, col2 = st.columns([3,1])
+
+    with col1:
+        ricerca = st.text_input("🔍 Cerca componente", placeholder="es. compressore aria")
+
+    with col2:
+        limite = st.selectbox("Mostra", [50, 100, 200], index=0)
 
     risultati = df_mag.copy()
 
     # =========================
-    # RICERCA SEMPLICE E VELOCE
+    # RICERCA VELOCE
     # =========================
     if ricerca:
-        risultati = risultati[
-            risultati["COMPONENTE"].str.contains(ricerca, case=False) |
-            risultati["ASSIEME"].str.contains(ricerca, case=False)
-        ]
+        parole = ricerca.lower().split()
+
+        for parola in parole:
+            risultati = risultati[
+                risultati["COMPONENTE"].str.lower().str.contains(parola) |
+                risultati["ASSIEME"].str.lower().str.contains(parola)
+            ]
+
+    totale = len(risultati)
 
     # =========================
-    # LIMITA RISULTATI
+    # LIMITA RISULTATI 🔥
     # =========================
-    risultati = risultati.head(50)
+    risultati = risultati.head(limite)
 
-    st.caption(f"Risultati: {len(risultati)}")
+    st.markdown(f"🔎 Trovati: {totale} | Mostrati: {len(risultati)}")
 
     if risultati.empty:
         st.warning("Nessun risultato")
         st.stop()
 
     # =========================
-    # LISTA PULITA
+    # TABELLA PULITA
     # =========================
-    scelta = st.selectbox(
-        "Seleziona componente",
-        risultati["COMPONENTE"].tolist()
+    st.dataframe(
+        risultati,
+        use_container_width=True,
+        height=500
     )
-
-    # =========================
-    # DETTAGLIO
-    # =========================
-    riga = risultati[risultati["COMPONENTE"] == scelta].iloc[0]
-
-    st.divider()
-
-    st.subheader(f"🔧 {riga['COMPONENTE']}")
-    st.write(f"📦 Assieme: {riga.get('ASSIEME','-')}")
-
-    for col in df_mag.columns:
-        if col not in ["COMPONENTE", "ASSIEME"]:
-            val = riga.get(col, "")
-            if val:
-                st.write(f"• {col}: {val}")
 # =========================
 # 📚 SCHEDE SR (EXCEL)
 # =========================
