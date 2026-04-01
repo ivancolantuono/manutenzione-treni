@@ -758,14 +758,16 @@ elif menu == "📦 Cerca Componente":
     import re
 
     # =========================
-    # CACHE (fondamentale)
+    # CACHE (velocità)
     # =========================
     @st.cache_data
     def carica_magazzino():
         df = pd.read_excel("magazzino.xlsx")
         df.columns = df.columns.str.strip()
+
         for col in df.columns:
             df[col] = df[col].astype(str).fillna("")
+
         return df
 
     df_mag = carica_magazzino()
@@ -776,7 +778,7 @@ elif menu == "📦 Cerca Componente":
     col1, col2 = st.columns([3,1])
 
     with col1:
-        ricerca = st.text_input("🔍 Cerca componente", placeholder="es. compressore aria")
+        ricerca = st.text_input("🔍 Cerca componente o codice", placeholder="es. compressore o 100360165")
 
     with col2:
         limite = st.selectbox("Mostra", [50, 100, 200], index=0)
@@ -784,38 +786,62 @@ elif menu == "📦 Cerca Componente":
     risultati = df_mag.copy()
 
     # =========================
-    # RICERCA VELOCE
+    # TROVA COLONNE PART NUMBER 🔥
+    # =========================
+    colonne_pn = []
+
+    for col in df_mag.columns:
+        nome = col.lower()
+        if "pn" in nome or "part" in nome or "codice" in nome:
+            colonne_pn.append(col)
+
+    # =========================
+    # RICERCA INTELLIGENTE
     # =========================
     if ricerca:
+
         parole = ricerca.lower().split()
 
         for parola in parole:
-            risultati = risultati[
+
+            mask = (
                 risultati["COMPONENTE"].str.lower().str.contains(parola) |
                 risultati["ASSIEME"].str.lower().str.contains(parola)
-            ]
+            )
+
+            # 🔥 CERCA IN TUTTI I PART NUMBER
+            for col in colonne_pn:
+                mask = mask | risultati[col].str.lower().str.contains(parola)
+
+            risultati = risultati[mask]
 
     totale = len(risultati)
 
     # =========================
-    # LIMITA RISULTATI 🔥
+    # LIMITA RISULTATI (ANTI BLOCCO)
     # =========================
     risultati = risultati.head(limite)
 
     st.markdown(f"🔎 Trovati: {totale} | Mostrati: {len(risultati)}")
 
     if risultati.empty:
-        st.warning("Nessun risultato")
+        st.warning("Nessun risultato trovato")
         st.stop()
 
     # =========================
-    # TABELLA PULITA
+    # TABELLA
     # =========================
     st.dataframe(
         risultati,
         use_container_width=True,
-        height=500
+        height=500,
+        hide_index=True
     )
+
+    # =========================
+    # INFO DEBUG (utile)
+    # =========================
+    st.caption(f"🔍 Ricerca attiva su: COMPONENTE, ASSIEME + {', '.join(colonne_pn)}")
 # =========================
 # 📚 SCHEDE SR (EXCEL)
 # =========================
