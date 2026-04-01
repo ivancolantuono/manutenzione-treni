@@ -751,76 +751,75 @@ elif menu == "📊 Dashboard":
 # =========================
 # MAGAZZINO
 # =========================
-
 elif menu == "📦 Cerca Componente":
 
     st.title("📦 Cerca componente")
 
     import re
 
-    df_mag = pd.read_excel("magazzino.xlsx")
-    df_mag.columns = df_mag.columns.str.strip()
+    # =========================
+    # CACHE (veloce)
+    # =========================
+    @st.cache_data
+    def carica_magazzino():
+        df = pd.read_excel("magazzino.xlsx")
+        df.columns = df.columns.str.strip()
+        for col in df.columns:
+            df[col] = df[col].astype(str).fillna("")
+        return df
 
-    for col in df_mag.columns:
-        df_mag[col] = df_mag[col].astype(str).fillna("")
+    df_mag = carica_magazzino()
 
     # =========================
     # INPUT
     # =========================
-    ricerca = st.text_input("🔍 Cerca componente", placeholder="es. compressore aria")
+    ricerca = st.text_input("🔍 Cerca", placeholder="es. compressore aria")
 
     risultati = df_mag.copy()
 
     # =========================
-    # FUNZIONE PULIZIA
-    # =========================
-    def pulisci(t):
-        t = str(t).lower()
-        return re.sub(r"[^a-z0-9]", " ", t)
-
-    # =========================
-    # RICERCA VELOCE
+    # RICERCA SEMPLICE E VELOCE
     # =========================
     if ricerca:
-
-        parole = [pulisci(p) for p in ricerca.split()]
-
-        risultati["__search__"] = (
-            risultati["COMPONENTE"] + " " +
-            risultati["ASSIEME"]
-        ).apply(pulisci)
-
-        for parola in parole:
-            risultati = risultati[
-                risultati["__search__"].str.contains(parola, na=False)
-            ]
+        risultati = risultati[
+            risultati["COMPONENTE"].str.contains(ricerca, case=False) |
+            risultati["ASSIEME"].str.contains(ricerca, case=False)
+        ]
 
     # =========================
-    # LIMITA RISULTATI 🔥
+    # LIMITA RISULTATI
     # =========================
-    totale = len(risultati)
-    risultati = risultati.head(100)  # 👈 FONDAMENTALE
+    risultati = risultati.head(50)
 
-    st.markdown(f"🔎 Trovati: {totale} | Mostrati: {len(risultati)}")
+    st.caption(f"Risultati: {len(risultati)}")
 
     if risultati.empty:
         st.warning("Nessun risultato")
         st.stop()
 
     # =========================
-    # VISUALIZZAZIONE LEGGERA
+    # LISTA PULITA
     # =========================
-    for i, r in risultati.iterrows():
+    scelta = st.selectbox(
+        "Seleziona componente",
+        risultati["COMPONENTE"].tolist()
+    )
 
-        if st.button(f"🔧 {r['COMPONENTE']}", key=f"btn_{i}"):
+    # =========================
+    # DETTAGLIO
+    # =========================
+    riga = risultati[risultati["COMPONENTE"] == scelta].iloc[0]
 
-            st.write(f"📦 Assieme: {r.get('ASSIEME','-')}")
+    st.divider()
 
-            for col in df_mag.columns:
-                if col not in ["COMPONENTE", "ASSIEME", "__search__"]:
-                    val = r.get(col, "")
-                    if val:
-                        st.write(f"{col}: {val}")
+    st.subheader(f"🔧 {riga['COMPONENTE']}")
+    st.write(f"📦 Assieme: {riga.get('ASSIEME','-')}")
+
+    for col in df_mag.columns:
+        if col not in ["COMPONENTE", "ASSIEME"]:
+            val = riga.get(col, "")
+            if val:
+                st.write(f"• {col}: {val}")
 # =========================
 # 📚 SCHEDE SR (EXCEL)
 # =========================
