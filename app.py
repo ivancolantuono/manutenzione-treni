@@ -18,6 +18,32 @@ footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+
+/* Nasconde menu hamburger + GitHub + toolbar */
+[data-testid="stToolbar"] {
+    display: none;
+}
+
+/* Nasconde menu in alto a destra */
+[data-testid="stDecoration"] {
+    display: none;
+}
+
+/* Nasconde header */
+header {
+    visibility: hidden;
+}
+
+/* Sidebar completamente nascosta */
+section[data-testid="stSidebar"] {
+    display: none;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # =========================
 # STILE
 # =========================
@@ -181,36 +207,30 @@ with colB:
         st.rerun()
 
 # =========================
-# MENU SIDEBAR SICURO
+# MENU ORIZZONTALE
 # =========================
-with st.sidebar:
-
-    st.markdown("## Menu ##")
-
-    if ruolo == "CAPOSQUADRA":
-        menu = st.radio(
-            "Seleziona",
-            [
-                "🚄 Manutenzione",
-                "📊 Dashboard",
-                "📊 Storico",
-                "📚 Schede SR",
-                "📦 Cerca Componente"
-            ]
-        )
-    else:
-        menu = st.radio(
-            "Seleziona",
-            [
-                "🚄 Manutenzione",
-                "📊 Storico",
-                "📦 Cerca Componente"
-            ]
-        )
-
-    if st.button("🔓 LOGOUT"):
-        st.session_state.clear()
-        st.rerun()
+if ruolo == "CAPOSQUADRA":
+    menu = st.radio(
+        "",
+        [
+            "🚄 Manutenzione",
+            "📊 Dashboard",
+            "📊 Storico",
+            "📚 Schede SR",
+            "📦 Cerca Componente"
+        ],
+        horizontal=True
+    )
+else:
+    menu = st.radio(
+        "",
+        [
+            "🚄 Manutenzione",
+            "📊 Storico",
+            "📦 Cerca Componente"
+        ],
+        horizontal=True
+    )
 # =========================
 # DATI
 # =========================
