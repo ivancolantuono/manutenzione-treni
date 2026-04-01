@@ -191,19 +191,17 @@ ruolo = st.session_state.ruolo.upper()
 # =========================
 # HEADER
 # =========================
-
-col1, col2 = st.columns([8,2])
+col1, col2 = st.columns([9,1])
 
 with col1:
     st.markdown(f"""
-    <div style='margin-top:10px; font-size:22px; font-weight:bold;'>
-    👤 {utente} ({ruolo})
+    <div style='display:flex; align-items:center; height:40px; font-size:20px; font-weight:bold;'>
+        👤 {utente} ({ruolo})
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("<div style='margin-top:10px'></div>", unsafe_allow_html=True)
-    if st.button("🔓 Logout", use_container_width=True):
+    if st.button("🔴 Logout", use_container_width=True):
         st.session_state.clear()
         st.rerun()
 # =========================
