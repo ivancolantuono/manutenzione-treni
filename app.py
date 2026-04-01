@@ -191,7 +191,6 @@ ruolo = st.session_state.ruolo.upper()
 # =========================
 # HEADER
 # =========================
-colA, colB = st.columns([6,2])
 
 col1, col2 = st.columns([8,2])
 
