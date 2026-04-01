@@ -193,19 +193,20 @@ ruolo = st.session_state.ruolo.upper()
 # =========================
 colA, colB = st.columns([6,2])
 
-with colA:
+col1, col2 = st.columns([8,2])
+
+with col1:
     st.markdown(f"""
-    <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
+    <div style='margin-top:10px; font-size:22px; font-weight:bold;'>
     👤 {utente} ({ruolo})
     </div>
     """, unsafe_allow_html=True)
 
-with colB:
-    st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
-    if st.button("🔓 LOGOUT"):
+with col2:
+    st.markdown("<div style='margin-top:10px'></div>", unsafe_allow_html=True)
+    if st.button("🔓 Logout", use_container_width=True):
         st.session_state.clear()
         st.rerun()
-
 # =========================
 # MENU ORIZZONTALE
 # =========================
