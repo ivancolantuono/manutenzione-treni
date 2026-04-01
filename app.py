@@ -191,7 +191,7 @@ ruolo = st.session_state.ruolo.upper()
 # =========================
 # HEADER
 # =========================
-colA, colB = st.columns([6,8])
+colA, colB = st.columns([6,12])
 
 with colA:
     st.markdown(f"""
