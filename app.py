@@ -756,22 +756,92 @@ elif menu == "📦 Cerca Componente":
 
     st.title("📦 Cerca componente")
 
-    ricerca = st.text_input("🔍 Cerca")
+    import re
 
+    # =========================
+    # CARICA FILE
+    # =========================
     df_mag = pd.read_excel("magazzino.xlsx")
     df_mag.columns = df_mag.columns.str.strip()
 
+    # pulizia
     for col in df_mag.columns:
         df_mag[col] = df_mag[col].astype(str).fillna("")
 
+    # =========================
+    # INPUT (MOBILE FRIENDLY)
+    # =========================
+    col1, col2 = st.columns(2)
+
+    with col1:
+        ricerca = st.text_input("🔍 Cerca componente", placeholder="es. compressore aria")
+
+    with col2:
+        campo = st.selectbox(
+            "🎯 Cerca in",
+            ["Tutti", "COMPONENTE", "ASSIEME"]
+        )
+
+    # =========================
+    # FUNZIONE NORMALIZZAZIONE
+    # =========================
+    def pulisci(testo):
+        testo = str(testo).lower()
+        testo = re.sub(r"[^a-z0-9]", " ", testo)
+        return testo
+
+    risultati = df_mag.copy()
+
+    # =========================
+    # RICERCA SMART
+    # =========================
     if ricerca:
-        df_mag = df_mag[
-            df_mag["COMPONENTE"].str.contains(ricerca, case=False) |
-            df_mag["ASSIEME"].str.contains(ricerca, case=False)
-        ]
 
-    st.dataframe(df_mag, use_container_width=True)
+        parole = [pulisci(p) for p in ricerca.split()]
 
+        # campo unificato
+        risultati["__search__"] = (
+            risultati["COMPONENTE"] + " " +
+            risultati["ASSIEME"]
+        ).apply(pulisci)
+
+        for parola in parole:
+            risultati = risultati[
+                risultati["__search__"].str.contains(parola, na=False)
+            ]
+
+    # =========================
+    # RISULTATI
+    # =========================
+    st.markdown(f"**🔎 Risultati trovati: {len(risultati)}**")
+
+    if risultati.empty:
+        st.warning("Nessun componente trovato")
+        st.stop()
+
+    # =========================
+    # OUTPUT MIGLIORATO
+    # =========================
+    for i, r in risultati.iterrows():
+
+        with st.expander(f"🔧 {r['COMPONENTE']}"):
+
+            st.markdown(f"**📦 Assieme:** {r.get('ASSIEME','-')}")
+
+            # evidenzia ricerca
+            if ricerca:
+                testo = r["COMPONENTE"]
+                for parola in ricerca.split():
+                    testo = testo.replace(parola, f"**{parola.upper()}**")
+
+                st.markdown(f"🔎 Match: {testo}")
+
+            # eventuali altre colonne
+            for col in df_mag.columns:
+                if col not in ["COMPONENTE", "ASSIEME", "__search__"]:
+                    valore = r.get(col, "")
+                    if valore:
+                        st.write(f"• {col}: {valore}")
 # =========================
 # 📚 SCHEDE SR (EXCEL)
 # =========================
