@@ -1141,6 +1141,17 @@ elif menu == "📌 Open Item":
     st.title("📌 Open Item")
 
     # =========================
+    # FUNZIONE FORMATTA DATA
+    # =========================
+    def formatta_data(data_raw):
+        if data_raw:
+            try:
+                return datetime.fromisoformat(str(data_raw)).strftime("%d/%m/%Y %H:%M")
+            except:
+                return str(data_raw)
+        return ""
+
+    # =========================
     # ➕ INSERIMENTO
     # =========================
     st.markdown("### ➕ Nuova attività rimandata")
@@ -1186,7 +1197,7 @@ elif menu == "📌 Open Item":
         st.stop()
 
     # =========================
-    # 🔍 FILTRO TRENO (SELECT)
+    # 🔍 FILTRO TRENO
     # =========================
     treni = sorted(df_open["treno"].dropna().unique())
     filtro_treno = st.selectbox("🚆 Seleziona treno", ["Tutti"] + treni)
@@ -1210,7 +1221,6 @@ elif menu == "📌 Open Item":
     # 🔢 CONTATORI
     # =========================
     colA, colB = st.columns(2)
-
     colA.metric("🔴 Aperte", len(df_aperti))
     colB.metric("🟢 Chiuse", len(df_chiusi))
 
@@ -1229,7 +1239,7 @@ elif menu == "📌 Open Item":
         with st.expander(f"🔴 Treno {r['treno']} - {r['descrizione']}"):
 
             st.write(f"👤 {r.get('utente','')}")
-            st.write(f"📅 {r.get('data_creazione','')}")
+            st.write(f"📅 {formatta_data(r.get('data_creazione'))}")
 
             st.markdown("---")
 
@@ -1239,7 +1249,6 @@ elif menu == "📌 Open Item":
                 key=f"lav_{i}"
             )
 
-            # ✅ CHIUDI
             if st.button("✅ Chiudi", key=f"chiudi_{i}"):
 
                 if not lavorazioni:
@@ -1256,7 +1265,7 @@ elif menu == "📌 Open Item":
                     st.rerun()
 
     # =========================
-    # 🟢 CHIUSI (TOGGLE)
+    # 🟢 CHIUSI
     # =========================
     if st.checkbox("Mostra attività chiuse"):
 
@@ -1267,7 +1276,7 @@ elif menu == "📌 Open Item":
             with st.expander(f"🟢 Treno {r['treno']} - {r['descrizione']}"):
 
                 st.write(f"👤 Creato da: {r.get('utente','')}")
-                st.write(f"📅 Creata: {r.get('data_creazione','')}")
+                st.write(f"📅 Creata: {formatta_data(r.get('data_creazione'))}")
 
                 st.markdown("---")
 
@@ -1279,4 +1288,4 @@ elif menu == "📌 Open Item":
                 )
 
                 st.write(f"👤 Chiuso da: {r.get('utente_chiusura','')}")
-                st.write(f"📅 Chiuso il: {r.get('data_chiusura','')}")
+                st.write(f"📅 Chiuso il: {formatta_data(r.get('data_chiusura'))}")
