@@ -1136,110 +1136,147 @@ elif menu == "📚 Schede SR":
 
 elif menu == "📌 Open Item":
 
+    from datetime import datetime
+
     st.title("📌 Open Item")
 
     # =========================
-    # NUOVO OPEN ITEM
+    # ➕ INSERIMENTO
     # =========================
-    st.subheader("➕ Nuova attività rimandata")
+    st.markdown("### ➕ Nuova attività rimandata")
 
-    treno = st.text_input("🚆 Treno", key="oi_treno")
+    col1, col2 = st.columns(2)
 
-    descrizione = st.text_area("🔧 Descrizione attività")
+    with col1:
+        treno = st.text_input("🚆 Treno").strip()
 
-    if st.button("➕ Inserisci Open Item"):
+    with col2:
+        descrizione = st.text_input("📝 Descrizione").strip()
 
-        if not descrizione:
-            st.error("Inserisci descrizione")
+    if st.button("➕ Inserisci Open Item", use_container_width=True):
+
+        if not treno or not descrizione:
+            st.error("Inserisci tutti i dati")
         else:
             supabase.table("open_item").insert({
                 "treno": treno,
                 "descrizione": descrizione,
                 "stato": "APERTO",
                 "utente": utente,
-                "data_creazione": str(datetime.now())
+                "lavorazioni": "",
+                "data_chiusura": ""
             }).execute()
 
-            st.success("Inserito")
+            st.success("Open Item inserito")
             st.rerun()
 
     st.divider()
 
     # =========================
-    # LISTA OPEN ITEM
+    # 🔍 FILTRO
     # =========================
-    st.subheader("📋 Attività aperte")
+    st.markdown("### 🔍 Filtra")
 
+    filtro_treno = st.text_input("🚆 Filtra per treno")
+
+    # =========================
+    # 📊 DATI
+    # =========================
     res = supabase.table("open_item").select("*").execute()
     rows = res.data if res.data else []
 
-    if not rows:
-        st.info("Nessun open item")
+    df_open = pd.DataFrame(rows)
+
+    if df_open.empty:
+        st.info("Nessun Open Item")
         st.stop()
 
-    df_oi = pd.DataFrame(rows)
+    # =========================
+    # 🔎 FILTRO
+    # =========================
+    if filtro_treno:
+        df_open = df_open[
+            df_open["treno"].astype(str).str.contains(filtro_treno, case=False)
+        ]
 
-    df_oi = df_oi[df_oi["stato"] == "APERTO"]
+    # =========================
+    # 📊 ORDINE (PER DATA)
+    # =========================
+    if "data_creazione" in df_open.columns:
+        df_open = df_open.sort_values(by="data_creazione", ascending=False)
 
-    for i, r in df_oi.iterrows():
+    st.markdown(f"**📊 Totale: {len(df_open)}**")
 
-        with st.expander(f"🔧 {r['descrizione'][:60]}"):
+    # =========================
+    # 📋 LISTA
+    # =========================
+    for i, r in df_open.iterrows():
 
-            st.write(f"🚆 Treno: {r.get('treno','')}")
-            st.write(f"👤 Inserito da: {r.get('utente','')}")
+        stato = r.get("stato", "")
+
+        # =========================
+        # 🎯 CALCOLO URGENZA
+        # =========================
+        colore = "⚪"
+
+        data = r.get("data_creazione")
+
+        try:
+            if data:
+                data_dt = datetime.fromisoformat(str(data))
+                giorni = (datetime.now() - data_dt).days
+
+                if stato == "CHIUSO":
+                    colore = "🟢"
+                elif giorni >= 3:
+                    colore = "🔴"
+                elif giorni >= 1:
+                    colore = "🟡"
+                else:
+                    colore = "🟢"
+        except:
+            colore = "⚪"
+
+        # =========================
+        # 📂 BLOCCO
+        # =========================
+        with st.expander(f"{colore} Treno {r['treno']} - {r['descrizione']}"):
+
+            st.write(f"👤 Creato da: {r.get('utente','')}")
+            st.write(f"📅 Creata: {r.get('data_creazione','')}")
+            st.write(f"📌 Stato: {stato}")
+
+            st.markdown("---")
 
             # =========================
-            # LAVORAZIONI
+            # ✏️ LAVORAZIONI
             # =========================
             lavorazioni = st.text_area(
-                "🛠️ Lavorazioni eseguite",
+                "✏️ Lavorazioni eseguite",
+                value=r.get("lavorazioni",""),
                 key=f"lav_{i}"
             )
 
-            data_chiusura = st.date_input(
-                "📅 Data chiusura",
-                key=f"data_{i}"
-            )
+            colA, colB = st.columns(2)
 
-            col1, col2 = st.columns(2)
+            # 💾 SALVA
+            if colA.button("💾 Salva", key=f"salva_{i}"):
 
-            # CHIUDI
-            if col1.button("✅ Chiudi", key=f"chiudi_oi_{i}"):
+                supabase.table("open_item").update({
+                    "lavorazioni": lavorazioni
+                }).eq("id", r["id"]).execute()
+
+                st.success("Aggiornato")
+                st.rerun()
+
+            # ✅ CHIUDI
+            if colB.button("✅ Chiudi", key=f"chiudi_{i}"):
 
                 supabase.table("open_item").update({
                     "stato": "CHIUSO",
                     "lavorazioni": lavorazioni,
-                    "data_chiusura": str(data_chiusura)
+                    "data_chiusura": datetime.now().strftime("%d/%m/%Y %H:%M")
                 }).eq("id", r["id"]).execute()
 
-                st.success("Chiusa")
+                st.success("Attività chiusa")
                 st.rerun()
-
-            # ELIMINA
-            if col2.button("🗑️ Elimina", key=f"del_oi_{i}"):
-
-                supabase.table("open_item").delete().eq("id", r["id"]).execute()
-
-                st.warning("Eliminata")
-                st.rerun()
-
-    # =========================
-    # STORICO CHIUSI
-    # =========================
-    st.divider()
-    st.subheader("📚 Storico Open Item")
-
-    df_chiusi = df_oi = pd.DataFrame(rows)
-    df_chiusi = df_chiusi[df_chiusi["stato"] == "CHIUSO"]
-
-    if not df_chiusi.empty:
-
-        st.dataframe(
-            df_chiusi[[
-                "treno",
-                "descrizione",
-                "lavorazioni",
-                "data_chiusura"
-            ]],
-            use_container_width=True
-        )
