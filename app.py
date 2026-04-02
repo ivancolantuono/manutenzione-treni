@@ -1181,12 +1181,12 @@ elif menu == "📌 Open Item":
 
     cassa = st.selectbox(
         "🏗 Cassa",
-        ["", "Struttura cassa", "Carrozzeria"]
+        ["", "DM1", "TT2", "M3", "T4", "T5", "M6", "TT7", "DM8"]
     )
 
     impianto = st.selectbox(
         "⚙️ Impianto",
-        ["", "Porte", "Clima", "Elettrico", "Altro"]
+        ["", "Porte Interne", "Freno", "Antincendio", "Pis", "Arredo"]
     )
 
     descrizione = st.text_area("📝 Descrizione attività")
