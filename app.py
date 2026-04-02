@@ -1175,9 +1175,7 @@ elif menu == "📌 Open Item":
     # =========================
     # 🔍 FILTRO
     # =========================
-    st.markdown("### 🔍 Filtra")
-
-    filtro_treno = st.text_input("🚆 Filtra per treno")
+    filtro_treno = st.text_input("🔍 Filtra per treno")
 
     # =========================
     # 📊 DATI
@@ -1200,7 +1198,7 @@ elif menu == "📌 Open Item":
         ]
 
     # =========================
-    # 📊 ORDINE (PER DATA)
+    # 📊 ORDINE
     # =========================
     if "data_creazione" in df_open.columns:
         df_open = df_open.sort_values(by="data_creazione", ascending=False)
@@ -1214,37 +1212,16 @@ elif menu == "📌 Open Item":
 
         stato = r.get("stato", "")
 
-        # =========================
-        # 🎯 CALCOLO URGENZA
-        # =========================
-        colore = "⚪"
+        # 🔴 / 🟢 COLORI SEMPLICI
+        if stato == "APERTO":
+            colore = "🔴"
+        else:
+            colore = "🟢"
 
-        data = r.get("data_creazione")
-
-        try:
-            if data:
-                data_dt = datetime.fromisoformat(str(data))
-                giorni = (datetime.now() - data_dt).days
-
-                if stato == "CHIUSO":
-                    colore = "🟢"
-                elif giorni >= 3:
-                    colore = "🔴"
-                elif giorni >= 1:
-                    colore = "🟡"
-                else:
-                    colore = "🟢"
-        except:
-            colore = "⚪"
-
-        # =========================
-        # 📂 BLOCCO
-        # =========================
-        with st.expander(f"{colore} Treno {r['treno']} - {r['descrizione']}"):
+        with st.expander(f"{colore} [{stato}] Treno {r['treno']} - {r['descrizione']}"):
 
             st.write(f"👤 Creato da: {r.get('utente','')}")
             st.write(f"📅 Creata: {r.get('data_creazione','')}")
-            st.write(f"📌 Stato: {stato}")
 
             st.markdown("---")
 
