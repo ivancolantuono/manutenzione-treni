@@ -1174,11 +1174,6 @@ elif menu == "📌 Open Item":
     st.divider()
 
     # =========================
-    # 🔍 FILTRO
-    # =========================
-    filtro_treno = st.text_input("🔍 Filtra per treno")
-
-    # =========================
     # 📊 DATI
     # =========================
     res = supabase.table("open_item").select("*").execute()
@@ -1191,12 +1186,13 @@ elif menu == "📌 Open Item":
         st.stop()
 
     # =========================
-    # 🔎 FILTRO
+    # 🔍 FILTRO TRENO (SELECT)
     # =========================
-    if filtro_treno:
-        df_open = df_open[
-            df_open["treno"].astype(str).str.contains(filtro_treno, case=False)
-        ]
+    treni = sorted(df_open["treno"].dropna().unique())
+    filtro_treno = st.selectbox("🚆 Seleziona treno", ["Tutti"] + treni)
+
+    if filtro_treno != "Tutti":
+        df_open = df_open[df_open["treno"] == filtro_treno]
 
     # =========================
     # 📊 ORDINE
@@ -1204,72 +1200,51 @@ elif menu == "📌 Open Item":
     if "data_creazione" in df_open.columns:
         df_open = df_open.sort_values(by="data_creazione", ascending=False)
 
-    st.markdown(f"**📊 Totale: {len(df_open)}**")
+    # =========================
+    # 📂 SEPARAZIONE
+    # =========================
+    df_aperti = df_open[df_open["stato"] == "APERTO"]
+    df_chiusi = df_open[df_open["stato"] == "CHIUSO"]
 
     # =========================
-    # 📋 LISTA
+    # 🔢 CONTATORI
     # =========================
-    for i, r in df_open.iterrows():
+    colA, colB = st.columns(2)
 
-        stato = r.get("stato", "")
+    colA.metric("🔴 Aperte", len(df_aperti))
+    colB.metric("🟢 Chiuse", len(df_chiusi))
 
-        # 🔴 / 🟢
-        if stato == "APERTO":
-            colore = "🔴"
-        else:
-            colore = "🟢"
+    st.divider()
 
-        with st.expander(f"{colore} [{stato}] Treno {r['treno']} - {r['descrizione']}"):
+    # =========================
+    # 🔴 APERTI
+    # =========================
+    st.markdown("### 🔴 Attività Aperte")
 
-            # INFO BASE
-            st.write(f"👤 Creato da: {r.get('utente','')}")
-            st.write(f"📅 Creata: {r.get('data_creazione','')}")
+    if df_aperti.empty:
+        st.info("Nessuna attività aperta")
+
+    for i, r in df_aperti.iterrows():
+
+        with st.expander(f"🔴 Treno {r['treno']} - {r['descrizione']}"):
+
+            st.write(f"👤 {r.get('utente','')}")
+            st.write(f"📅 {r.get('data_creazione','')}")
 
             st.markdown("---")
 
-            # =========================
-            # 🔒 SE CHIUSO
-            # =========================
-            if stato == "CHIUSO":
+            lavorazioni = st.text_area(
+                "✏️ Lavorazioni eseguite",
+                value=r.get("lavorazioni",""),
+                key=f"lav_{i}"
+            )
 
-                st.text_area(
-                    "🔒 Lavorazioni eseguite",
-                    value=r.get("lavorazioni",""),
-                    disabled=True,
-                    key=f"lav_{i}"
-                )
+            # ✅ CHIUDI
+            if st.button("✅ Chiudi", key=f"chiudi_{i}"):
 
-                st.write(f"👤 Chiuso da: {r.get('utente_chiusura','')}")
-                st.write(f"📅 Chiuso il: {r.get('data_chiusura','')}")
-
-                st.success("✔ Attività completata")
-
-            # =========================
-            # ✏️ SE APERTO
-            # =========================
-            else:
-
-                lavorazioni = st.text_area(
-                    "✏️ Lavorazioni eseguite",
-                    value=r.get("lavorazioni",""),
-                    key=f"lav_{i}"
-                )
-
-                colA, colB = st.columns(2)
-
-                # 💾 SALVA
-                if colA.button("💾 Salva", key=f"salva_{i}"):
-
-                    supabase.table("open_item").update({
-                        "lavorazioni": lavorazioni
-                    }).eq("id", r["id"]).execute()
-
-                    st.success("Aggiornato")
-                    st.rerun()
-
-                # ✅ CHIUDI
-                if colB.button("✅ Chiudi", key=f"chiudi_{i}"):
-
+                if not lavorazioni:
+                    st.error("Inserisci lavorazioni prima di chiudere")
+                else:
                     supabase.table("open_item").update({
                         "stato": "CHIUSO",
                         "lavorazioni": lavorazioni,
@@ -1279,3 +1254,29 @@ elif menu == "📌 Open Item":
 
                     st.success("Attività chiusa")
                     st.rerun()
+
+    # =========================
+    # 🟢 CHIUSI (TOGGLE)
+    # =========================
+    if st.checkbox("Mostra attività chiuse"):
+
+        st.markdown("### 🟢 Attività Chiuse")
+
+        for i, r in df_chiusi.iterrows():
+
+            with st.expander(f"🟢 Treno {r['treno']} - {r['descrizione']}"):
+
+                st.write(f"👤 Creato da: {r.get('utente','')}")
+                st.write(f"📅 Creata: {r.get('data_creazione','')}")
+
+                st.markdown("---")
+
+                st.text_area(
+                    "🔒 Lavorazioni eseguite",
+                    value=r.get("lavorazioni",""),
+                    disabled=True,
+                    key=f"lav_ch_{i}"
+                )
+
+                st.write(f"👤 Chiuso da: {r.get('utente_chiusura','')}")
+                st.write(f"📅 Chiuso il: {r.get('data_chiusura','')}")
