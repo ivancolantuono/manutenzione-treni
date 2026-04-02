@@ -1187,7 +1187,7 @@ elif menu == "📌 Open Item":
 
     impianto = st.selectbox(
         "⚙️ Impianto",
-        ["", "Porte Interne", "Freno", "Antincendio", "Pis", "Arredo"]
+        ["", "Porte Interne", "Freno", "Antincendio", "Pis", "Arredo", "Climatizzazione", "Porte Esterne", "Toilette", "Bar-Bistrot"]
     )
 
     descrizione = st.text_area("📝 Descrizione attività")
@@ -1241,7 +1241,7 @@ elif menu == "📌 Open Item":
 
         with st.expander(f"🔴 Treno {item['treno']} - {item['descrizione']}"):
 
-            st.write(f"Cassa: {item.get('cassa', '-')}")
+            st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
             st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
             st.write(f"👤 Creato da: {item.get('utente', '-')}")
             st.write(f"📅 Creato il: {item.get('data_creazione', '-')}")
@@ -1279,7 +1279,7 @@ elif menu == "📌 Open Item":
 
             with st.expander(f"🟢 Treno {item['treno']} - {item['descrizione']}"):
 
-                st.write(f" Cassa: {item.get('cassa', '-')}")
+                st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
                 st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
                 st.write(f"👤 Creato da: {item.get('utente', '-')}")
                 st.write(f"📅 Creato il: {item.get('data_creazione', '-')}")
