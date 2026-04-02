@@ -1165,12 +1165,17 @@ elif menu == "📌 Open Item":
 
     import streamlit as st
     from datetime import datetime
+    from zoneinfo import ZoneInfo
     from streamlit_autorefresh import st_autorefresh
 
     # 🔄 REFRESH AUTOMATICO
     st_autorefresh(interval=30000, key="refresh_open_item")
 
-    # ✅ FUNZIONE FORMATTA DATA
+    # ✅ ORA ITALIA
+    def ora_italia_iso():
+        return datetime.now(ZoneInfo("Europe/Rome")).isoformat()
+
+    # ✅ FORMATTA DATA
     def formatta_data(data_str):
         if not data_str:
             return "-"
@@ -1183,7 +1188,7 @@ elif menu == "📌 Open Item":
     st.title("📌 Open Item")
 
     # ============================
-    # FORM NUOVO OPEN ITEM
+    # FORM
     # ============================
 
     st.subheader("➕ Nuova attività rimandata")
@@ -1212,7 +1217,7 @@ elif menu == "📌 Open Item":
                 "descrizione": descrizione,
                 "stato": "APERTO",
                 "utente": utente_loggato,
-                "data_creazione": datetime.now().isoformat()
+                "data_creazione": ora_italia_iso()   # ✅ FIX ORARIO
             }).execute()
 
             st.success("✅ Inserito")
@@ -1225,10 +1230,6 @@ elif menu == "📌 Open Item":
     # ============================
 
     filtro_treno = st.text_input("🔍 Filtra per treno")
-
-    # ============================
-    # CARICA DATI
-    # ============================
 
     dati = supabase.table("open_item").select("*").execute().data
 
@@ -1255,13 +1256,12 @@ elif menu == "📌 Open Item":
             st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
             st.write(f"👤 Creato da: {item.get('utente', '-')}")
             st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
-            
+
             lavori = st.text_area(
                 "🔧 Lavorazioni eseguite",
                 key=f"lav_{item['id']}"
             )
 
-            # ✅ BOTTONE DISABILITATO SE VUOTO
             chiudi = st.button(
                 "✅ Chiudi attività",
                 key=f"chiudi_{item['id']}",
@@ -1273,10 +1273,10 @@ elif menu == "📌 Open Item":
                 supabase.table("open_item").update({
                     "stato": "CHIUSO",
                     "lavorazioni": lavori,
-                    "data_chiusura": datetime.now().isoformat(),
+                    "data_chiusura": ora_italia_iso(),   # ✅ FIX ORARIO
                     "utente_chiusura": utente_loggato
                 }).eq("id", item["id"]).execute()
-            
+
                 st.success("✔ Attività chiusa")
                 st.rerun()
 
