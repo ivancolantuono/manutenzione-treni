@@ -1162,159 +1162,130 @@ elif menu == "📚 Schede SR":
 
 elif menu == "📌 Open Item":
 
+    import streamlit as st
     from datetime import datetime
+    from streamlit_autorefresh import st_autorefresh
 
-    # 🔄 REFRESH OGNI 30 SECONDI
+    # 🔄 REFRESH AUTOMATICO
     st_autorefresh(interval=30000, key="refresh_open_item")
 
     st.title("📌 Open Item")
 
-    # =========================
-    # FUNZIONE FORMATTA DATA
-    # =========================
-    def formatta_data(data_raw):
-        if data_raw:
-            try:
-                return datetime.fromisoformat(str(data_raw)).strftime("%d/%m/%Y %H:%M")
-            except:
-                return str(data_raw)
-        return ""
+    # ============================
+    # FORM NUOVO OPEN ITEM
+    # ============================
 
-    # =========================
-    # ➕ INSERIMENTO
-    # =========================
-    st.markdown("### ➕ Nuova attività rimandata")
+    st.subheader("➕ Nuova attività rimandata")
 
-    col1, col2 = st.columns(2)
+    treno = st.text_input("🚆 Treno")
 
-    with col1:
-        treno = st.text_input("🚆 Treno").strip()
+    cassa = st.selectbox(
+        "🏗 Cassa",
+        ["", "Struttura cassa", "Carrozzeria"]
+    )
 
-    with col2:
-        descrizione = st.text_input("📝 Descrizione").strip()
+    impianto = st.selectbox(
+        "⚙️ Impianto",
+        ["", "Porte", "Clima", "Elettrico", "Altro"]
+    )
 
-    if st.button("➕ Inserisci Open Item", use_container_width=True):
+    descrizione = st.text_area("📝 Descrizione attività")
 
-        if not treno or not descrizione:
-            st.error("Inserisci tutti i dati")
-        else:
+    if st.button("➕ Inserisci Open Item"):
+
+        if treno and descrizione:
             supabase.table("open_item").insert({
                 "treno": treno,
+                "cassa": cassa,
+                "impianto": impianto,
                 "descrizione": descrizione,
                 "stato": "APERTO",
-                "utente": utente,
-                "lavorazioni": "",
-                "data_chiusura": "",
-                "utente_chiusura": ""
+                "utente": utente_loggato,
+                "data_creazione": datetime.now().isoformat()
             }).execute()
 
-            st.success("Open Item inserito")
+            st.success("✅ Inserito")
             st.rerun()
 
     st.divider()
 
-    # =========================
-    # 📊 DATI
-    # =========================
-    res = supabase.table("open_item").select("*").execute()
-    rows = res.data if res.data else []
+    # ============================
+    # FILTRO
+    # ============================
 
-    df_open = pd.DataFrame(rows)
+    filtro_treno = st.text_input("🔍 Filtra per treno")
 
-    if df_open.empty:
-        st.info("Nessun Open Item")
-        st.stop()
+    # ============================
+    # CARICA DATI
+    # ============================
 
-    # =========================
-    # 🔍 FILTRO TRENO
-    # =========================
-    treni = sorted(df_open["treno"].dropna().unique())
-    filtro_treno = st.selectbox("🚆 Seleziona treno", ["Tutti"] + treni)
+    dati = supabase.table("open_item").select("*").execute().data
 
-    if filtro_treno != "Tutti":
-        df_open = df_open[df_open["treno"] == filtro_treno]
+    if filtro_treno:
+        dati = [d for d in dati if filtro_treno.lower() in str(d.get("treno", "")).lower()]
 
-    # =========================
-    # 📊 ORDINE
-    # =========================
-    if "data_creazione" in df_open.columns:
-        df_open = df_open.sort_values(by="data_creazione", ascending=False)
+    aperti = [d for d in dati if d.get("stato") == "APERTO"]
+    chiusi = [d for d in dati if d.get("stato") == "CHIUSO"]
 
-    # =========================
-    # 📂 SEPARAZIONE
-    # =========================
-    df_aperti = df_open[df_open["stato"] == "APERTO"]
-    df_chiusi = df_open[df_open["stato"] == "CHIUSO"]
-
-    # =========================
-    # 🔢 CONTATORI
-    # =========================
-    colA, colB = st.columns(2)
-    colA.metric("🔴 Aperte", len(df_aperti))
-    colB.metric("🟢 Chiuse", len(df_chiusi))
-
-    st.divider()
-
-    # =========================
+    # ============================
     # 🔴 APERTI
-    # =========================
-    st.markdown("### 🔴 Attività Aperte")
+    # ============================
 
-    if df_aperti.empty:
+    st.subheader("🔴 Attività Aperte")
+
+    if not aperti:
         st.info("Nessuna attività aperta")
 
-    for i, r in df_aperti.iterrows():
+    for item in aperti:
 
-        with st.expander(f"🔴 Treno {r['treno']} - {r['descrizione']}"):
+        with st.expander(f"🔴 Treno {item['treno']} - {item['descrizione']}"):
 
-            st.write(f"👤 {r.get('utente','')}")
-            st.write(f"📅 {formatta_data(r.get('data_creazione'))}")
-
-            st.markdown("---")
-
-            lavorazioni = st.text_area(
-                "✏️ Lavorazioni eseguite",
-                value=r.get("lavorazioni",""),
-                key=f"lav_{i}"
+            st.write(f"🏗 Cassa: {item.get('cassa', '-')}")
+            st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
+            st.write(f"👤 Creato da: {item.get('utente', '-')}")
+            st.write(f"📅 Creato il: {item.get('data_creazione', '-')}")
+            
+            lavori = st.text_area(
+                "🔧 Lavorazioni eseguite",
+                key=f"lav_{item['id']}"
             )
 
-            if st.button("✅ Chiudi", key=f"chiudi_{i}"):
+            if st.button("✅ Chiudi attività", key=f"chiudi_{item['id']}"):
 
-                if not lavorazioni:
-                    st.error("Inserisci lavorazioni prima di chiudere")
-                else:
-                    supabase.table("open_item").update({
-                        "stato": "CHIUSO",
-                        "lavorazioni": lavorazioni,
-                        "data_chiusura": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                        "utente_chiusura": utente
-                    }).eq("id", r["id"]).execute()
+                supabase.table("open_item").update({
+                    "stato": "CHIUSO",
+                    "lavorazioni": lavori,
+                    "data_chiusura": datetime.now().isoformat(),
+                    "utente_chiusura": utente_loggato
+                }).eq("id", item["id"]).execute()
 
-                    st.success("Attività chiusa")
-                    st.rerun()
+                st.success("✔ Attività chiusa")
+                st.rerun()
 
-    # =========================
+    # ============================
     # 🟢 CHIUSI
-    # =========================
-    if st.checkbox("Mostra attività chiuse"):
+    # ============================
 
-        st.markdown("### 🟢 Attività Chiuse")
+    mostra_chiusi = st.checkbox("Mostra attività chiuse", value=True)
 
-        for i, r in df_chiusi.iterrows():
+    if mostra_chiusi:
 
-            with st.expander(f"🟢 Treno {r['treno']} - {r['descrizione']}"):
+        st.subheader("🟢 Attività Chiuse")
 
-                st.write(f"👤 Creato da: {r.get('utente','')}")
-                st.write(f"📅 Creata: {formatta_data(r.get('data_creazione'))}")
+        for item in chiusi:
 
-                st.markdown("---")
+            with st.expander(f"🟢 Treno {item['treno']} - {item['descrizione']}"):
+
+                st.write(f"🏗 Cassa: {item.get('cassa', '-')}")
+                st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
+                st.write(f"👤 Creato da: {item.get('utente', '-')}")
+                st.write(f"📅 Creato il: {item.get('data_creazione', '-')}")
 
                 st.text_area(
                     "🔒 Lavorazioni eseguite",
-                    value=r.get("lavorazioni",""),
-                    disabled=True,
-                    key=f"lav_ch_{i}"
+                    value=item.get("lavorazioni", ""),
+                    disabled=True
                 )
 
-                st.write(f"👤 Chiuso da: {r.get('utente_chiusura','')}")
-                st.write(f"📅 Chiuso il: {formatta_data(r.get('data_chiusura'))}")
+                st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
+                st.write(f"📅 Chiuso il: {item.get('data_chiusura', '-')}")
