@@ -1302,6 +1302,7 @@ elif menu == "📌 Open Item":
                 st.text_area(
                     "🔒 Lavorazioni eseguite",
                     value=item.get("lavorazioni", ""),
+                    key=f"lav_chiuso_{item['id']}",
                     disabled=True
                 )
 
