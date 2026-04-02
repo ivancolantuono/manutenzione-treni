@@ -1164,7 +1164,8 @@ elif menu == "📌 Open Item":
                 "stato": "APERTO",
                 "utente": utente,
                 "lavorazioni": "",
-                "data_chiusura": ""
+                "data_chiusura": "",
+                "utente_chiusura": ""
             }).execute()
 
             st.success("Open Item inserito")
@@ -1212,7 +1213,7 @@ elif menu == "📌 Open Item":
 
         stato = r.get("stato", "")
 
-        # 🔴 / 🟢 COLORI SEMPLICI
+        # 🔴 / 🟢
         if stato == "APERTO":
             colore = "🔴"
         else:
@@ -1220,40 +1221,61 @@ elif menu == "📌 Open Item":
 
         with st.expander(f"{colore} [{stato}] Treno {r['treno']} - {r['descrizione']}"):
 
+            # INFO BASE
             st.write(f"👤 Creato da: {r.get('utente','')}")
             st.write(f"📅 Creata: {r.get('data_creazione','')}")
 
             st.markdown("---")
 
             # =========================
-            # ✏️ LAVORAZIONI
+            # 🔒 SE CHIUSO
             # =========================
-            lavorazioni = st.text_area(
-                "✏️ Lavorazioni eseguite",
-                value=r.get("lavorazioni",""),
-                key=f"lav_{i}"
-            )
+            if stato == "CHIUSO":
 
-            colA, colB = st.columns(2)
+                st.text_area(
+                    "🔒 Lavorazioni eseguite",
+                    value=r.get("lavorazioni",""),
+                    disabled=True,
+                    key=f"lav_{i}"
+                )
 
-            # 💾 SALVA
-            if colA.button("💾 Salva", key=f"salva_{i}"):
+                st.write(f"👤 Chiuso da: {r.get('utente_chiusura','')}")
+                st.write(f"📅 Chiuso il: {r.get('data_chiusura','')}")
 
-                supabase.table("open_item").update({
-                    "lavorazioni": lavorazioni
-                }).eq("id", r["id"]).execute()
+                st.success("✔ Attività completata")
 
-                st.success("Aggiornato")
-                st.rerun()
+            # =========================
+            # ✏️ SE APERTO
+            # =========================
+            else:
 
-            # ✅ CHIUDI
-            if colB.button("✅ Chiudi", key=f"chiudi_{i}"):
+                lavorazioni = st.text_area(
+                    "✏️ Lavorazioni eseguite",
+                    value=r.get("lavorazioni",""),
+                    key=f"lav_{i}"
+                )
 
-                supabase.table("open_item").update({
-                    "stato": "CHIUSO",
-                    "lavorazioni": lavorazioni,
-                    "data_chiusura": datetime.now().strftime("%d/%m/%Y %H:%M")
-                }).eq("id", r["id"]).execute()
+                colA, colB = st.columns(2)
 
-                st.success("Attività chiusa")
-                st.rerun()
+                # 💾 SALVA
+                if colA.button("💾 Salva", key=f"salva_{i}"):
+
+                    supabase.table("open_item").update({
+                        "lavorazioni": lavorazioni
+                    }).eq("id", r["id"]).execute()
+
+                    st.success("Aggiornato")
+                    st.rerun()
+
+                # ✅ CHIUDI
+                if colB.button("✅ Chiudi", key=f"chiudi_{i}"):
+
+                    supabase.table("open_item").update({
+                        "stato": "CHIUSO",
+                        "lavorazioni": lavorazioni,
+                        "data_chiusura": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                        "utente_chiusura": utente
+                    }).eq("id", r["id"]).execute()
+
+                    st.success("Attività chiusa")
+                    st.rerun()
