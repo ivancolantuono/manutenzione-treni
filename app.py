@@ -217,7 +217,8 @@ if ruolo == "CAPOSQUADRA":
             "📊 Dashboard",
             "📊 Storico",
             "📚 Schede SR",
-            "📦 Cerca Componente"
+            "📦 Cerca Componente",
+            "📌 Open Item"
         ],
         horizontal=True
     )
@@ -1132,3 +1133,113 @@ elif menu == "📚 Schede SR":
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
+
+elif menu == "📌 Open Item":
+
+    st.title("📌 Open Item")
+
+    # =========================
+    # NUOVO OPEN ITEM
+    # =========================
+    st.subheader("➕ Nuova attività rimandata")
+
+    treno = st.text_input("🚆 Treno", key="oi_treno")
+
+    descrizione = st.text_area("🔧 Descrizione attività")
+
+    if st.button("➕ Inserisci Open Item"):
+
+        if not descrizione:
+            st.error("Inserisci descrizione")
+        else:
+            supabase.table("open_item").insert({
+                "treno": treno,
+                "descrizione": descrizione,
+                "stato": "APERTO",
+                "utente": utente,
+                "data_creazione": str(datetime.now())
+            }).execute()
+
+            st.success("Inserito")
+            st.rerun()
+
+    st.divider()
+
+    # =========================
+    # LISTA OPEN ITEM
+    # =========================
+    st.subheader("📋 Attività aperte")
+
+    res = supabase.table("open_item").select("*").execute()
+    rows = res.data if res.data else []
+
+    if not rows:
+        st.info("Nessun open item")
+        st.stop()
+
+    df_oi = pd.DataFrame(rows)
+
+    df_oi = df_oi[df_oi["stato"] == "APERTO"]
+
+    for i, r in df_oi.iterrows():
+
+        with st.expander(f"🔧 {r['descrizione'][:60]}"):
+
+            st.write(f"🚆 Treno: {r.get('treno','')}")
+            st.write(f"👤 Inserito da: {r.get('utente','')}")
+
+            # =========================
+            # LAVORAZIONI
+            # =========================
+            lavorazioni = st.text_area(
+                "🛠️ Lavorazioni eseguite",
+                key=f"lav_{i}"
+            )
+
+            data_chiusura = st.date_input(
+                "📅 Data chiusura",
+                key=f"data_{i}"
+            )
+
+            col1, col2 = st.columns(2)
+
+            # CHIUDI
+            if col1.button("✅ Chiudi", key=f"chiudi_oi_{i}"):
+
+                supabase.table("open_item").update({
+                    "stato": "CHIUSO",
+                    "lavorazioni": lavorazioni,
+                    "data_chiusura": str(data_chiusura)
+                }).eq("id", r["id"]).execute()
+
+                st.success("Chiusa")
+                st.rerun()
+
+            # ELIMINA
+            if col2.button("🗑️ Elimina", key=f"del_oi_{i}"):
+
+                supabase.table("open_item").delete().eq("id", r["id"]).execute()
+
+                st.warning("Eliminata")
+                st.rerun()
+
+    # =========================
+    # STORICO CHIUSI
+    # =========================
+    st.divider()
+    st.subheader("📚 Storico Open Item")
+
+    df_chiusi = df_oi = pd.DataFrame(rows)
+    df_chiusi = df_chiusi[df_chiusi["stato"] == "CHIUSO"]
+
+    if not df_chiusi.empty:
+
+        st.dataframe(
+            df_chiusi[[
+                "treno",
+                "descrizione",
+                "lavorazioni",
+                "data_chiusura"
+            ]],
+            use_container_width=True
+        )
