@@ -551,7 +551,9 @@ elif menu == "🚄 Manutenzione":
                     numeri = []
                     
                     for t in tecnici_input:
-                        row = df_operatori[df_operatori["Nominativo"] == t]
+                        row = df_operatori[
+                            df_operatori["Nominativo"].str.lower().str.contains(str(t).lower())
+                        ]
                         if not row.empty and "Telefono" in df_operatori.columns:
                             num = str(row["Telefono"].values[0]).replace(".0","").strip()
                             if num.isdigit():
