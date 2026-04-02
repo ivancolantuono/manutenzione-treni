@@ -1161,6 +1161,7 @@ elif menu == "📚 Schede SR":
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
 
 elif menu == "📌 Open Item":
+    utente_loggato = st.session_state["utente"]
 
     import streamlit as st
     from datetime import datetime
