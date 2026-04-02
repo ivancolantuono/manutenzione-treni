@@ -560,19 +560,24 @@ elif menu == "🚄 Manutenzione":
                                 numeri.append(num)
                     
                     if numeri:
-                    
+                        
+                        link = r.get("Link", "")
+
                         msg = f"""🚄 NUOVA ATTIVITÀ
-                    
-                    🚆 Treno: {treno}
-                    🧾 ODL: {odl}
-                    📅 Data: {data_giorno}
-                    ⏱️ Scadenza: {st.session_state.scadenza}
-                    
-                    👷 Caposquadra: {utente}
-                    
-                    🔧 {r['Intervento']}
-                    🔧 {r['Componente']}
-                    """
+                        
+                        🚆 Treno: {treno}
+                        🧾 ODL: {odl}
+                        📅 Data: {data_giorno}
+                        ⏱️ Scadenza: {st.session_state.scadenza}
+                        
+                        👷 Caposquadra: {utente}
+                        
+                        🔧 {r['Intervento']}
+                        🔧 {r['Componente']}
+                        
+                        📄 Scheda tecnica:
+                        {link}
+                        """
                     
                         # 🔥 BOTTONI BELLI (NON LINK BRUTTI)
                         for num in numeri:
