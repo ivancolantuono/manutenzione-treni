@@ -476,13 +476,13 @@ elif menu == "🚄 Manutenzione":
                             tecnici = [tecnici]
     
                 ods = r.get("ODL") or r.get("Ods") or r.get("ODS")
-
-                titolo = f"{colore} <b>{r['Componente']}</b>"
-
-                if ods:
-                    titolo += f" | ODS: <b>{ods}</b>"                
-                with st.expander(titolo, expanded=False):
-    
+                
+                titolo = f"{colore} **{r['Componente']}**"
+                
+                if ods and str(ods).lower() != "nan":
+                    titolo += f" | ODS: **{ods}**"
+                
+                with st.expander(titolo):    
                     st.write(r["Intervento"])
     
                     # 🔗 LINK
