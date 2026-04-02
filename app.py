@@ -1170,6 +1170,16 @@ elif menu == "📌 Open Item":
     # 🔄 REFRESH AUTOMATICO
     st_autorefresh(interval=30000, key="refresh_open_item")
 
+    # ✅ FUNZIONE FORMATTA DATA
+    def formatta_data(data_str):
+        if not data_str:
+            return "-"
+        try:
+            dt = datetime.fromisoformat(data_str)
+            return dt.strftime("%d/%m/%Y %H:%M")
+        except:
+            return data_str
+
     st.title("📌 Open Item")
 
     # ============================
@@ -1244,27 +1254,32 @@ elif menu == "📌 Open Item":
             st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
             st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
             st.write(f"👤 Creato da: {item.get('utente', '-')}")
-            st.write(f"📅 Creato il: {item.get('data_creazione', '-')}")
+            st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
             
             lavori = st.text_area(
                 "🔧 Lavorazioni eseguite",
                 key=f"lav_{item['id']}"
             )
 
-            if st.button("✅ Chiudi attività", key=f"chiudi_{item['id']}"):
+            # ✅ BOTTONE DISABILITATO SE VUOTO
+            chiudi = st.button(
+                "✅ Chiudi attività",
+                key=f"chiudi_{item['id']}",
+                disabled=not lavori or lavori.strip() == ""
+            )
 
-                if not lavori or lavori.strip() == "":
-                    st.error("❌ Devi inserire le lavorazioni eseguite")
-                else:
-                    supabase.table("open_item").update({
-                        "stato": "CHIUSO",
-                        "lavorazioni": lavori,
-                        "data_chiusura": datetime.now().isoformat(),
-                        "utente_chiusura": utente_loggato
-                    }).eq("id", item["id"]).execute()
+            if chiudi:
+
+                supabase.table("open_item").update({
+                    "stato": "CHIUSO",
+                    "lavorazioni": lavori,
+                    "data_chiusura": datetime.now().isoformat(),
+                    "utente_chiusura": utente_loggato
+                }).eq("id", item["id"]).execute()
             
-                    st.success("✔ Attività chiusa")
-                    st.rerun()
+                st.success("✔ Attività chiusa")
+                st.rerun()
+
     # ============================
     # 🟢 CHIUSI
     # ============================
@@ -1282,7 +1297,7 @@ elif menu == "📌 Open Item":
                 st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
                 st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
                 st.write(f"👤 Creato da: {item.get('utente', '-')}")
-                st.write(f"📅 Creato il: {item.get('data_creazione', '-')}")
+                st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
 
                 st.text_area(
                     "🔒 Lavorazioni eseguite",
@@ -1291,4 +1306,4 @@ elif menu == "📌 Open Item":
                 )
 
                 st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
-                st.write(f"📅 Chiuso il: {item.get('data_chiusura', '-')}")
+                st.write(f"📅 Chiuso il: {formatta_data(item.get('data_chiusura'))}")
