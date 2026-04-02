@@ -480,7 +480,7 @@ elif menu == "🚄 Manutenzione":
                 titolo = f"{colore} **{r['Componente']}**"
                 
                 if ods and str(ods).lower() != "nan":
-                    titolo += f" ||   ODS: **{ods}**"
+                    titolo += f"   ||      **{ods}**"
                 
                 with st.expander(titolo):    
                     st.write(r["Intervento"])
