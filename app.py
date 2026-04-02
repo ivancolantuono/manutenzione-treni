@@ -475,7 +475,9 @@ elif menu == "🚄 Manutenzione":
                         except:
                             tecnici = [tecnici]
     
-                with st.expander(f"{colore} {r['Componente']}"):
+                ods = r.get("ODL", "") or r.get("Ods", "") or r.get("ODS", "")
+
+                with st.expander(f"{colore} {r['Componente']} (ODS: {ods})"):
     
                     st.write(r["Intervento"])
     
