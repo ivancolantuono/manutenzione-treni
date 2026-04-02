@@ -565,19 +565,19 @@ elif menu == "🚄 Manutenzione":
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
                         
-            🚆 Treno: {treno}
-            🧾 ODL: {odl}
-            📅 Data: {data_giorno}
-            ⏱️ Scadenza: {st.session_state.scadenza}
+    🚆 Treno: {treno}
+    🧾 ODL: {odl}
+    📅 Data: {data_giorno}
+    ⏱️ Scadenza: {st.session_state.scadenza}
                         
-            👷 Caposquadra: {utente}
+    👷 Caposquadra: {utente}
                         
-            🔧 {r['Intervento']}
-            🔧 {r['Componente']}
+    🔧 {r['Intervento']}
+    🔧 {r['Componente']}
                         
-            📄 Scheda tecnica:
-            {link}
-            """
+    📄 Scheda tecnica:
+    {link}
+    """
                     
                         # 🔥 BOTTONI BELLI (NON LINK BRUTTI)
                         for num in numeri:
