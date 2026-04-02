@@ -475,7 +475,7 @@ elif menu == "🚄 Manutenzione":
                         except:
                             tecnici = [tecnici]
     
-                ods = r.get("ODL") or r.get("Ods") or r.get("ODS")
+                ods = r.get("ODS")
                 
                 titolo = f"{colore} **{r['Componente']}**"
                 
