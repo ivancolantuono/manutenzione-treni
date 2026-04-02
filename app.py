@@ -44,6 +44,32 @@ section[data-testid="stSidebar"] {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+
+/* 🔥 Nasconde barra in basso (Streamlit Cloud) */
+[data-testid="stStatusWidget"] {
+    display: none;
+}
+
+/* Nasconde badge/overlay basso destra */
+div[data-testid="stToolbar"] {
+    display: none;
+}
+
+/* Nasconde eventuali elementi flottanti */
+.st-emotion-cache-1dp5vir {
+    display: none;
+}
+
+/* sicurezza extra */
+button[kind="secondary"] {
+    display: none;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # =========================
 # STILE
 # =========================
