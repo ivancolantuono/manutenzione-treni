@@ -1169,8 +1169,6 @@ elif menu == "📌 Open Item":
 
     st.title("📌 Open Item")
 
-    st.title("📌 Open Item")
-
     # =========================
     # FUNZIONE FORMATTA DATA
     # =========================
