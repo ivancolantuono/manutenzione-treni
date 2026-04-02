@@ -1164,6 +1164,11 @@ elif menu == "📌 Open Item":
 
     from datetime import datetime
 
+    # 🔄 REFRESH OGNI 30 SECONDI
+    st_autorefresh(interval=30000, key="refresh_open_item")
+
+    st.title("📌 Open Item")
+
     st.title("📌 Open Item")
 
     # =========================
