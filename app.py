@@ -1253,16 +1253,18 @@ elif menu == "📌 Open Item":
 
             if st.button("✅ Chiudi attività", key=f"chiudi_{item['id']}"):
 
-                supabase.table("open_item").update({
-                    "stato": "CHIUSO",
-                    "lavorazioni": lavori,
-                    "data_chiusura": datetime.now().isoformat(),
-                    "utente_chiusura": utente_loggato
-                }).eq("id", item["id"]).execute()
-
-                st.success("✔ Attività chiusa")
-                st.rerun()
-
+                if not lavori or lavori.strip() == "":
+                    st.error("❌ Devi inserire le lavorazioni eseguite")
+                else:
+                    supabase.table("open_item").update({
+                        "stato": "CHIUSO",
+                        "lavorazioni": lavori,
+                        "data_chiusura": datetime.now().isoformat(),
+                        "utente_chiusura": utente_loggato
+                    }).eq("id", item["id"]).execute()
+            
+                    st.success("✔ Attività chiusa")
+                    st.rerun()
     # ============================
     # 🟢 CHIUSI
     # ============================
