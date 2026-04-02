@@ -578,6 +578,26 @@ elif menu == "🚄 Manutenzione":
                         st.warning("Cancellato")
                         st.rerun()
 
+                    # =========================
+                    # 🔒 CHIUSURA FORZATA CAPOSQUADRA
+                    # =========================
+                    if record and record.get("stato") != "CHIUSO":
+                    
+                        if colC.button("🔒 Chiudi attività", key=f"chiudi_capo_{i}"):
+                    
+                            note_vecchie = record.get("note", "")
+                    
+                            nuove_note = f"{note_vecchie}\n---\nCHIUSO DA CAPOSQUADRA: {utente}"
+                    
+                            supabase.table("interventi").update({
+                                "stato": "CHIUSO",
+                                "fine": ora_italia(),
+                                "note": nuove_note
+                            }).eq("chiave", chiave).execute()
+                    
+                            st.success("Attività chiusa dal caposquadra")
+                            st.rerun()
+
     # =========================
     # 👷 OPERATORE
     # =========================
