@@ -1181,7 +1181,7 @@ elif menu == "📌 Open Item":
     treno = st.text_input("🚆 Treno")
 
     cassa = st.selectbox(
-        ""☑️ Cassa",
+        "☑️ Cassa",
         ["", "DM1", "TT2", "M3", "T4", "T5", "M6", "TT7", "DM8"]
     )
 
