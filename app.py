@@ -1337,28 +1337,79 @@ elif menu == "📌 Open Item":
     # ============================
     # 🟢 CHIUSI
     # ============================
-
+    
     mostra_chiusi = st.checkbox("Mostra attività chiuse", value=True)
-
+    
     if mostra_chiusi:
-
+    
         st.subheader("🟢 Attività Chiuse")
-
+    
         for item in chiusi:
-
+    
+            item_id = item["id"]
+    
+            # stato modifica per ogni item
+            if f"edit_{item_id}" not in st.session_state:
+                st.session_state[f"edit_{item_id}"] = False
+    
             with st.expander(f"🟢 Treno {item['treno']} - {item['descrizione']}"):
-
+    
                 st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
                 st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
                 st.write(f"👤 Creato da: {item.get('utente', '-')}")
                 st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
-
-                st.text_area(
-                    "🔒 Lavorazioni eseguite",
-                    value=item.get("lavorazioni", ""),
-                    key=f"lav_chiuso_{item['id']}",
-                    disabled=True
-                )
-
+    
+                # ----------------------------
+                # MODALITÀ MODIFICA
+                # ----------------------------
+    
+                if st.session_state[f"edit_{item_id}"]:
+    
+                    lavori_edit = st.text_area(
+                        "✏️ Modifica lavorazioni",
+                        value=item.get("lavorazioni", ""),
+                        key=f"edit_lav_{item_id}"
+                    )
+    
+                    col1, col2 = st.columns(2)
+    
+                    with col1:
+                        if st.button("💾 Salva", key=f"save_{item_id}"):
+    
+                            try:
+                                supabase.table("open_item").update({
+                                    "lavorazioni": lavori_edit
+                                }).eq("id", item_id).execute()
+    
+                                st.success("✔ Modifiche salvate")
+    
+                                st.session_state[f"edit_{item_id}"] = False
+                                st.rerun()
+    
+                            except Exception as e:
+                                st.error(f"Errore salvataggio: {e}")
+    
+                    with col2:
+                        if st.button("❌ Annulla", key=f"cancel_{item_id}"):
+                            st.session_state[f"edit_{item_id}"] = False
+                            st.rerun()
+    
+                # ----------------------------
+                # VISUALIZZAZIONE NORMALE
+                # ----------------------------
+    
+                else:
+    
+                    st.text_area(
+                        "🔒 Lavorazioni eseguite",
+                        value=item.get("lavorazioni", ""),
+                        key=f"lav_chiuso_{item_id}",
+                        disabled=True
+                    )
+    
+                    if st.button("✏️ Modifica", key=f"edit_btn_{item_id}"):
+                        st.session_state[f"edit_{item_id}"] = True
+                        st.rerun()
+    
                 st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
                 st.write(f"📅 Chiuso il: {formatta_data(item.get('data_chiusura'))}")
