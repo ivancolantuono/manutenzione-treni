@@ -1422,21 +1422,24 @@ elif menu == "📌 Open Item":
             # 🔓 RIAPERTURA
             if st.button("🔓 Riapri attività", key=f"riapri_{item_id}"):
 
-                supabase.table("open_item").update({
-                    "stato": "APERTO",
-                    "data_riapertura": ora_italia_iso(),
-                    "utente_riapertura": utente_loggato
-                }).eq("id", item_id).execute()
-
-                salva_log(
-                    item_id,
-                    "RIAPERTURA",
-                    utente_loggato,
-                    item.get("lavorazioni", ""),
-                    "RIAPERTO"
-                )
-
-                st.rerun()
+                try:
+                    supabase.table("open_item").update({
+                        "stato": "APERTO"
+                    }).eq("id", item_id).execute()
+            
+                    salva_log(
+                        item_id,
+                        "RIAPERTURA",
+                        utente_loggato,
+                        item.get("lavorazioni", ""),
+                        "RIAPERTO"
+                    )
+            
+                    st.success("Attività riaperta")
+                    st.rerun()
+            
+                except Exception as e:
+                    st.error(f"Errore: {e}")
 
             # ============================
             # 📜 CRONOLOGIA
