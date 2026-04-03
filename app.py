@@ -1325,7 +1325,11 @@ elif menu == "📌 Open Item":
 
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{item['id']}")
 
-            if st.button("✅ Chiudi", key=f"chiudi_{item['id']}"):
+            if st.button(
+                "✅ Chiudi attività",
+                key=f"chiudi_{item['id']}",
+                disabled=not lavori or lavori.strip() == ""
+            ):
 
                 supabase.table("open_item").update({
                     "stato": "CHIUSO",
