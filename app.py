@@ -1246,11 +1246,12 @@ elif menu == "📌 Open Item":
             st.rerun()
 
     st.divider()
+
     # ============================
-    # CARICA DATI (PRIMA!)
+    # DATI
     # ============================
 
-    dati = supabase.table("open_item").select("*").execute().data
+    dati = supabase.table("open_item").select("*").execute().data or []
 
     # ============================
     # FILTRI
@@ -1299,11 +1300,8 @@ elif menu == "📌 Open Item":
 
         return True
 
-    # ============================
-    # DATI
-    # ============================
-
-    dati = supabase.table("open_item").select("*").execute().data or []
+    # 🔥 APPLICA FILTRI
+    dati = [d for d in dati if filtra(d)]
 
     aperti = [d for d in dati if d.get("stato") == "APERTO"]
     chiusi = [d for d in dati if d.get("stato") == "CHIUSO"]
@@ -1313,6 +1311,9 @@ elif menu == "📌 Open Item":
     # ============================
 
     st.subheader("🔴 Attività Aperte")
+
+    if not aperti:
+        st.info("Nessuna attività aperta")
 
     for item in aperti:
 
@@ -1338,7 +1339,6 @@ elif menu == "📌 Open Item":
                     "utente_chiusura": utente_loggato
                 }).eq("id", item["id"]).execute()
 
-                # LOG
                 salva_log(item["id"], "CHIUSURA", utente_loggato, "", lavori)
 
                 st.rerun()
@@ -1348,6 +1348,9 @@ elif menu == "📌 Open Item":
     # ============================
 
     st.subheader("🟢 Attività Chiuse")
+
+    if not chiusi:
+        st.info("Nessuna attività chiusa")
 
     for item in chiusi:
 
@@ -1410,29 +1413,30 @@ elif menu == "📌 Open Item":
             st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
             st.write(f"📅 Data chiusura: {formatta_data(item.get('data_chiusura'))}")
 
-            if st.button("🔓 Riapri attività", key=f"riapri_{item_id}"):
-            
-                try:
-                    supabase.table("open_item").update({
-                        "stato": "APERTO",
-                        "data_chiusura": None,
-                        "utente_chiusura": None
-                    }).eq("id", item_id).execute()
-            
-                    # 🔥 LOG RIAPERTURA
-                    salva_log(
-                        item_id,
-                        "RIAPERTURA",
-                        utente_loggato,
-                        item.get("lavorazioni", ""),
-                        "RIAPERTO"
-                    )
+            # 🔓 INFO RIAPERTURA
+            if item.get("utente_riapertura"):
+                st.warning(
+                    f"🔓 Riaperta da {item.get('utente_riapertura')} il {formatta_data(item.get('data_riapertura'))}"
+                )
 
-                    st.success("Attività riaperta")
-                    st.rerun()
-            
-                except Exception as e:
-                    st.error(f"Errore riapertura: {e}")
+            # 🔓 RIAPERTURA
+            if st.button("🔓 Riapri attività", key=f"riapri_{item_id}"):
+
+                supabase.table("open_item").update({
+                    "stato": "APERTO",
+                    "data_riapertura": ora_italia_iso(),
+                    "utente_riapertura": utente_loggato
+                }).eq("id", item_id).execute()
+
+                salva_log(
+                    item_id,
+                    "RIAPERTURA",
+                    utente_loggato,
+                    item.get("lavorazioni", ""),
+                    "RIAPERTO"
+                )
+
+                st.rerun()
 
             # ============================
             # 📜 CRONOLOGIA
