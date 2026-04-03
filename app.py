@@ -1410,6 +1410,30 @@ elif menu == "📌 Open Item":
             st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
             st.write(f"📅 Data chiusura: {formatta_data(item.get('data_chiusura'))}")
 
+            if st.button("🔓 Riapri attività", key=f"riapri_{item_id}"):
+            
+                try:
+                    supabase.table("open_item").update({
+                        "stato": "APERTO",
+                        "data_chiusura": None,
+                        "utente_chiusura": None
+                    }).eq("id", item_id).execute()
+            
+                    # 🔥 LOG RIAPERTURA
+                    salva_log(
+                        item_id,
+                        "RIAPERTURA",
+                        utente_loggato,
+                        item.get("lavorazioni", ""),
+                        "RIAPERTO"
+                    )
+
+        st.success("Attività riaperta")
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"Errore riapertura: {e}")
+
             # ============================
             # 📜 CRONOLOGIA
             # ============================
