@@ -129,6 +129,21 @@ def ora_italia():
 url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
 key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
+# ============================
+# LOG OPEN ITEM
+# ============================
+def salva_log(item_id, azione, utente, vecchio, nuovo):
+    try:
+        supabase.table("open_item_log").insert({
+            "item_id": item_id,
+            "azione": azione,
+            "utente": utente,
+            "data": datetime.now(ZoneInfo("Europe/Rome")).isoformat(),
+            "valore_precedente": vecchio,
+            "valore_nuovo": nuovo
+        }).execute()
+    except Exception as e:
+        print("Errore log:", e)
 
 # =========================
 # LOGIN EXCEL FIX DEFINITIVO
@@ -1170,14 +1185,13 @@ elif menu == "📚 Schede SR":
 
 elif menu == "📌 Open Item":
 
-    import streamlit as st
     from datetime import datetime
     from zoneinfo import ZoneInfo
     from streamlit_autorefresh import st_autorefresh
 
-    utente_loggato = st.session_state["utente"]
+    utente_loggato = st.session_state.get("utente", "Sconosciuto")
 
-    # 🔄 REFRESH AUTOMATICO
+    # 🔄 REFRESH
     st_autorefresh(interval=30000, key="refresh_open_item")
 
     # ============================
@@ -1196,6 +1210,19 @@ elif menu == "📌 Open Item":
         except:
             return data_str
 
+    def salva_log(item_id, azione, utente, vecchio, nuovo):
+        try:
+            supabase.table("open_item_log").insert({
+                "item_id": item_id,
+                "azione": azione,
+                "utente": utente,
+                "data": ora_italia_iso(),
+                "valore_precedente": vecchio,
+                "valore_nuovo": nuovo
+            }).execute()
+        except Exception as e:
+            print("Errore log:", e)
+
     st.title("📌 Open Item")
 
     # ============================
@@ -1206,13 +1233,11 @@ elif menu == "📌 Open Item":
 
     treno = st.text_input("🚆 Treno")
 
-    cassa = st.selectbox(
-        "☑️ Cassa",
+    cassa = st.selectbox("☑️ Cassa",
         ["", "DM1", "TT2", "M3", "T4", "T5", "M6", "TT7", "DM8"]
     )
 
-    impianto = st.selectbox(
-        "⚙️ Impianto",
+    impianto = st.selectbox("⚙️ Impianto",
         ["", "Porte Interne", "Freno", "Antincendio", "Pis", "Arredo",
          "Climatizzazione", "Porte Esterne", "Toilette", "Bar-Bistrot"]
     )
@@ -1234,63 +1259,16 @@ elif menu == "📌 Open Item":
 
             st.success("✅ Inserito")
             st.rerun()
+        else:
+            st.warning("Compila almeno Treno e Descrizione")
 
     st.divider()
 
     # ============================
-    # CARICA DATI (PRIMA!)
+    # DATI
     # ============================
 
-    dati = supabase.table("open_item").select("*").execute().data
-
-    # ============================
-    # FILTRI
-    # ============================
-
-    st.subheader("🔍 Filtri")
-
-    tutti_treni = sorted(set(str(d.get("treno", "")) for d in dati))
-    tutte_casse = sorted(set(str(d.get("cassa", "")) for d in dati))
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        filtro_treni = st.multiselect("🚆 Treno", tutti_treni)
-
-    with col2:
-        filtro_casse = st.multiselect("☑️ Cassa", tutte_casse)
-
-    with col3:
-        filtro_date = st.date_input("📅 Data creazione")
-
-    # ============================
-    # FUNZIONE FILTRO
-    # ============================
-
-    def filtra(d):
-
-        if filtro_treni and str(d.get("treno")) not in filtro_treni:
-            return False
-
-        if filtro_casse and str(d.get("cassa")) not in filtro_casse:
-            return False
-
-        if filtro_date:
-            try:
-                data_db = datetime.fromisoformat(d.get("data_creazione")).date()
-
-                if isinstance(filtro_date, tuple):
-                    if not (filtro_date[0] <= data_db <= filtro_date[1]):
-                        return False
-                else:
-                    if data_db != filtro_date:
-                        return False
-            except:
-                return False
-
-        return True
-
-    dati = [d for d in dati if filtra(d)]
+    dati = supabase.table("open_item").select("*").execute().data or []
 
     aperti = [d for d in dati if d.get("stato") == "APERTO"]
     chiusi = [d for d in dati if d.get("stato") == "CHIUSO"]
@@ -1318,10 +1296,9 @@ elif menu == "📌 Open Item":
                 key=f"lav_{item['id']}"
             )
 
-            if st.button(
-                "✅ Chiudi attività",
+            if st.button("✅ Chiudi attività",
                 key=f"chiudi_{item['id']}",
-                disabled=not lavori or lavori.strip() == ""
+                disabled=not lavori.strip()
             ):
 
                 supabase.table("open_item").update({
@@ -1331,85 +1308,103 @@ elif menu == "📌 Open Item":
                     "utente_chiusura": utente_loggato
                 }).eq("id", item["id"]).execute()
 
+                # 🔥 LOG CHIUSURA
+                salva_log(item["id"], "CHIUSURA", utente_loggato, "", lavori)
+
                 st.success("✔ Attività chiusa")
                 st.rerun()
 
     # ============================
     # 🟢 CHIUSI
     # ============================
-    
-    mostra_chiusi = st.checkbox("Mostra attività chiuse", value=True)
-    
-    if mostra_chiusi:
-    
-        st.subheader("🟢 Attività Chiuse")
-    
-        for item in chiusi:
-    
-            item_id = item["id"]
-    
-            # stato modifica per ogni item
-            if f"edit_{item_id}" not in st.session_state:
-                st.session_state[f"edit_{item_id}"] = False
-    
-            with st.expander(f"🟢 Treno {item['treno']} - {item['descrizione']}"):
-    
-                st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
-                st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
-                st.write(f"👤 Creato da: {item.get('utente', '-')}")
-                st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
-    
-                # ----------------------------
-                # MODALITÀ MODIFICA
-                # ----------------------------
-    
-                if st.session_state[f"edit_{item_id}"]:
-    
-                    lavori_edit = st.text_area(
-                        "✏️ Modifica lavorazioni",
-                        value=item.get("lavorazioni", ""),
-                        key=f"edit_lav_{item_id}"
-                    )
-    
-                    col1, col2 = st.columns(2)
-    
-                    with col1:
-                        if st.button("💾 Salva", key=f"save_{item_id}"):
-    
-                            try:
-                                supabase.table("open_item").update({
-                                    "lavorazioni": lavori_edit
-                                }).eq("id", item_id).execute()
-    
-                                st.success("✔ Modifiche salvate")
-    
-                                st.session_state[f"edit_{item_id}"] = False
-                                st.rerun()
-    
-                            except Exception as e:
-                                st.error(f"Errore salvataggio: {e}")
-    
-                    with col2:
-                        if st.button("❌ Annulla", key=f"cancel_{item_id}"):
-                            st.session_state[f"edit_{item_id}"] = False
-                            st.rerun()
-    
-                # ----------------------------
-                # VISUALIZZAZIONE NORMALE
-                # ----------------------------
-    
-                else:
-    
-                    st.text_area(
-                        "🔒 Lavorazioni eseguite",
-                        value=item.get("lavorazioni", ""),
-                        key=f"lav_chiuso_{item_id}",
-                        disabled=True
-                    )
-    
-                    if st.button("✏️ Modifica", key=f"edit_btn_{item_id}"):
-                        st.session_state[f"edit_{item_id}"] = True
+
+    st.subheader("🟢 Attività Chiuse")
+
+    for item in chiusi:
+
+        item_id = item["id"]
+
+        if f"edit_{item_id}" not in st.session_state:
+            st.session_state[f"edit_{item_id}"] = False
+
+        with st.expander(f"🟢 Treno {item['treno']} - {item['descrizione']}"):
+
+            st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
+            st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
+            st.write(f"👤 Creato da: {item.get('utente', '-')}")
+            st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
+
+            # ----------------------------
+            # MODIFICA
+            # ----------------------------
+
+            if st.session_state[f"edit_{item_id}"]:
+
+                lavori_edit = st.text_area(
+                    "✏️ Modifica lavorazioni",
+                    value=item.get("lavorazioni", ""),
+                    key=f"edit_{item_id}"
+                )
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    if st.button("💾 Salva", key=f"save_{item_id}"):
+
+                        vecchio = item.get("lavorazioni", "")
+
+                        supabase.table("open_item").update({
+                            "lavorazioni": lavori_edit
+                        }).eq("id", item_id).execute()
+
+                        # 🔥 LOG MODIFICA
+                        salva_log(item_id, "MODIFICA", utente_loggato, vecchio, lavori_edit)
+
+                        st.session_state[f"edit_{item_id}"] = False
+                        st.success("✔ Salvato")
                         st.rerun()
-    
-                st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
-                st.write(f"📅 Chiuso il: {formatta_data(item.get('data_chiusura'))}")
+
+                with col2:
+                    if st.button("❌ Annulla", key=f"annulla_{item_id}"):
+                        st.session_state[f"edit_{item_id}"] = False
+                        st.rerun()
+
+            else:
+
+                st.text_area(
+                    "🔒 Lavorazioni eseguite",
+                    value=item.get("lavorazioni", ""),
+                    disabled=True,
+                    key=f"view_{item_id}"
+                )
+
+                if st.button("✏️ Modifica", key=f"edit_btn_{item_id}"):
+                    st.session_state[f"edit_{item_id}"] = True
+                    st.rerun()
+
+            st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
+            st.write(f"📅 Chiuso il: {formatta_data(item.get('data_chiusura'))}")
+
+            # ============================
+            # 📜 CRONOLOGIA
+            # ============================
+
+            st.markdown("### 📜 Cronologia")
+
+            log = supabase.table("open_item_log")\
+                .select("*")\
+                .eq("item_id", item_id)\
+                .order("data", desc=False)\
+                .execute().data
+
+            if not log:
+                st.caption("Nessuna modifica")
+
+            for l in log:
+                st.write(
+                    f"🕒 {formatta_data(l['data'])} - {l['utente']} → {l['azione']}"
+                )
+
+                if l["azione"] == "MODIFICA":
+                    st.caption(f"✏️ Da: {l['valore_precedente']}")
+                    st.caption(f"➡️ A: {l['valore_nuovo']}")
