@@ -1237,10 +1237,57 @@ elif menu == "📌 Open Item":
     # FILTRO
     # ============================
 
-    filtro_treno = st.text_input("🔍 Filtra per treno")
+    st.subheader("🔍 Filtri")
+
+    # prendi valori unici dal DB
+    tutti_treni = sorted(list(set([str(d.get("treno", "")) for d in dati])))
+    tutte_casse = sorted(list(set([str(d.get("cassa", "")) for d in dati])))
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        filtro_treni = st.multiselect("🚆 Treno", tutti_treni)
+    
+    with col2:
+        filtro_casse = st.multiselect("☑️ Cassa", tutte_casse)
+    
+    with col3:
+        filtro_date = st.date_input(
+            "📅 Data creazione",
+            value=[]
+        )
 
     dati = supabase.table("open_item").select("*").execute().data
+    
+    from datetime import datetime
 
+    def filtra(d):
+        # filtro treno
+        if filtro_treni and str(d.get("treno")) not in filtro_treni:
+            return False
+    
+        # filtro cassa
+        if filtro_casse and str(d.get("cassa")) not in filtro_casse:
+            return False
+    
+        # filtro data
+        if filtro_date:
+            data_db = d.get("data_creazione")
+            if data_db:
+                data_db = datetime.fromisoformat(data_db).date()
+    
+                if isinstance(filtro_date, list) and len(filtro_date) == 2:
+                    if not (filtro_date[0] <= data_db <= filtro_date[1]):
+                        return False
+                elif isinstance(filtro_date, datetime):
+                    if data_db != filtro_date:
+                        return False
+    
+        return True
+    
+    dati = [d for d in dati if filtra(d)]
+    
+    
     if filtro_treno:
         dati = [d for d in dati if filtro_treno.lower() in str(d.get("treno", "")).lower()]
 
