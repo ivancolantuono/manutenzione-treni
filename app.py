@@ -1246,6 +1246,58 @@ elif menu == "📌 Open Item":
             st.rerun()
 
     st.divider()
+    # ============================
+    # CARICA DATI (PRIMA!)
+    # ============================
+
+    dati = supabase.table("open_item").select("*").execute().data
+
+    # ============================
+    # FILTRI
+    # ============================
+
+    st.subheader("🔍 Filtri")
+
+    tutti_treni = sorted(set(str(d.get("treno", "")) for d in dati))
+    tutte_casse = sorted(set(str(d.get("cassa", "")) for d in dati))
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        filtro_treni = st.multiselect("🚆 Treno", tutti_treni)
+
+    with col2:
+        filtro_casse = st.multiselect("☑️ Cassa", tutte_casse)
+
+    with col3:
+        filtro_date = st.date_input("📅 Data creazione")
+
+    # ============================
+    # FUNZIONE FILTRO
+    # ============================
+
+    def filtra(d):
+
+        if filtro_treni and str(d.get("treno")) not in filtro_treni:
+            return False
+
+        if filtro_casse and str(d.get("cassa")) not in filtro_casse:
+            return False
+
+        if filtro_date:
+            try:
+                data_db = datetime.fromisoformat(d.get("data_creazione")).date()
+
+                if isinstance(filtro_date, tuple):
+                    if not (filtro_date[0] <= data_db <= filtro_date[1]):
+                        return False
+                else:
+                    if data_db != filtro_date:
+                        return False
+            except:
+                return False
+
+        return True
 
     # ============================
     # DATI
@@ -1266,9 +1318,10 @@ elif menu == "📌 Open Item":
 
         with st.expander(f"🔴 Treno {item['treno']} - {item['descrizione']}"):
 
-            st.write(f"Cassa: {item.get('cassa', '-')}")
-            st.write(f"Impianto: {item.get('impianto', '-')}")
-            st.write(f"Creato da: {item.get('utente', '-')}")
+            st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
+            st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
+            st.write(f"👤 Creato da: {item.get('utente', '-')}")
+            st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
 
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{item['id']}")
 
@@ -1299,9 +1352,10 @@ elif menu == "📌 Open Item":
 
         with st.expander(f"🟢 Treno {item['treno']} - {item['descrizione']}"):
 
-            st.write(f"Cassa: {item.get('cassa', '-')}")
-            st.write(f"Impianto: {item.get('impianto', '-')}")
-            st.write(f"Creato da: {item.get('utente', '-')}")
+            st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
+            st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
+            st.write(f"👤 Creato da: {item.get('utente', '-')}")
+            st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
 
             # -------------------------
             # MODIFICA
@@ -1339,7 +1393,7 @@ elif menu == "📌 Open Item":
             else:
 
                 st.text_area(
-                    "🔒 Lavorazioni",
+                    "🔒 Lavorazioni eseguite",
                     value=item.get("lavorazioni", ""),
                     disabled=True,
                     key=f"view_{item_id}"
@@ -1349,8 +1403,8 @@ elif menu == "📌 Open Item":
                     st.session_state[f"edit_{item_id}"] = True
                     st.rerun()
 
-            st.write(f"Chiuso da: {item.get('utente_chiusura', '-')}")
-            st.write(f"Data chiusura: {formatta_data(item.get('data_chiusura'))}")
+            st.write(f"👤 Chiuso da: {item.get('utente_chiusura', '-')}")
+            st.write(f"📅 Data chiusura: {formatta_data(item.get('data_chiusura'))}")
 
             # ============================
             # 📜 CRONOLOGIA
