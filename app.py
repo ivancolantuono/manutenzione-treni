@@ -1428,11 +1428,11 @@ elif menu == "📌 Open Item":
                         "RIAPERTO"
                     )
 
-        st.success("Attività riaperta")
-        st.rerun()
-
-    except Exception as e:
-        st.error(f"Errore riapertura: {e}")
+                    st.success("Attività riaperta")
+                    st.rerun()
+            
+                except Exception as e:
+                    st.error(f"Errore riapertura: {e}")
 
             # ============================
             # 📜 CRONOLOGIA
