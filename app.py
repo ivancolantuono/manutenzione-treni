@@ -227,7 +227,8 @@ else:
         "",
         [
             "🚄 Manutenzione",
-            "📊 Storico",
+            "📚 Schede SR",
+            "📌 Open Item",
             "📦 Cerca Componente"
         ],
         horizontal=True
