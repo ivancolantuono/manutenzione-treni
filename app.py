@@ -1169,21 +1169,24 @@ elif menu == "📚 Schede SR":
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
 
 elif menu == "📌 Open Item":
-    utente_loggato = st.session_state["utente"]
 
     import streamlit as st
     from datetime import datetime
     from zoneinfo import ZoneInfo
     from streamlit_autorefresh import st_autorefresh
 
+    utente_loggato = st.session_state["utente"]
+
     # 🔄 REFRESH AUTOMATICO
     st_autorefresh(interval=30000, key="refresh_open_item")
 
-    # ✅ ORA ITALIA
+    # ============================
+    # FUNZIONI
+    # ============================
+
     def ora_italia_iso():
         return datetime.now(ZoneInfo("Europe/Rome")).isoformat()
 
-    # ✅ FORMATTA DATA
     def formatta_data(data_str):
         if not data_str:
             return "-"
@@ -1196,7 +1199,7 @@ elif menu == "📌 Open Item":
     st.title("📌 Open Item")
 
     # ============================
-    # FORM
+    # FORM NUOVO
     # ============================
 
     st.subheader("➕ Nuova attività rimandata")
@@ -1210,7 +1213,8 @@ elif menu == "📌 Open Item":
 
     impianto = st.selectbox(
         "⚙️ Impianto",
-        ["", "Porte Interne", "Freno", "Antincendio", "Pis", "Arredo", "Climatizzazione", "Porte Esterne", "Toilette", "Bar-Bistrot"]
+        ["", "Porte Interne", "Freno", "Antincendio", "Pis", "Arredo",
+         "Climatizzazione", "Porte Esterne", "Toilette", "Bar-Bistrot"]
     )
 
     descrizione = st.text_area("📝 Descrizione attività")
@@ -1225,7 +1229,7 @@ elif menu == "📌 Open Item":
                 "descrizione": descrizione,
                 "stato": "APERTO",
                 "utente": utente_loggato,
-                "data_creazione": ora_italia_iso()   # ✅ FIX ORARIO
+                "data_creazione": ora_italia_iso()
             }).execute()
 
             st.success("✅ Inserito")
@@ -1234,62 +1238,59 @@ elif menu == "📌 Open Item":
     st.divider()
 
     # ============================
-    # FILTRO
+    # CARICA DATI (PRIMA!)
+    # ============================
+
+    dati = supabase.table("open_item").select("*").execute().data
+
+    # ============================
+    # FILTRI
     # ============================
 
     st.subheader("🔍 Filtri")
 
-    # prendi valori unici dal DB
-    tutti_treni = sorted(list(set([str(d.get("treno", "")) for d in dati])))
-    tutte_casse = sorted(list(set([str(d.get("cassa", "")) for d in dati])))
-    
+    tutti_treni = sorted(set(str(d.get("treno", "")) for d in dati))
+    tutte_casse = sorted(set(str(d.get("cassa", "")) for d in dati))
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         filtro_treni = st.multiselect("🚆 Treno", tutti_treni)
-    
+
     with col2:
         filtro_casse = st.multiselect("☑️ Cassa", tutte_casse)
-    
-    with col3:
-        filtro_date = st.date_input(
-            "📅 Data creazione",
-            value=[]
-        )
 
-    dati = supabase.table("open_item").select("*").execute().data
-    
-    from datetime import datetime
+    with col3:
+        filtro_date = st.date_input("📅 Data creazione")
+
+    # ============================
+    # FUNZIONE FILTRO
+    # ============================
 
     def filtra(d):
-        # filtro treno
+
         if filtro_treni and str(d.get("treno")) not in filtro_treni:
             return False
-    
-        # filtro cassa
+
         if filtro_casse and str(d.get("cassa")) not in filtro_casse:
             return False
-    
-        # filtro data
+
         if filtro_date:
-            data_db = d.get("data_creazione")
-            if data_db:
-                data_db = datetime.fromisoformat(data_db).date()
-    
-                if isinstance(filtro_date, list) and len(filtro_date) == 2:
+            try:
+                data_db = datetime.fromisoformat(d.get("data_creazione")).date()
+
+                if isinstance(filtro_date, tuple):
                     if not (filtro_date[0] <= data_db <= filtro_date[1]):
                         return False
-                elif isinstance(filtro_date, datetime):
+                else:
                     if data_db != filtro_date:
                         return False
-    
+            except:
+                return False
+
         return True
-    
+
     dati = [d for d in dati if filtra(d)]
-    
-    
-    if filtro_treno:
-        dati = [d for d in dati if filtro_treno.lower() in str(d.get("treno", "")).lower()]
 
     aperti = [d for d in dati if d.get("stato") == "APERTO"]
     chiusi = [d for d in dati if d.get("stato") == "CHIUSO"]
@@ -1317,18 +1318,16 @@ elif menu == "📌 Open Item":
                 key=f"lav_{item['id']}"
             )
 
-            chiudi = st.button(
+            if st.button(
                 "✅ Chiudi attività",
                 key=f"chiudi_{item['id']}",
                 disabled=not lavori or lavori.strip() == ""
-            )
-
-            if chiudi:
+            ):
 
                 supabase.table("open_item").update({
                     "stato": "CHIUSO",
                     "lavorazioni": lavori,
-                    "data_chiusura": ora_italia_iso(),   # ✅ FIX ORARIO
+                    "data_chiusura": ora_italia_iso(),
                     "utente_chiusura": utente_loggato
                 }).eq("id", item["id"]).execute()
 
