@@ -1234,7 +1234,7 @@ elif menu == "📌 Open Item":
         if treno and descrizione:
             supabase.table("open_item").insert({
                 "treno": treno,
-                "cassa": ", ".join(casse),
+                "cassa": ", ".join(casse) if casse else ""
                 "impianto": impianto,
                 "descrizione": descrizione,
                 "stato": "APERTO",
