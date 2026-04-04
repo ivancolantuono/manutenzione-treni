@@ -1270,9 +1270,6 @@ elif menu == "📌 Open Item":
     with col2:
         filtro_casse = st.multiselect("☑️ Cassa", tutte_casse)
 
-    with col3:
-        filtro_date = st.date_input("📅 Data creazione")
-
     # ============================
     # FUNZIONE FILTRO
     # ============================
@@ -1285,7 +1282,7 @@ elif menu == "📌 Open Item":
         if filtro_casse and str(d.get("cassa")) not in filtro_casse:
             return False
 
-
+        
 
         return True
 
