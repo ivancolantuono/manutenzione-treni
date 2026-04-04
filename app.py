@@ -1285,18 +1285,7 @@ elif menu == "📌 Open Item":
         if filtro_casse and str(d.get("cassa")) not in filtro_casse:
             return False
 
-        if filtro_date:
-            try:
-                data_db = datetime.fromisoformat(d.get("data_creazione")).date()
 
-                if isinstance(filtro_date, tuple):
-                    if not (filtro_date[0] <= data_db <= filtro_date[1]):
-                        return False
-                else:
-                    if data_db != filtro_date:
-                        return False
-            except:
-                return False
 
         return True
 
