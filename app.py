@@ -1219,7 +1219,7 @@ elif menu == "📌 Open Item":
 
     treno = st.text_input("🚆 Treno")
 
-    cassa = st.selectbox("☑️ Cassa",
+    cassa = st.multiselect("☑️ Cassa",
         ["", "DM1", "TT2", "M3", "T4", "T5", "M6", "TT7", "DM8"]
     )
 
@@ -1234,7 +1234,7 @@ elif menu == "📌 Open Item":
         if treno and descrizione:
             supabase.table("open_item").insert({
                 "treno": treno,
-                "cassa": cassa,
+                "cassa": ", ".join(casse),
                 "impianto": impianto,
                 "descrizione": descrizione,
                 "stato": "APERTO",
