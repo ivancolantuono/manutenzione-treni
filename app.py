@@ -1177,11 +1177,11 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            link = gruppo[col_link].iloc[0] if col_link in gruppo.columns else None
+            link = gruppo[col_link].astype(str).iloc[0]
 
-            if pd.notna(link):
+            if link and link != "nan":
 
-                link = str(link).strip()
+                link = link.strip()
 
                 if not link.startswith("http"):
                     link = "https://" + link
