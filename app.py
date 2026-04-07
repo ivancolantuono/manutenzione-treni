@@ -1177,9 +1177,35 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            st.markdown(f"📘 **{manuale}**")
-            st.markdown(f"📘 **{link1}**")
+            link = None
 
+            if col_link in gruppo.columns:
+                links = gruppo[col_link].dropna().astype(str)
+
+                links = links[links.str.strip() != ""]
+                links = links[links.str.lower() != "nan"]
+
+                if len(links) > 0:
+                    link = links.iloc[0]
+
+            # 🔥 RIGA PDF + LINK
+            colA, colB = st.columns([4,1])
+
+            with colA:
+                st.write(f"📘 {manuale}")
+
+            with colB:
+                if link:
+                    link = link.strip()
+
+                    if not link.startswith("http"):
+                        link = "https://" + link
+
+                    st.link_button("Apri", link)
+                else:
+                    st.write("—")
+
+            # INFO
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
