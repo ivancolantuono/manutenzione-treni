@@ -1006,30 +1006,51 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            link = None
+    # =========================
+    # 🔗 PRENDE IL LINK (UNO SOLO)
+    # =========================
+    link = None
 
-            if "link1" in gruppo.columns:
+    if "link1" in gruppo.columns:
 
-                for val in gruppo["link1"]:
-                    val = str(val).strip()
+        links = gruppo["link1"].dropna().astype(str)
 
-                    if val and val.lower() != "nan":
-                        link = val
-                        break
+        links = links[links.str.strip() != ""]
+        links = links[links.str.lower() != "nan"]
 
-            if link:
+        if not links.empty:
+            link = links.iloc[0].strip()
 
-                if not link.startswith("http"):
-                    link = "https://" + link
+    # =========================
+    # 📄 PAGINE RAGGRUPPATE
+    # =========================
+    pagine = gruppo[col_pagina].dropna().astype(str).unique().tolist()
 
-                st.markdown(f"📘 [{manuale}]({link})")
+    # =========================
+    # 📘 MANUALE + LINK
+    # =========================
+    if link:
 
-            else:
-                st.markdown(f"📘 **{manuale}**")
+        if not link.startswith("http"):
+            link = "https://" + link
 
-            if sottogruppo:
-                st.caption(f"📂 {sottogruppo}")
-                
+        st.markdown(f"📘 [{manuale}]({link})")
+
+    else:
+        st.markdown(f"📘 **{manuale}**")
+
+    # =========================
+    # 📂 SOTTOGRUPPO
+    # =========================
+    if sottogruppo:
+        st.caption(f"📂 {sottogruppo}")
+
+    # =========================
+    # 📄 PAGINE
+    # =========================
+    if pagine:
+        st.caption(f"📄 Pagine: {', '.join(pagine)}")
+        
 elif menu == "📌 Open Item":
 
     from datetime import datetime
