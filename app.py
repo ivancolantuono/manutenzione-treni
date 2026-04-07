@@ -1177,21 +1177,9 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            link = None
-
-            if col_link in gruppo.columns:
-                links_validi = gruppo[col_link].dropna().astype(str)
-
-                # togli valori vuoti o "nan"
-                links_validi = links_validi[links_validi.str.strip() != ""]
-                links_validi = links_validi[links_validi.str.lower() != "nan"]
-
-                if not links_validi.empty:
-                    link = links_validi.iloc[0]
-
             if col_link in gruppo.columns:
 
-                links = gruppo[col_link].dropna().astype(str)
+                links = gruppo[col_link].dropna().astype(str).unique()
 
                 for link in links:
 
@@ -1202,12 +1190,18 @@ elif menu == "📚 Schede SR":
                         if not link.startswith("http"):
                             link = "https://" + link
 
-                        st.markdown(f"[📘 {manuale}]({link})")
+                        st.markdown(
+                            f'<a href="{link}" target="_blank">📘 {manuale}</a>',
+                            unsafe_allow_html=True
+                        )
+
+            else:
+                st.markdown(f"📘 **{manuale}**")
+
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
-            
 elif menu == "📌 Open Item":
 
     from datetime import datetime
