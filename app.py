@@ -1180,15 +1180,22 @@ elif menu == "📚 Schede SR":
             link = gruppo[col_link].iloc[0] if col_link in gruppo.columns else None
 
             if pd.notna(link):
-            st.markdown(f"📘 **[{manuale}]({link})**", unsafe_allow_html=True)
+
+                link = str(link).strip()
+
+                if not link.startswith("http"):
+                    link = "https://" + link
+
+                st.link_button(f"📘 {manuale}", link)
+
             else:
-            st.markdown(f"📘 **{manuale}**")
+                st.markdown(f"📘 **{manuale}**")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
+            
 elif menu == "📌 Open Item":
 
     from datetime import datetime
