@@ -1177,26 +1177,25 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            if col_link in gruppo.columns:
+            if col_link:
 
                 links = gruppo[col_link].dropna().astype(str).unique()
 
-                for link in links:
+                if len(links) > 0:
 
-                    link = link.strip()
+                    link = links[0].strip()
+
+                    st.write("DEBUG:", link)  # 👈 TEMPORANEO
 
                     if link and link.lower() != "nan":
 
                         if not link.startswith("http"):
                             link = "https://" + link
 
-                        st.markdown(
-                            f'<a href="{link}" target="_blank">📘 {manuale}</a>',
-                            unsafe_allow_html=True
-                        )
+                        st.link_button(f"📘 {manuale}", link)
 
             else:
-                st.markdown(f"📘 **{manuale}**")
+                st.error("Colonna link NON trovata")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
