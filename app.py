@@ -1177,23 +1177,22 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            # =========================
-            # 🔗 RECUPERO LINK SICURO
-            # =========================
+            # 🔥 LINK PRESO CORRETTAMENTE
             link = None
 
-            if col_link in gruppo.columns:
+            df_link = risultati[
+                (risultati[col_titolo] == titolo) &
+                (risultati[col_manuale] == manuale)
+            ]
 
-                for val in gruppo[col_link]:
-                    val = str(val).strip()
+            for val in df_link[col_link]:
+                val = str(val).strip()
 
-                    if val and val.lower() != "nan":
-                        link = val
-                        break
+                if val and val.lower() != "nan":
+                    link = val
+                    break
 
-            # =========================
-            # 📄 RIGA PDF + LINK
-            # =========================
+            # UI
             colA, colB = st.columns([4,1])
 
             with colA:
@@ -1210,9 +1209,6 @@ elif menu == "📚 Schede SR":
                 else:
                     st.caption("❌ N.D.")
 
-            # =========================
-            # INFO
-            # =========================
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
