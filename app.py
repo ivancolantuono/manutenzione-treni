@@ -1090,7 +1090,7 @@ elif menu == "📚 Schede SR":
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
-    col_link = "link1"
+    col_link = "link1"   # 👈 la tua colonna aggiornata
 
     # 🔎 trova sottogruppo
     col_sottogruppo = None
@@ -1100,15 +1100,12 @@ elif menu == "📚 Schede SR":
             break
 
     # =========================
-    # 📱 INPUT COMPATTO MOBILE
+    # 📱 INPUT
     # =========================
     col1, col2 = st.columns(2)
 
     with col1:
-        ricerca = st.text_input(
-            "🔍 Cerca",
-            placeholder="es. compressore aria"
-        )
+        ricerca = st.text_input("🔍 Cerca", placeholder="es. compressore aria")
 
     with col2:
         if col_sottogruppo:
@@ -1120,21 +1117,17 @@ elif menu == "📚 Schede SR":
     df_filtrato = df_sr.copy()
 
     # =========================
-    # 🔧 FUNZIONE NORMALIZZAZIONE
+    # 🔎 RICERCA
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
         testo = re.sub(r"[^a-z0-9]", " ", testo)
         return testo
 
-    # =========================
-    # 🔎 RICERCA GOOGLE STYLE (VELOCIZZATA)
-    # =========================
     if ricerca:
 
         parole = [pulisci(p) for p in ricerca.split()]
 
-        # 👉 concatena colonne UNA VOLTA (molto più veloce)
         df_filtrato["__search__"] = (
             df_filtrato[col_testo].astype(str) + " " +
             df_filtrato[col_titolo].astype(str) + " " +
@@ -1166,7 +1159,21 @@ elif menu == "📚 Schede SR":
         st.stop()
 
     # =========================
-    # 📄 OUTPUT COMPATTO MOBILE
+    # 🔥 CREA MAPPA LINK (SOLUZIONE DEFINITIVA)
+    # =========================
+    link_map = {}
+
+    for _, row in risultati.iterrows():
+
+        manuale = str(row.get(col_manuale, "")).strip()
+        link = str(row.get(col_link, "")).strip()
+
+        if manuale not in link_map:
+            if link and link.lower() != "nan":
+                link_map[manuale] = link
+
+    # =========================
+    # 📄 OUTPUT
     # =========================
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
@@ -1177,22 +1184,8 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            # 🔥 LINK PRESO CORRETTAMENTE
-            link = None
+            link = link_map.get(manuale)
 
-            df_link = risultati[
-                (risultati[col_titolo] == titolo) &
-                (risultati[col_manuale] == manuale)
-            ]
-
-            for val in df_link[col_link]:
-                val = str(val).strip()
-
-                if val and val.lower() != "nan":
-                    link = val
-                    break
-
-            # UI
             colA, colB = st.columns([4,1])
 
             with colA:
