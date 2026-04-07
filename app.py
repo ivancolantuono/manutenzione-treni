@@ -1189,17 +1189,20 @@ elif menu == "📚 Schede SR":
                 if not links_validi.empty:
                     link = links_validi.iloc[0]
 
-            if link:
+            if col_link in gruppo.columns:
 
-                link = link.strip()
+                links = gruppo[col_link].dropna().astype(str)
 
-                if not link.startswith("http"):
-                    link = "https://" + link
+                for link in links:
 
-                st.link_button(f"📘 {manuale}", link)
+                    link = link.strip()
 
-            else:
-                st.markdown(f"📘 **{manuale}**")
+                    if link and link.lower() != "nan":
+
+                        if not link.startswith("http"):
+                            link = "https://" + link
+
+                        st.markdown(f"[📘 {manuale}]({link})")
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
