@@ -1177,9 +1177,19 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            link = gruppo[col_link].astype(str).iloc[0]
+            link = None
 
-            if link and link != "nan":
+            if col_link in gruppo.columns:
+                links_validi = gruppo[col_link].dropna().astype(str)
+
+                # togli valori vuoti o "nan"
+                links_validi = links_validi[links_validi.str.strip() != ""]
+                links_validi = links_validi[links_validi.str.lower() != "nan"]
+
+                if not links_validi.empty:
+                    link = links_validi.iloc[0]
+
+            if link:
 
                 link = link.strip()
 
@@ -1190,7 +1200,6 @@ elif menu == "📚 Schede SR":
 
             else:
                 st.markdown(f"📘 **{manuale}**")
-
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
