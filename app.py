@@ -1177,28 +1177,26 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            if col_link in gruppo.columns:
+            # 🔥 PRENDE LINK DAL DATAFRAME ORIGINALE (NON dal gruppo)
+            df_link = df_sr[df_sr[col_manuale] == manuale]
 
-                links = gruppo[col_link].dropna().astype(str).unique()
+            links = df_link[col_link].dropna().astype(str).unique()
 
-                if len(links) > 0:
+            if len(links) > 0:
 
-                    link = links[0].strip()
+                link = links[0].strip()
 
-                    st.write("DEBUG:", link)
+                st.write("DEBUG:", link)  # 👈 vedrai finalmente il link
 
-                    if link and link.lower() != "nan":
+                if link and link.lower() != "nan":
 
-                        if not link.startswith("http"):
-                            link = "https://" + link
+                    if not link.startswith("http"):
+                        link = "https://" + link
 
-                        st.link_button(f"📘 {manuale}", link)
-
-                else:
-                    st.warning("⚠️ Nessun link nel gruppo")
+                    st.link_button(f"📘 {manuale}", link)
 
             else:
-                st.error(f"Colonna '{col_link}' NON trovata")
+                st.warning("⚠️ Nessun link trovato")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
