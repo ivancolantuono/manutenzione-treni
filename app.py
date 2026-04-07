@@ -1177,40 +1177,49 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            df_test = df_sr[
-                df_sr[col_manuale].astype(str).str.contains(
-                    str(manuale).strip(), case=False, na=False
-                )
+            # 🔍 DEBUG MINIMO
+            st.write("MANUALE:", manuale)
+
+            # 🔥 PRENDE TUTTE LE RIGHE CON LINK VALIDO
+            df_link = df_sr[df_sr[col_link].notna()].copy()
+
+            # pulizia
+            df_link[col_link] = df_link[col_link].astype(str).str.strip()
+            df_link[col_manuale] = df_link[col_manuale].astype(str).str.strip()
+
+            # 🔥 MATCH LARGO (non preciso)
+            df_match = df_link[
+                df_link[col_manuale].str.contains(manuale, case=False, na=False)
             ]
 
-            st.write("📊 Righe trovate:", df_test.shape)
+            # fallback se non trova nulla
+            if df_match.empty:
+                df_match = df_link
 
-            if not df_test.empty:
+            st.write("RIGHE MATCH:", df_match.shape)
 
-                links = df_test[col_link].dropna().astype(str).unique()
+            links = df_match[col_link].unique()
 
-                st.write("🔗 Link trovati:", links)
+            st.write("LINK TROVATI:", links)
 
-                if len(links) > 0:
+            if len(links) > 0:
 
-                    link = links[0].strip()
+                link = links[0]
 
-                    if not link.startswith("http"):
-                        link = "https://" + link
+                if not link.startswith("http"):
+                    link = "https://" + link
 
-                    st.link_button(f"📘 {manuale}", link)
-
-                else:
-                    st.error("❌ Link non presente nella colonna")
+                st.success("LINK TROVATO")
+                st.link_button(f"📘 {manuale}", link)
 
             else:
-                st.error("❌ Manuale NON trovato nel dataframe")
+                st.error("❌ NESSUN LINK TROVATO")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
+            
 elif menu == "📌 Open Item":
 
     from datetime import datetime
