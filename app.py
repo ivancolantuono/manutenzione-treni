@@ -1006,8 +1006,7 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            st.markdown(f"📘 **{manuale}**")
-            
+            st.markdown(f"[📘 **{manuale}**]({link1})")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
