@@ -1086,11 +1086,11 @@ elif menu == "📚 Schede SR":
     # =========================
     # 📌 COLONNE
     # =========================
-    col_link = "link"
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
+    col_link = "link"
 
     # 🔎 trova sottogruppo
     col_sottogruppo = None
@@ -1177,49 +1177,38 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            # 🔍 DEBUG MINIMO
-            st.write("MANUALE:", manuale)
+            st.markdown(f"📘 **{manuale}**")
 
-            # 🔥 PRENDE TUTTE LE RIGHE CON LINK VALIDO
-            df_link = df_sr[df_sr[col_link].notna()].copy()
+            # 🔥 PRENDE IL LINK DAL GRUPPO
+            link = None
 
-            # pulizia
-            df_link[col_link] = df_link[col_link].astype(str).str.strip()
-            df_link[col_manuale] = df_link[col_manuale].astype(str).str.strip()
+            if col_link in gruppo.columns:
+                links = gruppo[col_link].dropna().astype(str)
 
-            # 🔥 MATCH LARGO (non preciso)
-            df_match = df_link[
-                df_link[col_manuale].str.contains(manuale, case=False, na=False)
-            ]
+                links = links[links.str.strip() != ""]
+                links = links[links.str.lower() != "nan"]
 
-            # fallback se non trova nulla
-            if df_match.empty:
-                df_match = df_link
+                if not links.empty:
+                    link = links.iloc[0]
 
-            st.write("RIGHE MATCH:", df_match.shape)
+            # 🔥 MOSTRA LINK
+            if link:
 
-            links = df_match[col_link].unique()
-
-            st.write("LINK TROVATI:", links)
-
-            if len(links) > 0:
-
-                link = links[0]
+                link = link.strip()
 
                 if not link.startswith("http"):
                     link = "https://" + link
 
-                st.success("LINK TROVATO")
-                st.link_button(f"📘 {manuale}", link)
+                st.link_button("📘 Apri manuale", link)
 
             else:
-                st.error("❌ NESSUN LINK TROVATO")
+                st.error("❌ Link NON trovato")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
-            
+
 elif menu == "📌 Open Item":
 
     from datetime import datetime
