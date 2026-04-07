@@ -1006,13 +1006,30 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            st.markdown(f"[📘 **{manuale}**]({link1})")
+            link = None
+
+            if "link1" in gruppo.columns:
+
+                for val in gruppo["link1"]:
+                    val = str(val).strip()
+
+                    if val and val.lower() != "nan":
+                        link = val
+                        break
+
+            if link:
+
+                if not link.startswith("http"):
+                    link = "https://" + link
+
+                st.markdown(f"📘 [{manuale}]({link})")
+
+            else:
+                st.markdown(f"📘 **{manuale}**")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
-
-            st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
+                
 elif menu == "📌 Open Item":
 
     from datetime import datetime
