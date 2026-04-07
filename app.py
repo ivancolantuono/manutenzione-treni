@@ -1177,26 +1177,49 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            # 🔥 PRENDE LINK DAL DATAFRAME ORIGINALE (NON dal gruppo)
-            df_link = df_sr[df_sr[col_manuale] == manuale]
+            st.write("🔍 DEBUG MANUALE:", manuale)
 
-            links = df_link[col_link].dropna().astype(str).unique()
+            # 🔎 controlla colonne
+            st.write("📊 Colonne df_sr:", df_sr.columns)
 
-            if len(links) > 0:
+            # 🔎 controlla dati grezzi
+            st.write("📄 Prime righe:")
+            st.write(df_sr[[col_manuale, col_link]].head(5))
 
-                link = links[0].strip()
+            # 🔎 filtro manuale (robusto)
+            df_test = df_sr[
+                df_sr[col_manuale].astype(str).str.strip().str.lower() ==
+                str(manuale).strip().lower()
+            ]
 
-                st.write("DEBUG:", link)  # 👈 vedrai finalmente il link
+            st.write("📊 Righe trovate:", df_test.shape)
 
-                if link and link.lower() != "nan":
+            if not df_test.empty:
+                st.write("📄 Righe filtrate:")
+                st.write(df_test[[col_manuale, col_link]])
 
-                    if not link.startswith("http"):
-                        link = "https://" + link
+                links = df_test[col_link].dropna().astype(str).unique()
 
-                    st.link_button(f"📘 {manuale}", link)
+                st.write("🔗 Link trovati:", links)
+
+                if len(links) > 0:
+
+                    link = links[0].strip()
+
+                    st.write("✅ LINK USATO:", link)
+
+                    if link and link.lower() != "nan":
+
+                        if not link.startswith("http"):
+                            link = "https://" + link
+
+                        st.link_button(f"📘 {manuale}", link)
+
+                else:
+                    st.error("❌ Nessun link valido")
 
             else:
-                st.warning("⚠️ Nessun link trovato")
+                st.error("❌ Nessuna riga trovata per questo manuale")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
