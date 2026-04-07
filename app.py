@@ -1179,22 +1179,21 @@ elif menu == "📚 Schede SR":
 
             st.markdown(f"📘 **{manuale}**")
 
-            # 🔥 PRENDE IL LINK DAL GRUPPO
+            # 🔥 RECUPERO LINK ROBUSTO
             link = None
 
             if col_link in gruppo.columns:
-                links = gruppo[col_link].dropna().astype(str)
 
-                links = links[links.str.strip() != ""]
-                links = links[links.str.lower() != "nan"]
+                links = gruppo[col_link].dropna().astype(str).str.strip()
+
+                # pulizia valori sporchi
+                links = links[(links != "") & (links.str.lower() != "nan")]
 
                 if not links.empty:
                     link = links.iloc[0]
 
-            # 🔥 MOSTRA LINK
+            # 🔗 MOSTRA LINK
             if link:
-
-                link = link.strip()
 
                 if not link.startswith("http"):
                     link = "https://" + link
@@ -1202,13 +1201,13 @@ elif menu == "📚 Schede SR":
                 st.link_button("📘 Apri manuale", link)
 
             else:
-                st.error("❌ Link NON trovato")
+                st.warning("⚠️ Nessun link disponibile")
 
+            # INFO EXTRA
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
 elif menu == "📌 Open Item":
 
     from datetime import datetime
