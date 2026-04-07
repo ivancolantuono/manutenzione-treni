@@ -1177,18 +1177,23 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
+            # =========================
+            # 🔗 RECUPERO LINK SICURO
+            # =========================
             link = None
 
             if col_link in gruppo.columns:
-                links = gruppo[col_link].dropna().astype(str)
 
-                links = links[links.str.strip() != ""]
-                links = links[links.str.lower() != "nan"]
+                for val in gruppo[col_link]:
+                    val = str(val).strip()
 
-                if len(links) > 0:
-                    link = links.iloc[0]
+                    if val and val.lower() != "nan":
+                        link = val
+                        break
 
-            # 🔥 RIGA PDF + LINK
+            # =========================
+            # 📄 RIGA PDF + LINK
+            # =========================
             colA, colB = st.columns([4,1])
 
             with colA:
@@ -1196,16 +1201,18 @@ elif menu == "📚 Schede SR":
 
             with colB:
                 if link:
-                    link = link.strip()
 
                     if not link.startswith("http"):
                         link = "https://" + link
 
-                    st.link_button("Apri", link)
-                else:
-                    st.write("—")
+                    st.link_button("🔗 Apri", link)
 
+                else:
+                    st.caption("❌ N.D.")
+
+            # =========================
             # INFO
+            # =========================
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
