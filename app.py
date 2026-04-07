@@ -1177,7 +1177,7 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            if col_link:
+            if col_link in gruppo.columns:
 
                 links = gruppo[col_link].dropna().astype(str).unique()
 
@@ -1185,7 +1185,7 @@ elif menu == "📚 Schede SR":
 
                     link = links[0].strip()
 
-                    st.write("DEBUG:", link)  # 👈 TEMPORANEO
+                    st.write("DEBUG:", link)
 
                     if link and link.lower() != "nan":
 
@@ -1194,8 +1194,11 @@ elif menu == "📚 Schede SR":
 
                         st.link_button(f"📘 {manuale}", link)
 
+                else:
+                    st.warning("⚠️ Nessun link nel gruppo")
+
             else:
-                st.error("Colonna link NON trovata")
+                st.error(f"Colonna '{col_link}' NON trovata")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
