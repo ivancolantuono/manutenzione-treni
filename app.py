@@ -1177,26 +1177,15 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            st.write("🔍 DEBUG MANUALE:", manuale)
-
-            # 🔎 controlla colonne
-            st.write("📊 Colonne df_sr:", df_sr.columns)
-
-            # 🔎 controlla dati grezzi
-            st.write("📄 Prime righe:")
-            st.write(df_sr[[col_manuale, col_link]].head(5))
-
-            # 🔎 filtro manuale (robusto)
             df_test = df_sr[
-                df_sr[col_manuale].astype(str).str.strip().str.lower() ==
-                str(manuale).strip().lower()
+                df_sr[col_manuale].astype(str).str.contains(
+                    str(manuale).strip(), case=False, na=False
+                )
             ]
 
             st.write("📊 Righe trovate:", df_test.shape)
 
             if not df_test.empty:
-                st.write("📄 Righe filtrate:")
-                st.write(df_test[[col_manuale, col_link]])
 
                 links = df_test[col_link].dropna().astype(str).unique()
 
@@ -1206,25 +1195,22 @@ elif menu == "📚 Schede SR":
 
                     link = links[0].strip()
 
-                    st.write("✅ LINK USATO:", link)
+                    if not link.startswith("http"):
+                        link = "https://" + link
 
-                    if link and link.lower() != "nan":
-
-                        if not link.startswith("http"):
-                            link = "https://" + link
-
-                        st.link_button(f"📘 {manuale}", link)
+                    st.link_button(f"📘 {manuale}", link)
 
                 else:
-                    st.error("❌ Nessun link valido")
+                    st.error("❌ Link non presente nella colonna")
 
             else:
-                st.error("❌ Nessuna riga trovata per questo manuale")
+                st.error("❌ Manuale NON trovato nel dataframe")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
+
 elif menu == "📌 Open Item":
 
     from datetime import datetime
