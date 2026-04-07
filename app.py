@@ -1006,51 +1006,51 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-    # =========================
-    # 🔗 PRENDE IL LINK (UNO SOLO)
-    # =========================
-    link = None
+            # =========================
+            # 🔗 PRENDE IL LINK (UNO SOLO)
+            # =========================
+            link = None
 
-    if "link1" in gruppo.columns:
+            if "link1" in gruppo.columns:
 
-        links = gruppo["link1"].dropna().astype(str)
+                links = gruppo["link1"].dropna().astype(str)
 
-        links = links[links.str.strip() != ""]
-        links = links[links.str.lower() != "nan"]
+                links = links[links.str.strip() != ""]
+                links = links[links.str.lower() != "nan"]
 
-        if not links.empty:
-            link = links.iloc[0].strip()
+                if not links.empty:
+                    link = links.iloc[0].strip()
 
-    # =========================
-    # 📄 PAGINE RAGGRUPPATE
-    # =========================
-    pagine = gruppo[col_pagina].dropna().astype(str).unique().tolist()
+            # =========================
+            # 📄 PAGINE RAGGRUPPATE
+            # =========================
+            pagine = gruppo[col_pagina].dropna().astype(str).unique().tolist()
 
-    # =========================
-    # 📘 MANUALE + LINK
-    # =========================
-    if link:
+            # =========================
+            # 📘 MANUALE + LINK
+            # =========================
+            if link:
 
-        if not link.startswith("http"):
-            link = "https://" + link
+                if not link.startswith("http"):
+                    link = "https://" + link
 
-        st.markdown(f"📘 [{manuale}]({link})")
+                st.markdown(f"📘 [{manuale}]({link})")
 
-    else:
-        st.markdown(f"📘 **{manuale}**")
+            else:
+                st.markdown(f"📘 **{manuale}**")
 
-    # =========================
-    # 📂 SOTTOGRUPPO
-    # =========================
-    if sottogruppo:
-        st.caption(f"📂 {sottogruppo}")
+            # =========================
+            # 📂 SOTTOGRUPPO
+            # =========================
+            if sottogruppo:
+                st.caption(f"📂 {sottogruppo}")
 
-    # =========================
-    # 📄 PAGINE
-    # =========================
-    if pagine:
-        st.caption(f"📄 Pagine: {', '.join(pagine)}")
-        
+            # =========================
+            # 📄 PAGINE
+            # =========================
+            if pagine:
+                st.caption(f"📄 Pagine: {', '.join(pagine)}")
+                
 elif menu == "📌 Open Item":
 
     from datetime import datetime
