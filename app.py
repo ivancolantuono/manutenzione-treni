@@ -1086,6 +1086,7 @@ elif menu == "📚 Schede SR":
     # =========================
     # 📌 COLONNE
     # =========================
+    col_link = "link"
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
@@ -1176,6 +1177,11 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
+            link = gruppo[col_link].iloc[0] if col_link in gruppo.columns else None
+
+            if pd.notna(link):
+            st.markdown(f"📘 **[{manuale}]({link})**", unsafe_allow_html=True)
+            else:
             st.markdown(f"📘 **{manuale}**")
 
             if sottogruppo:
