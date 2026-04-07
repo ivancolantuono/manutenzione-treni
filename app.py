@@ -1090,7 +1090,7 @@ elif menu == "📚 Schede SR":
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
-    col_link1 = "link1"
+    col_link = "link1"
 
     # 🔎 trova sottogruppo
     col_sottogruppo = None
