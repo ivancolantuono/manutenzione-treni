@@ -1179,31 +1179,33 @@ elif menu == "📚 Schede SR":
 
             st.markdown(f"📘 **{manuale}**")
 
-            # 🔥 RECUPERO LINK ROBUSTO
+            # 🔥 PRENDE IL PRIMO LINK VALIDO (anche se duplicato)
             link = None
 
             if col_link in gruppo.columns:
 
-                links = gruppo[col_link].dropna().astype(str).str.strip()
+                links = gruppo[col_link].dropna().astype(str)
 
-                # pulizia valori sporchi
-                links = links[(links != "") & (links.str.lower() != "nan")]
+                # pulizia
+                links = links[links.str.strip() != ""]
+                links = links[links.str.lower() != "nan"]
 
-                if not links.empty:
-                    link = links.iloc[0]
+                if len(links) > 0:
+                    link = links.iloc[0]   # 👈 PRENDE SOLO UNO (GIUSTO)
 
             # 🔗 MOSTRA LINK
             if link:
 
+                link = link.strip()
+
                 if not link.startswith("http"):
                     link = "https://" + link
 
-                st.link_button("📘 Apri manuale", link)
+                st.markdown(f"[📘 {manuale}]({link})")
 
             else:
-                st.warning("⚠️ Nessun link disponibile")
+                st.error("❌ Link non trovato")
 
-            # INFO EXTRA
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
