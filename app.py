@@ -1090,7 +1090,7 @@ elif menu == "📚 Schede SR":
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
-    col_link = "link"
+    col_link1 = "link1"
 
     # 🔎 trova sottogruppo
     col_sottogruppo = None
@@ -1178,38 +1178,13 @@ elif menu == "📚 Schede SR":
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
             st.markdown(f"📘 **{manuale}**")
-
-            # 🔥 PRENDE IL PRIMO LINK VALIDO (anche se duplicato)
-            link = None
-
-            if col_link in gruppo.columns:
-
-                links = gruppo[col_link].dropna().astype(str)
-
-                # pulizia
-                links = links[links.str.strip() != ""]
-                links = links[links.str.lower() != "nan"]
-
-                if len(links) > 0:
-                    link = links.iloc[0]   # 👈 PRENDE SOLO UNO (GIUSTO)
-
-            # 🔗 MOSTRA LINK
-            if link:
-
-                link = link.strip()
-
-                if not link.startswith("http"):
-                    link = "https://" + link
-
-                st.markdown(f"[📘 {manuale}]({link})")
-
-            else:
-                st.error("❌ Link non trovato")
+            st.markdown(f"📘 **{link1}**")
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
+
 elif menu == "📌 Open Item":
 
     from datetime import datetime
