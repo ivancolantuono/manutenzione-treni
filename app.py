@@ -1184,8 +1184,19 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            link = link_map.get(manuale)
+            link = None
 
+            # 🔥 prende il primo link valido
+            if col_link in gruppo.columns:
+
+                for val in gruppo[col_link]:
+                    val = str(val).strip()
+
+                    if val and val.lower() != "nan":
+                        link = val
+                        break
+
+            # UI
             colA, colB = st.columns([4,1])
 
             with colA:
@@ -1204,9 +1215,6 @@ elif menu == "📚 Schede SR":
 
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
-
-            st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
 elif menu == "📌 Open Item":
 
     from datetime import datetime
