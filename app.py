@@ -10,7 +10,41 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+st.markdown("""
+<style>
 
+/* 🔥 NASCONDE TUTTO IN BASSO */
+footer {
+    visibility: hidden;
+}
+
+/* 🔥 NASCONDE BADGE STREAMLIT (nuovo) */
+[data-testid="stStatusWidget"] {
+    display: none;
+}
+
+/* 🔥 NASCONDE BOTTOM RIGHT ICON (quella che vedi) */
+[data-testid="stDecoration"] {
+    display: none;
+}
+
+/* 🔥 NASCONDE FLOATING BUTTON */
+button[kind="secondary"] {
+    display: none;
+}
+
+/* 🔥 NASCONDE EVENTUALE OVERLAY */
+div[class*="floating"] {
+    display: none !important;
+}
+
+/* 🔥 NASCONDE TOOLBAR COMPLETA */
+[data-testid="stToolbar"] {
+    display: none;
+}
+
+</style>
+""", unsafe_allow_html=True)
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
