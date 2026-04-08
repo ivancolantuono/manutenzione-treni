@@ -538,6 +538,10 @@ elif menu == "🚄 Manutenzione":
                     colA, colB, colC = st.columns(3)
                     # ASSEGNA
                     if colA.button("🔧 Assegna", key=f"assegna_{i}"):
+                        # 🚫 BLOCCO SE NESSUN TECNICO
+                        if not tecnici_input:
+                            st.error("⚠️ Seleziona almeno un tecnico prima di assegnare")
+                            st.stop()
 
                         # 🔁 recupera eventuali note già presenti
                         note_vecchie = record.get("note", "") if record else ""
