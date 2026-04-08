@@ -1163,39 +1163,92 @@ elif menu == "📌 Open Item":
     # ============================
     # 🔴 APERTI
     # ============================
-
+    
     st.subheader("🔴 Attività Aperte")
-
+    
     if not aperti:
         st.info("Nessuna attività aperta")
-
+    
     for item in aperti:
-
+    
         with st.expander(f"🔴 Treno {item['treno']} - {item['descrizione']}"):
-
+    
             st.write(f"☑️ Cassa: {item.get('cassa', '-')}")
             st.write(f"⚙️ Impianto: {item.get('impianto', '-')}")
             st.write(f"👤 Creato da: {item.get('utente', '-')}")
             st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
-
+    
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{item['id']}")
-
-            if st.button(
-                "✅ Chiudi attività",
-                key=f"chiudi_{item['id']}",
-                disabled=not lavori or lavori.strip() == ""
-            ):
-
-                supabase.table("open_item").update({
-                    "stato": "CHIUSO",
-                    "lavorazioni": lavori,
-                    "data_chiusura": ora_italia_iso(),
-                    "utente_chiusura": utente_loggato
-                }).eq("id", item["id"]).execute()
-
-                salva_log(item["id"], "CHIUSURA", utente_loggato, "", lavori)
-
-                st.rerun()
+    
+            # =========================
+            # BOTTONI AZIONI
+            # =========================
+            col1, col2 = st.columns(2)
+    
+            # 🔒 CHIUDI ATTIVITÀ
+            with col1:
+                if st.button(
+                    "✅ Chiudi attività",
+                    key=f"chiudi_{item['id']}",
+                    disabled=not lavori or lavori.strip() == ""
+                ):
+    
+                    supabase.table("open_item").update({
+                        "stato": "CHIUSO",
+                        "lavorazioni": lavori,
+                        "data_chiusura": ora_italia_iso(),
+                        "utente_chiusura": utente_loggato
+                    }).eq("id", item["id"]).execute()
+    
+                    salva_log(item["id"], "CHIUSURA", utente_loggato, "", lavori)
+    
+                    st.rerun()
+    
+            # =========================
+            # 🗑️ ELIMINAZIONE SICURA
+            # =========================
+            item_id = item["id"]
+    
+            if f"delete_{item_id}" not in st.session_state:
+                st.session_state[f"delete_{item_id}"] = False
+    
+            with col2:
+    
+                if not st.session_state[f"delete_{item_id}"]:
+    
+                    if st.button("🗑️ Elimina", key=f"del_{item_id}"):
+                        st.session_state[f"delete_{item_id}"] = True
+                        st.rerun()
+    
+                else:
+    
+                    st.warning("⚠️ Confermi eliminazione definitiva?")
+    
+                    colA, colB = st.columns(2)
+    
+                    with colA:
+                        if st.button("✔ Conferma", key=f"confirm_del_{item_id}"):
+    
+                            try:
+                                supabase.table("open_item")\
+                                    .delete()\
+                                    .eq("id", item_id)\
+                                    .execute()
+    
+                                salva_log(item_id, "ELIMINAZIONE", utente_loggato, "", "")
+    
+                                st.success("✅ Eliminato")
+                                st.session_state[f"delete_{item_id}"] = False
+                                st.rerun()
+    
+                            except Exception as e:
+                                st.error(f"Errore: {e}")
+    
+                    with colB:
+                        if st.button("❌ Annulla", key=f"cancel_del_{item_id}"):
+    
+                            st.session_state[f"delete_{item_id}"] = False
+                            st.rerun()
 
     # ============================
     # 🟢 CHIUSI
