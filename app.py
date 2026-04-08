@@ -13,57 +13,6 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-
-/* NASCONDE QUALSIASI ELEMENTO FISSO IN BASSO */
-div[style*="position: fixed"] {
-    display: none !important;
-}
-
-/* NASCONDE ELEMENTI FLOATING */
-div[style*="bottom"] {
-    display: none !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-
-/* 🔥 NASCONDE TUTTO IN BASSO */
-footer {
-    visibility: hidden;
-}
-
-/* 🔥 NASCONDE BADGE STREAMLIT (nuovo) */
-[data-testid="stStatusWidget"] {
-    display: none;
-}
-
-/* 🔥 NASCONDE BOTTOM RIGHT ICON (quella che vedi) */
-[data-testid="stDecoration"] {
-    display: none;
-}
-
-/* 🔥 NASCONDE FLOATING BUTTON */
-button[kind="secondary"] {
-    display: none;
-}
-
-/* 🔥 NASCONDE EVENTUALE OVERLAY */
-div[class*="floating"] {
-    display: none !important;
-}
-
-/* 🔥 NASCONDE TOOLBAR COMPLETA */
-[data-testid="stToolbar"] {
-    display: none;
-}
-
-</style>
-""", unsafe_allow_html=True)
-st.markdown("""
-<style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 </style>
