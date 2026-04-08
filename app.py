@@ -10,6 +10,23 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+st.markdown("""
+<style>
+
+/* NASCONDE QUALSIASI ELEMENTO FISSO IN BASSO */
+div[style*="position: fixed"] {
+    display: none !important;
+}
+
+/* NASCONDE ELEMENTI FLOATING */
+div[style*="bottom"] {
+    display: none !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 
