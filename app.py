@@ -988,7 +988,8 @@ elif menu == "📚 Schede SR":
         df_filtrato["__search__"] = (
             df_filtrato[col_testo].astype(str) + " " +
             df_filtrato[col_titolo].astype(str) + " " +
-            df_filtrato[col_manuale].astype(str)
+            df_filtrato[col_manuale].astype(str) + " " +
+            (df_filtrato[col_sottogruppo].astype(str) if col_sottogruppo else "")
         ).apply(pulisci)
 
         for parola in parole:
