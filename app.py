@@ -932,13 +932,21 @@ elif menu == "📚 Schede SR":
             col_sottogruppo = col
             break
 
-    # 🔥 NORMALIZZAZIONE DATI (FONDAMENTALE)
+    # 🔥 NORMALIZZA SOTTOGRUPPO
     if col_sottogruppo:
         df_sr[col_sottogruppo] = (
             df_sr[col_sottogruppo]
             .astype(str)
             .str.strip()
         )
+
+    # =========================
+    # 🔧 FUNZIONE PULIZIA
+    # =========================
+    def pulisci(testo):
+        testo = str(testo).lower()
+        testo = re.sub(r"[^a-z0-9]", " ", testo)
+        return testo
 
     # =========================
     # 📱 INPUT
@@ -951,10 +959,33 @@ elif menu == "📚 Schede SR":
             placeholder="es. compressore aria"
         )
 
+    # =========================
+    # 📂 SOTTOGRUPPI DINAMICI
+    # =========================
     with col2:
+
         if col_sottogruppo:
+
+            df_tmp = df_sr.copy()
+
+            if ricerca:
+
+                parole = [pulisci(p) for p in ricerca.split()]
+
+                df_tmp["__search__"] = (
+                    df_tmp[col_testo].fillna("").astype(str) + " " +
+                    df_tmp[col_titolo].fillna("").astype(str) + " " +
+                    df_tmp[col_manuale].fillna("").astype(str) + " " +
+                    df_tmp[col_sottogruppo].fillna("").astype(str)
+                ).apply(pulisci)
+
+                for parola in parole:
+                    df_tmp = df_tmp[
+                        df_tmp["__search__"].str.contains(parola, na=False)
+                    ]
+
             gruppi = sorted(
-                df_sr[col_sottogruppo]
+                df_tmp[col_sottogruppo]
                 .dropna()
                 .astype(str)
                 .str.strip()
@@ -963,34 +994,31 @@ elif menu == "📚 Schede SR":
 
             gruppo_sel = st.selectbox(
                 "📂 Sottogruppo",
-                ["Tutti"] + list(gruppi)
+                ["Tutti"] + gruppi
             )
+
         else:
             gruppo_sel = "Tutti"
 
+    # =========================
+    # 🔎 FILTRO PRINCIPALE
+    # =========================
     df_filtrato = df_sr.copy()
 
-    # =========================
-    # 🔧 NORMALIZZAZIONE TESTO
-    # =========================
-    def pulisci(testo):
-        testo = str(testo).lower()
-        testo = re.sub(r"[^a-z0-9]", " ", testo)
-        return testo
-
-    # =========================
-    # 🔎 RICERCA VELOCE
-    # =========================
     if ricerca:
 
         parole = [pulisci(p) for p in ricerca.split()]
 
         df_filtrato["__search__"] = (
-            df_filtrato[col_testo].astype(str) + " " +
-            df_filtrato[col_titolo].astype(str) + " " +
-            df_filtrato[col_manuale].astype(str) + " " +
-            (df_filtrato[col_sottogruppo].astype(str) if col_sottogruppo else "")
-        ).apply(pulisci)
+            df_filtrato[col_testo].fillna("").astype(str) + " " +
+            df_filtrato[col_titolo].fillna("").astype(str) + " " +
+            df_filtrato[col_manuale].fillna("").astype(str)
+        )
+
+        if col_sottogruppo:
+            df_filtrato["__search__"] += " " + df_filtrato[col_sottogruppo].fillna("").astype(str)
+
+        df_filtrato["__search__"] = df_filtrato["__search__"].apply(pulisci)
 
         for parola in parole:
             df_filtrato = df_filtrato[
@@ -998,7 +1026,7 @@ elif menu == "📚 Schede SR":
             ]
 
     # =========================
-    # 📂 FILTRO SOTTOGRUPPO (ROBUSTO)
+    # 📂 FILTRO SOTTOGRUPPO
     # =========================
     if gruppo_sel != "Tutti" and col_sottogruppo:
 
@@ -1057,7 +1085,8 @@ elif menu == "📚 Schede SR":
                 st.caption(f"📂 {sottogruppo}")
 
             if pagine:
-                st.caption(f"📄 Pagine: {', '.join(pagine)}")                
+                st.caption(f"📄 Pagine: {', '.join(pagine)}")
+
 elif menu == "📌 Open Item":
 
     from datetime import datetime
