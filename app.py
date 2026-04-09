@@ -912,7 +912,9 @@ elif menu == "📚 Schede SR":
     # =========================
     df_sr = pd.read_excel("schede_sr.xlsx")
 
-    # 🔥 pulizia colonne
+    # 🔥 pulizia generale (FONDAMENTALE)
+    df_sr = df_sr.fillna("")
+
     df_sr.columns = df_sr.columns.astype(str)
     df_sr.columns = df_sr.columns.str.strip().str.lower()
 
@@ -932,7 +934,7 @@ elif menu == "📚 Schede SR":
             col_sottogruppo = col
             break
 
-    # 🔥 NORMALIZZA SOTTOGRUPPO
+    # 🔥 normalizza sottogruppo
     if col_sottogruppo:
         df_sr[col_sottogruppo] = (
             df_sr[col_sottogruppo]
@@ -973,10 +975,10 @@ elif menu == "📚 Schede SR":
                 parole = [pulisci(p) for p in ricerca.split()]
 
                 df_tmp["__search__"] = (
-                    df_tmp[col_testo].fillna("").astype(str) + " " +
-                    df_tmp[col_titolo].fillna("").astype(str) + " " +
-                    df_tmp[col_manuale].fillna("").astype(str) + " " +
-                    df_tmp[col_sottogruppo].fillna("").astype(str)
+                    df_tmp[col_testo].astype(str) + " " +
+                    df_tmp[col_titolo].astype(str) + " " +
+                    df_tmp[col_manuale].astype(str) + " " +
+                    df_tmp[col_sottogruppo].astype(str)
                 ).apply(pulisci)
 
                 for parola in parole:
@@ -986,7 +988,6 @@ elif menu == "📚 Schede SR":
 
             gruppi = sorted(
                 df_tmp[col_sottogruppo]
-                .dropna()
                 .astype(str)
                 .str.strip()
                 .unique()
@@ -1010,13 +1011,13 @@ elif menu == "📚 Schede SR":
         parole = [pulisci(p) for p in ricerca.split()]
 
         df_filtrato["__search__"] = (
-            df_filtrato[col_testo].fillna("").astype(str) + " " +
-            df_filtrato[col_titolo].fillna("").astype(str) + " " +
-            df_filtrato[col_manuale].fillna("").astype(str)
+            df_filtrato[col_testo].astype(str) + " " +
+            df_filtrato[col_titolo].astype(str) + " " +
+            df_filtrato[col_manuale].astype(str)
         )
 
         if col_sottogruppo:
-            df_filtrato["__search__"] += " " + df_filtrato[col_sottogruppo].fillna("").astype(str)
+            df_filtrato["__search__"] += " " + df_filtrato[col_sottogruppo].astype(str)
 
         df_filtrato["__search__"] = df_filtrato["__search__"].apply(pulisci)
 
@@ -1026,16 +1027,21 @@ elif menu == "📚 Schede SR":
             ]
 
     # =========================
-    # 📂 FILTRO SOTTOGRUPPO
+    # 📂 FILTRO SOTTOGRUPPO (FIX PYARROW)
     # =========================
     if gruppo_sel != "Tutti" and col_sottogruppo:
 
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo]
+            .fillna("")
             .astype(str)
             .str.strip()
             .str.lower()
-            .str.contains(gruppo_sel.strip().lower())
+            .str.contains(
+                gruppo_sel.strip().lower(),
+                na=False,
+                regex=False
+            )
         ]
 
     risultati = df_filtrato.copy()
@@ -1062,7 +1068,7 @@ elif menu == "📚 Schede SR":
         link = None
         if col_link in gruppo.columns:
 
-            links = gruppo[col_link].dropna().astype(str)
+            links = gruppo[col_link].astype(str)
             links = links[links.str.strip() != ""]
             links = links[links.str.lower() != "nan"]
 
@@ -1070,7 +1076,7 @@ elif menu == "📚 Schede SR":
                 link = links.iloc[0].strip()
 
         # 📄 PAGINE
-        pagine = gruppo[col_pagina].dropna().astype(str).unique().tolist()
+        pagine = gruppo[col_pagina].astype(str).unique().tolist()
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
