@@ -932,8 +932,16 @@ elif menu == "📚 Schede SR":
             col_sottogruppo = col
             break
 
+    # 🔥 NORMALIZZAZIONE DATI (FONDAMENTALE)
+    if col_sottogruppo:
+        df_sr[col_sottogruppo] = (
+            df_sr[col_sottogruppo]
+            .astype(str)
+            .str.strip()
+        )
+
     # =========================
-    # 📱 INPUT COMPATTO MOBILE
+    # 📱 INPUT
     # =========================
     col1, col2 = st.columns(2)
 
@@ -945,15 +953,25 @@ elif menu == "📚 Schede SR":
 
     with col2:
         if col_sottogruppo:
-            gruppi = sorted(df_sr[col_sottogruppo].dropna().unique())
-            gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
+            gruppi = sorted(
+                df_sr[col_sottogruppo]
+                .dropna()
+                .astype(str)
+                .str.strip()
+                .unique()
+            )
+
+            gruppo_sel = st.selectbox(
+                "📂 Sottogruppo",
+                ["Tutti"] + list(gruppi)
+            )
         else:
             gruppo_sel = "Tutti"
 
     df_filtrato = df_sr.copy()
 
     # =========================
-    # 🔧 FUNZIONE NORMALIZZAZIONE
+    # 🔧 NORMALIZZAZIONE TESTO
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
@@ -961,13 +979,12 @@ elif menu == "📚 Schede SR":
         return testo
 
     # =========================
-    # 🔎 RICERCA GOOGLE STYLE (VELOCIZZATA)
+    # 🔎 RICERCA VELOCE
     # =========================
     if ricerca:
 
         parole = [pulisci(p) for p in ricerca.split()]
 
-        # 👉 concatena colonne UNA VOLTA (molto più veloce)
         df_filtrato["__search__"] = (
             df_filtrato[col_testo].astype(str) + " " +
             df_filtrato[col_titolo].astype(str) + " " +
@@ -980,11 +997,16 @@ elif menu == "📚 Schede SR":
             ]
 
     # =========================
-    # 📂 FILTRO SOTTOGRUPPO
+    # 📂 FILTRO SOTTOGRUPPO (ROBUSTO)
     # =========================
     if gruppo_sel != "Tutti" and col_sottogruppo:
+
         df_filtrato = df_filtrato[
-            df_filtrato[col_sottogruppo] == gruppo_sel
+            df_filtrato[col_sottogruppo]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            .str.contains(gruppo_sel.strip().lower())
         ]
 
     risultati = df_filtrato.copy()
@@ -999,62 +1021,42 @@ elif menu == "📚 Schede SR":
         st.stop()
 
     # =========================
-    # 📄 OUTPUT COMPATTO MOBILE
+    # 📄 OUTPUT
     # =========================
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
     for (titolo, manuale), gruppo in gruppi:
 
         sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo else ""
-        pagine = gruppo[col_pagina].astype(str).tolist()
+
+        # 🔗 LINK
+        link = None
+        if col_link in gruppo.columns:
+
+            links = gruppo[col_link].dropna().astype(str)
+            links = links[links.str.strip() != ""]
+            links = links[links.str.lower() != "nan"]
+
+            if not links.empty:
+                link = links.iloc[0].strip()
+
+        # 📄 PAGINE
+        pagine = gruppo[col_pagina].dropna().astype(str).unique().tolist()
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            # =========================
-            # 🔗 PRENDE IL LINK (UNO SOLO)
-            # =========================
-            link = None
-
-            if "link1" in gruppo.columns:
-
-                links = gruppo["link1"].dropna().astype(str)
-
-                links = links[links.str.strip() != ""]
-                links = links[links.str.lower() != "nan"]
-
-                if not links.empty:
-                    link = links.iloc[0].strip()
-
-            # =========================
-            # 📄 PAGINE RAGGRUPPATE
-            # =========================
-            pagine = gruppo[col_pagina].dropna().astype(str).unique().tolist()
-
-            # =========================
-            # 📘 MANUALE + LINK
-            # =========================
             if link:
-
                 if not link.startswith("http"):
                     link = "https://" + link
-
                 st.markdown(f"📘 [{manuale}]({link})")
-
             else:
                 st.markdown(f"📘 **{manuale}**")
 
-            # =========================
-            # 📂 SOTTOGRUPPO
-            # =========================
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
-            # =========================
-            # 📄 PAGINE
-            # =========================
             if pagine:
-                st.caption(f"📄 Pagine: {', '.join(pagine)}")
-                
+                st.caption(f"📄 Pagine: {', '.join(pagine)}")                
 elif menu == "📌 Open Item":
 
     from datetime import datetime
