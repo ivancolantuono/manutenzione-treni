@@ -563,14 +563,15 @@ elif menu == "🚄 Manutenzione":
 
                     numeri = []
 
-                        for t in tecnici_input:
-                            for u in utenti:
-                                nome = str(u.get("Nominativo","")).lower().strip()
-                                telefono = str(u.get("Telefono","")).replace(".0","").strip()
-                        
-                                if str(t).lower().strip() == nome and telefono.isdigit():
-                                    numeri.append(telefono)
+                    for t in tecnici_input:
+                        for u in utenti:
+                            nome = str(u.get("Nominativo","")).lower().strip()
+                            telefono = str(u.get("Telefono","")).replace(".0","").strip()
                     
+                            if str(t).lower().strip() == nome and telefono.isdigit():
+                                numeri.append(telefono)
+
+                        
                     if numeri:
                         
                         link = r.get("Link", "")
