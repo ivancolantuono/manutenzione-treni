@@ -393,9 +393,9 @@ elif menu == "🚄 Manutenzione":
     # =========================
     rows = get_interventi()
 
-    df_operatori = carica_operatori()
-    operatori = df_operatori["Nominativo"].dropna().tolist()
-
+    utenti = get_utenti()
+    operatori = [u.get("Nominativo") for u in utenti if u.get("Nominativo")]
+    
     # =========================
     # 👨‍🔧 CAPOSQUADRA
     # =========================
