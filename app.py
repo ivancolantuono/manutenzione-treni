@@ -141,6 +141,9 @@ url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
 key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
 
 @st.cache_data(ttl=60)
 def get_utenti():
