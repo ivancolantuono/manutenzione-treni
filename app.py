@@ -273,7 +273,7 @@ if "mostra" not in st.session_state:
 if menu == "📊 Storico":
 
     from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=5000, key="refresh_storico")
+    st_autorefresh(interval=8000, key="refresh_storico")
 
     st.title("📊 Storico Attività")
 
