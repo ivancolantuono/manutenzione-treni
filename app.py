@@ -116,6 +116,22 @@ label {
 </style>
 """, unsafe_allow_html=True)
 
+@st.cache_data(ttl=5)
+def get_interventi():
+    res = supabase.table("interventi").select("*").execute()
+    return res.data or []
+
+@st.cache_data(ttl=10)
+def get_open_item():
+    res = supabase.table("open_item").select("*").execute()
+    return res.data or []
+
+@st.cache_data(ttl=60)
+def carica_operatori():
+    df = pd.read_excel("operatori.xlsx")
+    df.columns = df.columns.str.strip()
+    return df
+
 # =========================
 # ORAIO
 # =========================
@@ -255,11 +271,10 @@ else:
 df = pd.read_excel("database_manutenzione.xlsx")
 df.columns = df.columns.str.strip()
 
-res = supabase.table("interventi").select("*").execute()
-rows = res.data if res.data else []
+rows = get_interventi()
 
-df_operatori = pd.read_excel("operatori.xlsx")
-df_operatori.columns = df_operatori.columns.str.strip()
+df_operatori = carica_operatori()
+operatori = df_operatori["Nominativo"].dropna().tolist()
 
 if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
@@ -272,8 +287,7 @@ if menu == "📊 Storico":
     st.title("📊 Storico Attività")
 
     # 🔥 RICARICA DATI SEMPRE
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
+    rows = get_interventi()
 
     df = pd.DataFrame(rows)
 
@@ -383,25 +397,13 @@ elif menu == "🚄 Manutenzione":
     if "mostra" not in st.session_state:
         st.session_state.mostra = False
 
-    # =========================
-    # REFRESH
-    # =========================
-    if ruolo == "CAPOSQUADRA":
-        st_autorefresh(interval=8000, key="refresh_capo")
-    else:
-        st_autorefresh(interval=8000, key="refresh_operatore")
 
     # =========================
     # DATI
     # =========================
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
+    rows = get_interventi()
 
-    df_operatori = pd.read_excel("operatori.xlsx")
-    df_operatori.columns = df_operatori.columns.str.strip()
-
-    df.columns = df.columns.str.strip()
-
+    df_operatori = carica_operatori()
     operatori = df_operatori["Nominativo"].dropna().tolist()
 
     # =========================
@@ -460,7 +462,7 @@ elif menu == "🚄 Manutenzione":
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
     
             # ✅ PRENDE I DATI DAL DB
-            interventi_db = supabase.table("interventi").select("*").execute().data
+            interventi_db = rows
     
             for i, r in risultati.iterrows():
     
@@ -562,6 +564,7 @@ elif menu == "🚄 Manutenzione":
                             "note": note_vecchie  # ✅ mantiene le note esistenti
                         }).execute()
                     
+                        st.cache_data.clear()
                         st.success("Assegnato")
                         st.rerun()
 
@@ -608,6 +611,7 @@ elif menu == "🚄 Manutenzione":
                     if colB.button("🗑️ Cancella", key=f"cancella_{i}"):
 
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
+                        st.cache_data.clear()
                         st.warning("Cancellato")
                         st.rerun()
 
@@ -628,6 +632,7 @@ elif menu == "🚄 Manutenzione":
                                 "note": nuove_note
                             }).eq("chiave", chiave).execute()
                     
+                            st.cache_data.clear()
                             st.success("Attività chiusa dal caposquadra")
                             st.rerun()
 
@@ -709,6 +714,7 @@ elif menu == "🚄 Manutenzione":
                         "note": nuove_note
                     }).eq("chiave", record["chiave"]).execute()
                 
+                    st.cache_data.clear()
                     st.success("Attività chiusa")
                     st.rerun()
     
@@ -722,8 +728,7 @@ elif menu == "📊 Dashboard":
     # =========================
     # DATI
     # =========================
-    res = supabase.table("interventi").select("*").execute()
-    rows = res.data if res.data else []
+    rows = get_interventi()
 
     df = pd.DataFrame(rows)
 
@@ -1152,6 +1157,7 @@ elif menu == "📌 Open Item":
                 "data_creazione": ora_italia_iso()
             }).execute()
 
+            st.cache_data.clear()
             st.success("Inserito")
             st.rerun()
 
@@ -1161,7 +1167,7 @@ elif menu == "📌 Open Item":
     # DATI
     # ============================
 
-    dati = supabase.table("open_item").select("*").execute().data or []
+    dati = get_open_item()
 
     # ============================
     # FILTRI
@@ -1244,6 +1250,7 @@ elif menu == "📌 Open Item":
     
                     salva_log(item["id"], "CHIUSURA", utente_loggato, "", lavori)
     
+                    st.cache_data.clear()
                     st.rerun()
     
             # =========================
@@ -1338,6 +1345,7 @@ elif menu == "📌 Open Item":
 
                         salva_log(item_id, "MODIFICA", utente_loggato, vecchio, lavori_edit)
 
+                        st.cache_data.clear()
                         st.session_state[f"edit_{item_id}"] = False
                         st.rerun()
 
@@ -1384,6 +1392,7 @@ elif menu == "📌 Open Item":
                         "RIAPERTO"
                     )
             
+                    st.cache_data.clear()
                     st.success("Attività riaperta")
                     st.rerun()
             
