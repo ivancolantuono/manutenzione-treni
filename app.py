@@ -126,12 +126,6 @@ def get_open_item():
     res = supabase.table("open_item").select("*").execute()
     return res.data or []
 
-@st.cache_data(ttl=60)
-def get_utenti():
-    res = supabase.table("operatori").select("*").execute()
-    return res.data or[]
-    
-utenti = get_utenti()
 
 # =========================
 # ORAIO
@@ -146,6 +140,14 @@ def ora_italia():
 url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
 key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
+
+
+@st.cache_data(ttl=60)
+def get_utenti():
+    res = supabase.table("operatori").select("*").execute()
+    return res.data or[]
+    
+utenti = get_utenti()
 # ============================
 # LOG OPEN ITEM
 # ============================
