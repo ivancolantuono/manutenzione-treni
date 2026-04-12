@@ -193,7 +193,7 @@ if not st.session_state.logged_in:
             )
                 
 
-            if not user.empty:
+            if user:
 
                 st.session_state.logged_in = True
                 st.session_state.utente = user.iloc[0]["Nominativo"]
