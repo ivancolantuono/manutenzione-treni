@@ -183,29 +183,25 @@ if not st.session_state.logged_in:
 
         if st.button("Accedi"):
 
-            user = next(
-                (
-                    x for x in utenti
-                    if str(x.get("Nominativo","")).lower().strip() == u
-                    and str(x.get("Password","")).strip() == p
-                ),
-                None
-            )
-                
-            if user:
-
-                st.session_state.logged_in = True
-                st.session_state.utente = user.get["Nominativo"]
-                st.session_state.ruolo = user.get["Ruolo"]
-                st.session_state.squadra = user.get["Squadra"]
-                st.session_state.telefono = user.get["Telefono"]
-
-                st.success("Accesso riuscito")
-                st.rerun()
-
+            st.write("INPUT:", u, p)
+        
+            trovato = False
+        
+            for x in utenti:
+                nome_db = str(x.get("Nominativo","")).lower().strip()
+                pass_db = str(x.get("Password","")).replace(".0","").strip()
+        
+                st.write("DB:", nome_db, pass_db)
+        
+                if nome_db == u and pass_db == p:
+                    trovato = True
+                    user = x
+                    break
+        
+            if trovato:
+                st.success("LOGIN OK")
             else:
-                st.error("Credenziali errate")
-
+                st.error("NON MATCHA")
     st.stop()
 
 utente = st.session_state.utente
