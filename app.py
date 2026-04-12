@@ -186,8 +186,8 @@ if not st.session_state.logged_in:
             user = next(
                 (
                     x for x in utenti
-                    if x ["Nominativo"].lower().strip() == u
-                    and str(x["Password"]).strip() == p
+                    if x ["nominativo"].lower().strip() == u
+                    and str(x["password"]).strip() == p
                 ),
                 None
             )
@@ -396,7 +396,7 @@ elif menu == "🚄 Manutenzione":
     rows = get_interventi()
 
     df_operatori = carica_operatori()
-    operatori = df_operatori["Nominativo"].dropna().tolist()
+    operatori = df_operatori["nominativo"].dropna().tolist()
 
     # =========================
     # 👨‍🔧 CAPOSQUADRA
