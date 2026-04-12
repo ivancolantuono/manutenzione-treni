@@ -177,6 +177,8 @@ if not st.session_state.logged_in:
     with col2:
         st.image("frecciarossa.jpg")
         st.markdown("## 🔐 LOGIN")
+        st.write(utenti)
+        
 
         u = st.text_input("Utente").strip().lower()
         p = st.text_input("Password", type="password").strip()
