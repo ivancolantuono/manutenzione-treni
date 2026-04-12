@@ -195,10 +195,10 @@ if not st.session_state.logged_in:
             if user:
 
                 st.session_state.logged_in = True
-                st.session_state.utente = user.iloc[0]["Nominativo"]
-                st.session_state.ruolo = user.iloc[0]["Ruolo"]
-                st.session_state.squadra = user.iloc[0]["Squadra"]
-                st.session_state.telefono = user.iloc[0]["Telefono"]
+                st.session_state.utente = user.get["Nominativo"]
+                st.session_state.ruolo = user.get["Ruolo"]
+                st.session_state.squadra = user.get["Squadra"]
+                st.session_state.telefono = user.get["Telefono"]
 
                 st.success("Accesso riuscito")
                 st.rerun()
