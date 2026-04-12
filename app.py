@@ -127,10 +127,11 @@ def get_open_item():
     return res.data or []
 
 @st.cache_data(ttl=60)
-def carica_operatori():
-    df = pd.read_excel("operatori.xlsx")
-    df.columns = df.columns.str.strip()
-    return df
+def get_utenti():
+    res = supabase.table("operatori").select("*").execute()
+    return res.data or[]
+    
+utenti = get_utenti()
 
 # =========================
 # ORAIO
@@ -162,22 +163,6 @@ def salva_log(item_id, azione, utente, vecchio, nuovo):
         print("Errore log:", e)
 
 # =========================
-# LOGIN EXCEL FIX DEFINITIVO
-# =========================
-
-import pandas as pd
-
-df_utenti = pd.read_excel("operatori.xlsx")
-df_utenti.columns = df_utenti.columns.str.strip()
-
-# pulizia
-for col in df_utenti.columns:
-    df_utenti[col] = df_utenti[col].astype(str).str.strip()
-
-# fix password Excel
-df_utenti["Password"] = df_utenti["Password"].str.replace(".0","")
-
-# =========================
 # SESSION
 # =========================
 if "logged_in" not in st.session_state:
@@ -196,10 +181,13 @@ if not st.session_state.logged_in:
 
         if st.button("Accedi"):
 
-            user = df_utenti[
-                (df_utenti["Nominativo"].str.lower() == u) &
-                (df_utenti["Password"] == p)
-            ]
+            user = next(
+                (
+                    x for x in utenti
+                    if x ["Nominativo"].lower().strip() == u
+                    and str(x["Password"]).strip() == p
+                ),
+                None
 
             if not user.empty:
 
@@ -273,8 +261,8 @@ df.columns = df.columns.str.strip()
 
 rows = get_interventi()
 
-df_operatori = carica_operatori()
-operatori = df_operatori["Nominativo"].dropna().tolist()
+utenti = get_utenti()
+operatori = [u["Nominativo"] for u in utenti]
 
 if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
