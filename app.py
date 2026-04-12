@@ -141,29 +141,8 @@ url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
 key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
-from supabase import create_client
-def listen_changes():
-    def callback(payload):
-        st.session_state["refresh"] = True
-
-    channel = supabase.channel("realtime-interventi")
-
-    channel.on(
-        "postgres_changes",
-        {
-            "event": "*",
-            "schema": "public",
-            "table": "interventi",
-        },
-        callback
-    ).subscribe()
-
-    return channel  # 👈 IMPORTANTISSIMO
-
-
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-
 
 @st.cache_data(ttl=60)
 def get_utenti():
@@ -230,9 +209,6 @@ if not st.session_state.logged_in:
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo.upper()
 
-if "listener_attivo" not in st.session_state:
-    st.session_state.channel = listen_changes()
-    st.session_state.listener_attivo = True
 # =========================
 # HEADER
 # =========================
@@ -279,10 +255,6 @@ else:
         horizontal=True
     )
 
-if st.session_state.get("refresh"):
-    st.session_state["refresh"] = False
-    st.cache_data.clear()
-    st.rerun()
 # =========================
 # DATI
 # =========================
@@ -389,6 +361,9 @@ if menu == "📊 Storico":
 # 🚄 MANUTENZIONE
 # =========================
 elif menu == "🚄 Manutenzione":
+    
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=8000, key="refresh_manutenzione")
 
     st.markdown("""
     <h1 style='margin-bottom:0;'>🚄 Gestione Manutenzione</h1>
