@@ -562,15 +562,15 @@ elif menu == "🚄 Manutenzione":
                     import urllib.parse
 
                     numeri = []
+
+                     for t in tecnici_input:
                     
-                    for t in tecnici_input:
-                        row = df_operatori[
-                            df_operatori["Nominativo"].str.lower().str.contains(str(t).lower())
-                        ]
-                        if not row.empty and "Telefono" in df_operatori.columns:
-                            num = str(row["Telefono"].values[0]).replace(".0","").strip()
-                            if num.isdigit():
-                                numeri.append(num)
+                        for u in utenti:
+                            nome = str(u.get("Nominativo","")).lower()
+                            telefono = str(u.get("Telefono","")).replace(".0","").strip()
+                    
+                            if str(t).lower() in nome and telefono.isdigit():
+                                numeri.append(telefono)
                     
                     if numeri:
                         
