@@ -141,6 +141,26 @@ url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
 key = "sb_publishable_fpaQCHaVxVoHU_x7hhuLkg_zdhiHlUl"
 supabase = create_client(url, key)
 
+from supabase import create_client
+def listen_changes():
+    def callback(payload):
+        st.session_state["refresh"] = True
+
+    channel = supabase.channel("realtime-interventi")
+
+    channel.on(
+        "postgres_changes",
+        {
+            "event": "*",
+            "schema": "public",
+            "table": "interventi",
+        },
+        callback
+    ).subscribe()
+
+    return channel  # 👈 IMPORTANTISSIMO
+
+
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -209,6 +229,10 @@ if not st.session_state.logged_in:
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo.upper()
+
+if "listener_attivo" not in st.session_state:
+    st.session_state.channel = listen_changes()
+    st.session_state.listener_attivo = True
 # =========================
 # HEADER
 # =========================
@@ -254,6 +278,11 @@ else:
         ],
         horizontal=True
     )
+
+if st.session_state.get("refresh"):
+    st.session_state["refresh"] = False
+    st.cache_data.clear()
+    st.rerun()
 # =========================
 # DATI
 # =========================
