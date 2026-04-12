@@ -186,8 +186,8 @@ if not st.session_state.logged_in:
             user = next(
                 (
                     x for x in utenti
-                    if x ["Nominativo"].lower().strip() == u
-                    and str(x["Password"]).strip() == p
+                    if str(x.get("Nominativo","")).lower().strip() == u
+                    and str(x.get("Password","")).strip() == p
                 ),
                 None
             )
