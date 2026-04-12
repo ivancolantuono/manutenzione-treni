@@ -1140,7 +1140,7 @@ elif menu == "📌 Open Item":
 
     impianto = st.selectbox("⚙️ Impianto",
         ["", "Porte Interne", "Freno", "Antincendio", "Pis", "Arredo",
-         "Climatizzazione", "Porte Esterne", "Toilette", "Bar-Bistrot"]
+         "Climatizzazione", "Tcms", "Porte Esterne", "Toilette", "Bar-Bistrot"]
     )
 
     descrizione = st.text_area("📝 Descrizione")
