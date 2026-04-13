@@ -1221,7 +1221,43 @@ elif menu == "📌 Open Item":
             st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
     
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{item['id']}")
-    
+
+            # =========================
+            # 📈 AVANZAMENTO
+            # =========================
+            avanzamento = st.text_area(
+                "📈 Avanzamento / Monitoraggio",
+                value=item.get("avanzamento", ""),
+                key=f"avanz_{item['id']}"
+            )
+            
+            colA, colB, colC = st.columns(3)
+            
+            # 💾 SALVA AVANZAMENTO
+            if colA.button("💾 Salva avanzamento", key=f"save_av_{item['id']}"):
+            
+                vecchio = item.get("avanzamento", "")
+            
+                supabase.table("open_item").update({
+                    "avanzamento": avanzamento
+                }).eq("id", item["id"]).execute()
+            
+                salva_log(item["id"], "AVANZAMENTO", utente_loggato, vecchio, avanzamento)
+            
+                st.success("Aggiornato")
+                st.rerun()
+            
+            # 🟡 METTI IN VALUTAZIONE
+            if colB.button("🟡 In valutazione", key=f"val_{item['id']}"):
+            
+                supabase.table("open_item").update({
+                    "stato": "VALUTAZIONE"
+                }).eq("id", item["id"]).execute()
+            
+                salva_log(item["id"], "VALUTAZIONE", utente_loggato, "", "")
+            
+                st.rerun()
+            
             # =========================
             # BOTTONI AZIONI
             # =========================
