@@ -1162,6 +1162,8 @@ elif menu == "📌 Open Item":
     # ============================
 
     dati = get_open_item()
+    test = supabase.table("open_item").select("*").limit(1).execute()
+    st.write("DEBUG DB:", test)
 
     # ============================
     # FILTRI
