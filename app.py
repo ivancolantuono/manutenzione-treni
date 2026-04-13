@@ -1310,8 +1310,8 @@ elif menu == "📌 Open Item":
                     st.success("✅ Attività chiusa")
                     st.rerun()
 
-    except Exception as e:
-        st.error(f"Errore: {e}")
+                except Exception as e:
+                    st.error(f"Errore: {e}")
             # CRONOLOGIA
             st.markdown("### 📜 Cronologia")
 
