@@ -1285,14 +1285,33 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             if col2.button("✅ Chiudi", key=f"close_val_{item['id']}"):
-                supabase.table("open_item").update({
-                    "stato": "CHIUSO"
-                }).eq("id", item["id"]).execute()
 
-                salva_log(item["id"], "CHIUSURA", utente_loggato, "", "")
+                # 🔒 controllo obbligatorio
+                if not lavori or not lavori.strip():
+                    st.error("⚠️ Inserisci le lavorazioni prima di chiudere")
+                    st.stop()
+            
+                try:
+                    supabase.table("open_item").update({
+                        "stato": "CHIUSO",
+                        "lavorazioni": lavori.strip(),
+                        "data_chiusura": ora_italia_iso(),
+                        "utente_chiusura": utente_loggato
+                    }).eq("id", item["id"]).execute()
+            
+                    salva_log(
+                        item["id"],
+                        "CHIUSURA",
+                        utente_loggato,
+                        "",
+                        lavori
+                    )
+            
+                    st.success("✅ Attività chiusa")
+                    st.rerun()
 
-                st.rerun()
-
+    except Exception as e:
+        st.error(f"Errore: {e}")
             # CRONOLOGIA
             st.markdown("### 📜 Cronologia")
 
