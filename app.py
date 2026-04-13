@@ -1240,7 +1240,7 @@ elif menu == "📌 Open Item":
             
                 supabase.table("open_item").update({
                     "avanzamento": avanzamento
-                }).eq("id", item["id"]).execute()
+                }).eq("id", int(item["id"])).execute()
             
                 salva_log(item["id"], "AVANZAMENTO", utente_loggato, vecchio, avanzamento)
             
