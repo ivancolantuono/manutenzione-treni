@@ -1227,7 +1227,7 @@ elif menu == "📌 Open Item":
             # =========================
             avanzamento = st.text_area(
                 "📈 Avanzamento / Monitoraggio",
-                value=item.get("avanzamento", ""),
+                value=item.get("avanzamento", "") or "",
                 key=f"avanz_{item['id']}"
             )
             
@@ -1236,17 +1236,40 @@ elif menu == "📌 Open Item":
             # 💾 SALVA AVANZAMENTO
             if colA.button("💾 Salva avanzamento", key=f"save_av_{item['id']}"):
             
-                vecchio = item.get("avanzamento", "")
+                # 🔒 controllo input
+                if not avanzamento or not avanzamento.strip():
+                    st.error("Inserisci un avanzamento")
+                    st.stop()
             
-                supabase.table("open_item").update({
-                    "avanzamento": avanzamento
-                }).eq("id", int(item["id"])).execute()
+                try:
+                    item_id = int(item.get("id"))
             
-                salva_log(item["id"], "AVANZAMENTO", utente_loggato, vecchio, avanzamento)
+                    # 🔍 debug utile (puoi toglierlo dopo)
+                    # st.write("ID:", item_id)
+                    # st.write("TESTO:", avanzamento)
             
-                st.success("Aggiornato")
-                st.rerun()
+                    response = supabase.table("open_item").update({
+                        "avanzamento": str(avanzamento).strip()
+                    }).eq("id", item_id).execute()
             
+                    # 🔍 se non aggiorna nulla
+                    if not response.data:
+                        st.error("⚠️ Nessuna riga aggiornata (ID non trovato)")
+                        st.stop()
+            
+                    salva_log(
+                        item_id,
+                        "AVANZAMENTO",
+                        utente_loggato,
+                        item.get("avanzamento", ""),
+                        avanzamento
+                    )
+            
+                    st.success("✅ Aggiornato")
+                    st.rerun()
+            
+                except Exception as e:
+                    st.error(f"❌ Errore salvataggio: {e}")          
             # 🟡 METTI IN VALUTAZIONE
             if colB.button("🟡 In valutazione", key=f"val_{item['id']}"):
             
