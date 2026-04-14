@@ -193,7 +193,7 @@ if not st.session_state.logged_in:
 
             if user:
                 st.session_state.logged_in = True
-                 st.session_state.login_time = datetime.now()
+                st.session_state.login_time = datetime.now()
                 st.session_state.utente = user.get("Nominativo")
                 st.session_state.ruolo = user.get("Ruolo")
                 st.session_state.squadra = user.get("Squadra")
