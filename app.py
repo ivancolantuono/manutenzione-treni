@@ -1091,6 +1091,7 @@ elif menu == "📚 Schede SR":
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
+
 elif menu == "📌 Open Item":
 
     from datetime import datetime
@@ -1116,7 +1117,7 @@ elif menu == "📌 Open Item":
     @st.cache_data(ttl=10)
     def get_open_item_fast():
         return supabase.table("open_item")\
-            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni")\
+            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura")\
             .order("data_creazione", desc=True)\
             .execute().data
 
@@ -1142,16 +1143,21 @@ elif menu == "📌 Open Item":
             st.info("Nessuna modifica")
             return
 
+        st.markdown("### 📜 Cronologia")
         for l in log:
             st.write(f"{formatta_data(l['data'])} - {l['utente']} → {l['azione']}")
             if l.get("campo"):
                 st.caption(f"{l['campo']}: {l.get('valore_precedente','')} → {l.get('valore_nuovo','')}")
 
     # ============================
-    # INSERIMENTO
+    # UI
     # ============================
 
     st.title("📌 Open Item")
+
+    # ============================
+    # INSERIMENTO
+    # ============================
 
     with st.expander("➕ Nuova attività"):
 
@@ -1215,43 +1221,73 @@ elif menu == "📌 Open Item":
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{id}")
 
             avanzamento = st.text_area(
-                "📈 Avanzamento",
+                "📈 Avanzamento / Monitoraggio",
                 value=item.get("avanzamento","") or "",
                 key=f"av_{id}"
             )
 
             col1, col2, col3, col4 = st.columns(4)
 
-            # SALVA
-            if col1.button("💾 Salva", key=f"save_{id}"):
+            # 🟡 MONITORAGGIO
+            if col1.button("🟡 Monitoraggio", key=f"monitor_{id}"):
 
                 if not avanzamento.strip():
                     st.error("Inserisci avanzamento")
                     st.stop()
 
-                salva_log(id,"MODIFICA",utente_loggato,item.get("avanzamento",""),avanzamento,"avanzamento")
+                supabase.table("open_item").update({
+                    "avanzamento": avanzamento.strip(),
+                    "stato": "VALUTAZIONE"
+                }).eq("id", id).execute()
+
+                salva_log(id,"MONITORAGGIO",utente_loggato,
+                          item.get("avanzamento",""),
+                          avanzamento,
+                          "avanzamento")
+
+                st.cache_data.clear()
+                st.rerun()
+
+            # 💾 SALVA
+            if col2.button("💾 Salva", key=f"save_{id}"):
+
+                if not avanzamento.strip():
+                    st.error("Inserisci avanzamento")
+                    st.stop()
 
                 supabase.table("open_item").update({
                     "avanzamento": avanzamento.strip()
                 }).eq("id", id).execute()
 
+                salva_log(id,"MODIFICA",utente_loggato,
+                          item.get("avanzamento",""),
+                          avanzamento,
+                          "avanzamento")
+
                 st.cache_data.clear()
                 st.rerun()
 
-            # VALUTAZIONE
-            if col2.button("🟡 Valutazione", key=f"val_{id}"):
+            # ✅ CHIUDI
+            if col3.button("✅ Chiudi", key=f"close_{id}"):
+
+                if not lavori.strip():
+                    st.error("Inserisci lavorazioni")
+                    st.stop()
 
                 supabase.table("open_item").update({
-                    "stato": "VALUTAZIONE"
+                    "stato": "CHIUSO",
+                    "lavorazioni": lavori.strip(),
+                    "data_chiusura": ora_italia_iso(),
+                    "utente_chiusura": utente_loggato
                 }).eq("id", id).execute()
 
-                salva_log(id,"STATO",utente_loggato,"APERTO","VALUTAZIONE","stato")
+                salva_log(id,"CHIUSURA",utente_loggato,"","CHIUSO","stato")
 
                 st.cache_data.clear()
                 st.rerun()
 
-            # ELIMINA
-            if col3.button("🗑️ Elimina", key=f"del_{id}"):
+            # 🗑️ ELIMINA
+            if col4.button("🗑️ Elimina", key=f"del_{id}"):
 
                 supabase.table("open_item").delete().eq("id", id).execute()
 
@@ -1260,33 +1296,9 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            # LOG
-            if col4.button("📜 Log", key=f"log_{id}"):
+            # 📜 LOG
+            if st.button("📜 Log", key=f"log_{id}"):
                 mostra_cronologia(id)
-
-            # CHIUDI
-            if st.button("✅ Chiudi", key=f"close_{id}"):
-
-                if not lavori.strip():
-                    st.error("Inserisci lavorazioni")
-                    st.stop()
-
-                if not avanzamento.strip():
-                    st.error("Inserisci avanzamento")
-                    st.stop()
-
-                supabase.table("open_item").update({
-                    "stato": "CHIUSO",
-                    "lavorazioni": lavori.strip(),
-                    "avanzamento": avanzamento.strip(),
-                    "data_chiusura": ora_italia_iso(),
-                    "utente_chiusura": utente_loggato
-                }).eq("id", id).execute()
-
-                salva_log(id,"STATO",utente_loggato,"APERTO","CHIUSO","stato")
-
-                st.cache_data.clear()
-                st.rerun()
 
     # ============================
     # 🟡 VALUTAZIONE
@@ -1313,50 +1325,38 @@ elif menu == "📌 Open Item":
                 key=f"av_val_{id}"
             )
 
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3 = st.columns(3)
 
-            if col1.button("💾 Salva", key=f"save_val_{id}"):
-
-                salva_log(id,"MODIFICA",utente_loggato,item.get("avanzamento",""),avanzamento,"avanzamento")
+            if col1.button("🔴 Riporta aperto", key=f"back_{id}"):
 
                 supabase.table("open_item").update({
-                    "avanzamento": avanzamento.strip()
+                    "stato": "APERTO"
                 }).eq("id", id).execute()
-
-                st.cache_data.clear()
-                st.rerun()
-
-            if col2.button("🔴 Apri", key=f"back_{id}"):
-
-                supabase.table("open_item").update({
-                    "stato":"APERTO"
-                }).eq("id",id).execute()
 
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","APERTO","stato")
 
                 st.cache_data.clear()
                 st.rerun()
 
-            if col3.button("✅ Chiudi", key=f"close_val_{id}"):
+            if col2.button("✅ Chiudi", key=f"close_val_{id}"):
 
                 if not lavori.strip():
                     st.error("Inserisci lavorazioni")
                     st.stop()
 
                 supabase.table("open_item").update({
-                    "stato":"CHIUSO",
-                    "lavorazioni":lavori.strip(),
-                    "avanzamento":avanzamento.strip(),
-                    "data_chiusura":ora_italia_iso(),
-                    "utente_chiusura":utente_loggato
-                }).eq("id",id).execute()
+                    "stato": "CHIUSO",
+                    "lavorazioni": lavori.strip(),
+                    "data_chiusura": ora_italia_iso(),
+                    "utente_chiusura": utente_loggato
+                }).eq("id", id).execute()
 
-                salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","CHIUSO","stato")
+                salva_log(id,"CHIUSURA",utente_loggato,"","CHIUSO","stato")
 
                 st.cache_data.clear()
                 st.rerun()
 
-            if col4.button("📜 Log", key=f"log_val_{id}"):
+            if col3.button("📜 Log", key=f"log_val_{id}"):
                 mostra_cronologia(id)
 
     # ============================
@@ -1388,10 +1388,10 @@ elif menu == "📌 Open Item":
             if col1.button("🔓 Riapri", key=f"riapri_{id}"):
 
                 supabase.table("open_item").update({
-                    "stato":"APERTO"
-                }).eq("id",id).execute()
+                    "stato": "APERTO"
+                }).eq("id", id).execute()
 
-                salva_log(id,"STATO",utente_loggato,"CHIUSO","APERTO","stato")
+                salva_log(id,"RIAPERTURA",utente_loggato,"CHIUSO","APERTO","stato")
 
                 st.cache_data.clear()
                 st.rerun()
