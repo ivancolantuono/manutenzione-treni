@@ -1363,6 +1363,8 @@ elif menu == "📌 Open Item":
     
             st.write(f"☑️ {item.get('cassa','-')}")
             st.write(f"⚙️ {item.get('impianto','-')}")
+            st.write(f"👤 Creato da: {item.get('utente','-')}")
+            st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
     
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_val_{id}")
     
@@ -1418,6 +1420,8 @@ elif menu == "📌 Open Item":
     
             st.write(f"☑️ {item.get('cassa','-')}")
             st.write(f"⚙️ {item.get('impianto','-')}")
+            st.write(f"👤 Creato da: {item.get('utente','-')}")
+            st.write(f"📅 Creato il: {formatta_data(item.get('data_creazione'))}")
     
             st.text_area(
                 "🔒 Lavorazioni",
