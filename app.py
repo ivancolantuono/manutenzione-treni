@@ -1091,7 +1091,6 @@ elif menu == "📚 Schede SR":
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
 elif menu == "📌 Open Item":
 
     from datetime import datetime
@@ -1114,7 +1113,23 @@ elif menu == "📌 Open Item":
             return data_str
 
     # ============================
-    # 📜 DIALOG CRONOLOGIA
+    # LOG
+    # ============================
+
+    def salva_log(item_id, azione, utente, vecchio, nuovo, campo=""):
+
+        supabase.table("open_item_log").insert({
+            "item_id": item_id,
+            "azione": azione,
+            "campo": campo,
+            "utente": utente,
+            "data": ora_italia_iso(),
+            "valore_precedente": vecchio,
+            "valore_nuovo": nuovo
+        }).execute()
+
+    # ============================
+    # 📜 CRONOLOGIA
     # ============================
 
     @st.dialog("📜 Cronologia")
@@ -1126,11 +1141,8 @@ elif menu == "📌 Open Item":
             .order("data", desc=False)\
             .execute().data
 
-        if not log:
-            st.info("Nessuna cronologia")
-
         for l in log:
-            st.markdown(f"**{l['utente']}** → {l['azione']}")
+            st.markdown(f"**{l.get('campo','-')}** → {l['azione']}")
             st.caption(formatta_data(l["data"]))
 
     # ============================
@@ -1142,6 +1154,46 @@ elif menu == "📌 Open Item":
         return supabase.table("open_item").select("*").eq("stato", stato).execute().data
 
     st.title("📌 Open Item")
+
+    # ============================
+    # ➕ INSERIMENTO
+    # ============================
+
+    st.subheader("➕ Nuovo Open Item")
+
+    treno = st.text_input("🚆 Treno")
+    descrizione = st.text_area("📝 Descrizione")
+
+    if st.button("➕ Inserisci"):
+
+        if not treno or not descrizione:
+            st.error("⚠️ Compila tutti i campi")
+            st.stop()
+
+        res = supabase.table("open_item").insert({
+            "treno": treno,
+            "descrizione": descrizione,
+            "stato": "APERTO",
+            "utente": utente_loggato,
+            "data_creazione": ora_italia_iso()
+        }).execute()
+
+        nuovo_id = res.data[0]["id"]
+
+        salva_log(
+            nuovo_id,
+            "CREAZIONE",
+            utente_loggato,
+            "",
+            descrizione,
+            campo="descrizione"
+        )
+
+        st.cache_data.clear()
+        st.success("✅ Inserito")
+        st.rerun()
+
+    st.divider()
 
     # ============================
     # DATI
@@ -1173,39 +1225,36 @@ elif menu == "📌 Open Item":
 
             col1, col2, col3 = st.columns(3)
 
-            # 💾 SALVA AVANZAMENTO
             if col1.button("💾 Salva", key=f"save_{item_id}"):
 
                 if not avanzamento or not avanzamento.strip():
                     st.error("⚠️ Inserisci avanzamento")
                     st.stop()
 
+                vecchio = item.get("avanzamento","")
+
                 supabase.table("open_item").update({
                     "avanzamento": avanzamento.strip()
                 }).eq("id", item_id).execute()
 
-                salva_log(item_id, "AVANZAMENTO", utente_loggato, "", avanzamento)
+                salva_log(item_id, "AGGIORNAMENTO", utente_loggato, vecchio, avanzamento, "avanzamento")
 
                 st.cache_data.clear()
                 st.rerun()
 
-            # 🟡 VALUTAZIONE
             if col2.button("🟡 Valutazione", key=f"val_{item_id}"):
 
-                supabase.table("open_item").update({
-                    "stato": "VALUTAZIONE"
-                }).eq("id", item_id).execute()
+                supabase.table("open_item").update({"stato": "VALUTAZIONE"}).eq("id", item_id).execute()
 
-                salva_log(item_id, "VALUTAZIONE", utente_loggato, "", "")
+                salva_log(item_id, "CAMBIO_STATO", utente_loggato, "APERTO", "VALUTAZIONE", "stato")
 
                 st.cache_data.clear()
                 st.rerun()
 
-            # 🔒 CHIUSURA
             if col3.button("✅ Chiudi", key=f"chiudi_{item_id}"):
 
                 if not lavori or not lavori.strip():
-                    st.error("⚠️ Inserisci lavorazioni prima di chiudere")
+                    st.error("⚠️ Inserisci lavorazioni")
                     st.stop()
 
                 supabase.table("open_item").update({
@@ -1215,50 +1264,21 @@ elif menu == "📌 Open Item":
                     "utente_chiusura": utente_loggato
                 }).eq("id", item_id).execute()
 
-                salva_log(item_id, "CHIUSURA", utente_loggato, "", lavori)
+                salva_log(item_id, "CHIUSURA", utente_loggato, "APERTO", "CHIUSO", "stato")
 
                 st.cache_data.clear()
                 st.rerun()
 
-            # =========================
-            # 🗑️ ELIMINAZIONE SICURA
-            # =========================
+            # ELIMINA
+            if st.button("🗑️ Elimina", key=f"del_{item_id}"):
 
-            if f"confirm_del_{item_id}" not in st.session_state:
-                st.session_state[f"confirm_del_{item_id}"] = False
+                supabase.table("open_item").delete().eq("id", item_id).execute()
 
-            if not st.session_state[f"confirm_del_{item_id}"]:
+                salva_log(item_id, "ELIMINAZIONE", utente_loggato, "", "", "record")
 
-                if st.button("🗑️ Elimina", key=f"del_{item_id}"):
-                    st.session_state[f"confirm_del_{item_id}"] = True
-                    st.warning("⚠️ Confermi eliminazione?")
-                    st.stop()
+                st.cache_data.clear()
+                st.rerun()
 
-            else:
-
-                colA, colB = st.columns(2)
-
-                with colA:
-                    if st.button("✔ Conferma", key=f"confirm_{item_id}"):
-
-                        supabase.table("open_item")\
-                            .delete()\
-                            .eq("id", item_id)\
-                            .execute()
-
-                        salva_log(item_id, "ELIMINAZIONE", utente_loggato, "", "")
-
-                        st.session_state[f"confirm_del_{item_id}"] = False
-                        st.cache_data.clear()
-                        st.success("✅ Eliminato")
-                        st.rerun()
-
-                with colB:
-                    if st.button("❌ Annulla", key=f"cancel_{item_id}"):
-                        st.session_state[f"confirm_del_{item_id}"] = False
-                        st.rerun()
-
-            # 📜 CRONOLOGIA
             if st.button("📜 Cronologia", key=f"log_{item_id}"):
                 mostra_cronologia(item_id)
 
@@ -1280,11 +1300,10 @@ elif menu == "📌 Open Item":
 
             if col1.button("🔴 Riporta aperto", key=f"back_{item_id}"):
 
-                supabase.table("open_item").update({
-                    "stato": "APERTO"
-                }).eq("id", item_id).execute()
+                supabase.table("open_item").update({"stato": "APERTO"}).eq("id", item_id).execute()
 
-                salva_log(item_id, "RIAPERTURA", utente_loggato, "", "")
+                salva_log(item_id, "CAMBIO_STATO", utente_loggato, "VALUTAZIONE", "APERTO", "stato")
+
                 st.cache_data.clear()
                 st.rerun()
 
@@ -1301,7 +1320,7 @@ elif menu == "📌 Open Item":
                     "utente_chiusura": utente_loggato
                 }).eq("id", item_id).execute()
 
-                salva_log(item_id, "CHIUSURA", utente_loggato, "", lavori)
+                salva_log(item_id, "CHIUSURA", utente_loggato, "VALUTAZIONE", "CHIUSO", "stato")
 
                 st.cache_data.clear()
                 st.rerun()
@@ -1325,11 +1344,9 @@ elif menu == "📌 Open Item":
 
             if st.button("🔓 Riapri", key=f"riapri_{item_id}"):
 
-                supabase.table("open_item").update({
-                    "stato": "APERTO"
-                }).eq("id", item_id).execute()
+                supabase.table("open_item").update({"stato": "APERTO"}).eq("id", item_id).execute()
 
-                salva_log(item_id, "RIAPERTURA", utente_loggato, "", "")
+                salva_log(item_id, "RIAPERTURA", utente_loggato, "CHIUSO", "APERTO", "stato")
 
                 st.cache_data.clear()
                 st.rerun()
