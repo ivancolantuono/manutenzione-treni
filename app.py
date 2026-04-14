@@ -1334,7 +1334,7 @@ elif menu == "📌 Open Item":
     # 🟡 VALUTAZIONE
     # ============================
 
-    st.subheader("🟡 In Valutazione")
+    st.subheader("🟡 Monitoraggio")
 
     for item in valutazione:
 
