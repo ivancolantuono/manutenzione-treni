@@ -1352,70 +1352,95 @@ elif menu == "📌 Open Item":
     # ============================
     # 🟡 VALUTAZIONE
     # ============================
-
+    
     st.subheader("🟡 In Valutazione")
-
+    
     for item in valutazione:
-
+    
         id = item["id"]
-
+    
         with st.expander(f"🟡 {item['treno']} - {item['descrizione']}"):
-
+    
+            st.write(f"☑️ {item.get('cassa','-')}")
+            st.write(f"⚙️ {item.get('impianto','-')}")
+    
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_val_{id}")
-
-            col1, col2 = st.columns(2)
-
-            if col1.button("🔴 Riporta aperto", key=f"back_{id}"):
-
-                supabase.table("open_item").update({"stato":"APERTO"}).eq("id",id).execute()
+    
+            # 🔥 BOTTONI ORIZZONTALI
+            col1, col2, col3 = st.columns(3)
+    
+            # 🔴 TORNA APERTO
+            if col1.button("🔴 Apri", key=f"back_{id}"):
+    
+                supabase.table("open_item").update({
+                    "stato":"APERTO"
+                }).eq("id",id).execute()
+    
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","APERTO","stato")
-
+    
                 st.cache_data.clear()
                 st.rerun()
 
+            # ✅ CHIUDI
             if col2.button("✅ Chiudi", key=f"close_{id}"):
-
+    
                 if not lavori.strip():
                     st.error("Inserisci lavorazioni")
                     st.stop()
-
+    
                 supabase.table("open_item").update({
                     "stato":"CHIUSO",
                     "lavorazioni":lavori.strip(),
                     "data_chiusura":ora_italia_iso(),
                     "utente_chiusura":utente_loggato
                 }).eq("id",id).execute()
-
+    
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","CHIUSO","stato")
                 salva_log(id,"MODIFICA",utente_loggato,"",lavori,"lavorazioni")
-
+    
                 st.cache_data.clear()
                 st.rerun()
-
-            if st.button("📜 Log", key=f"log_val_{id}"):
+    
+            # 📜 LOG
+            if col3.button("📜 Log", key=f"log_val_{id}"):
                 mostra_cronologia(id)
-
     # ============================
     # 🟢 CHIUSI
     # ============================
-
+    
     st.subheader("🟢 Attività Chiuse")
-
+    
     for item in chiusi:
-
+    
         id = item["id"]
-
+    
         with st.expander(f"🟢 {item['treno']} - {item['descrizione']}"):
-
-            st.write(item.get("lavorazioni","-"))
-
-            if st.button("🔓 Riapri", key=f"riapri_{id}"):
-
-                supabase.table("open_item").update({"stato":"APERTO"}).eq("id",id).execute()
+    
+            st.write(f"☑️ {item.get('cassa','-')}")
+            st.write(f"⚙️ {item.get('impianto','-')}")
+    
+            st.text_area(
+                "🔒 Lavorazioni",
+                value=item.get("lavorazioni",""),
+                disabled=True,
+                key=f"view_{id}"
+            )
+    
+            # 🔥 BOTTONI ORIZZONTALI
+            col1, col2 = st.columns(2)
+    
+            # 🔓 RIAPRI
+            if col1.button("🔓 Riapri", key=f"riapri_{id}"):
+    
+                supabase.table("open_item").update({
+                    "stato":"APERTO"
+                }).eq("id",id).execute()
+    
                 salva_log(id,"STATO",utente_loggato,"CHIUSO","APERTO","stato")
-
+    
                 st.cache_data.clear()
                 st.rerun()
-
-            if st.button("📜 Log", key=f"log_chiusi_{id}"):
+    
+            # 📜 LOG
+            if col2.button("📜 Log", key=f"log_chiusi_{id}"):
                 mostra_cronologia(id)
