@@ -1167,7 +1167,7 @@ elif menu == "📌 Open Item":
         cassa = col2.multiselect("☑️ Cassa", ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"])
         impianto = col3.selectbox("⚙️ Impianto",
             ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
-             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot"]
+             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo"]
         )
 
         descrizione = st.text_area("📝 Descrizione")
