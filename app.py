@@ -1114,16 +1114,38 @@ elif menu == "📌 Open Item":
             return data_str
 
     # ============================
+    # DIALOG CRONOLOGIA
+    # ============================
+
+    @st.dialog("📜 Cronologia")
+    def mostra_cronologia(item_id):
+
+        log = supabase.table("open_item_log")\
+            .select("*")\
+            .eq("item_id", item_id)\
+            .order("data", desc=False)\
+            .execute().data
+
+        if not log:
+            st.info("Nessuna cronologia")
+
+        for l in log:
+            st.markdown(f"**{l['utente']}** → {l['azione']}")
+            st.caption(formatta_data(l["data"]))
+
+            if l.get("valore_precedente"):
+                st.caption(f"Da: {l['valore_precedente']}")
+
+            if l.get("valore_nuovo"):
+                st.caption(f"A: {l['valore_nuovo']}")
+
+    # ============================
     # CACHE
     # ============================
 
     @st.cache_data(ttl=10)
     def get_items(stato):
         return supabase.table("open_item").select("*").eq("stato", stato).execute().data
-
-    @st.cache_data(ttl=10)
-    def get_logs():
-        return supabase.table("open_item_log").select("*").execute().data
 
     st.title("📌 Open Item")
 
@@ -1159,8 +1181,6 @@ elif menu == "📌 Open Item":
     valutazione = get_items("VALUTAZIONE")
     chiusi = get_items("CHIUSO")
 
-    logs = get_logs()
-
     # ============================
     # 🔴 APERTI
     # ============================
@@ -1183,7 +1203,6 @@ elif menu == "📌 Open Item":
 
             col1, col2, col3 = st.columns(3)
 
-            # SALVA AVANZAMENTO
             if col1.button("💾 Salva", key=f"save_{item_id}"):
                 supabase.table("open_item").update({
                     "avanzamento": avanzamento
@@ -1194,7 +1213,6 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            # VALUTAZIONE
             if col2.button("🟡 Valutazione", key=f"val_{item_id}"):
                 supabase.table("open_item").update({
                     "stato": "VALUTAZIONE"
@@ -1205,7 +1223,6 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            # CHIUSURA
             if col3.button("✅ Chiudi", key=f"chiudi_{item_id}"):
 
                 if not lavori or not lavori.strip():
@@ -1224,12 +1241,11 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            # ELIMINA
             if st.button("🗑️ Elimina", key=f"del_{item_id}"):
 
                 if f"conf_{item_id}" not in st.session_state:
                     st.session_state[f"conf_{item_id}"] = True
-                    st.warning("Premi di nuovo per confermare eliminazione")
+                    st.warning("Premi di nuovo per confermare")
                     st.stop()
 
                 supabase.table("open_item").delete().eq("id", item_id).execute()
@@ -1239,13 +1255,8 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            # CRONOLOGIA SU RICHIESTA
             if st.button("📜 Cronologia", key=f"log_{item_id}"):
-
-                log_item = [l for l in logs if l["item_id"] == item_id]
-
-                for l in log_item:
-                    st.write(f"{formatta_data(l['data'])} - {l['utente']} → {l['azione']}")
+                mostra_cronologia(item_id)
 
     # ============================
     # 🟡 VALUTAZIONE
@@ -1292,11 +1303,7 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             if st.button("📜 Cronologia", key=f"log_val_{item_id}"):
-
-                log_item = [l for l in logs if l["item_id"] == item_id]
-
-                for l in log_item:
-                    st.write(f"{formatta_data(l['data'])} - {l['utente']} → {l['azione']}")
+                mostra_cronologia(item_id)
 
     # ============================
     # 🟢 CHIUSI
@@ -1323,8 +1330,4 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             if st.button("📜 Cronologia", key=f"log_chiusi_{item_id}"):
-
-                log_item = [l for l in logs if l["item_id"] == item_id]
-
-                for l in log_item:
-                    st.write(f"{formatta_data(l['data'])} - {l['utente']} → {l['azione']}")
+                mostra_cronologia(item_id)
