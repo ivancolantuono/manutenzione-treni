@@ -1133,12 +1133,6 @@ elif menu == "📌 Open Item":
             st.markdown(f"**{l['utente']}** → {l['azione']}")
             st.caption(formatta_data(l["data"]))
 
-            if l.get("valore_precedente"):
-                st.caption(f"Da: {l['valore_precedente']}")
-
-            if l.get("valore_nuovo"):
-                st.caption(f"A: {l['valore_nuovo']}")
-
     # ============================
     # CACHE
     # ============================
@@ -1148,30 +1142,6 @@ elif menu == "📌 Open Item":
         return supabase.table("open_item").select("*").eq("stato", stato).execute().data
 
     st.title("📌 Open Item")
-
-    # ============================
-    # NUOVO ITEM
-    # ============================
-
-    st.subheader("➕ Nuova attività")
-
-    treno = st.text_input("🚆 Treno")
-    descrizione = st.text_area("📝 Descrizione")
-
-    if st.button("➕ Inserisci"):
-        if treno and descrizione:
-            supabase.table("open_item").insert({
-                "treno": treno,
-                "descrizione": descrizione,
-                "stato": "APERTO",
-                "utente": utente_loggato,
-                "data_creazione": ora_italia_iso()
-            }).execute()
-
-            st.cache_data.clear()
-            st.rerun()
-
-    st.divider()
 
     # ============================
     # DATI
@@ -1191,7 +1161,7 @@ elif menu == "📌 Open Item":
 
         item_id = item["id"]
 
-        with st.expander(f"🔴 Treno {item['treno']} - {item['descrizione']}"):
+        with st.expander(f"🔴 {item['treno']} - {item['descrizione']}"):
 
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{item_id}")
 
@@ -1203,9 +1173,15 @@ elif menu == "📌 Open Item":
 
             col1, col2, col3 = st.columns(3)
 
+            # SALVA AVANZAMENTO
             if col1.button("💾 Salva", key=f"save_{item_id}"):
+
+                if not avanzamento or not avanzamento.strip():
+                    st.error("⚠️ Inserisci avanzamento")
+                    st.stop()
+
                 supabase.table("open_item").update({
-                    "avanzamento": avanzamento
+                    "avanzamento": avanzamento.strip()
                 }).eq("id", item_id).execute()
 
                 salva_log(item_id, "AVANZAMENTO", utente_loggato, "", avanzamento)
@@ -1213,16 +1189,17 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
+            # VALUTAZIONE
             if col2.button("🟡 Valutazione", key=f"val_{item_id}"):
                 supabase.table("open_item").update({
                     "stato": "VALUTAZIONE"
                 }).eq("id", item_id).execute()
 
                 salva_log(item_id, "VALUTAZIONE", utente_loggato, "", "")
-
                 st.cache_data.clear()
                 st.rerun()
 
+            # CHIUSURA
             if col3.button("✅ Chiudi", key=f"chiudi_{item_id}"):
 
                 if not lavori or not lavori.strip():
@@ -1241,20 +1218,6 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            if st.button("🗑️ Elimina", key=f"del_{item_id}"):
-
-                if f"conf_{item_id}" not in st.session_state:
-                    st.session_state[f"conf_{item_id}"] = True
-                    st.warning("Premi di nuovo per confermare")
-                    st.stop()
-
-                supabase.table("open_item").delete().eq("id", item_id).execute()
-
-                salva_log(item_id, "ELIMINAZIONE", utente_loggato, "", "")
-
-                st.cache_data.clear()
-                st.rerun()
-
             if st.button("📜 Cronologia", key=f"log_{item_id}"):
                 mostra_cronologia(item_id)
 
@@ -1268,7 +1231,7 @@ elif menu == "📌 Open Item":
 
         item_id = item["id"]
 
-        with st.expander(f"🟡 Treno {item['treno']} - {item['descrizione']}"):
+        with st.expander(f"🟡 {item['treno']} - {item['descrizione']}"):
 
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_val_{item_id}")
 
@@ -1280,7 +1243,6 @@ elif menu == "📌 Open Item":
                 }).eq("id", item_id).execute()
 
                 salva_log(item_id, "RIAPERTURA", utente_loggato, "", "")
-
                 st.cache_data.clear()
                 st.rerun()
 
@@ -1315,7 +1277,7 @@ elif menu == "📌 Open Item":
 
         item_id = item["id"]
 
-        with st.expander(f"🟢 Treno {item['treno']} - {item['descrizione']}"):
+        with st.expander(f"🟢 {item['treno']} - {item['descrizione']}"):
 
             st.write(item.get("lavorazioni","-"))
 
