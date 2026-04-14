@@ -1196,6 +1196,38 @@ elif menu == "📌 Open Item":
     # ============================
 
     dati = get_open_item_fast()
+    # ============================
+    # 🔍 FILTRI
+    # ============================
+    
+    st.subheader("🔍 Filtri")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    lista_treni = sorted(set(d.get("treno","") for d in dati if d.get("treno")))
+    lista_casse = sorted(set(d.get("cassa","") for d in dati if d.get("cassa")))
+    lista_impianti = sorted(set(d.get("impianto","") for d in dati if d.get("impianto")))
+    
+    filtro_treno = col1.multiselect("🚆 Treno", lista_treni)
+    filtro_cassa = col2.multiselect("☑️ Cassa", lista_casse)
+    filtro_impianto = col3.multiselect("⚙️ Impianto", lista_impianti)
+    
+    
+    def applica_filtri(d):
+    
+        if filtro_treno and d.get("treno") not in filtro_treno:
+            return False
+    
+        if filtro_cassa and d.get("cassa") not in filtro_cassa:
+            return False
+    
+        if filtro_impianto and d.get("impianto") not in filtro_impianto:
+            return False
+    
+        return True
+    
+    
+    dati = [d for d in dati if applica_filtri(d)]
 
     aperti = [d for d in dati if d["stato"] == "APERTO"]
     valutazione = [d for d in dati if d["stato"] == "VALUTAZIONE"]
