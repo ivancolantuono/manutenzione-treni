@@ -1091,7 +1091,6 @@ elif menu == "📚 Schede SR":
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
 elif menu == "📌 Open Item":
 
     from datetime import datetime
@@ -1114,7 +1113,7 @@ elif menu == "📌 Open Item":
             return data_str
 
     # ============================
-    # DIALOG CRONOLOGIA
+    # 📜 DIALOG CRONOLOGIA
     # ============================
 
     @st.dialog("📜 Cronologia")
@@ -1173,7 +1172,7 @@ elif menu == "📌 Open Item":
 
             col1, col2, col3 = st.columns(3)
 
-            # SALVA AVANZAMENTO
+            # 💾 SALVA AVANZAMENTO
             if col1.button("💾 Salva", key=f"save_{item_id}"):
 
                 if not avanzamento or not avanzamento.strip():
@@ -1189,17 +1188,19 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            # VALUTAZIONE
+            # 🟡 VALUTAZIONE
             if col2.button("🟡 Valutazione", key=f"val_{item_id}"):
+
                 supabase.table("open_item").update({
                     "stato": "VALUTAZIONE"
                 }).eq("id", item_id).execute()
 
                 salva_log(item_id, "VALUTAZIONE", utente_loggato, "", "")
+
                 st.cache_data.clear()
                 st.rerun()
 
-            # CHIUSURA
+            # 🔒 CHIUSURA
             if col3.button("✅ Chiudi", key=f"chiudi_{item_id}"):
 
                 if not lavori or not lavori.strip():
@@ -1218,6 +1219,45 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
+            # =========================
+            # 🗑️ ELIMINAZIONE SICURA
+            # =========================
+
+            if f"confirm_del_{item_id}" not in st.session_state:
+                st.session_state[f"confirm_del_{item_id}"] = False
+
+            if not st.session_state[f"confirm_del_{item_id}"]:
+
+                if st.button("🗑️ Elimina", key=f"del_{item_id}"):
+                    st.session_state[f"confirm_del_{item_id}"] = True
+                    st.warning("⚠️ Confermi eliminazione?")
+                    st.stop()
+
+            else:
+
+                colA, colB = st.columns(2)
+
+                with colA:
+                    if st.button("✔ Conferma", key=f"confirm_{item_id}"):
+
+                        supabase.table("open_item")\
+                            .delete()\
+                            .eq("id", item_id)\
+                            .execute()
+
+                        salva_log(item_id, "ELIMINAZIONE", utente_loggato, "", "")
+
+                        st.session_state[f"confirm_del_{item_id}"] = False
+                        st.cache_data.clear()
+                        st.success("✅ Eliminato")
+                        st.rerun()
+
+                with colB:
+                    if st.button("❌ Annulla", key=f"cancel_{item_id}"):
+                        st.session_state[f"confirm_del_{item_id}"] = False
+                        st.rerun()
+
+            # 📜 CRONOLOGIA
             if st.button("📜 Cronologia", key=f"log_{item_id}"):
                 mostra_cronologia(item_id)
 
@@ -1238,6 +1278,7 @@ elif menu == "📌 Open Item":
             col1, col2 = st.columns(2)
 
             if col1.button("🔴 Riporta aperto", key=f"back_{item_id}"):
+
                 supabase.table("open_item").update({
                     "stato": "APERTO"
                 }).eq("id", item_id).execute()
@@ -1282,6 +1323,7 @@ elif menu == "📌 Open Item":
             st.write(item.get("lavorazioni","-"))
 
             if st.button("🔓 Riapri", key=f"riapri_{item_id}"):
+
                 supabase.table("open_item").update({
                     "stato": "APERTO"
                 }).eq("id", item_id).execute()
