@@ -1310,7 +1310,7 @@ elif menu == "📌 Open Item":
                 key=f"av_val_{id}"
             )
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
 
             if col1.button("🔴 Riporta aperto", key=f"back_{id}"):
 
@@ -1341,7 +1341,29 @@ elif menu == "📌 Open Item":
                 st.cache_data.clear()
                 st.rerun()
 
-            if col3.button("📜 Log", key=f"log_val_{id}"):
+            if col3.button("💾 Aggiorna", key=f"update_av_{id}"):
+
+                if not avanzamento.strip():
+                    st.error("Inserisci avanzamento")
+                    st.stop()
+    
+                supabase.table("open_item").update({
+                    "avanzamento": avanzamento.strip()
+                }).eq("id", id).execute()
+    
+                salva_log(
+                    id,
+                    "MODIFICA",
+                    utente_loggato,
+                    item.get("avanzamento",""),
+                    avanzamento,
+                    "avanzamento"
+                )
+    
+                st.cache_data.clear()
+                st.rerun()
+
+            if col4.button("📜 Log", key=f"log_val_{id}"):
                 mostra_cronologia(id)
 
     # ============================
