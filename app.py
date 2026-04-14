@@ -1091,6 +1091,7 @@ elif menu == "📚 Schede SR":
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
+
 elif menu == "📌 Open Item":
 
     from datetime import datetime
@@ -1189,7 +1190,7 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             # 🟡 VALUTAZIONE
-            if col2.button("🟡 Monitoraggio", key=f"val_{item_id}"):
+            if col2.button("🟡 Valutazione", key=f"val_{item_id}"):
 
                 supabase.table("open_item").update({
                     "stato": "VALUTAZIONE"
@@ -1265,7 +1266,7 @@ elif menu == "📌 Open Item":
     # 🟡 VALUTAZIONE
     # ============================
 
-    st.subheader("🟡 Monitoraggio")
+    st.subheader("🟡 In Valutazione")
 
     for item in valutazione:
 
