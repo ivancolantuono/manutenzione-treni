@@ -1112,7 +1112,7 @@ elif menu == "📌 Open Item":
             return data_str or "-"
 
     # ============================
-    # LOG
+    # LOG CORRETTO
     # ============================
 
     def salva_log(item_id, azione, utente, vecchio, nuovo, campo=""):
@@ -1123,12 +1123,12 @@ elif menu == "📌 Open Item":
             "campo": campo,
             "utente": utente,
             "data": ora_italia_iso(),
-            "valore_precedente": vecchio,
-            "valore_nuovo": nuovo
+            "valore_precedente": str(vecchio),
+            "valore_nuovo": str(nuovo)
         }).execute()
 
     # ============================
-    # CRONOLOGIA POPUP
+    # CRONOLOGIA (FIX VISIVO)
     # ============================
 
     @st.dialog("📜 Cronologia")
@@ -1144,8 +1144,23 @@ elif menu == "📌 Open Item":
             st.info("Nessuna cronologia")
 
         for l in log:
+
             st.markdown(f"**{l.get('campo','-')}** → {l['azione']}")
             st.caption(formatta_data(l["data"]))
+
+            if l.get("valore_precedente") or l.get("valore_nuovo"):
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.caption("Prima")
+                    st.write(l.get("valore_precedente","-"))
+
+                with col2:
+                    st.caption("Dopo")
+                    st.write(l.get("valore_nuovo","-"))
+
+            st.divider()
 
     # ============================
     # CACHE
@@ -1212,42 +1227,33 @@ elif menu == "📌 Open Item":
 
     dati = get_all_items()
 
-    tutti_treni = sorted(set(str(d.get("treno","")) for d in dati))
-    tutte_casse = sorted(set(str(d.get("cassa","")) for d in dati))
-    tutti_impianti = sorted(set(str(d.get("impianto","")) for d in dati))
-
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        f_treno = st.multiselect("🚆 Treno", tutti_treni)
+        f_treno = st.multiselect("🚆 Treno", sorted(set(d["treno"] for d in dati)))
 
     with col2:
-        f_cassa = st.multiselect("☑️ Cassa", tutte_casse)
+        f_cassa = st.multiselect("☑️ Cassa", sorted(set(d.get("cassa","") for d in dati)))
 
     with col3:
-        f_impianto = st.multiselect("⚙️ Impianto", tutti_impianti)
+        f_impianto = st.multiselect("⚙️ Impianto", sorted(set(d.get("impianto","") for d in dati)))
 
     with col4:
         f_stato = st.selectbox("📌 Stato", ["Tutti","APERTO","VALUTAZIONE","CHIUSO"])
 
     def filtra(x):
-
-        if f_treno and x.get("treno") not in f_treno:
-            return False
-        if f_cassa and x.get("cassa") not in f_cassa:
-            return False
-        if f_impianto and x.get("impianto") not in f_impianto:
-            return False
-        if f_stato != "Tutti" and x.get("stato") != f_stato:
-            return False
-
-        return True
+        return (
+            (not f_treno or x.get("treno") in f_treno) and
+            (not f_cassa or x.get("cassa") in f_cassa) and
+            (not f_impianto or x.get("impianto") in f_impianto) and
+            (f_stato == "Tutti" or x.get("stato") == f_stato)
+        )
 
     dati = [d for d in dati if filtra(d)]
 
-    aperti = [d for d in dati if d.get("stato") == "APERTO"]
-    valutazione = [d for d in dati if d.get("stato") == "VALUTAZIONE"]
-    chiusi = [d for d in dati if d.get("stato") == "CHIUSO"]
+    aperti = [d for d in dati if d["stato"] == "APERTO"]
+    valutazione = [d for d in dati if d["stato"] == "VALUTAZIONE"]
+    chiusi = [d for d in dati if d["stato"] == "CHIUSO"]
 
     # ============================
     # 🔴 APERTI
@@ -1274,7 +1280,7 @@ elif menu == "📌 Open Item":
 
             col1, col2 = st.columns(2)
 
-            # BLOCCO UNICO
+            # 💾 BLOCCO UNICO
             if col1.button("💾 Salva / Aggiorna", key=f"save_{id}"):
 
                 if not avanzamento.strip():
@@ -1287,20 +1293,16 @@ elif menu == "📌 Open Item":
                     "avanzamento": avanzamento.strip()
                 }).eq("id", id).execute()
 
-                salva_log(id,"UPDATE",utente_loggato,vecchio,avanzamento,"avanzamento")
+                salva_log(id,"MODIFICA",utente_loggato,vecchio,avanzamento,"avanzamento")
 
                 if in_valutazione:
-
-                    supabase.table("open_item").update({
-                        "stato":"VALUTAZIONE"
-                    }).eq("id",id).execute()
-
+                    supabase.table("open_item").update({"stato":"VALUTAZIONE"}).eq("id",id).execute()
                     salva_log(id,"STATO",utente_loggato,"APERTO","VALUTAZIONE","stato")
 
                 st.cache_data.clear()
                 st.rerun()
 
-            # CHIUSURA
+            # 🔒 CHIUSURA
             if col2.button("✅ Chiudi", key=f"chiudi_{id}"):
 
                 if not lavori.strip():
@@ -1309,7 +1311,7 @@ elif menu == "📌 Open Item":
 
                 supabase.table("open_item").update({
                     "stato":"CHIUSO",
-                    "lavorazioni":lavori,
+                    "lavorazioni":lavori.strip(),
                     "data_chiusura":ora_italia_iso(),
                     "utente_chiusura":utente_loggato
                 }).eq("id",id).execute()
@@ -1320,10 +1322,8 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             if st.button("🗑️ Elimina", key=f"del_{id}"):
-
                 supabase.table("open_item").delete().eq("id",id).execute()
                 salva_log(id,"DELETE",utente_loggato,"","", "record")
-
                 st.cache_data.clear()
                 st.rerun()
 
@@ -1347,10 +1347,8 @@ elif menu == "📌 Open Item":
             col1, col2 = st.columns(2)
 
             if col1.button("🔴 Riporta aperto", key=f"back_{id}"):
-
                 supabase.table("open_item").update({"stato":"APERTO"}).eq("id",id).execute()
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","APERTO","stato")
-
                 st.cache_data.clear()
                 st.rerun()
 
@@ -1362,7 +1360,7 @@ elif menu == "📌 Open Item":
 
                 supabase.table("open_item").update({
                     "stato":"CHIUSO",
-                    "lavorazioni":lavori,
+                    "lavorazioni":lavori.strip(),
                     "data_chiusura":ora_italia_iso(),
                     "utente_chiusura":utente_loggato
                 }).eq("id",id).execute()
@@ -1390,10 +1388,8 @@ elif menu == "📌 Open Item":
             st.write(item.get("lavorazioni","-"))
 
             if st.button("🔓 Riapri", key=f"riapri_{id}"):
-
                 supabase.table("open_item").update({"stato":"APERTO"}).eq("id",id).execute()
                 salva_log(id,"RIAPERTURA",utente_loggato,"CHIUSO","APERTO","stato")
-
                 st.cache_data.clear()
                 st.rerun()
 
