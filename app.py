@@ -1100,7 +1100,7 @@ elif menu == "📌 Open Item":
 
     utente_loggato = st.session_state.get("utente", "Sconosciuto")
 
-    st_autorefresh(interval=30000, key="refresh_open_item")
+    st_autorefresh(interval=6000, key="refresh_open_item")
 
     # ============================
     # FUNZIONI
