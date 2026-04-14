@@ -1253,7 +1253,7 @@ elif menu == "📌 Open Item":
                 st.rerun()
                 
             # ✅ CHIUDI
-            if col3.button("✅ Chiudi", key=f"close_{id}"):
+            if col2.button("✅ Chiudi", key=f"close_{id}"):
 
                 if not lavori.strip():
                     st.error("Inserisci lavorazioni")
@@ -1272,7 +1272,7 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             # 🗑️ ELIMINA
-            if col4.button("🗑️ Elimina", key=f"del_{id}"):
+            if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
                 supabase.table("open_item").delete().eq("id", id).execute()
 
@@ -1282,14 +1282,14 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             # 📜 LOG
-            if st.button("📜 Log", key=f"log_{id}"):
+            if col4.button("📜 Log", key=f"log_{id}"):
                 mostra_cronologia(id)
 
     # ============================
     # 🟡 VALUTAZIONE
     # ============================
 
-    st.subheader("🟡 In Valutazione")
+    st.subheader("🟡 Monitoraggio")
 
     for item in valutazione:
 
