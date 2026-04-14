@@ -1228,45 +1228,30 @@ elif menu == "📌 Open Item":
 
             col1, col2, col3, col4 = st.columns(4)
 
-            # 🟡 MONITORAGGIO
+            # 🟡 MONITORAGGIO (SALVA + VALUTAZIONE)
             if col1.button("🟡 Monitoraggio", key=f"monitor_{id}"):
-
+            
                 if not avanzamento.strip():
                     st.error("Inserisci avanzamento")
                     st.stop()
-
+            
                 supabase.table("open_item").update({
                     "avanzamento": avanzamento.strip(),
                     "stato": "VALUTAZIONE"
                 }).eq("id", id).execute()
-
-                salva_log(id,"MONITORAGGIO",utente_loggato,
-                          item.get("avanzamento",""),
-                          avanzamento,
-                          "avanzamento")
-
+            
+                salva_log(
+                    id,
+                    "MONITORAGGIO",
+                    utente_loggato,
+                    item.get("avanzamento",""),
+                    avanzamento,
+                    "avanzamento"
+                )
+            
                 st.cache_data.clear()
                 st.rerun()
-
-            # 💾 SALVA
-            if col2.button("💾 Salva", key=f"save_{id}"):
-
-                if not avanzamento.strip():
-                    st.error("Inserisci avanzamento")
-                    st.stop()
-
-                supabase.table("open_item").update({
-                    "avanzamento": avanzamento.strip()
-                }).eq("id", id).execute()
-
-                salva_log(id,"MODIFICA",utente_loggato,
-                          item.get("avanzamento",""),
-                          avanzamento,
-                          "avanzamento")
-
-                st.cache_data.clear()
-                st.rerun()
-
+                
             # ✅ CHIUDI
             if col3.button("✅ Chiudi", key=f"close_{id}"):
 
