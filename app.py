@@ -1189,7 +1189,7 @@ elif menu == "📌 Open Item":
                 st.rerun()
 
             # 🟡 VALUTAZIONE
-            if col2.button("🟡 Valutazione", key=f"val_{item_id}"):
+            if col2.button("🟡 Monitoraggio", key=f"val_{item_id}"):
 
                 supabase.table("open_item").update({
                     "stato": "VALUTAZIONE"
