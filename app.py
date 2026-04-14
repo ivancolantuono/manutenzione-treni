@@ -193,6 +193,7 @@ if not st.session_state.logged_in:
 
             if user:
                 st.session_state.logged_in = True
+                 st.session_state.login_time = datetime.now()
                 st.session_state.utente = user.get("Nominativo")
                 st.session_state.ruolo = user.get("Ruolo")
                 st.session_state.squadra = user.get("Squadra")
@@ -205,6 +206,23 @@ if not st.session_state.logged_in:
                 st.error("Credenziali errate")
 
     st.stop()
+    # ============================
+    # ⏱️ CONTROLLO SCADENZA LOGIN
+    # ============================
+    
+    from datetime import datetime
+    
+    if st.session_state.get("logged_in"):
+    
+        login_time = st.session_state.get("login_time")
+    
+        if login_time:
+            durata = datetime.now() - login_time
+    
+            if durata.total_seconds() > 21600:  # 6 ore
+                st.warning("Sessione scaduta, rifai il login")
+                st.session_state.clear()
+                st.rerun()
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo.upper()
