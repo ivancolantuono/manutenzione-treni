@@ -1091,16 +1091,12 @@ elif menu == "📚 Schede SR":
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
 elif menu == "📌 Open Item":
 
     from datetime import datetime
     from zoneinfo import ZoneInfo
-    from streamlit_autorefresh import st_autorefresh
 
     utente_loggato = st.session_state.get("utente", "Sconosciuto")
-
-    st_autorefresh(interval=6000, key="refresh_open_item")
 
     # ============================
     # FUNZIONI
@@ -1116,6 +1112,13 @@ elif menu == "📌 Open Item":
             return datetime.fromisoformat(data_str).strftime("%d/%m/%Y %H:%M")
         except:
             return data_str
+
+    @st.cache_data(ttl=10)
+    def get_open_item_fast():
+        return supabase.table("open_item")\
+            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni")\
+            .order("data_creazione", desc=True)\
+            .execute().data
 
     def salva_log(item_id, azione, utente, vecchio="", nuovo="", campo=""):
         supabase.table("open_item_log").insert({
@@ -1149,35 +1152,36 @@ elif menu == "📌 Open Item":
     # ============================
 
     st.title("📌 Open Item")
-    st.subheader("➕ Nuova attività")
 
-    col1, col2, col3 = st.columns(3)
+    with st.expander("➕ Nuova attività"):
 
-    treno = col1.text_input("🚆 Treno")
-    cassa = col2.multiselect("☑️ Cassa", ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"])
-    impianto = col3.selectbox("⚙️ Impianto",
-        ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
-         "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot"]
-    )
+        col1, col2, col3 = st.columns(3)
 
-    descrizione = st.text_area("📝 Descrizione")
+        treno = col1.text_input("🚆 Treno")
+        cassa = col2.multiselect("☑️ Cassa", ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"])
+        impianto = col3.selectbox("⚙️ Impianto",
+            ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
+             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot"]
+        )
 
-    if st.button("➕ Inserisci"):
-        if not treno or not descrizione:
-            st.error("Compila i campi obbligatori")
-        else:
-            supabase.table("open_item").insert({
-                "treno": treno,
-                "cassa": ", ".join(cassa),
-                "impianto": impianto,
-                "descrizione": descrizione,
-                "stato": "APERTO",
-                "utente": utente_loggato,
-                "data_creazione": ora_italia_iso()
-            }).execute()
+        descrizione = st.text_area("📝 Descrizione")
 
-            st.success("Inserito")
-            st.rerun()
+        if st.button("➕ Inserisci"):
+            if not treno or not descrizione:
+                st.error("Compila i campi obbligatori")
+            else:
+                supabase.table("open_item").insert({
+                    "treno": treno,
+                    "cassa": ", ".join(cassa),
+                    "impianto": impianto,
+                    "descrizione": descrizione,
+                    "stato": "APERTO",
+                    "utente": utente_loggato,
+                    "data_creazione": ora_italia_iso()
+                }).execute()
+
+                st.cache_data.clear()
+                st.rerun()
 
     st.divider()
 
@@ -1185,7 +1189,7 @@ elif menu == "📌 Open Item":
     # DATI
     # ============================
 
-    dati = get_open_item()
+    dati = get_open_item_fast()
 
     aperti = [d for d in dati if d["stato"] == "APERTO"]
     valutazione = [d for d in dati if d["stato"] == "VALUTAZIONE"]
@@ -1218,8 +1222,8 @@ elif menu == "📌 Open Item":
 
             col1, col2, col3, col4 = st.columns(4)
 
-            # SALVA + VALUTAZIONE
-            if col1.button("💾 Monitoraggio", key=f"save_{id}"):
+            # SALVA
+            if col1.button("💾 Salva", key=f"save_{id}"):
 
                 if not avanzamento.strip():
                     st.error("Inserisci avanzamento")
@@ -1228,30 +1232,40 @@ elif menu == "📌 Open Item":
                 salva_log(id,"MODIFICA",utente_loggato,item.get("avanzamento",""),avanzamento,"avanzamento")
 
                 supabase.table("open_item").update({
-                    "avanzamento": avanzamento.strip(),
+                    "avanzamento": avanzamento.strip()
+                }).eq("id", id).execute()
+
+                st.cache_data.clear()
+                st.rerun()
+
+            # VALUTAZIONE
+            if col2.button("🟡 Valutazione", key=f"val_{id}"):
+
+                supabase.table("open_item").update({
                     "stato": "VALUTAZIONE"
                 }).eq("id", id).execute()
 
                 salva_log(id,"STATO",utente_loggato,"APERTO","VALUTAZIONE","stato")
 
+                st.cache_data.clear()
                 st.rerun()
 
             # ELIMINA
-            if col2.button("🗑️ Elimina", key=f"del_{id}"):
-
-                salva_log(id,"ELIMINAZIONE",utente_loggato,"","")
+            if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
                 supabase.table("open_item").delete().eq("id", id).execute()
 
+                salva_log(id,"ELIMINAZIONE",utente_loggato,"","")
+
+                st.cache_data.clear()
                 st.rerun()
 
-            # LOG (STABILE)
-            if col3.button("📜 Log", key=f"log_{id}"):
-                with st.expander("📜 Cronologia", expanded=True):
-                    mostra_cronologia(id)
+            # LOG
+            if col4.button("📜 Log", key=f"log_{id}"):
+                mostra_cronologia(id)
 
             # CHIUDI
-            if col4.button("✅ Chiudi", key=f"close_{id}"):
+            if st.button("✅ Chiudi", key=f"close_{id}"):
 
                 if not lavori.strip():
                     st.error("Inserisci lavorazioni")
@@ -1271,13 +1285,14 @@ elif menu == "📌 Open Item":
 
                 salva_log(id,"STATO",utente_loggato,"APERTO","CHIUSO","stato")
 
+                st.cache_data.clear()
                 st.rerun()
 
     # ============================
     # 🟡 VALUTAZIONE
     # ============================
 
-    st.subheader("🟡 Monitoraggio")
+    st.subheader("🟡 In Valutazione")
 
     for item in valutazione:
 
@@ -1300,12 +1315,7 @@ elif menu == "📌 Open Item":
 
             col1, col2, col3, col4 = st.columns(4)
 
-            # SALVA AVANZAMENTO
             if col1.button("💾 Salva", key=f"save_val_{id}"):
-
-                if not avanzamento.strip():
-                    st.error("Inserisci avanzamento")
-                    st.stop()
 
                 salva_log(id,"MODIFICA",utente_loggato,item.get("avanzamento",""),avanzamento,"avanzamento")
 
@@ -1313,10 +1323,9 @@ elif menu == "📌 Open Item":
                     "avanzamento": avanzamento.strip()
                 }).eq("id", id).execute()
 
-                st.success("Salvato")
+                st.cache_data.clear()
                 st.rerun()
 
-            # APRI
             if col2.button("🔴 Apri", key=f"back_{id}"):
 
                 supabase.table("open_item").update({
@@ -1325,17 +1334,13 @@ elif menu == "📌 Open Item":
 
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","APERTO","stato")
 
+                st.cache_data.clear()
                 st.rerun()
 
-            # CHIUDI
             if col3.button("✅ Chiudi", key=f"close_val_{id}"):
 
                 if not lavori.strip():
                     st.error("Inserisci lavorazioni")
-                    st.stop()
-
-                if not avanzamento.strip():
-                    st.error("Inserisci avanzamento")
                     st.stop()
 
                 supabase.table("open_item").update({
@@ -1348,12 +1353,11 @@ elif menu == "📌 Open Item":
 
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","CHIUSO","stato")
 
+                st.cache_data.clear()
                 st.rerun()
 
-            # 📜 LOG
             if col4.button("📜 Log", key=f"log_val_{id}"):
-                with st.expander("📜 Cronologia", expanded=True):
-                    mostra_cronologia(id)
+                mostra_cronologia(id)
 
     # ============================
     # 🟢 CHIUSI
@@ -1389,8 +1393,8 @@ elif menu == "📌 Open Item":
 
                 salva_log(id,"STATO",utente_loggato,"CHIUSO","APERTO","stato")
 
+                st.cache_data.clear()
                 st.rerun()
 
             if col2.button("📜 Log", key=f"log_ch_{id}"):
-                with st.expander("📜 Cronologia", expanded=True):
-                    mostra_cronologia(id)
+                mostra_cronologia(id)
