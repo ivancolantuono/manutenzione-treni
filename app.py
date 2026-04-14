@@ -1219,7 +1219,7 @@ elif menu == "📌 Open Item":
             col1, col2, col3, col4 = st.columns(4)
 
             # SALVA + VALUTAZIONE
-            if col1.button("💾 Salva / Valutazione", key=f"save_{id}"):
+            if col1.button("💾 Monitoraggio", key=f"save_{id}"):
 
                 if not avanzamento.strip():
                     st.error("Inserisci avanzamento")
@@ -1277,7 +1277,7 @@ elif menu == "📌 Open Item":
     # 🟡 VALUTAZIONE
     # ============================
 
-    st.subheader("🟡 In Valutazione")
+    st.subheader("🟡 Monitoraggio")
 
     for item in valutazione:
 
@@ -1298,7 +1298,7 @@ elif menu == "📌 Open Item":
                 key=f"av_val_{id}"
             )
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
 
             # SALVA AVANZAMENTO
             if col1.button("💾 Salva", key=f"save_val_{id}"):
@@ -1349,6 +1349,11 @@ elif menu == "📌 Open Item":
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","CHIUSO","stato")
 
                 st.rerun()
+
+            # 📜 LOG
+            if col4.button("📜 Log", key=f"log_val_{id}"):
+                with st.expander("📜 Cronologia", expanded=True):
+                    mostra_cronologia(id)
 
     # ============================
     # 🟢 CHIUSI
