@@ -915,43 +915,57 @@ elif menu == "📦 Cerca Componente":
     st.caption(f"🔍 Ricerca attiva su: COMPONENTE, ASSIEME + {', '.join(colonne_pn)}")
 
 # =========================
-# 📚 SCHEDE SR (SUPABASE)
+# 📚 SCHEDE SR (EXCEL)
 # =========================
 elif menu == "📚 Schede SR":
 
     import pandas as pd
+    import re
 
     st.title("📚 Ricerca Schede SR")
 
     # =========================
-    # 📥 CARICAMENTO DATI (VELOCE)
+    # 📥 CARICA FILE
     # =========================
-    @st.cache_data(ttl=300)
-    def get_schede():
-        res = supabase.table("schede_sr").select("*").execute()
-        return res.data
+    df_sr = pd.read_excel("schede_sr.xlsx")
 
-    dati = get_schede()
-
-    if not dati:
-        st.warning("Nessun dato trovato")
-        st.stop()
-
-    df_sr = pd.DataFrame(dati)
-    df_sr.columns = df_sr.columns.str.lower().str.strip()
-
-    # =========================
-    # 🔥 PULIZIA
-    # =========================
+    # 🔥 pulizia generale (FONDAMENTALE)
     df_sr = df_sr.fillna("")
 
-    # colonne (già allineate a supabase)
+    df_sr.columns = df_sr.columns.astype(str)
+    df_sr.columns = df_sr.columns.str.strip().str.lower()
+
+    # =========================
+    # 📌 COLONNE
+    # =========================
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
     col_link = "link1"
-    col_sottogruppo = "sottogruppo"
+
+    # 🔎 trova sottogruppo
+    col_sottogruppo = None
+    for col in df_sr.columns:
+        if "sotto" in col:
+            col_sottogruppo = col
+            break
+
+    # 🔥 normalizza sottogruppo
+    if col_sottogruppo:
+        df_sr[col_sottogruppo] = (
+            df_sr[col_sottogruppo]
+            .astype(str)
+            .str.strip()
+        )
+
+    # =========================
+    # 🔧 FUNZIONE PULIZIA
+    # =========================
+    def pulisci(testo):
+        testo = str(testo).lower()
+        testo = re.sub(r"[^a-z0-9]", " ", testo)
+        return testo
 
     # =========================
     # 📱 INPUT
@@ -969,24 +983,40 @@ elif menu == "📚 Schede SR":
     # =========================
     with col2:
 
-        df_tmp = df_sr.copy()
+        if col_sottogruppo:
 
-        if ricerca:
-            r = ricerca.lower()
+            df_tmp = df_sr.copy()
 
-            df_tmp = df_tmp[
-                df_tmp[col_testo].str.lower().str.contains(r, na=False) |
-                df_tmp[col_titolo].str.lower().str.contains(r, na=False) |
-                df_tmp[col_manuale].str.lower().str.contains(r, na=False) |
-                df_tmp[col_sottogruppo].str.lower().str.contains(r, na=False)
-            ]
+            if ricerca:
 
-        gruppi = sorted(df_tmp[col_sottogruppo].astype(str).unique())
+                parole = [pulisci(p) for p in ricerca.split()]
 
-        gruppo_sel = st.selectbox(
-            "📂 Sottogruppo",
-            ["Tutti"] + gruppi
-        )
+                df_tmp["__search__"] = (
+                    df_tmp[col_testo].astype(str) + " " +
+                    df_tmp[col_titolo].astype(str) + " " +
+                    df_tmp[col_manuale].astype(str) + " " +
+                    df_tmp[col_sottogruppo].astype(str)
+                ).apply(pulisci)
+
+                for parola in parole:
+                    df_tmp = df_tmp[
+                        df_tmp["__search__"].str.contains(parola, na=False)
+                    ]
+
+            gruppi = sorted(
+                df_tmp[col_sottogruppo]
+                .astype(str)
+                .str.strip()
+                .unique()
+            )
+
+            gruppo_sel = st.selectbox(
+                "📂 Sottogruppo",
+                ["Tutti"] + gruppi
+            )
+
+        else:
+            gruppo_sel = "Tutti"
 
     # =========================
     # 🔎 FILTRO PRINCIPALE
@@ -994,20 +1024,41 @@ elif menu == "📚 Schede SR":
     df_filtrato = df_sr.copy()
 
     if ricerca:
-        r = ricerca.lower()
 
-        df_filtrato = df_filtrato[
-            df_filtrato[col_testo].str.lower().str.contains(r, na=False) |
-            df_filtrato[col_titolo].str.lower().str.contains(r, na=False) |
-            df_filtrato[col_manuale].str.lower().str.contains(r, na=False) |
-            df_filtrato[col_sottogruppo].str.lower().str.contains(r, na=False)
-        ]
+        parole = [pulisci(p) for p in ricerca.split()]
 
-    if gruppo_sel != "Tutti":
+        df_filtrato["__search__"] = (
+            df_filtrato[col_testo].astype(str) + " " +
+            df_filtrato[col_titolo].astype(str) + " " +
+            df_filtrato[col_manuale].astype(str)
+        )
+
+        if col_sottogruppo:
+            df_filtrato["__search__"] += " " + df_filtrato[col_sottogruppo].astype(str)
+
+        df_filtrato["__search__"] = df_filtrato["__search__"].apply(pulisci)
+
+        for parola in parole:
+            df_filtrato = df_filtrato[
+                df_filtrato["__search__"].str.contains(parola, na=False)
+            ]
+
+    # =========================
+    # 📂 FILTRO SOTTOGRUPPO (FIX PYARROW)
+    # =========================
+    if gruppo_sel != "Tutti" and col_sottogruppo:
+
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo]
+            .fillna("")
+            .astype(str)
+            .str.strip()
             .str.lower()
-            .str.contains(gruppo_sel.lower(), na=False)
+            .str.contains(
+                gruppo_sel.strip().lower(),
+                na=False,
+                regex=False
+            )
         ]
 
     risultati = df_filtrato.copy()
@@ -1028,13 +1079,16 @@ elif menu == "📚 Schede SR":
 
     for (titolo, manuale), gruppo in gruppi:
 
-        sottogruppo = gruppo[col_sottogruppo].iloc[0]
+        sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo else ""
 
         # 🔗 LINK
         link = None
         if col_link in gruppo.columns:
+
             links = gruppo[col_link].astype(str)
             links = links[links.str.strip() != ""]
+            links = links[links.str.lower() != "nan"]
+
             if not links.empty:
                 link = links.iloc[0].strip()
 
@@ -1043,7 +1097,6 @@ elif menu == "📚 Schede SR":
 
         with st.expander(f"🔧 {str(titolo)[:60]}"):
 
-            # link
             if link:
                 if not link.startswith("http"):
                     link = "https://" + link
@@ -1051,13 +1104,11 @@ elif menu == "📚 Schede SR":
             else:
                 st.markdown(f"📘 **{manuale}**")
 
-            # info
             if sottogruppo:
                 st.caption(f"📂 {sottogruppo}")
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
 elif menu == "📌 Open Item":
 
     from datetime import datetime
