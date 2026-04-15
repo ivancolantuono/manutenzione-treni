@@ -938,6 +938,7 @@ elif menu == "📚 Schede SR":
         st.stop()
 
     df_sr = pd.DataFrame(dati)
+    df_sr.columns = df_sr.columns.str.lower().str.strip()
 
     # =========================
     # 🔥 PULIZIA
