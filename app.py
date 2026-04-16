@@ -1489,7 +1489,7 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "📚 SCHEDE SR new":
+elif menu == "📚 SCHEDE SR":
 
     import pandas as pd
     import re
@@ -1524,7 +1524,7 @@ elif menu == "📚 SCHEDE SR new":
         if df.empty:
             return df
 
-        # 🔥 NORMALIZZAZIONE TOTALE (ANTI BUG)
+        # 🔥 NORMALIZZAZIONE (ANTI BUG PYARROW)
         df.columns = df.columns.str.lower().str.strip()
         df = df.fillna("")
 
@@ -1534,7 +1534,7 @@ elif menu == "📚 SCHEDE SR new":
         return df
 
     # =========================
-    # CACHE SESSIONE (no reload continuo)
+    # CACHE SESSIONE
     # =========================
     if "schede_sr" not in st.session_state:
         with st.spinner("🔄 Caricamento schede SR..."):
@@ -1647,12 +1647,13 @@ elif menu == "📚 SCHEDE SR new":
     # =========================
     if gruppo_sel != "Tutti" and col_sottogruppo:
 
+        gruppo = gruppo_sel.lower()
+
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo]
             .fillna("")
             .astype(str)
-            .str.lower()
-            .str.contains(gruppo_sel.lower(), na=False)
+            .apply(lambda x: gruppo in x.lower())
         ]
 
     risultati = df_filtrato.copy()
@@ -1701,3 +1702,5 @@ elif menu == "📚 SCHEDE SR new":
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
+
+ 
