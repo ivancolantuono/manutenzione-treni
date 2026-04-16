@@ -1469,48 +1469,171 @@ elif menu == "📌 OPEN ITEM":
                 mostra_cronologia(id)
                 
 # =========================
-# 📚 SCHEDE SR VZI6 (VERSIONE PULITA)
+# 📚 SCHEDE SR (SUPABASE)
 # =========================
 elif menu == "SCHEDE SR VZI6":
 
     import pandas as pd
+    import re
 
-    st.title("🗄 Ricerca Schede SR VZI6")
+    st.title("📚 Ricerca Schede SR")
 
-    ricerca = st.text_input("🔍 Cerca")
+    # =========================
+    # 📥 CARICAMENTO
+    # =========================
+    @st.cache_data(ttl=300)
+    def carica_schede():
 
-    if not ricerca:
-        st.info("Inserisci qualcosa per cercare")
+        dati = []
+        step = 1000
+        start = 0
+
+        while True:
+            res = supabase.table("schede_sr").select("*").range(start, start + step - 1).execute()
+
+            if not res.data:
+                break
+
+            dati.extend(res.data)
+
+            if len(res.data) < step:
+                break
+
+            start += step
+
+        df = pd.DataFrame(dati)
+
+        if df.empty:
+            return df
+
+        # 🔥 NORMALIZZA
+        df.columns = df.columns.str.lower().str.strip()
+        df = df.fillna("")
+
+        for col in df.columns:
+            df[col] = df[col].apply(lambda x: str(x))
+
+        return df
+
+    # =========================
+    # CACHE
+    # =========================
+    if "schede_sr" not in st.session_state:
+        with st.spinner("🔄 Caricamento schede SR..."):
+            st.session_state.schede_sr = carica_schede()
+
+    df_sr = st.session_state.schede_sr
+
+    if df_sr.empty:
+        st.warning("Nessuna scheda trovata")
         st.stop()
 
-    try:
-        res = supabase.table("schede_sr_vzi6")\
-            .select("*")\
-            .ilike("testo", f"%{ricerca}%")\
-            .limit(100)\
-            .execute()
+    # =========================
+    # COLONNE
+    # =========================
+    col_manuale = "manuale"
+    col_pagina = "pagina"
+    col_titolo = "titolo"
+    col_testo = "testo"
+    col_link = "link1"
+    col_sottogruppo = "sottogruppo"
 
-        dati = res.data
+    # =========================
+    # PULIZIA
+    # =========================
+    def pulisci(testo):
+        testo = str(testo).lower()
+        testo = re.sub(r"[^a-z0-9]", " ", testo)
+        return testo
 
-    except Exception as e:
-        st.error(f"Errore: {e}")
-        st.stop()
+    # =========================
+    # 🔥 COLONNA UNICA RICERCA
+    # =========================
+    df_sr["__search__"] = (
+        df_sr[col_testo] + " " +
+        df_sr[col_titolo] + " " +
+        df_sr[col_manuale] + " " +
+        df_sr[col_sottogruppo]
+    ).apply(pulisci)
 
-    if not dati:
+    # =========================
+    # INPUT
+    # =========================
+    col1, col2 = st.columns(2)
+
+    with col1:
+        ricerca = st.text_input("🔍 Cerca")
+
+    # =========================
+    # 📂 SOTTOGRUPPI DINAMICI (CORRETTO)
+    # =========================
+    with col2:
+
+        df_tmp = df_sr.copy()
+
+        if ricerca:
+            parole = [pulisci(p) for p in ricerca.split()]
+
+            for parola in parole:
+                df_tmp = df_tmp[
+                    df_tmp["__search__"].apply(lambda x: parola in x)
+                ]
+
+        gruppi = sorted(
+            df_tmp[col_sottogruppo]
+            .fillna("")
+            .astype(str)
+            .unique()
+        )
+
+        gruppo_sel = st.selectbox(
+            "📂 Sottogruppo",
+            ["Tutti"] + gruppi
+        )
+
+    # =========================
+    # 🔎 FILTRO PRINCIPALE
+    # =========================
+    df_filtrato = df_sr.copy()
+
+    if ricerca:
+        parole = [pulisci(p) for p in ricerca.split()]
+
+        for parola in parole:
+            df_filtrato = df_filtrato[
+                df_filtrato["__search__"].apply(lambda x: parola in x)
+            ]
+
+    # =========================
+    # 📂 FILTRO SOTTOGRUPPO
+    # =========================
+    if gruppo_sel != "Tutti":
+
+        gruppo = gruppo_sel.lower()
+
+        df_filtrato = df_filtrato[
+            df_filtrato[col_sottogruppo]
+            .apply(lambda x: gruppo in str(x).lower())
+        ]
+
+    risultati = df_filtrato
+
+    # =========================
+    # OUTPUT
+    # =========================
+    st.markdown(f"🔎 Risultati: {len(risultati)}")
+
+    if risultati.empty:
         st.warning("Nessun risultato trovato")
         st.stop()
 
-    df = pd.DataFrame(dati)
+    gruppi = risultati.groupby([col_titolo, col_manuale])
 
-    st.markdown(f"🔎 Risultati: {len(df)}")
+    for (titolo, manuale), gruppo in gruppi:
 
-    for _, r in df.iterrows():
-
-        titolo = r.get("titolo", "")
-        manuale = r.get("manuale", "")
-        link = r.get("link", "")
-        pagina = r.get("pagina", "")
-        sottogruppo = r.get("sottogruppo", "")
+        sottogruppo = gruppo[col_sottogruppo].iloc[0]
+        link = gruppo[col_link].iloc[0]
+        pagine = gruppo[col_pagina].unique().tolist()
 
         with st.expander(f"🔧 {titolo}"):
 
@@ -1518,8 +1641,6 @@ elif menu == "SCHEDE SR VZI6":
                 if not link.startswith("http"):
                     link = "https://" + link
                 st.markdown(f"📘 [{manuale}]({link})")
-            else:
-                st.write(f"📘 {manuale}")
 
             st.caption(f"📂 {sottogruppo}")
-            st.caption(f"📄 Pagina: {pagina}")
+            st.caption(f"📄 Pagine: {', '.join(pagine)}")
