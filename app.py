@@ -829,7 +829,7 @@ elif menu == "📦 Cerca Componente":
     st.title("📦 Cerca componente")
 
     # =========================
-    # 📥 CARICAMENTO DATI (VELOCE)
+    # 📥 CARICAMENTO DATI
     # =========================
     @st.cache_data(ttl=300)
     def carica_magazzino():
@@ -844,7 +844,9 @@ elif menu == "📦 Cerca Componente":
 
     df_mag = pd.DataFrame(dati)
 
-    # 🔥 NORMALIZZA COLONNE (FONDAMENTALE)
+    # =========================
+    # 🔥 NORMALIZZA COLONNE
+    # =========================
     df_mag.columns = df_mag.columns.str.lower().str.strip()
 
     # pulizia valori
@@ -869,29 +871,30 @@ elif menu == "📦 Cerca Componente":
     risultati = df_mag.copy()
 
     # =========================
-    # 🔎 TROVA COLONNE CODICI
+    # 🔍 NORMALIZZA INPUT
     # =========================
-    colonne_pn = [
-        col for col in df_mag.columns
-        if any(x in col for x in ["pn", "part", "codice"])
-    ]
+    if ricerca:
+        ricerca = ricerca.lower().replace("_", " ").replace("-", " ").strip()
 
     # =========================
-    # 🔍 RICERCA INTELLIGENTE (OTTIMIZZATA)
+    # 🔎 RICERCA SUPER ELASTICA
     # =========================
     if ricerca:
 
-        parole = ricerca.lower().split()
+        parole = ricerca.split()
 
         for parola in parole:
 
-            mask = (
-                risultati.get("componente","").str.lower().str.contains(parola, na=False) |
-                risultati.get("assieme","").str.lower().str.contains(parola, na=False)
-            )
+            parola = parola.strip()
 
-            for col in colonne_pn:
-                mask = mask | risultati[col].str.lower().str.contains(parola, na=False)
+            mask = False
+
+            # 🔎 cerca su TUTTE le colonne (chiave)
+            for col in risultati.columns:
+                try:
+                    mask = mask | risultati[col].str.lower().str.contains(parola, na=False)
+                except:
+                    pass
 
             risultati = risultati[mask]
 
@@ -921,7 +924,7 @@ elif menu == "📦 Cerca Componente":
     # =========================
     # DEBUG
     # =========================
-    st.caption(f"🔍 Ricerca su: componente, assieme + {', '.join(colonne_pn)}")
+    st.caption(f"🔍 Ricerca attiva su TUTTE le colonne ({len(df_mag.columns)} colonne)")
 
 # =========================
 # 📚 SCHEDE SR (EXCEL)
