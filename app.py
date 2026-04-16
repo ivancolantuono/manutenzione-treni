@@ -820,28 +820,37 @@ elif menu == "📊 Dashboard":
                 
                 st.divider()                    
 # =========================
-# MAGAZZINO
+# 📦 CATALOGO COMPONENTI (SUPABASE)
 # =========================
 elif menu == "📦 Cerca Componente":
 
+    import pandas as pd
+
     st.title("📦 Cerca componente")
 
-    import re
-
     # =========================
-    # CACHE (velocità)
+    # 📥 CARICAMENTO DATI (VELOCE)
     # =========================
-    @st.cache_data
+    @st.cache_data(ttl=300)
     def carica_magazzino():
-        df = pd.read_excel("magazzino.xlsx")
-        df.columns = df.columns.str.strip()
+        res = supabase.table("magazzino").select("*").execute()
+        return res.data
 
-        for col in df.columns:
-            df[col] = df[col].astype(str).fillna("")
+    dati = carica_magazzino()
 
-        return df
+    if not dati:
+        st.warning("Catalogo vuoto")
+        st.stop()
 
-    df_mag = carica_magazzino()
+    df_mag = pd.DataFrame(dati)
+
+    # 🔥 NORMALIZZA COLONNE (FONDAMENTALE)
+    df_mag.columns = df_mag.columns.str.lower().str.strip()
+
+    # pulizia valori
+    df_mag = df_mag.fillna("")
+    for col in df_mag.columns:
+        df_mag[col] = df_mag[col].astype(str)
 
     # =========================
     # INPUT
@@ -849,7 +858,10 @@ elif menu == "📦 Cerca Componente":
     col1, col2 = st.columns([3,1])
 
     with col1:
-        ricerca = st.text_input("🔍 Cerca componente o codice", placeholder="es. compressore o 100360165")
+        ricerca = st.text_input(
+            "🔍 Cerca componente o codice",
+            placeholder="es. compressore o 100360165"
+        )
 
     with col2:
         limite = st.selectbox("Mostra", [50, 100, 200], index=0)
@@ -857,17 +869,15 @@ elif menu == "📦 Cerca Componente":
     risultati = df_mag.copy()
 
     # =========================
-    # TROVA COLONNE PART NUMBER 🔥
+    # 🔎 TROVA COLONNE CODICI
     # =========================
-    colonne_pn = []
-
-    for col in df_mag.columns:
-        nome = col.lower()
-        if "pn" in nome or "part" in nome or "codice" in nome:
-            colonne_pn.append(col)
+    colonne_pn = [
+        col for col in df_mag.columns
+        if any(x in col for x in ["pn", "part", "codice"])
+    ]
 
     # =========================
-    # RICERCA INTELLIGENTE
+    # 🔍 RICERCA INTELLIGENTE (OTTIMIZZATA)
     # =========================
     if ricerca:
 
@@ -876,20 +886,19 @@ elif menu == "📦 Cerca Componente":
         for parola in parole:
 
             mask = (
-                risultati["COMPONENTE"].str.lower().str.contains(parola) |
-                risultati["ASSIEME"].str.lower().str.contains(parola)
+                risultati.get("componente","").str.lower().str.contains(parola, na=False) |
+                risultati.get("assieme","").str.lower().str.contains(parola, na=False)
             )
 
-            # 🔥 CERCA IN TUTTI I PART NUMBER
             for col in colonne_pn:
-                mask = mask | risultati[col].str.lower().str.contains(parola)
+                mask = mask | risultati[col].str.lower().str.contains(parola, na=False)
 
             risultati = risultati[mask]
 
     totale = len(risultati)
 
     # =========================
-    # LIMITA RISULTATI (ANTI BLOCCO)
+    # LIMITA RISULTATI
     # =========================
     risultati = risultati.head(limite)
 
@@ -900,7 +909,7 @@ elif menu == "📦 Cerca Componente":
         st.stop()
 
     # =========================
-    # TABELLA
+    # 📄 TABELLA
     # =========================
     st.dataframe(
         risultati,
@@ -910,9 +919,9 @@ elif menu == "📦 Cerca Componente":
     )
 
     # =========================
-    # INFO DEBUG (utile)
+    # DEBUG
     # =========================
-    st.caption(f"🔍 Ricerca attiva su: COMPONENTE, ASSIEME + {', '.join(colonne_pn)}")
+    st.caption(f"🔍 Ricerca su: componente, assieme + {', '.join(colonne_pn)}")
 
 # =========================
 # 📚 SCHEDE SR (EXCEL)
