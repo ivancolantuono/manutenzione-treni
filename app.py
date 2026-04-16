@@ -1106,21 +1106,35 @@ elif menu == "📚 SCHEDE SR":
 
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
-    for (titolo, manuale), gruppo in gruppi:
+    for (Titolo, Manuale), gruppo in gruppi:
 
-        sottogruppo = gruppo[col_sottogruppo].iloc[0]
-        link = gruppo[col_link].iloc[0]
-        pagine = gruppo[col_pagina].unique().tolist()
+        sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo in gruppo.columns else ""
+        
+        link = ""
+        if col_link in gruppo.columns:
+            val = gruppo[col_link].astype(str).str.strip()
+            val = val[val != ""]
+            if not val.empty:
+                link = val.iloc[0]
+
+        pagine = gruppo[col_pagina].unique().tolist() if col_pagina in gruppo.columns else []
 
         with st.expander(f"🔧 {titolo}"):
 
-            if link:
-                if not link.startswith("http"):
-                    link = "https://" + link
-                st.markdown(f"📘 [{manuale}]({link})")
+            # ✅ MOSTRA SEMPRE IL MANUALE
+            if manuale and str(manuale).strip() != "":
+                
+                if link:
+                    if not link.startswith("http"):
+                        link = "https://" + link
+                    st.markdown(f"📘 [{Manuale}]({link1})")
+                else:
+                    st.markdown(f"📘 **{Manuale}**")
+            else:
+                st.caption("⚠️ Manuale non disponibile")
 
-            st.caption(f"📂 {sottogruppo}")
-            st.caption(f"📄 Pagine: {', '.join(pagine)}")
+            st.caption(f"📂 {Sottogruppo}")
+            st.caption(f"📄 Pagine: {', '.join(map(str, Pagine))}")
             
 elif menu == "📌 OPEN ITEM":
 
@@ -1631,16 +1645,30 @@ elif menu == "SCHEDE SR VZI6":
 
     for (titolo, manuale), gruppo in gruppi:
 
-        sottogruppo = gruppo[col_sottogruppo].iloc[0]
-        link = gruppo[col_link].iloc[0]
-        pagine = gruppo[col_pagina].unique().tolist()
+        sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo in gruppo.columns else ""
+        
+        link = ""
+        if col_link in gruppo.columns:
+            val = gruppo[col_link].astype(str).str.strip()
+            val = val[val != ""]
+            if not val.empty:
+                link = val.iloc[0]
+
+        pagine = gruppo[col_pagina].unique().tolist() if col_pagina in gruppo.columns else []
 
         with st.expander(f"🔧 {titolo}"):
 
-            if link:
-                if not link.startswith("http"):
-                    link = "https://" + link
-                st.markdown(f"📘 [{manuale}]({link})")
+            # ✅ MOSTRA SEMPRE IL MANUALE
+            if manuale and str(manuale).strip() != "":
+                
+                if link:
+                    if not link.startswith("http"):
+                        link = "https://" + link
+                    st.markdown(f"📘 [{manuale}]({link})")
+                else:
+                    st.markdown(f"📘 **{manuale}**")
+            else:
+                st.caption("⚠️ Manuale non disponibile")
 
             st.caption(f"📂 {sottogruppo}")
-            st.caption(f"📄 Pagine: {', '.join(pagine)}")
+            st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
