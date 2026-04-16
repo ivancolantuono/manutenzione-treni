@@ -1535,7 +1535,7 @@ elif menu == "SCHEDE SR VZI6":
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
-    col_link = "link1"
+    col_link = "link"
     col_sottogruppo = "sottogruppo"
 
     # =========================
