@@ -958,7 +958,7 @@ elif menu == "📚 SCHEDE SR":
     # =========================
     # 📥 CARICAMENTO
     # =========================
-    @st.cache_data(ttl=300)
+    @st.cache_data(ttl=10)
     def carica_schede():
 
         dati = []
@@ -1483,7 +1483,7 @@ elif menu == "📌 OPEN ITEM":
                 mostra_cronologia(id)
                 
 # =========================
-# 📚 SCHEDE SR (SUPABASE)
+# 📚 SCHEDE SR VZI6 (SUPABASE)
 # =========================
 elif menu == "📚 SCHEDE SR VZI6":
 
@@ -1495,7 +1495,7 @@ elif menu == "📚 SCHEDE SR VZI6":
     # =========================
     # 📥 CARICAMENTO
     # =========================
-    @st.cache_data(ttl=300)
+    @st.cache_data(ttl=10)
     def carica_schede():
 
         dati = []
