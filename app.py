@@ -1473,6 +1473,13 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 elif menu == "🗄 SCHEDE SR VZI6":
 
+    st.title("DEBUG VZI6")
+
+    res = supabase.table("schede_sr_vzi6").select("*").limit(5).execute()
+
+    st.write("RISPOSTA COMPLETA:", res)
+    st.write("DATI:", res.data)
+
     import pandas as pd
     import re
 
