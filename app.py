@@ -1469,7 +1469,7 @@ elif menu == "📌 OPEN ITEM":
                 mostra_cronologia(id)
                 
 # =========================
-# 📚 SCHEDE SR VZI6 (SUPABASE)
+# 📚 SCHEDE SR VZI6 (SUPABASE) - VERSIONE STABILE
 # =========================
 elif menu == "🗄 SCHEDE SR VZI6":
 
@@ -1479,7 +1479,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
     st.title("🗄 Ricerca Schede SR VZI6")
 
     # =========================
-    # 📥 CARICAMENTO
+    # 📥 CARICAMENTO DATI
     # =========================
     @st.cache_data(ttl=300)
     def carica_schede():
@@ -1489,11 +1489,10 @@ elif menu == "🗄 SCHEDE SR VZI6":
         start = 0
 
         while True:
-            res = supabase.table("schede_sr_VZI6").select("*").range(start, start + step - 1).execute()
-
-            if res.data is None:
-                st.error("❌ Errore Supabase o tabella non trovata")
-                return pd.DataFrame()
+            res = supabase.table("schede_sr_VZI6")\
+                .select("*")\
+                .range(start, start + step - 1)\
+                .execute()
 
             if not res.data:
                 break
@@ -1510,34 +1509,31 @@ elif menu == "🗄 SCHEDE SR VZI6":
         if df.empty:
             return df
 
-        # 🔥 NORMALIZZA
-        df.columns = df.columns.str.strip()
+        # 🔥 NORMALIZZA COLONNE
+        df.columns = df.columns.str.strip().str.lower()
 
+        # 🔥 PULIZIA DATI
         for col in df.columns:
             df[col] = df[col].fillna("").astype(str)
 
         return df
 
     # =========================
-    # CACHE SESSIONE
+    # CARICAMENTO
     # =========================
-    if "schede_sr_VZI6" not in st.session_state:
-        with st.spinner("🔄 Caricamento schede SR VZI6..."):
-            st.session_state.schede_sr_VZI6 = carica_schede()
-
-    df_sr = st.session_state.schede_sr_VZI6
-    st.write("DEBUG RIGHE:", len(df_sr))
+    with st.spinner("🔄 Caricamento schede VZI6..."):
+        df_sr = carica_schede()
 
     if df_sr.empty:
-        st.warning("Nessuna scheda trovata")
+        st.warning("⚠️ Nessuna scheda trovata")
         st.stop()
 
     # =========================
-    # 🔍 TROVA COLONNE AUTOMATICO
+    # TROVA COLONNE AUTOMATICO
     # =========================
     def trova_colonna(df, nome):
         for col in df.columns:
-            if nome in col.lower():
+            if nome in col:
                 return col
         return None
 
@@ -1549,13 +1545,13 @@ elif menu == "🗄 SCHEDE SR VZI6":
     col_link = trova_colonna(df_sr, "link")
 
     # sicurezza
-    if not all([col_manuale, col_pagina, col_titolo, col_testo, col_sottogruppo]):
-        st.error("❌ Colonne mancanti nella tabella")
+    if not col_titolo or not col_testo:
+        st.error("❌ Colonne fondamentali mancanti")
         st.write(df_sr.columns.tolist())
         st.stop()
 
     # =========================
-    # 🔧 PULIZIA TESTO
+    # PULIZIA TESTO
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
@@ -1563,15 +1559,15 @@ elif menu == "🗄 SCHEDE SR VZI6":
         return testo
 
     # =========================
-    # 🔥 COLONNA SEARCH
+    # COLONNA SEARCH
     # =========================
     if "__search__" not in df_sr.columns:
         df_sr["__search__"] = (
-            df_sr[col_testo] + " " +
-            df_sr[col_titolo] + " " +
-            df_sr[col_manuale] + " " +
-            df_sr[col_sottogruppo]
-        ).apply(pulisci)
+            df_sr.get(col_testo, "") + " " +
+            df_sr.get(col_titolo, "") + " " +
+            df_sr.get(col_manuale, "") + " " +
+            df_sr.get(col_sottogruppo, "")
+        ).astype(str).apply(pulisci)
 
     # =========================
     # INPUT
@@ -1582,7 +1578,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
         ricerca = st.text_input("🔍 Cerca")
 
     # =========================
-    # 📂 SOTTOGRUPPI DINAMICI
+    # SOTTOGRUPPI DINAMICI
     # =========================
     with col2:
 
@@ -1598,15 +1594,14 @@ elif menu == "🗄 SCHEDE SR VZI6":
 
         gruppi = sorted(
             df_tmp[col_sottogruppo]
-            .fillna("")
             .astype(str)
             .unique()
-        )
+        ) if col_sottogruppo else []
 
         gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + gruppi)
 
     # =========================
-    # 🔎 FILTRO
+    # FILTRO
     # =========================
     df_filtrato = df_sr.copy()
 
@@ -1618,12 +1613,10 @@ elif menu == "🗄 SCHEDE SR VZI6":
                 df_filtrato["__search__"].apply(lambda x: parola in x)
             ]
 
-    if gruppo_sel != "Tutti":
-        gruppo = gruppo_sel.lower()
-
+    if gruppo_sel != "Tutti" and col_sottogruppo:
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo]
-            .apply(lambda x: gruppo in str(x).lower())
+            .apply(lambda x: gruppo_sel.lower() in str(x).lower())
         ]
 
     risultati = df_filtrato
@@ -1637,22 +1630,29 @@ elif menu == "🗄 SCHEDE SR VZI6":
         st.warning("Nessun risultato trovato")
         st.stop()
 
-    gruppi = risultati.groupby([col_titolo, col_manuale])
+    gruppi = risultati.groupby([col_titolo, col_manuale]) if col_manuale else risultati.groupby(col_titolo)
 
-    for (titolo, manuale), gruppo in gruppi:
+    for keys, gruppo in gruppi:
 
-        sottogruppo = gruppo[col_sottogruppo].iloc[0]
+        titolo = keys[0] if isinstance(keys, tuple) else keys
+        manuale = keys[1] if isinstance(keys, tuple) else ""
+
+        sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo else ""
         link = gruppo[col_link].iloc[0] if col_link else ""
-        pagine = gruppo[col_pagina].unique().tolist()
+        pagine = gruppo[col_pagina].unique().tolist() if col_pagina else []
 
         with st.expander(f"🔧 {titolo}"):
 
-            if link and str(link).strip() != "":
+            # LINK
+            if link and link.strip():
                 if not link.startswith("http"):
                     link = "https://" + link
                 st.markdown(f"📘 [{manuale}]({link})")
             else:
                 st.warning("⚠️ Link non disponibile")
 
-            st.caption(f"📂 {sottogruppo}")
-            st.caption(f"📄 Pagine: {', '.join(pagine)}")
+            if sottogruppo:
+                st.caption(f"📂 {sottogruppo}")
+
+            if pagine:
+                st.caption(f"📄 Pagine: {', '.join(pagine)}")
