@@ -821,7 +821,7 @@ elif menu == "📊 Dashboard":
                 st.divider()                    
 
 # =========================
-# 📦 CATALOGO COMPONENTI (SUPABASE DEFINITIVO)
+# 📦 CATALOGO COMPONENTI (SUPABASE + FAST SEARCH)
 # =========================
 elif menu == "📦 Cerca Componente":
 
@@ -831,7 +831,7 @@ elif menu == "📦 Cerca Componente":
     st.title("📦 Cerca componente")
 
     # =========================
-    # 📥 CARICAMENTO COMPLETO (NO LIMITE 1000)
+    # 📥 CARICAMENTO COMPLETO + COLONNA SEARCH
     # =========================
     @st.cache_data(ttl=300)
     def carica_magazzino():
@@ -853,24 +853,34 @@ elif menu == "📦 Cerca Componente":
 
             start += step
 
-        return dati
+        df = pd.DataFrame(dati)
 
-    dati = carica_magazzino()
+        # 🔥 NORMALIZZA
+        df.columns = df.columns.str.lower().str.strip()
+        df = df.fillna("")
 
-    if not dati:
+        for col in df.columns:
+            df[col] = df[col].astype(str)
+
+        # 🔥 COLONNA UNICA PER RICERCA (SUPER VELOCE)
+        def normalizza(testo):
+            testo = str(testo).lower()
+            testo = testo.replace("_", " ").replace("-", " ")
+            testo = re.sub(r"[^a-z0-9]", " ", testo)
+            return testo
+
+        df["search"] = df.apply(
+            lambda x: normalizza(" ".join(x.values.astype(str))),
+            axis=1
+        )
+
+        return df
+
+    df_mag = carica_magazzino()
+
+    if df_mag.empty:
         st.warning("Catalogo vuoto")
         st.stop()
-
-    df_mag = pd.DataFrame(dati)
-
-    # =========================
-    # 🔥 NORMALIZZA
-    # =========================
-    df_mag.columns = df_mag.columns.str.lower().str.strip()
-    df_mag = df_mag.fillna("")
-
-    for col in df_mag.columns:
-        df_mag[col] = df_mag[col].astype(str)
 
     # DEBUG (puoi toglierlo dopo)
     st.write("Righe:", len(df_mag))
@@ -892,32 +902,16 @@ elif menu == "📦 Cerca Componente":
     risultati = df_mag.copy()
 
     # =========================
-    # 🔎 NORMALIZZAZIONE TESTO
-    # =========================
-    def normalizza(testo):
-        testo = str(testo).lower()
-        testo = testo.replace("_", " ").replace("-", " ")
-        testo = re.sub(r"[^a-z0-9]", " ", testo)
-        return testo
-
-    # =========================
-    # 🔍 RICERCA FLESSIBILE (FUNZIONA SEMPRE)
+    # 🔍 RICERCA VELOCE
     # =========================
     if ricerca:
 
-        ricerca_norm = normalizza(ricerca)
+        ricerca_norm = ricerca.lower().strip()
+        ricerca_norm = ricerca_norm.replace("_", " ").replace("-", " ")
 
-        risultati_filtrati = []
-
-        for _, row in risultati.iterrows():
-
-            valori = [str(v) for v in row.values if v]
-            testo_riga = normalizza(" ".join(valori))
-
-            if ricerca_norm in testo_riga:
-                risultati_filtrati.append(row)
-
-        risultati = pd.DataFrame(risultati_filtrati)
+        risultati = risultati[
+            risultati["search"].str.contains(ricerca_norm, na=False)
+        ]
 
     totale = len(risultati)
 
@@ -936,13 +930,13 @@ elif menu == "📦 Cerca Componente":
     # 📄 TABELLA
     # =========================
     st.dataframe(
-        risultati,
+        risultati.drop(columns=["search"]),  # nasconde colonna tecnica
         use_container_width=True,
         height=500,
         hide_index=True
     )
 
-    st.caption(f"🔍 Ricerca su {len(df_mag.columns)} colonne")
+    st.caption("🔍 Ricerca veloce su tutto il catalogo")
 
 # =========================
 # 📚 SCHEDE SR (EXCEL)
