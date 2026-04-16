@@ -1489,7 +1489,7 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "📚 SCHEDE SR":
+elif menu == "📚 SCHEDE SR new":
 
     import pandas as pd
     import re
