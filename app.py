@@ -1482,7 +1482,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
     # 📥 CARICAMENTO DATI
     # =========================
     @st.cache_data(ttl=300)
-    def carica_schede():
+    def carica_schede_VZI6():
 
         dati = []
         step = 1000
