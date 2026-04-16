@@ -820,11 +820,12 @@ elif menu == "📊 Dashboard":
                 
                 st.divider()                    
 # =========================
-# 📦 CATALOGO COMPONENTI (SUPABASE)
+# 📦 CATALOGO COMPONENTI (SUPABASE ROBUSTO)
 # =========================
 elif menu == "📦 Cerca Componente":
 
     import pandas as pd
+    import re
 
     st.title("📦 Cerca componente")
 
@@ -844,9 +845,7 @@ elif menu == "📦 Cerca Componente":
 
     df_mag = pd.DataFrame(dati)
 
-    # =========================
     # 🔥 NORMALIZZA COLONNE
-    # =========================
     df_mag.columns = df_mag.columns.str.lower().str.strip()
 
     # pulizia valori
@@ -871,32 +870,35 @@ elif menu == "📦 Cerca Componente":
     risultati = df_mag.copy()
 
     # =========================
-    # 🔍 NORMALIZZA INPUT
+    # 🔎 FUNZIONE NORMALIZZAZIONE
+    # =========================
+    def normalizza(testo):
+        testo = str(testo).lower().strip()
+        testo = testo.replace("_", " ").replace("-", " ")
+        testo = re.sub(r"\s+", " ", testo)
+        return testo
+
+    # =========================
+    # 🔍 RICERCA ULTRA ROBUSTA
     # =========================
     if ricerca:
-        ricerca = ricerca.lower().replace("_", " ").replace("-", " ").strip()
 
-    # =========================
-    # 🔎 RICERCA SUPER ELASTICA
-    # =========================
-    if ricerca:
+        ricerca_norm = normalizza(ricerca)
 
-        parole = ricerca.split()
+        risultati_filtrati = []
 
-        for parola in parole:
+        for _, row in risultati.iterrows():
 
-            parola = parola.strip()
+            # unisci tutta la riga
+            valori = [str(v) for v in row.values if v]
+            testo_riga = " ".join(valori)
 
-            mask = False
+            testo_riga = normalizza(testo_riga)
 
-            # 🔎 cerca su TUTTE le colonne (chiave)
-            for col in risultati.columns:
-                try:
-                    mask = mask | risultati[col].str.lower().str.contains(parola, na=False)
-                except:
-                    pass
+            if ricerca_norm in testo_riga:
+                risultati_filtrati.append(row)
 
-            risultati = risultati[mask]
+        risultati = pd.DataFrame(risultati_filtrati)
 
     totale = len(risultati)
 
@@ -922,10 +924,9 @@ elif menu == "📦 Cerca Componente":
     )
 
     # =========================
-    # DEBUG
+    # DEBUG UTILE
     # =========================
-    st.caption(f"🔍 Ricerca attiva su TUTTE le colonne ({len(df_mag.columns)} colonne)")
-
+    st.caption(f"🔍 Ricerca su {len(df_mag.columns)} colonne")
 # =========================
 # 📚 SCHEDE SR (EXCEL)
 # =========================
