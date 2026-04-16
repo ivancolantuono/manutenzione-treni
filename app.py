@@ -256,7 +256,7 @@ if ruolo == "CAPOSQUADRA":
             "📊 DASHBOARD",
             "📊 STORICO",
             "📚 SCHEDE SR",
-            "🗄️ SCHEDE SR VZI6",
+            "SCHEDE SR VZI6",
             "📦 CERCA COMPONENTE",
             "📌 OPEN ITEM"
         ],
@@ -1471,7 +1471,7 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR VZI6 (VERSIONE PULITA)
 # =========================
-elif menu == "🗄 SCHEDE SR VZI6":
+elif menu == "SCHEDE SR VZI6":
 
     import pandas as pd
 
