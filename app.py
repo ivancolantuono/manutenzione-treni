@@ -1469,7 +1469,7 @@ elif menu == "📌 OPEN ITEM":
                 mostra_cronologia(id)
                 
 # =========================
-# 📚 SCHEDE SR VZI6 (SUPABASE) - VERSIONE STABILE
+# 📚 SCHEDE SR VZI6 (SUPABASE) - FIX CACHE
 # =========================
 elif menu == "🗄 SCHEDE SR VZI6":
 
@@ -1479,10 +1479,10 @@ elif menu == "🗄 SCHEDE SR VZI6":
     st.title("🗄 Ricerca Schede SR VZI6")
 
     # =========================
-    # 📥 CARICAMENTO DATI
+    # 📥 CARICAMENTO DATI (NOME UNICO!)
     # =========================
     @st.cache_data(ttl=300)
-    def carica_schede_VZI6():
+    def carica_schede_vzi6():
 
         dati = []
         step = 1000
@@ -1519,17 +1519,17 @@ elif menu == "🗄 SCHEDE SR VZI6":
         return df
 
     # =========================
-    # CARICAMENTO
+    # 🔄 CARICAMENTO (NO CACHE CONDIVISA)
     # =========================
     with st.spinner("🔄 Caricamento schede VZI6..."):
-        df_sr = carica_schede_VZI6()
+        df_sr = carica_schede_vzi6()
 
     if df_sr.empty:
         st.warning("⚠️ Nessuna scheda trovata")
         st.stop()
 
     # =========================
-    # TROVA COLONNE AUTOMATICO
+    # 🔍 TROVA COLONNE AUTOMATICO
     # =========================
     def trova_colonna(df, nome):
         for col in df.columns:
@@ -1544,14 +1544,14 @@ elif menu == "🗄 SCHEDE SR VZI6":
     col_sottogruppo = trova_colonna(df_sr, "sotto")
     col_link = trova_colonna(df_sr, "link")
 
-    # sicurezza
+    # sicurezza minima
     if not col_titolo or not col_testo:
         st.error("❌ Colonne fondamentali mancanti")
         st.write(df_sr.columns.tolist())
         st.stop()
 
     # =========================
-    # PULIZIA TESTO
+    # 🔧 PULIZIA TESTO
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
@@ -1559,7 +1559,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
         return testo
 
     # =========================
-    # COLONNA SEARCH
+    # 🔥 COLONNA SEARCH
     # =========================
     if "__search__" not in df_sr.columns:
         df_sr["__search__"] = (
@@ -1570,7 +1570,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
         ).astype(str).apply(pulisci)
 
     # =========================
-    # INPUT
+    # 🔍 INPUT
     # =========================
     col1, col2 = st.columns(2)
 
@@ -1578,7 +1578,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
         ricerca = st.text_input("🔍 Cerca")
 
     # =========================
-    # SOTTOGRUPPI DINAMICI
+    # 📂 SOTTOGRUPPI DINAMICI
     # =========================
     with col2:
 
@@ -1593,15 +1593,13 @@ elif menu == "🗄 SCHEDE SR VZI6":
                 ]
 
         gruppi = sorted(
-            df_tmp[col_sottogruppo]
-            .astype(str)
-            .unique()
+            df_tmp[col_sottogruppo].astype(str).unique()
         ) if col_sottogruppo else []
 
         gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + gruppi)
 
     # =========================
-    # FILTRO
+    # 🔎 FILTRO PRINCIPALE
     # =========================
     df_filtrato = df_sr.copy()
 
@@ -1622,7 +1620,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
     risultati = df_filtrato
 
     # =========================
-    # OUTPUT
+    # 📊 OUTPUT
     # =========================
     st.markdown(f"🔎 Risultati: {len(risultati)}")
 
@@ -1643,7 +1641,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
 
         with st.expander(f"🔧 {titolo}"):
 
-            # LINK
+            # 📘 LINK
             if link and link.strip():
                 if not link.startswith("http"):
                     link = "https://" + link
