@@ -256,7 +256,7 @@ if ruolo == "CAPOSQUADRA":
             "📊 DASHBOARD",
             "📊 STORICO",
             "📚 SCHEDE SR",
-            "SCHEDE SR VZI6",
+            "📚 SCHEDE SR VZI6",
             "📦 CERCA COMPONENTE",
             "📌 OPEN ITEM"
         ],
@@ -1119,7 +1119,7 @@ elif menu == "📚 SCHEDE SR":
 
         pagine = gruppo[col_pagina].unique().tolist() if col_pagina in gruppo.columns else []
 
-        with st.expander(f"🔧 {titolo}"):
+        with st.expander(f"🔧 {Titolo}"):
 
             # ✅ MOSTRA SEMPRE IL MANUALE
             if manuale and str(manuale).strip() != "":
@@ -1485,7 +1485,7 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "SCHEDE SR VZI6":
+elif menu == "📚 SCHEDE SR VZI6":
 
     import pandas as pd
     import re
