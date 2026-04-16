@@ -1468,9 +1468,8 @@ elif menu == "📌 OPEN ITEM":
             if col2.button("📜 Log", key=f"log_ch_{id}"):
                 mostra_cronologia(id)
                 
-            
 # =========================
-# 📚 SCHEDE SR (SUPABASE)
+# 📚 SCHEDE SR VZI6 (SUPABASE)
 # =========================
 elif menu == "🗄 SCHEDE SR VZI6":
 
@@ -1512,12 +1511,12 @@ elif menu == "🗄 SCHEDE SR VZI6":
         df = df.fillna("")
 
         for col in df.columns:
-            df[col] = df[col].apply(lambda x: str(x))
+            df[col] = df[col].astype(str)
 
         return df
 
     # =========================
-    # CACHE
+    # CACHE SESSIONE
     # =========================
     if "schede_sr_VZI6" not in st.session_state:
         with st.spinner("🔄 Caricamento schede SR VZI6..."):
@@ -1548,14 +1547,15 @@ elif menu == "🗄 SCHEDE SR VZI6":
         return testo
 
     # =========================
-    # 🔥 COLONNA UNICA RICERCA
+    # 🔥 COLONNA SEARCH (UNA VOLTA SOLA)
     # =========================
-    df_sr["__search__"] = (
-        df_sr[col_testo] + " " +
-        df_sr[col_titolo] + " " +
-        df_sr[col_manuale] + " " +
-        df_sr[col_sottogruppo]
-    ).apply(pulisci)
+    if "__search__" not in df_sr.columns:
+        df_sr["__search__"] = (
+            df_sr[col_testo] + " " +
+            df_sr[col_titolo] + " " +
+            df_sr[col_manuale] + " " +
+            df_sr[col_sottogruppo]
+        ).apply(pulisci)
 
     # =========================
     # INPUT
@@ -1566,11 +1566,11 @@ elif menu == "🗄 SCHEDE SR VZI6":
         ricerca = st.text_input("🔍 Cerca")
 
     # =========================
-    # 📂 SOTTOGRUPPI DINAMICI (CORRETTO)
+    # 📂 SOTTOGRUPPI DINAMICI
     # =========================
     with col2:
 
-        df_tmp = df_sr.copy()
+        df_tmp = df_sr
 
         if ricerca:
             parole = [pulisci(p) for p in ricerca.split()]
@@ -1595,7 +1595,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
     # =========================
     # 🔎 FILTRO PRINCIPALE
     # =========================
-    df_filtrato = df_sr.copy()
+    df_filtrato = df_sr
 
     if ricerca:
         parole = [pulisci(p) for p in ricerca.split()]
@@ -1633,16 +1633,18 @@ elif menu == "🗄 SCHEDE SR VZI6":
     for (titolo, manuale), gruppo in gruppi:
 
         sottogruppo = gruppo[col_sottogruppo].iloc[0]
-        link = gruppo[col_link].iloc[0]
+        link = gruppo[col_link].iloc[0] if col_link in gruppo.columns else ""
         pagine = gruppo[col_pagina].unique().tolist()
 
         with st.expander(f"🔧 {titolo}"):
 
-            if link:
+            # 🔗 LINK
+            if link and link.strip() != "":
                 if not link.startswith("http"):
                     link = "https://" + link
                 st.markdown(f"📘 [{manuale}]({link})")
+            else:
+                st.warning("⚠️ Link non disponibile")
 
             st.caption(f"📂 {sottogruppo}")
             st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
