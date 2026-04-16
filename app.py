@@ -256,7 +256,6 @@ if ruolo == "CAPOSQUADRA":
             "📊 DASHBOARD",
             "📊 STORICO",
             "📚 SCHEDE SR",
-            "📚 SCHEDE SR new",
             "📦 CERCA COMPONENTE",
             "📌 OPEN ITEM"
         ],
@@ -945,7 +944,7 @@ elif menu == "📦 CERCA COMPONENTE":
     st.caption("🔍 Ricerca veloce su tutto il catalogo")
 
 # =========================
-# 📚 SCHEDE SR (EXCEL)
+# 📚 SCHEDE SR (SUPABASE)
 # =========================
 elif menu == "📚 SCHEDE SR":
 
@@ -955,42 +954,67 @@ elif menu == "📚 SCHEDE SR":
     st.title("📚 Ricerca Schede SR")
 
     # =========================
-    # 📥 CARICA FILE
+    # 📥 CARICAMENTO
     # =========================
-    df_sr = pd.read_excel("schede_sr.xlsx")
+    @st.cache_data(ttl=300)
+    def carica_schede():
 
-    # 🔥 pulizia generale (FONDAMENTALE)
-    df_sr = df_sr.fillna("")
+        dati = []
+        step = 1000
+        start = 0
 
-    df_sr.columns = df_sr.columns.astype(str)
-    df_sr.columns = df_sr.columns.str.strip().str.lower()
+        while True:
+            res = supabase.table("schede_sr").select("*").range(start, start + step - 1).execute()
+
+            if not res.data:
+                break
+
+            dati.extend(res.data)
+
+            if len(res.data) < step:
+                break
+
+            start += step
+
+        df = pd.DataFrame(dati)
+
+        if df.empty:
+            return df
+
+        # 🔥 NORMALIZZA
+        df.columns = df.columns.str.lower().str.strip()
+        df = df.fillna("")
+
+        for col in df.columns:
+            df[col] = df[col].apply(lambda x: str(x))
+
+        return df
 
     # =========================
-    # 📌 COLONNE
+    # CACHE
+    # =========================
+    if "schede_sr" not in st.session_state:
+        with st.spinner("🔄 Caricamento schede SR..."):
+            st.session_state.schede_sr = carica_schede()
+
+    df_sr = st.session_state.schede_sr
+
+    if df_sr.empty:
+        st.warning("Nessuna scheda trovata")
+        st.stop()
+
+    # =========================
+    # COLONNE
     # =========================
     col_manuale = "manuale"
     col_pagina = "pagina"
     col_titolo = "titolo"
     col_testo = "testo"
     col_link = "link1"
-
-    # 🔎 trova sottogruppo
-    col_sottogruppo = None
-    for col in df_sr.columns:
-        if "sotto" in col:
-            col_sottogruppo = col
-            break
-
-    # 🔥 normalizza sottogruppo
-    if col_sottogruppo:
-        df_sr[col_sottogruppo] = (
-            df_sr[col_sottogruppo]
-            .astype(str)
-            .str.strip()
-        )
+    col_sottogruppo = "sottogruppo"
 
     # =========================
-    # 🔧 FUNZIONE PULIZIA
+    # PULIZIA
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
@@ -998,55 +1022,49 @@ elif menu == "📚 SCHEDE SR":
         return testo
 
     # =========================
-    # 📱 INPUT
+    # 🔥 COLONNA UNICA RICERCA
+    # =========================
+    df_sr["__search__"] = (
+        df_sr[col_testo] + " " +
+        df_sr[col_titolo] + " " +
+        df_sr[col_manuale] + " " +
+        df_sr[col_sottogruppo]
+    ).apply(pulisci)
+
+    # =========================
+    # INPUT
     # =========================
     col1, col2 = st.columns(2)
 
     with col1:
-        ricerca = st.text_input(
-            "🔍 Cerca",
-            placeholder="es. compressore aria"
-        )
+        ricerca = st.text_input("🔍 Cerca")
 
     # =========================
-    # 📂 SOTTOGRUPPI DINAMICI
+    # 📂 SOTTOGRUPPI DINAMICI (CORRETTO)
     # =========================
     with col2:
 
-        if col_sottogruppo:
+        df_tmp = df_sr.copy()
 
-            df_tmp = df_sr.copy()
+        if ricerca:
+            parole = [pulisci(p) for p in ricerca.split()]
 
-            if ricerca:
+            for parola in parole:
+                df_tmp = df_tmp[
+                    df_tmp["__search__"].apply(lambda x: parola in x)
+                ]
 
-                parole = [pulisci(p) for p in ricerca.split()]
+        gruppi = sorted(
+            df_tmp[col_sottogruppo]
+            .fillna("")
+            .astype(str)
+            .unique()
+        )
 
-                df_tmp["__search__"] = (
-                    df_tmp[col_testo].astype(str) + " " +
-                    df_tmp[col_titolo].astype(str) + " " +
-                    df_tmp[col_manuale].astype(str) + " " +
-                    df_tmp[col_sottogruppo].astype(str)
-                ).apply(pulisci)
-
-                for parola in parole:
-                    df_tmp = df_tmp[
-                        df_tmp["__search__"].str.contains(parola, na=False)
-                    ]
-
-            gruppi = sorted(
-                df_tmp[col_sottogruppo]
-                .astype(str)
-                .str.strip()
-                .unique()
-            )
-
-            gruppo_sel = st.selectbox(
-                "📂 Sottogruppo",
-                ["Tutti"] + gruppi
-            )
-
-        else:
-            gruppo_sel = "Tutti"
+        gruppo_sel = st.selectbox(
+            "📂 Sottogruppo",
+            ["Tutti"] + gruppi
+        )
 
     # =========================
     # 🔎 FILTRO PRINCIPALE
@@ -1054,91 +1072,54 @@ elif menu == "📚 SCHEDE SR":
     df_filtrato = df_sr.copy()
 
     if ricerca:
-
         parole = [pulisci(p) for p in ricerca.split()]
-
-        df_filtrato["__search__"] = (
-            df_filtrato[col_testo].astype(str) + " " +
-            df_filtrato[col_titolo].astype(str) + " " +
-            df_filtrato[col_manuale].astype(str)
-        )
-
-        if col_sottogruppo:
-            df_filtrato["__search__"] += " " + df_filtrato[col_sottogruppo].astype(str)
-
-        df_filtrato["__search__"] = df_filtrato["__search__"].apply(pulisci)
 
         for parola in parole:
             df_filtrato = df_filtrato[
-                df_filtrato["__search__"].str.contains(parola, na=False)
+                df_filtrato["__search__"].apply(lambda x: parola in x)
             ]
 
     # =========================
-    # 📂 FILTRO SOTTOGRUPPO (FIX PYARROW)
+    # 📂 FILTRO SOTTOGRUPPO
     # =========================
-    if gruppo_sel != "Tutti" and col_sottogruppo:
+    if gruppo_sel != "Tutti":
+
+        gruppo = gruppo_sel.lower()
 
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo]
-            .fillna("")
-            .astype(str)
-            .str.strip()
-            .str.lower()
-            .str.contains(
-                gruppo_sel.strip().lower(),
-                na=False,
-                regex=False
-            )
+            .apply(lambda x: gruppo in str(x).lower())
         ]
 
-    risultati = df_filtrato.copy()
+    risultati = df_filtrato
 
     # =========================
-    # 📊 RISULTATI
+    # OUTPUT
     # =========================
-    st.markdown(f"**🔎 Risultati trovati: {len(risultati)}**")
+    st.markdown(f"🔎 Risultati: {len(risultati)}")
 
     if risultati.empty:
-        st.info("Nessuna scheda trovata")
+        st.warning("Nessun risultato trovato")
         st.stop()
 
-    # =========================
-    # 📄 OUTPUT
-    # =========================
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
     for (titolo, manuale), gruppo in gruppi:
 
-        sottogruppo = gruppo[col_sottogruppo].iloc[0] if col_sottogruppo else ""
+        sottogruppo = gruppo[col_sottogruppo].iloc[0]
+        link = gruppo[col_link].iloc[0]
+        pagine = gruppo[col_pagina].unique().tolist()
 
-        # 🔗 LINK
-        link = None
-        if col_link in gruppo.columns:
-
-            links = gruppo[col_link].astype(str)
-            links = links[links.str.strip() != ""]
-            links = links[links.str.lower() != "nan"]
-
-            if not links.empty:
-                link = links.iloc[0].strip()
-
-        # 📄 PAGINE
-        pagine = gruppo[col_pagina].astype(str).unique().tolist()
-
-        with st.expander(f"🔧 {str(titolo)[:60]}"):
+        with st.expander(f"🔧 {titolo}"):
 
             if link:
                 if not link.startswith("http"):
                     link = "https://" + link
                 st.markdown(f"📘 [{manuale}]({link})")
-            else:
-                st.markdown(f"📘 **{manuale}**")
 
-            if sottogruppo:
-                st.caption(f"📂 {sottogruppo}")
-
-            if pagine:
-                st.caption(f"📄 Pagine: {', '.join(pagine)}")
+            st.caption(f"📂 {sottogruppo}")
+            st.caption(f"📄 Pagine: {', '.join(pagine)}")
+            
 elif menu == "📌 OPEN ITEM":
 
     from datetime import datetime
@@ -1486,179 +1467,3 @@ elif menu == "📌 OPEN ITEM":
                 mostra_cronologia(id)
                 
              
-# =========================
-# 📚 SCHEDE SR (SUPABASE)
-# =========================
-elif menu == "📚 SCHEDE SR new":
-
-    import pandas as pd
-    import re
-
-    st.title("📚 Ricerca Schede SR")
-
-    # =========================
-    # 📥 CARICAMENTO
-    # =========================
-    @st.cache_data(ttl=300)
-    def carica_schede():
-
-        dati = []
-        step = 1000
-        start = 0
-
-        while True:
-            res = supabase.table("schede_sr").select("*").range(start, start + step - 1).execute()
-
-            if not res.data:
-                break
-
-            dati.extend(res.data)
-
-            if len(res.data) < step:
-                break
-
-            start += step
-
-        df = pd.DataFrame(dati)
-
-        if df.empty:
-            return df
-
-        # 🔥 NORMALIZZA
-        df.columns = df.columns.str.lower().str.strip()
-        df = df.fillna("")
-
-        for col in df.columns:
-            df[col] = df[col].apply(lambda x: str(x))
-
-        return df
-
-    # =========================
-    # CACHE
-    # =========================
-    if "schede_sr" not in st.session_state:
-        with st.spinner("🔄 Caricamento schede SR..."):
-            st.session_state.schede_sr = carica_schede()
-
-    df_sr = st.session_state.schede_sr
-
-    if df_sr.empty:
-        st.warning("Nessuna scheda trovata")
-        st.stop()
-
-    # =========================
-    # COLONNE
-    # =========================
-    col_manuale = "manuale"
-    col_pagina = "pagina"
-    col_titolo = "titolo"
-    col_testo = "testo"
-    col_link = "link1"
-    col_sottogruppo = "sottogruppo"
-
-    # =========================
-    # PULIZIA
-    # =========================
-    def pulisci(testo):
-        testo = str(testo).lower()
-        testo = re.sub(r"[^a-z0-9]", " ", testo)
-        return testo
-
-    # =========================
-    # 🔥 COLONNA UNICA RICERCA
-    # =========================
-    df_sr["__search__"] = (
-        df_sr[col_testo] + " " +
-        df_sr[col_titolo] + " " +
-        df_sr[col_manuale] + " " +
-        df_sr[col_sottogruppo]
-    ).apply(pulisci)
-
-    # =========================
-    # INPUT
-    # =========================
-    col1, col2 = st.columns(2)
-
-    with col1:
-        ricerca = st.text_input("🔍 Cerca")
-
-    # =========================
-    # 📂 SOTTOGRUPPI DINAMICI (CORRETTO)
-    # =========================
-    with col2:
-
-        df_tmp = df_sr.copy()
-
-        if ricerca:
-            parole = [pulisci(p) for p in ricerca.split()]
-
-            for parola in parole:
-                df_tmp = df_tmp[
-                    df_tmp["__search__"].apply(lambda x: parola in x)
-                ]
-
-        gruppi = sorted(
-            df_tmp[col_sottogruppo]
-            .fillna("")
-            .astype(str)
-            .unique()
-        )
-
-        gruppo_sel = st.selectbox(
-            "📂 Sottogruppo",
-            ["Tutti"] + gruppi
-        )
-
-    # =========================
-    # 🔎 FILTRO PRINCIPALE
-    # =========================
-    df_filtrato = df_sr.copy()
-
-    if ricerca:
-        parole = [pulisci(p) for p in ricerca.split()]
-
-        for parola in parole:
-            df_filtrato = df_filtrato[
-                df_filtrato["__search__"].apply(lambda x: parola in x)
-            ]
-
-    # =========================
-    # 📂 FILTRO SOTTOGRUPPO
-    # =========================
-    if gruppo_sel != "Tutti":
-
-        gruppo = gruppo_sel.lower()
-
-        df_filtrato = df_filtrato[
-            df_filtrato[col_sottogruppo]
-            .apply(lambda x: gruppo in str(x).lower())
-        ]
-
-    risultati = df_filtrato
-
-    # =========================
-    # OUTPUT
-    # =========================
-    st.markdown(f"🔎 Risultati: {len(risultati)}")
-
-    if risultati.empty:
-        st.warning("Nessun risultato trovato")
-        st.stop()
-
-    gruppi = risultati.groupby([col_titolo, col_manuale])
-
-    for (titolo, manuale), gruppo in gruppi:
-
-        sottogruppo = gruppo[col_sottogruppo].iloc[0]
-        link = gruppo[col_link].iloc[0]
-        pagine = gruppo[col_pagina].unique().tolist()
-
-        with st.expander(f"🔧 {titolo}"):
-
-            if link:
-                if not link.startswith("http"):
-                    link = "https://" + link
-                st.markdown(f"📘 [{manuale}]({link})")
-
-            st.caption(f"📂 {sottogruppo}")
-            st.caption(f"📄 Pagine: {', '.join(pagine)}")
