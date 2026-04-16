@@ -288,7 +288,7 @@ operatori = [u["Nominativo"] for u in utenti]
 if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
 
-if menu == "📊 Storico":
+if menu == "📊 STORICO":
 
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=8000, key="refresh_storico")
