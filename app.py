@@ -1133,8 +1133,8 @@ elif menu == "📚 SCHEDE SR":
             else:
                 st.caption("⚠️ Manuale non disponibile")
 
-            st.caption(f"📂 {Sottogruppo}")
-            st.caption(f"📄 Pagine: {', '.join(map(str, Pagine))}")
+            st.caption(f"📂 {sottogruppo}")
+            st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
             
 elif menu == "📌 OPEN ITEM":
 
