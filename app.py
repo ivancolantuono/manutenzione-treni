@@ -1122,7 +1122,7 @@ elif menu == "📚 SCHEDE SR":
         with st.expander(f"🔧 {Titolo}"):
 
             # ✅ MOSTRA SEMPRE IL MANUALE
-            if manuale and str(manuale).strip() != "":
+            if Manuale and str(Manuale).strip() != "":
                 
                 if link:
                     if not link.startswith("http"):
