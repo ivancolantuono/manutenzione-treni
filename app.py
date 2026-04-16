@@ -1476,7 +1476,7 @@ elif menu == "SCHEDE SR VZI6":
     import pandas as pd
     import re
 
-    st.title("📚 Ricerca Schede SR")
+    st.title("📚 Ricerca Schede SR VZI6")
 
     # =========================
     # 📥 CARICAMENTO
@@ -1489,7 +1489,7 @@ elif menu == "SCHEDE SR VZI6":
         start = 0
 
         while True:
-            res = supabase.table("schede_sr").select("*").range(start, start + step - 1).execute()
+            res = supabase.table("schede_sr_vzi6").select("*").range(start, start + step - 1).execute()
 
             if not res.data:
                 break
@@ -1518,11 +1518,11 @@ elif menu == "SCHEDE SR VZI6":
     # =========================
     # CACHE
     # =========================
-    if "schede_sr" not in st.session_state:
+    if "schede_sr_vzi6" not in st.session_state:
         with st.spinner("🔄 Caricamento schede SR..."):
-            st.session_state.schede_sr = carica_schede()
+            st.session_state.schede_sr_vzi6 = carica_schede()
 
-    df_sr = st.session_state.schede_sr
+    df_sr = st.session_state.schede_sr_vzi6
 
     if df_sr.empty:
         st.warning("Nessuna scheda trovata")
