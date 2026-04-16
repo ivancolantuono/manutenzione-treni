@@ -1469,7 +1469,7 @@ elif menu == "📌 OPEN ITEM":
                 mostra_cronologia(id)
                 
 # =========================
-# 📚 SCHEDE SR VZI6 (FAST QUERY)
+# 📚 SCHEDE SR VZI6 (VERSIONE PULITA)
 # =========================
 elif menu == "🗄 SCHEDE SR VZI6":
 
@@ -1480,14 +1480,14 @@ elif menu == "🗄 SCHEDE SR VZI6":
     ricerca = st.text_input("🔍 Cerca")
 
     if not ricerca:
-        st.info("Inserisci un termine di ricerca")
+        st.info("Inserisci qualcosa per cercare")
         st.stop()
 
     try:
         res = supabase.table("schede_sr_vzi6")\
             .select("*")\
             .ilike("testo", f"%{ricerca}%")\
-            .limit(200)\
+            .limit(100)\
             .execute()
 
         dati = res.data
@@ -1497,7 +1497,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
         st.stop()
 
     if not dati:
-        st.warning("Nessun risultato")
+        st.warning("Nessun risultato trovato")
         st.stop()
 
     df = pd.DataFrame(dati)
