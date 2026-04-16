@@ -823,7 +823,7 @@ elif menu == "📊 Dashboard":
 # =========================
 # 📦 CATALOGO COMPONENTI (SUPABASE + FAST SEARCH)
 # =========================
-elif menu == "📦 Cerca Componente":
+elif menu == "📦 CERCA COMPONENTE":
 
     import pandas as pd
     import re
@@ -1133,7 +1133,7 @@ elif menu == "📚 Schede SR":
 
             if pagine:
                 st.caption(f"📄 Pagine: {', '.join(pagine)}")
-elif menu == "📌 Open Item":
+elif menu == "📌 OPEN ITEM":
 
     from datetime import datetime
     from zoneinfo import ZoneInfo
