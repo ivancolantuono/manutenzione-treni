@@ -1472,12 +1472,12 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "📚 SCHEDE SR VZI6":
+elif menu == "🗄 SCHEDE SR VZI6":
 
     import pandas as pd
     import re
 
-    st.title("📚 Ricerca Schede SR")
+    st.title("🗄 Ricerca Schede SR VZI6")
 
     # =========================
     # 📥 CARICAMENTO
