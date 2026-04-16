@@ -844,6 +844,8 @@ elif menu == "📦 Cerca Componente":
         st.stop()
 
     df_mag = pd.DataFrame(dati)
+    st.write("Righe:", len(df_mag))
+    st.write(df_mag.head())
 
     # 🔥 NORMALIZZA COLONNE
     df_mag.columns = df_mag.columns.str.lower().str.strip()
