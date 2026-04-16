@@ -378,7 +378,7 @@ if menu == "📊 STORICO":
 # =========================
 # 🚄 MANUTENZIONE
 # =========================
-elif menu == "🚄 Manutenzione":
+elif menu == "🚄 MANUTENZIONE":
     
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=8000, key="refresh_manutenzione")
@@ -730,7 +730,7 @@ elif menu == "🚄 Manutenzione":
                     st.success("Attività chiusa")
                     st.rerun()
     
-elif menu == "📊 Dashboard":
+elif menu == "📊 DASHBOARD":
 
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=8000, key="refresh_dashboard")
