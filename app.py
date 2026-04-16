@@ -941,7 +941,7 @@ elif menu == "📦 CERCA COMPONENTE":
 # =========================
 # 📚 SCHEDE SR (EXCEL)
 # =========================
-elif menu == "📚 Schede SR":
+elif menu == "📚 SCHEDE SR":
 
     import pandas as pd
     import re
