@@ -1491,6 +1491,10 @@ elif menu == "🗄 SCHEDE SR VZI6":
         while True:
             res = supabase.table("schede_sr_vzi6").select("*").range(start, start + step - 1).execute()
 
+            if res.data is None:
+                st.error("❌ Errore Supabase o tabella non trovata")
+                return pd.DataFrame()
+
             if not res.data:
                 break
 
@@ -1507,11 +1511,10 @@ elif menu == "🗄 SCHEDE SR VZI6":
             return df
 
         # 🔥 NORMALIZZA
-        df.columns = df.columns.str.lower().str.strip()
-        df = df.fillna("")
+        df.columns = df.columns.str.strip()
 
         for col in df.columns:
-            df[col] = df[col].astype(str)
+            df[col] = df[col].fillna("").astype(str)
 
         return df
 
@@ -1529,17 +1532,29 @@ elif menu == "🗄 SCHEDE SR VZI6":
         st.stop()
 
     # =========================
-    # COLONNE
+    # 🔍 TROVA COLONNE AUTOMATICO
     # =========================
-    col_manuale = "manuale"
-    col_pagina = "pagina"
-    col_titolo = "titolo"
-    col_testo = "testo"
-    col_link = "link"
-    col_sottogruppo = "sottogruppo"
+    def trova_colonna(df, nome):
+        for col in df.columns:
+            if nome in col.lower():
+                return col
+        return None
+
+    col_manuale = trova_colonna(df_sr, "manuale")
+    col_pagina = trova_colonna(df_sr, "pagina")
+    col_titolo = trova_colonna(df_sr, "titolo")
+    col_testo = trova_colonna(df_sr, "testo")
+    col_sottogruppo = trova_colonna(df_sr, "sotto")
+    col_link = trova_colonna(df_sr, "link")
+
+    # sicurezza
+    if not all([col_manuale, col_pagina, col_titolo, col_testo, col_sottogruppo]):
+        st.error("❌ Colonne mancanti nella tabella")
+        st.write(df_sr.columns.tolist())
+        st.stop()
 
     # =========================
-    # PULIZIA
+    # 🔧 PULIZIA TESTO
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
@@ -1547,7 +1562,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
         return testo
 
     # =========================
-    # 🔥 COLONNA SEARCH (UNA VOLTA SOLA)
+    # 🔥 COLONNA SEARCH
     # =========================
     if "__search__" not in df_sr.columns:
         df_sr["__search__"] = (
@@ -1570,7 +1585,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
     # =========================
     with col2:
 
-        df_tmp = df_sr
+        df_tmp = df_sr.copy()
 
         if ricerca:
             parole = [pulisci(p) for p in ricerca.split()]
@@ -1587,15 +1602,12 @@ elif menu == "🗄 SCHEDE SR VZI6":
             .unique()
         )
 
-        gruppo_sel = st.selectbox(
-            "📂 Sottogruppo",
-            ["Tutti"] + gruppi
-        )
+        gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + gruppi)
 
     # =========================
-    # 🔎 FILTRO PRINCIPALE
+    # 🔎 FILTRO
     # =========================
-    df_filtrato = df_sr
+    df_filtrato = df_sr.copy()
 
     if ricerca:
         parole = [pulisci(p) for p in ricerca.split()]
@@ -1605,11 +1617,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
                 df_filtrato["__search__"].apply(lambda x: parola in x)
             ]
 
-    # =========================
-    # 📂 FILTRO SOTTOGRUPPO
-    # =========================
     if gruppo_sel != "Tutti":
-
         gruppo = gruppo_sel.lower()
 
         df_filtrato = df_filtrato[
@@ -1633,13 +1641,12 @@ elif menu == "🗄 SCHEDE SR VZI6":
     for (titolo, manuale), gruppo in gruppi:
 
         sottogruppo = gruppo[col_sottogruppo].iloc[0]
-        link = gruppo[col_link].iloc[0] if col_link in gruppo.columns else ""
+        link = gruppo[col_link].iloc[0] if col_link else ""
         pagine = gruppo[col_pagina].unique().tolist()
 
         with st.expander(f"🔧 {titolo}"):
 
-            # 🔗 LINK
-            if link and link.strip() != "":
+            if link and str(link).strip() != "":
                 if not link.startswith("http"):
                     link = "https://" + link
                 st.markdown(f"📘 [{manuale}]({link})")
