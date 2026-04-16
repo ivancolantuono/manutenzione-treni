@@ -1489,7 +1489,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
         start = 0
 
         while True:
-            res = supabase.table("schede_sr_vzi6").select("*").range(start, start + step - 1).execute()
+            res = supabase.table("schede_sr_VZI6").select("*").range(start, start + step - 1).execute()
 
             if res.data is None:
                 st.error("❌ Errore Supabase o tabella non trovata")
