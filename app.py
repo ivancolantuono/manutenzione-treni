@@ -1127,7 +1127,7 @@ elif menu == "📚 SCHEDE SR":
                 if link:
                     if not link.startswith("http"):
                         link = "https://" + link
-                    st.markdown(f"📘 [{Manuale}]({link1})")
+                    st.markdown(f"📘 [{Manuale}]({link})")
                 else:
                     st.markdown(f"📘 **{Manuale}**")
             else:
