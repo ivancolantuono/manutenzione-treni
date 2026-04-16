@@ -1526,6 +1526,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
             st.session_state.schede_sr_VZI6 = carica_schede()
 
     df_sr = st.session_state.schede_sr_VZI6
+    st.write("DEBUG RIGHE:", len(df_sr))
 
     if df_sr.empty:
         st.warning("Nessuna scheda trovata")
