@@ -252,12 +252,12 @@ if ruolo == "CAPOSQUADRA":
     menu = st.radio(
         "",
         [
-            "🚄 Manutenzione",
-            "📊 Dashboard",
-            "📊 Storico",
-            "📚 Schede SR",
-            "📦 Cerca Componente",
-            "📌 Open Item"
+            "🚄 MANUTENZIONE",
+            "📊 DASHBOARD",
+            "📊 STORICO",
+            "📚 SCHEDE SR",
+            "📦 CERCA COMPONENTE",
+            "📌 OPEN ITEM"
         ],
         horizontal=True
     )
@@ -265,10 +265,10 @@ else:
     menu = st.radio(
         "",
         [
-            "🚄 Manutenzione",
-            "📚 Schede SR",
-            "📌 Open Item",
-            "📦 Cerca Componente"
+            "🚄 MANUTENZIONE",
+            "📚 SCHEDE SR",
+            "📌 OPEN ITEM",
+            "📦 CERCA COMPONENTE"
         ],
         horizontal=True
     )
