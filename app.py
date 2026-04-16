@@ -819,8 +819,9 @@ elif menu == "📊 Dashboard":
                
                 
                 st.divider()                    
+
 # =========================
-# 📦 CATALOGO COMPONENTI (SUPABASE ROBUSTO)
+# 📦 CATALOGO COMPONENTI (SUPABASE DEFINITIVO)
 # =========================
 elif menu == "📦 Cerca Componente":
 
@@ -830,12 +831,29 @@ elif menu == "📦 Cerca Componente":
     st.title("📦 Cerca componente")
 
     # =========================
-    # 📥 CARICAMENTO DATI
+    # 📥 CARICAMENTO COMPLETO (NO LIMITE 1000)
     # =========================
     @st.cache_data(ttl=300)
     def carica_magazzino():
-        res = supabase.table("magazzino").select("*").execute()
-        return res.data
+
+        dati = []
+        step = 1000
+        start = 0
+
+        while True:
+            res = supabase.table("magazzino").select("*").range(start, start + step - 1).execute()
+
+            if not res.data:
+                break
+
+            dati.extend(res.data)
+
+            if len(res.data) < step:
+                break
+
+            start += step
+
+        return dati
 
     dati = carica_magazzino()
 
@@ -844,16 +862,18 @@ elif menu == "📦 Cerca Componente":
         st.stop()
 
     df_mag = pd.DataFrame(dati)
-    st.write("Righe:", len(df_mag))
-    st.write(df_mag.head())
 
-    # 🔥 NORMALIZZA COLONNE
+    # =========================
+    # 🔥 NORMALIZZA
+    # =========================
     df_mag.columns = df_mag.columns.str.lower().str.strip()
-
-    # pulizia valori
     df_mag = df_mag.fillna("")
+
     for col in df_mag.columns:
         df_mag[col] = df_mag[col].astype(str)
+
+    # DEBUG (puoi toglierlo dopo)
+    st.write("Righe:", len(df_mag))
 
     # =========================
     # INPUT
@@ -863,7 +883,7 @@ elif menu == "📦 Cerca Componente":
     with col1:
         ricerca = st.text_input(
             "🔍 Cerca componente o codice",
-            placeholder="es. compressore o 100360165"
+            placeholder="es. cilindro, compressore, 100360165"
         )
 
     with col2:
@@ -872,16 +892,16 @@ elif menu == "📦 Cerca Componente":
     risultati = df_mag.copy()
 
     # =========================
-    # 🔎 FUNZIONE NORMALIZZAZIONE
+    # 🔎 NORMALIZZAZIONE TESTO
     # =========================
     def normalizza(testo):
-        testo = str(testo).lower().strip()
+        testo = str(testo).lower()
         testo = testo.replace("_", " ").replace("-", " ")
-        testo = re.sub(r"\s+", " ", testo)
+        testo = re.sub(r"[^a-z0-9]", " ", testo)
         return testo
 
     # =========================
-    # 🔍 RICERCA ULTRA ROBUSTA
+    # 🔍 RICERCA FLESSIBILE (FUNZIONA SEMPRE)
     # =========================
     if ricerca:
 
@@ -891,11 +911,8 @@ elif menu == "📦 Cerca Componente":
 
         for _, row in risultati.iterrows():
 
-            # unisci tutta la riga
             valori = [str(v) for v in row.values if v]
-            testo_riga = " ".join(valori)
-
-            testo_riga = normalizza(testo_riga)
+            testo_riga = normalizza(" ".join(valori))
 
             if ricerca_norm in testo_riga:
                 risultati_filtrati.append(row)
@@ -925,10 +942,8 @@ elif menu == "📦 Cerca Componente":
         hide_index=True
     )
 
-    # =========================
-    # DEBUG UTILE
-    # =========================
     st.caption(f"🔍 Ricerca su {len(df_mag.columns)} colonne")
+
 # =========================
 # 📚 SCHEDE SR (EXCEL)
 # =========================
