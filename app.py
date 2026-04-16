@@ -1489,7 +1489,7 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "📚 SCHEDE SR new":
+elif menu == "📚 SCHEDE SR":
 
     import pandas as pd
     import re
@@ -1534,7 +1534,7 @@ elif menu == "📚 SCHEDE SR new":
         return df
 
     # =========================
-    # CACHE SESSIONE
+    # CACHE
     # =========================
     if "schede_sr" not in st.session_state:
         with st.spinner("🔄 Caricamento schede SR..."):
@@ -1547,7 +1547,7 @@ elif menu == "📚 SCHEDE SR new":
         st.stop()
 
     # =========================
-    # 📌 COLONNE
+    # COLONNE
     # =========================
     col_manuale = "manuale"
     col_pagina = "pagina"
@@ -1557,13 +1557,22 @@ elif menu == "📚 SCHEDE SR new":
     col_sottogruppo = "sottogruppo"
 
     # =========================
-    # 🔧 PULIZIA TESTO
+    # PULIZIA
     # =========================
     def pulisci(testo):
         testo = str(testo).lower()
-        testo = testo.replace("_", " ").replace("-", " ")
         testo = re.sub(r"[^a-z0-9]", " ", testo)
         return testo
+
+    # =========================
+    # 🔥 COLONNA UNICA RICERCA
+    # =========================
+    df_sr["__search__"] = (
+        df_sr[col_testo] + " " +
+        df_sr[col_titolo] + " " +
+        df_sr[col_manuale] + " " +
+        df_sr[col_sottogruppo]
+    ).apply(pulisci)
 
     # =========================
     # INPUT
@@ -1571,7 +1580,7 @@ elif menu == "📚 SCHEDE SR new":
     col1, col2 = st.columns(2)
 
     with col1:
-        ricerca = st.text_input("🔍 Cerca", placeholder="es. compressore aria")
+        ricerca = st.text_input("🔍 Cerca")
 
     # =========================
     # 📂 SOTTOGRUPPI DINAMICI (CORRETTO)
@@ -1581,12 +1590,12 @@ elif menu == "📚 SCHEDE SR new":
         df_tmp = df_sr.copy()
 
         if ricerca:
-            ricerca_clean = pulisci(ricerca)
+            parole = [pulisci(p) for p in ricerca.split()]
 
-            df_tmp = df_tmp[
-                df_tmp[col_testo].apply(pulisci).str.contains(ricerca_clean, na=False) |
-                df_tmp[col_titolo].apply(pulisci).str.contains(ricerca_clean, na=False)
-            ]
+            for parola in parole:
+                df_tmp = df_tmp[
+                    df_tmp["__search__"].apply(lambda x: parola in x)
+                ]
 
         gruppi = sorted(
             df_tmp[col_sottogruppo]
@@ -1606,15 +1615,15 @@ elif menu == "📚 SCHEDE SR new":
     df_filtrato = df_sr.copy()
 
     if ricerca:
-        ricerca_clean = pulisci(ricerca)
+        parole = [pulisci(p) for p in ricerca.split()]
 
-        df_filtrato = df_filtrato[
-            df_filtrato[col_testo].apply(pulisci).str.contains(ricerca_clean, na=False) |
-            df_filtrato[col_titolo].apply(pulisci).str.contains(ricerca_clean, na=False)
-        ]
+        for parola in parole:
+            df_filtrato = df_filtrato[
+                df_filtrato["__search__"].apply(lambda x: parola in x)
+            ]
 
     # =========================
-    # 📂 FILTRO SOTTOGRUPPO (FIX DEFINITIVO)
+    # 📂 FILTRO SOTTOGRUPPO
     # =========================
     if gruppo_sel != "Tutti":
 
@@ -1622,15 +1631,13 @@ elif menu == "📚 SCHEDE SR new":
 
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo]
-            .fillna("")
-            .astype(str)
-            .apply(lambda x: gruppo in x.lower())
+            .apply(lambda x: gruppo in str(x).lower())
         ]
 
     risultati = df_filtrato
 
     # =========================
-    # 📊 RISULTATI
+    # OUTPUT
     # =========================
     st.markdown(f"🔎 Risultati: {len(risultati)}")
 
@@ -1638,16 +1645,12 @@ elif menu == "📚 SCHEDE SR new":
         st.warning("Nessun risultato trovato")
         st.stop()
 
-    # =========================
-    # 📄 OUTPUT
-    # =========================
     gruppi = risultati.groupby([col_titolo, col_manuale])
 
     for (titolo, manuale), gruppo in gruppi:
 
         sottogruppo = gruppo[col_sottogruppo].iloc[0]
-
-        link = gruppo[col_link].iloc[0] if col_link in gruppo.columns else ""
+        link = gruppo[col_link].iloc[0]
         pagine = gruppo[col_pagina].unique().tolist()
 
         with st.expander(f"🔧 {titolo}"):
@@ -1656,13 +1659,6 @@ elif menu == "📚 SCHEDE SR new":
                 if not link.startswith("http"):
                     link = "https://" + link
                 st.markdown(f"📘 [{manuale}]({link})")
-            else:
-                st.markdown(f"📘 **{manuale}**")
 
-            if sottogruppo:
-                st.caption(f"📂 {sottogruppo}")
-
-            if pagine:
-                st.caption(f"📄 Pagine: {', '.join(pagine)}")
-
-
+            st.caption(f"📂 {sottogruppo}")
+            st.caption(f"📄 Pagine: {', '.join(pagine)}")
