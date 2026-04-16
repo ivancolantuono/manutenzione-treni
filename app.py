@@ -137,9 +137,13 @@ def ora_italia():
 # SUPABASE
 # =========================
 
-url = "https://nlsezrwjvhxvsbycxlxd.supabase.co"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc2V6cndqdmh4dnNieWN4bHhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDEwMTg1NiwiZXhwIjoyMDg5Njc3ODU2fQ.ptiE9QEIX32UHY_tVmX-vW_sGgk3m9DnHQAudQRyIJ0"
+import os
+
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
+
 supabase = create_client(url, key)
+
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
