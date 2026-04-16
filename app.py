@@ -1489,7 +1489,7 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "📚 SCHEDE SR new":
+elif menu == "📚 SCHEDE SR":
 
     import pandas as pd
     import re
@@ -1521,7 +1521,10 @@ elif menu == "📚 SCHEDE SR new":
 
         df = pd.DataFrame(dati)
 
-        # 🔥 pulizia
+        if df.empty:
+            return df
+
+        # 🔥 NORMALIZZAZIONE TOTALE (ANTI BUG)
         df.columns = df.columns.str.lower().str.strip()
         df = df.fillna("")
 
@@ -1531,7 +1534,7 @@ elif menu == "📚 SCHEDE SR new":
         return df
 
     # =========================
-    # SESSION CACHE (no reload)
+    # CACHE SESSIONE (no reload continuo)
     # =========================
     if "schede_sr" not in st.session_state:
         with st.spinner("🔄 Caricamento schede SR..."):
@@ -1597,9 +1600,17 @@ elif menu == "📚 SCHEDE SR new":
                 ).apply(pulisci)
 
                 for parola in parole:
-                    df_tmp = df_tmp[df_tmp["__search__"].str.contains(parola, na=False)]
+                    df_tmp = df_tmp[
+                        df_tmp["__search__"].str.contains(parola, na=False)
+                    ]
 
-            gruppi = sorted(df_tmp[col_sottogruppo].str.strip().unique())
+            gruppi = sorted(
+                df_tmp[col_sottogruppo]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .unique()
+            )
 
             gruppo_sel = st.selectbox("📂 Sottogruppo", ["Tutti"] + list(gruppi))
 
@@ -1627,15 +1638,19 @@ elif menu == "📚 SCHEDE SR new":
         df_filtrato["__search__"] = df_filtrato["__search__"].apply(pulisci)
 
         for parola in parole:
-            df_filtrato = df_filtrato[df_filtrato["__search__"].str.contains(parola, na=False)]
+            df_filtrato = df_filtrato[
+                df_filtrato["__search__"].str.contains(parola, na=False)
+            ]
 
     # =========================
-    # 📂 FILTRO SOTTOGRUPPO
+    # 📂 FILTRO SOTTOGRUPPO (FIX DEFINITIVO)
     # =========================
     if gruppo_sel != "Tutti" and col_sottogruppo:
 
         df_filtrato = df_filtrato[
             df_filtrato[col_sottogruppo]
+            .fillna("")
+            .astype(str)
             .str.lower()
             .str.contains(gruppo_sel.lower(), na=False)
         ]
