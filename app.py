@@ -1522,7 +1522,7 @@ elif menu == "🗄 SCHEDE SR VZI6":
     # CARICAMENTO
     # =========================
     with st.spinner("🔄 Caricamento schede VZI6..."):
-        df_sr = carica_schede()
+        df_sr = carica_schede_VZI6()
 
     if df_sr.empty:
         st.warning("⚠️ Nessuna scheda trovata")
