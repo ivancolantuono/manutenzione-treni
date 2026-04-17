@@ -313,20 +313,16 @@ if not st.session_state.logged_in:
 
                     try:
 
-                        esiste = supabase.table("operatori")\
-
-                            .select("matricola")\
-
-                            .eq("matricola", matricola)\
-
+                        esiste = (
+                            supabase.table("operatori")
+                            .select("matricola")
+                            .eq("matricola", matricola)
                             .execute()
+                        )
 
                         if esiste.data:
-
                             st.error("Matricola già esistente")
-
                         else:
-
                             supabase.table("operatori").insert({
 
                                 "nominativo": nominativo,
