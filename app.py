@@ -208,117 +208,168 @@ if not st.session_state.logged_in:
 
 
     # =========================
+
     # 🔐 LOGIN / REGISTRAZIONE
+
     # =========================
+
     if not st.session_state.logged_in:
 
-        col1, col2, col3 = st.columns([1,2,1])
+        tab1, tab2 = st.tabs(["🔐 Login", "🆕 Registrazione"])
 
-        with col2:
+        # ================= LOGIN =================
 
-            st.image("frecciarossa.jpg")
+        with tab1:
 
-            tab1, tab2 = st.tabs(["🔐 Login", "🆕 Registrazione"])
+            st.markdown("## 🔐 Login")
 
-            # ================= LOGIN =================
-            with tab1:
+            u = st.text_input("Nominativo", key="login_user")
 
-                u = st.text_input("Nominativo").strip().lower()
-                p = st.text_input("Password", type="password", key="login_password")
+            p = st.text_input("Password", type="password", key="login_password")
 
-                if st.button("Accedi"):
+            if st.button("Accedi"):
 
-                    user = next(
-                        (
-                            x for x in utenti
-                            if str(x.get("nominativo","")).lower().strip() == u
-                            and str(x.get("password","")) == hash_password(p)
-                        ),
-                        None
-                    )
+                user = next(
 
-                    if user:
-                        st.session_state.logged_in = True
-                        st.session_state.login_time = datetime.now()
-                        st.session_state.utente = user.get("nominativo")
-                        st.session_state.ruolo = user.get("ruolo")
-                        st.session_state.squadra = user.get("squadra")
-                        st.session_state.telefono = user.get("telefono")
+                    (
 
-                        st.success("Accesso riuscito")
-                        st.rerun()
-                    else:
-                        st.error("Credenziali errate")
+                        x for x in utenti
 
-            # ================= REGISTRAZIONE =================
-            # =========================
-            # 🆕 REGISTRAZIONE
-            # =========================
-            with tab2:
+                        if str(x.get("nominativo","")).lower().strip() == u.lower().strip()
 
-                st.markdown("## 🆕 Registrazione")
+                        and str(x.get("password","")).strip() == p
 
-                cognome = st.text_input("Cognome", key="reg_cognome")
-                nome = st.text_input("Nome", key="reg_nome")
-                telefono = st.text_input("Telefono", key="reg_tel")
-                matricola = st.text_input("Matricola", key="reg_matricola")
-                squadra = st.text_input("Squadra", key="reg_squadra")
-                ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"], key="reg_ruolo")
-                password = st.text_input("Password", type="password", key="reg_password")
+                    ),
 
-                # 🔤 funzione formato nome
-                def format_nome(txt):
-                    return txt.strip().capitalize()
+                    None
 
-                if st.button("Registrati", key="btn_reg"):
+                )
 
-                    # 🔥 pulizia input
-                    cognome = cognome.strip()
-                    nome = nome.strip()
-                    telefono = telefono.strip()
-                    matricola = matricola.strip()
-                    squadra = squadra.strip()
-                    password = password.strip()
+                if user:
 
-                    # 🔴 controlli
-                    if not cognome or not nome or not matricola or not password:
-                        st.error("Compila i campi obbligatori")
+                    st.session_state.logged_in = True
 
-                    else:
+                    st.session_state.utente = user.get("nominativo")
 
-                        # 🔥 formato nominativo
-                        cognome = format_nome(cognome)
-                        nome = format_nome(nome)
+                    st.session_state.ruolo = user.get("ruolo")
 
-                        nominativo = f"{cognome} {nome}"
+                    st.success("Accesso riuscito")
 
-                        try:
-                            # 🔍 controllo duplicato matricola
-                            esiste = supabase.table("operatori")\
-                                .select("matricola")\
-                                .eq("matricola", matricola)\
-                                .execute()
+                    st.rerun()
 
-                            if esiste.data:
-                                st.error("Matricola già esistente")
+                else:
 
-                            else:
-                                # 💾 INSERT
-                                res = supabase.table("operatori").insert({
-                                    "nominativo": nominativo,
-                                    "ruolo": ruolo,
-                                    "squadra": squadra,
-                                    "telefono": telefono,
-                                    "matricola": matricola,
-                                    "password": password
-                                }).execute()
+                    st.error("Credenziali errate")
 
-                                st.success("✅ Utente registrato!")
-                                st.rerun()
+        # ================= REGISTRAZIONE =================
 
-                        except Exception as e:
-                            st.error(f"Errore: {e}")
-                            
+        with tab2:
+
+            st.markdown("## 🆕 Registrazione")
+
+            cognome = st.text_input("Cognome", key="reg_cognome")
+
+            nome = st.text_input("Nome", key="reg_nome")
+
+            telefono = st.text_input("Telefono", key="reg_tel")
+
+            matricola = st.text_input("Matricola", key="reg_matricola")
+
+            squadra = st.text_input("Squadra", key="reg_squadra")
+
+            ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"], key="reg_ruolo")
+
+            password = st.text_input("Password", type="password", key="reg_password")
+
+            def format_nome(txt):
+
+                return txt.strip().capitalize()
+
+            if st.button("Registrati", key="btn_reg"):
+
+                cognome = cognome.strip()
+
+                nome = nome.strip()
+
+                telefono = telefono.strip()
+
+                matricola = matricola.strip()
+
+                squadra = squadra.strip()
+
+                password = password.strip()
+
+                if not cognome or not nome or not matricola or not password:
+
+                    st.error("Compila i campi obbligatori")
+
+                else:
+
+                    cognome = format_nome(cognome)
+
+                    nome = format_nome(nome)
+
+                    nominativo = f"{cognome} {nome}"
+
+                    try:
+
+                        esiste = supabase.table("operatori")\
+
+                            .select("matricola")\
+
+                            .eq("matricola", matricola)\
+
+                            .execute()
+
+                        if esiste.data:
+
+                            st.error("Matricola già esistente")
+
+                        else:
+
+                            supabase.table("operatori").insert({
+
+                                "nominativo": nominativo,
+
+                                "ruolo": ruolo,
+
+                                "squadra": squadra,
+
+                                "telefono": telefono,
+
+                                "matricola": matricola,
+
+                                "password": password
+
+                            }).execute()
+
+                            st.success("✅ Utente registrato!")
+
+                            st.rerun()
+
+                    except Exception as e:
+
+                        st.error(f"Errore DB: {e}")
+
+        st.stop()
+
+    # =========================
+
+    # 🟢 APP (DOPO LOGIN)
+
+    # =========================
+
+    st.write(f"👤 {st.session_state.utente} ({st.session_state.ruolo})")
+
+    if st.button("🚪 Logout"):
+
+        st.session_state.clear()
+
+        st.rerun()
+
+    st.title("📊 Gestione Manutenzione")
+
+    st.info("Benvenuto nell'app 👍")                            
 utente = st.session_state.get("utente", "")
 ruolo = st.session_state.get("ruolo", "").upper()
 
