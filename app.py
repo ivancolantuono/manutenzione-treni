@@ -279,7 +279,16 @@ if not st.session_state.logged_in:
                             "Password": hash_password(password)  # 🔐 HASH
                         }).execute()
 
-                        st.success("✅ Utente registrato!")
+                        st.success("✅ Registrazione effettuata!")
+
+                        # 🔄 reset campi
+                        st.session_state["reg_cognome"] = ""
+                        st.session_state["reg_nome"] = ""
+                        st.session_state["reg_tel"] = ""
+                        st.session_state["reg_matricola"] = ""
+                        st.session_state["reg_squadra"] = ""
+                        st.session_state["reg_password"] = ""
+
                         st.rerun()
 
                 except Exception as e:
