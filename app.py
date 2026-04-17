@@ -244,6 +244,9 @@ if not st.session_state.logged_in:
                         st.error("Credenziali errate")
 
             # ================= REGISTRAZIONE =================
+            # =========================
+            # 🆕 REGISTRAZIONE
+            # =========================
             with tab2:
 
                 st.markdown("## 🆕 Registrazione")
@@ -256,42 +259,59 @@ if not st.session_state.logged_in:
                 ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"], key="reg_ruolo")
                 password = st.text_input("Password", type="password", key="reg_password")
 
+                # 🔤 funzione formato nome
+                def format_nome(txt):
+                    return txt.strip().capitalize()
+
                 if st.button("Registrati", key="btn_reg"):
 
+                    # 🔥 pulizia input
+                    cognome = cognome.strip()
+                    nome = nome.strip()
+                    telefono = telefono.strip()
+                    matricola = matricola.strip()
+                    squadra = squadra.strip()
+                    password = password.strip()
+
+                    # 🔴 controlli
                     if not cognome or not nome or not matricola or not password:
                         st.error("Compila i campi obbligatori")
 
                     else:
 
+                        # 🔥 formato nominativo
                         cognome = format_nome(cognome)
                         nome = format_nome(nome)
 
                         nominativo = f"{cognome} {nome}"
 
-                        esiste = supabase.table("operatori")\
-                            .select("matricola")\
-                            .eq("matricola", matricola)\
-                            .execute()
+                        try:
+                            # 🔍 controllo duplicato matricola
+                            esiste = supabase.table("operatori")\
+                                .select("matricola")\
+                                .eq("matricola", matricola)\
+                                .execute()
 
-                        if esiste.data:
-                            st.error("Matricola già esistente")
+                            if esiste.data:
+                                st.error("Matricola già esistente")
 
-                        else:
+                            else:
+                                # 💾 INSERT
+                                res = supabase.table("operatori").insert({
+                                    "nominativo": nominativo,
+                                    "ruolo": ruolo,
+                                    "squadra": squadra,
+                                    "telefono": telefono,
+                                    "matricola": matricola,
+                                    "password": password
+                                }).execute()
 
-                            supabase.table("operatori").insert({
-                                "nominativo": nominativo,
-                                "ruolo": ruolo,
-                                "squadra": squadra,
-                                "telefono": telefono,
-                                "matricola": matricola,
-                                "password": hash_password(password)
-                            }).execute()
+                                st.success("✅ Utente registrato!")
+                                st.rerun()
 
-                            st.success("Utente registrato!")
-                            st.rerun()
-
-        st.stop()
-
+                        except Exception as e:
+                            st.error(f"Errore: {e}")
+                            
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo.upper()
 
