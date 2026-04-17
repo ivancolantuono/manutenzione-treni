@@ -196,12 +196,11 @@ if not st.session_state.logged_in:
 
     # ================= LOGIN =================
     with tab1:
-        col1, col2, col3 = st.columns([1,2,1])
+        col1, col2, col3 = st.columns([1,3,1])
 
         with col2:
-            st.image("frecciarossa.jpg", width=400)
-
-        st.markdown("## 🔐 Login")
+            st.image("frecciarossa.jpg", use_container_width=True)
+                st.markdown("## 🔐 Login")
 
         u = st.text_input("Nominativo", key="login_user")
         p = st.text_input("Password", type="password", key="login_password")
