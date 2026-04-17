@@ -244,7 +244,6 @@ if not st.session_state.logged_in:
 
                 try:
 
-                    # controllo duplicato
                     esiste = (
                         supabase.table("login")
                         .select("matricola")
@@ -266,18 +265,11 @@ if not st.session_state.logged_in:
 
                         st.success("✅ Registrazione effettuata!")
 
-                        # reset campi
-                        st.session_state["reg_nome"] = ""
-                        st.session_state["reg_cognome"] = ""
-                        st.session_state["reg_email"] = ""
-                        st.session_state["reg_matricola"] = ""
-                        st.session_state["reg_password"] = ""
-
+                        # 🔄 reset automatico
                         st.rerun()
 
                 except Exception as e:
                     st.error(f"Errore DB: {e}")
-
     st.stop()
 
 # ================= APP =================
