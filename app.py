@@ -287,14 +287,6 @@ if not st.session_state.logged_in:
 
 # ================= APP DOPO LOGIN =================
 
-st.write(f"👤 {st.session_state.utente} ({st.session_state.ruolo})")
-
-if st.button("🚪 Logout"):
-    st.session_state.clear()
-    st.rerun()
-
-st.title("📊 Gestione Manutenzione")
-st.info("Benvenuto nell'app 👍")
 
 utente = st.session_state.get("utente", "")
 ruolo = st.session_state.get("ruolo", "").upper()
