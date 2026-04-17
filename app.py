@@ -217,7 +217,7 @@ if not st.session_state.logged_in:
             with tab1:
 
                 u = st.text_input("Nominativo").strip().lower()
-                p = st.text_input("Password", type="password").strip()
+                p = st.text_input("Password", type="password", key="login_password")
 
                 if st.button("Accedi"):
 
@@ -246,18 +246,21 @@ if not st.session_state.logged_in:
             # ================= REGISTRAZIONE =================
             with tab2:
 
-                cognome = st.text_input("Cognome")
-                nome = st.text_input("Nome")
-                telefono = st.text_input("Telefono")
-                matricola = st.text_input("Matricola")
-                squadra = st.text_input("Squadra")
-                ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"])
-                password = st.text_input("Password", type="password")
+                st.markdown("## 🆕 Registrazione")
 
-                if st.button("Registrati"):
+                cognome = st.text_input("Cognome", key="reg_cognome")
+                nome = st.text_input("Nome", key="reg_nome")
+                telefono = st.text_input("Telefono", key="reg_tel")
+                matricola = st.text_input("Matricola", key="reg_matricola")
+                squadra = st.text_input("Squadra", key="reg_squadra")
+                ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"], key="reg_ruolo")
+                password = st.text_input("Password", type="password", key="reg_password")
+
+                if st.button("Registrati", key="btn_reg"):
 
                     if not cognome or not nome or not matricola or not password:
                         st.error("Compila i campi obbligatori")
+
                     else:
 
                         cognome = format_nome(cognome)
@@ -265,7 +268,6 @@ if not st.session_state.logged_in:
 
                         nominativo = f"{cognome} {nome}"
 
-                        # controllo duplicato matricola
                         esiste = supabase.table("operatori")\
                             .select("matricola")\
                             .eq("matricola", matricola)\
@@ -273,6 +275,7 @@ if not st.session_state.logged_in:
 
                         if esiste.data:
                             st.error("Matricola già esistente")
+
                         else:
 
                             supabase.table("operatori").insert({
