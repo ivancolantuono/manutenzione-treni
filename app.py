@@ -247,12 +247,13 @@ if not st.session_state.logged_in:
                 st.error("Credenziali errate")
 
     # ================= REGISTRAZIONE =================
+    # ================= REGISTRAZIONE =================
     with tab2:
 
         st.markdown("## 🆕 Registrazione")
 
         # messaggio successo
-        if st.session_state.registrato:
+        if st.session_state.get("registrato"):
             st.success("✅ Registrazione effettuata!")
             st.session_state.registrato = False
 
@@ -260,6 +261,14 @@ if not st.session_state.logged_in:
         cognome = st.text_input("Cognome", key="reg_cognome")
         email = st.text_input("Email", key="reg_email")
         matricola = st.text_input("Matricola", key="reg_matricola")
+
+        # ✅ AGGIUNTA RUOLO
+        ruolo = st.selectbox(
+            "Ruolo",
+            ["OPERATORE", "CAPOSQUADRA"],
+            key="reg_ruolo"
+        )
+
         password = st.text_input("Password", type="password", key="reg_password")
 
         if st.button("Registrati", key="btn_reg"):
@@ -295,18 +304,17 @@ if not st.session_state.logged_in:
                             "cognome": cognome,
                             "email": email,
                             "matricola": matricola,
-                            "password": hash_password(password)
+                            "password": hash_password(password),
+                            "ruolo": ruolo   # ✅ AGGIUNTO
                         }).execute()
 
-                        # ✅ stato registrazione
+                        # ✅ solo flag
                         st.session_state.registrato = True
 
-                        # 🔄 reset campi
-                        st.session_state.reg_nome = ""
-                        st.session_state.reg_cognome = ""
-                        st.session_state.reg_email = ""
-                        st.session_state.reg_matricola = ""
-                        st.session_state.reg_password = ""
+                        # 🔥 RESET VERO (senza errore)
+                        for k in ["reg_nome", "reg_cognome", "reg_email", "reg_matricola", "reg_password"]:
+                            if k in st.session_state:
+                                del st.session_state[k]
 
                         st.rerun()
 
