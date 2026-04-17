@@ -196,7 +196,7 @@ if not st.session_state.logged_in:
 
     # ================= LOGIN =================
     with tab1:
-        st.image("frecciarossa.jpg", use_container_width=True)
+        st.image("frecciarossa.jpg", use_container_width=250)
 
         st.markdown("## 🔐 Login")
 
