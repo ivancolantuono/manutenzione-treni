@@ -147,6 +147,12 @@ supabase = create_client(url, key)
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+    
+if "utente" not in st.session_state:
+    st.session_state.utente = ""
+
+if "ruolo" not in st.session_state:
+    st.session_state.ruolo = ""
 
 @st.cache_data(ttl=60)
 def get_utenti():
@@ -154,6 +160,7 @@ def get_utenti():
     return res.data or[]
     
 utenti = get_utenti()
+
 # ============================
 # LOG OPEN ITEM
 # ============================
@@ -312,8 +319,8 @@ if not st.session_state.logged_in:
                         except Exception as e:
                             st.error(f"Errore: {e}")
                             
-utente = st.session_state.utente
-ruolo = st.session_state.ruolo.upper()
+utente = st.session_state.get("utente", "")
+ruolo = st.session_state.get("ruolo", "").upper()
 
 # =========================
 # HEADER
