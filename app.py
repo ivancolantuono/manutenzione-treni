@@ -200,7 +200,7 @@ if not st.session_state.logged_in:
 
         with col2:
             st.image("frecciarossa.jpg", use_container_width=True)
-                st.markdown("## 🔐 Login")
+            st.markdown("## 🔐 Login")
 
         u = st.text_input("Nominativo", key="login_user")
         p = st.text_input("Password", type="password", key="login_password")
