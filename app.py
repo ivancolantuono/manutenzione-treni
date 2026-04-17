@@ -147,12 +147,6 @@ supabase = create_client(url, key)
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-    
-if "utente" not in st.session_state:
-    st.session_state.utente = ""
-
-if "ruolo" not in st.session_state:
-    st.session_state.ruolo = ""
 
 @st.cache_data(ttl=60)
 def get_utenti():
@@ -160,7 +154,6 @@ def get_utenti():
     return res.data or[]
     
 utenti = get_utenti()
-
 # ============================
 # LOG OPEN ITEM
 # ============================
@@ -180,127 +173,63 @@ def salva_log(item_id, azione, utente, vecchio, nuovo):
 # =========================
 # SESSION
 # =========================
-
 if not st.session_state.logged_in:
 
-    import hashlib
-    from datetime import datetime
+    col1, col2, col3 = st.columns([1,2,1])
 
-    def hash_password(pwd):
-        return hashlib.sha256(pwd.encode()).hexdigest()
+    with col2:
+        st.image("frecciarossa.jpg")
+        st.markdown("## 🔐 LOGIN")
 
-    def format_nome(txt):
-        return txt.strip().capitalize()
-
-    tab1, tab2 = st.tabs(["🔐 Login", "🆕 Registrazione"])
-
-    # ================= LOGIN =================
-    with tab1:
-        col1, col2, col3 = st.columns([1,3,1])
-
-        with col2:
-            st.image("frecciarossa.jpg", use_container_width=True)
-
-        u = st.text_input("Nominativo", key="login_user")
-        p = st.text_input("Password", type="password", key="login_password")
+        u = st.text_input("Utente").strip().lower()
+        p = st.text_input("Password", type="password").strip()
 
         if st.button("Accedi"):
 
             user = next(
                 (
                     x for x in utenti
-                    if str(x.get("Nominativo","")).lower().strip() == u.lower().strip()
-                    and str(x.get("Password","")).strip() == hash_password(p)
+                    if str(x.get("Nominativo","")).lower().strip() == u
+                    and str(x.get("Password","")).replace(".0","").strip() == p
                 ),
                 None
             )
 
             if user:
                 st.session_state.logged_in = True
+                st.session_state.login_time = datetime.now()
                 st.session_state.utente = user.get("Nominativo")
                 st.session_state.ruolo = user.get("Ruolo")
-                st.session_state.login_time = datetime.now()
+                st.session_state.squadra = user.get("Squadra")
+                st.session_state.telefono = user.get("Telefono")
 
                 st.success("Accesso riuscito")
                 st.rerun()
+
             else:
                 st.error("Credenziali errate")
 
-    # ================= REGISTRAZIONE =================
-    with tab2:
-
-        st.markdown("## 🆕 Registrazione")
-
-        cognome = st.text_input("Cognome", key="reg_cognome")
-        nome = st.text_input("Nome", key="reg_nome")
-        telefono = st.text_input("Telefono", key="reg_tel")
-        matricola = st.text_input("Matricola", key="reg_matricola")
-        squadra = st.text_input("Squadra", key="reg_squadra")
-        ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"], key="reg_ruolo")
-        password = st.text_input("Password", type="password", key="reg_password")
-
-        if st.button("Registrati", key="btn_reg"):
-
-            cognome = cognome.strip()
-            nome = nome.strip()
-            telefono = telefono.strip()
-            matricola = matricola.strip()
-            squadra = squadra.strip()
-            password = password.strip()
-
-            if not cognome or not nome or not matricola or not password:
-                st.error("Compila i campi obbligatori")
-
-            else:
-                cognome = format_nome(cognome)
-                nome = format_nome(nome)
-
-                nominativo = f"{cognome} {nome}"
-
-                try:
-
-                    esiste = (
-                        supabase.table("operatori")
-                        .select("Matricola")
-                        .eq("Matricola", matricola)
-                        .execute()
-                    )
-
-                    if esiste.data:
-                        st.error("Matricola già esistente")
-
-                    else:
-                        supabase.table("operatori").insert({
-                            "Nominativo": nominativo,
-                            "Ruolo": ruolo,
-                            "Squadra": squadra,
-                            "Telefono": telefono,
-                            "Matricola": matricola,
-                            "Password": hash_password(password)  # 🔐 HASH
-                        }).execute()
-
-                        st.success("✅ Registrazione effettuata!")
-
-                        # 🔄 reset campi
-                        st.session_state["reg_cognome"] = ""
-                        st.session_state["reg_nome"] = ""
-                        st.session_state["reg_tel"] = ""
-                        st.session_state["reg_matricola"] = ""
-                        st.session_state["reg_squadra"] = ""
-                        st.session_state["reg_password"] = ""
-
-                        st.rerun()
-
-                except Exception as e:
-                    st.error(f"Errore DB: {e}")
-
     st.stop()
+    # ============================
+    # ⏱️ CONTROLLO SCADENZA LOGIN
+    # ============================
+    
+    from datetime import datetime
+    
+    if st.session_state.get("logged_in"):
+    
+        login_time = st.session_state.get("login_time")
+    
+        if login_time:
+            durata = datetime.now() - login_time
+    
+            if durata.total_seconds() > 21600:  # 6 ore
+                st.warning("Sessione scaduta, rifai il login")
+                st.session_state.clear()
+                st.rerun()
 
-# ================= APP DOPO LOGIN =================
-
-
-utente = st.session_state.get("utente", "")
-ruolo = st.session_state.get("ruolo", "").upper()
+utente = st.session_state.utente
+ruolo = st.session_state.ruolo.upper()
 
 # =========================
 # HEADER
