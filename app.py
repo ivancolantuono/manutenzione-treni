@@ -145,7 +145,15 @@ key = os.getenv("SUPABASE_KEY")
 supabase = create_client(url, key)
 
 
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
+@st.cache_data(ttl=60)
+def get_utenti():
+    res = supabase.table("operatori").select("*").execute()
+    return res.data or[]
+    
+utenti = get_utenti()
 # ============================
 # LOG OPEN ITEM
 # ============================
@@ -163,170 +171,65 @@ def salva_log(item_id, azione, utente, vecchio, nuovo):
         print("Errore log:", e)
 
 # =========================
-# SESSION INIT
+# SESSION
 # =========================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+if not st.session_state.logged_in:
 
-if "utente" not in st.session_state:
-    st.session_state.utente = ""
+    col1, col2, col3 = st.columns([1,2,1])
 
-if "ruolo" not in st.session_state:
-    st.session_state.ruolo = ""
+    with col2:
+        st.image("frecciarossa.jpg")
+        st.markdown("## 🔐 LOGIN")
 
-if "pagina" not in st.session_state:
-    st.session_state.pagina = "login"
+        u = st.text_input("Utente").strip().lower()
+        p = st.text_input("Password", type="password").strip()
 
-# =========================
-# FUNZIONI
-# =========================
-import hashlib
+        if st.button("Accedi"):
 
-def hash_password(pwd):
-    return hashlib.sha256(pwd.encode()).hexdigest()
+            user = next(
+                (
+                    x for x in utenti
+                    if str(x.get("Nominativo","")).lower().strip() == u
+                    and str(x.get("Password","")).replace(".0","").strip() == p
+                ),
+                None
+            )
 
-def format_nome(txt):
-    return txt.strip().capitalize()
+            if user:
+                st.session_state.logged_in = True
+                st.session_state.login_time = datetime.now()
+                st.session_state.utente = user.get("Nominativo")
+                st.session_state.ruolo = user.get("Ruolo")
+                st.session_state.squadra = user.get("Squadra")
+                st.session_state.telefono = user.get("Telefono")
 
-# =========================
-# DB
-# =========================
-@st.cache_data(ttl=60)
-def get_utenti_login():
-    res = supabase.table("login").select("*").execute()
-    return res.data or []
+                st.success("Accesso riuscito")
+                st.rerun()
 
-@st.cache_data(ttl=60)
-def get_operatori():
-    res = supabase.table("operatori").select("*").execute()
-    return res.data or []
+            else:
+                st.error("Credenziali errate")
 
-# =========================
-# LOGIN
-# =========================
-if st.session_state.pagina == "login":
+    st.stop()
+    # ============================
+    # ⏱️ CONTROLLO SCADENZA LOGIN
+    # ============================
+    
+    from datetime import datetime
+    
+    if st.session_state.get("logged_in"):
+    
+        login_time = st.session_state.get("login_time")
+    
+        if login_time:
+            durata = datetime.now() - login_time
+    
+            if durata.total_seconds() > 21600:  # 6 ore
+                st.warning("Sessione scaduta, rifai il login")
+                st.session_state.clear()
+                st.rerun()
 
-    st.markdown("## 🔐 Login")
-
-    matricola = st.text_input("Matricola")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Accedi"):
-
-        utenti = get_utenti_login()
-
-        user = next(
-            (
-                x for x in utenti
-                if str(x.get("matricola","")).strip() == matricola.strip()
-                and str(x.get("password","")).strip() == hash_password(password)
-            ),
-            None
-        )
-
-        if user:
-            st.session_state.logged_in = True
-            st.session_state.utente = f"{user.get('nome')} {user.get('cognome')}"
-            st.session_state.ruolo = user.get("ruolo","")
-
-            st.success("Accesso riuscito")
-            st.rerun()
-        else:
-            st.error("Credenziali errate")
-
-    if st.button("Vai alla registrazione"):
-        st.session_state.pagina = "registrazione"
-        st.rerun()
-
-# =========================
-# REGISTRAZIONE
-# =========================
-elif st.session_state.pagina == "registrazione":
-
-    st.markdown("## 🆕 Registrazione")
-
-    nome = st.text_input("Nome")
-    cognome = st.text_input("Cognome")
-    email = st.text_input("Email")
-    matricola = st.text_input("Matricola")
-
-    ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"])
-
-    password = st.text_input("Password", type="password")
-
-    if st.button("Registrati"):
-
-        nome = nome.strip()
-        cognome = cognome.strip()
-        email = email.strip()
-        matricola = matricola.strip()
-        password = password.strip()
-
-        if not nome or not cognome or not matricola or not password:
-            st.error("Compila i campi obbligatori")
-
-        else:
-            nome = format_nome(nome)
-            cognome = format_nome(cognome)
-
-            try:
-                esiste = (
-                    supabase.table("login")
-                    .select("matricola")
-                    .eq("matricola", matricola)
-                    .execute()
-                )
-
-                if esiste.data:
-                    st.error("Matricola già esistente")
-
-                else:
-                    supabase.table("login").insert({
-                        "nome": nome,
-                        "cognome": cognome,
-                        "email": email,
-                        "matricola": matricola,
-                        "password": hash_password(password),
-                        "ruolo": ruolo
-                    }).execute()
-
-                    st.success("✅ Registrazione effettuata!")
-
-                    # torna al login
-                    st.session_state.pagina = "login"
-                    st.rerun()
-
-            except Exception as e:
-                st.error(f"Errore DB: {e}")
-
-    if st.button("Torna al login"):
-        st.session_state.pagina = "login"
-        st.rerun()
-
-# =========================
-# DOPO LOGIN
-# =========================
-if st.session_state.logged_in:
-
-    st.write(f"👤 {st.session_state.utente} ({st.session_state.ruolo})")
-
-    if st.button("🚪 Logout"):
-        st.session_state.clear()
-        st.rerun()
-
-    # 🔥 OPERATORI (tabella giusta)
-    operatori_data = get_operatori()
-
-    operatori = [u.get("Nominativo", "") for u in operatori_data]
-
-    # esempio uso
-    st.selectbox("Seleziona operatore", operatori)
-
-    st.title("📊 Gestione Manutenzione")
-            
-
-utente = st.session_state.get("utente", "")
-ruolo = st.session_state.get("ruolo", "")
+utente = st.session_state.utente
+ruolo = st.session_state.ruolo.upper()
 
 # =========================
 # HEADER
