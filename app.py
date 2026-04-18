@@ -266,43 +266,56 @@ if not st.session_state.logged_in:
 
         # ================= REGISTRAZIONE =================
         with tab2:
-
+        
             st.markdown("## 🆕 Registrazione")
-
+        
+            # 🔥 flag reset
+            if "reset_form" not in st.session_state:
+                st.session_state.reset_form = False
+        
+            if st.session_state.reset_form:
+                st.session_state.reg_nome = ""
+                st.session_state.reg_cognome = ""
+                st.session_state.reg_matricola = ""
+                st.session_state.reg_tel = ""
+                st.session_state.reg_squadra = ""
+                st.session_state.reg_pass = ""
+                st.session_state.reset_form = False
+        
             nome = st.text_input("Nome", key="reg_nome")
             cognome = st.text_input("Cognome", key="reg_cognome")
             matricola = st.text_input("Matricola", key="reg_matricola")
             telefono = st.text_input("Telefono", key="reg_tel")
             squadra = st.text_input("Squadra", key="reg_squadra")
-
+        
             ruolo = st.selectbox(
                 "Ruolo",
                 ["OPERATORE", "CAPOSQUADRA"],
                 key="reg_ruolo"
             )
-
+        
             password = st.text_input("Password", type="password", key="reg_pass")
-
+        
             if st.button("Registrati"):
-
+        
                 if not nome or not cognome or not matricola or not password:
                     st.error("Compila i campi obbligatori")
-
+        
                 else:
                     nome = format_nome(nome)
                     cognome = format_nome(cognome)
                     nominativo = f"{cognome} {nome}"
-
+        
                     try:
                         # 🔍 controllo duplicato LOGIN
                         esiste = supabase.table("login")\
                             .select("matricola")\
                             .eq("matricola", matricola)\
                             .execute()
-
+        
                         if esiste.data:
                             st.error("Matricola già registrata")
-
+        
                         else:
                             # ================= LOGIN
                             supabase.table("login").insert({
@@ -312,15 +325,14 @@ if not st.session_state.logged_in:
                                 "password": hash_password(password),
                                 "ruolo": ruolo
                             }).execute()
-
+        
                             # ================= OPERATORI (NO DUPLICATI)
                             esiste_op = supabase.table("operatori")\
                                 .select("Matricola")\
                                 .eq("Matricola", matricola)\
                                 .execute()
-
+        
                             if not esiste_op.data:
-
                                 supabase.table("operatori").insert({
                                     "Nominativo": nominativo,
                                     "Matricola": matricola,
@@ -328,27 +340,19 @@ if not st.session_state.logged_in:
                                     "Squadra": squadra,
                                     "Ruolo": ruolo
                                 }).execute()
-
+        
                             st.success("✅ Registrazione completata!")
-
+        
                             # 🔥 aggiorna cache
                             st.cache_data.clear()
-
-                            # 🔥 reset campi
-                            st.session_state.reg_nome = ""
-                            st.session_state.reg_cognome = ""
-                            st.session_state.reg_matricola = ""
-                            st.session_state.reg_tel = ""
-                            st.session_state.reg_squadra = ""
-                            st.session_state.reg_pass = ""
-
+        
+                            # 🔥 trigger reset sicuro
+                            st.session_state.reset_form = True
+        
                             st.rerun()
-
+        
                     except Exception as e:
                         st.error(f"Errore: {e}")
-
-    st.stop()
-
 # =========================
 # DOPO LOGIN
 # =========================
