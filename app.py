@@ -150,6 +150,7 @@ if "logged_in" not in st.session_state:
 
 @st.cache_data(ttl=60)
 def get_utenti():
+
     res = supabase.table("operatori").select("*").execute()
     return res.data or[]
     
@@ -352,9 +353,6 @@ if not st.session_state.logged_in:
         
                             # ⏱️ mostra messaggio
                             time.sleep(2)
-        
-                            # 🔥 torna al login
-                            st.session_state.pagina = "login"
         
                             st.rerun()
         
