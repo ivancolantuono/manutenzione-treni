@@ -144,9 +144,14 @@ key = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(url, key)
 
-
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+
+if "utente" not in st.session_state:
+    st.session_state.utente = ""
+
+if "ruolo" not in st.session_state:
+    st.session_state.ruolo = ""
 
 @st.cache_data(ttl=60)
 def get_utenti():
@@ -299,8 +304,8 @@ elif st.session_state.pagina == "registrazione":
         st.session_state.pagina = "login"
         st.rerun()
 
-utente = st.session_state.utente
-ruolo = st.session_state.ruolo.upper()
+utente = st.session_state.get("utente", "")
+ruolo = st.session_state.get("ruolo", "")
 
 # =========================
 # HEADER
