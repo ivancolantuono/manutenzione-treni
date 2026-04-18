@@ -220,25 +220,21 @@ if not st.session_state.logged_in:
 
             if st.button("Accedi"):
                 st.markdown("---")
-                st.markdown("### 🔑 Recupera password")
+                st.markdown("### 🔑 Reset password")
                 
-                email_rec = st.text_input("Inserisci email", key="rec_email")
+                email_reset = st.text_input("Email", key="reset_email")
+                nuova_pass = st.text_input("Nuova password", type="password", key="reset_pass")
                 
-                if st.button("Recupera password"):
+                if st.button("Aggiorna password"):
                 
-                    if not email_rec:
-                        st.error("Inserisci email")
+                    if not email_reset or not nuova_pass:
+                        st.error("Compila tutti i campi")
                 
                     else:
-                        import random
-                        import string
-                
-                        nuova_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-                
                         try:
                             user = supabase.table("login")\
                                 .select("*")\
-                                .eq("email", email_rec)\
+                                .eq("email", email_reset)\
                                 .execute()
                 
                             if not user.data:
@@ -247,13 +243,12 @@ if not st.session_state.logged_in:
                             else:
                                 supabase.table("login")\
                                     .update({
-                                        "password": hash_password(nuova_password)
+                                        "password": hash_password(nuova_pass)
                                     })\
-                                    .eq("email", email_rec)\
+                                    .eq("email", email_reset)\
                                     .execute()
                 
-                                st.success("✅ Nuova password generata")
-                                st.warning(f"Password temporanea: {nuova_password}")
+                                st.success("✅ Password aggiornata!")
                 
                         except Exception as e:
                             st.error(f"Errore: {e}")
