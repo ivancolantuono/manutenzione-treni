@@ -260,41 +260,49 @@ if not st.session_state.logged_in:
 
         # ===== REGISTRAZIONE =====
         with tab2:
-
+        
+            import time
+        
             st.markdown("## 🆕 Registrazione")
-
+        
+            # stato pagina
+            if "pagina" not in st.session_state:
+                st.session_state.pagina = "login"
+        
             nome = st.text_input("Nome", key="reg_nome")
             cognome = st.text_input("Cognome", key="reg_cognome")
             email = st.text_input("Email", key="reg_email")
             matricola = st.text_input("Matricola", key="reg_matricola")
-
+        
             ruolo = st.selectbox(
                 "Ruolo",
                 ["OPERATORE", "CAPOSQUADRA"],
                 key="reg_ruolo"
             )
-
+        
             password = st.text_input("Password", type="password", key="reg_pass")
-
+        
             if st.button("Registrati"):
-
-                if not nome or not cognome or not matricola or not password:
-                    st.error("Compila i campi obbligatori")
-
+        
+                if not nome or not cognome or not matricola or not password or not email:
+                    st.error("Compila tutti i campi obbligatori")
+        
                 else:
                     nome = format_nome(nome)
                     cognome = format_nome(cognome)
-
+        
                     try:
+                        # 🔍 controllo duplicato
                         esiste = supabase.table("login")\
                             .select("matricola")\
                             .eq("matricola", matricola)\
                             .execute()
-
+        
                         if esiste.data:
                             st.error("Matricola già registrata")
-
+        
                         else:
+                            # 🔥 INSERT LOGIN
                             supabase.table("login").insert({
                                 "nome": nome,
                                 "cognome": cognome,
@@ -303,12 +311,20 @@ if not st.session_state.logged_in:
                                 "password": hash_password(password),
                                 "ruolo": ruolo
                             }).execute()
-
+        
                             st.success("✅ Registrazione completata!")
-
+        
+                            # aggiorna cache
                             st.cache_data.clear()
+        
+                            # ⏱️ mostra messaggio
+                            time.sleep(2)
+        
+                            # 🔥 torna al login
+                            st.session_state.pagina = "login"
+        
                             st.rerun()
-
+        
                     except Exception as e:
                         st.error(f"Errore: {e}")
 
