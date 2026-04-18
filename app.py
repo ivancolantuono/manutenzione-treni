@@ -219,40 +219,7 @@ if not st.session_state.logged_in:
             matricola = st.text_input("Matricola")
             password = st.text_input("Password", type="password")
 
-            if st.button("Accedi"):
-                st.markdown("---")
-                st.markdown("### 🔑 Reset password")
-                
-                email_reset = st.text_input("Email", key="reset_email")
-                nuova_pass = st.text_input("Nuova password", type="password", key="reset_pass")
-                
-                if st.button("Aggiorna password"):
-                
-                    if not email_reset or not nuova_pass:
-                        st.error("Compila tutti i campi")
-                
-                    else:
-                        try:
-                            user = supabase.table("login")\
-                                .select("*")\
-                                .eq("email", email_reset)\
-                                .execute()
-                
-                            if not user.data:
-                                st.error("Email non trovata")
-                
-                            else:
-                                supabase.table("login")\
-                                    .update({
-                                        "password": hash_password(nuova_pass)
-                                    })\
-                                    .eq("email", email_reset)\
-                                    .execute()
-                
-                                st.success("✅ Password aggiornata!")
-                
-                        except Exception as e:
-                            st.error(f"Errore: {e}")
+            if st.button("Accedi"):                
 
                 utenti_login = get_login()
 
