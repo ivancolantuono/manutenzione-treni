@@ -171,62 +171,133 @@ def salva_log(item_id, azione, utente, vecchio, nuovo):
         print("Errore log:", e)
 
 # =========================
-# SESSION
+# PAGINA
 # =========================
-if not st.session_state.logged_in:
+if "pagina" not in st.session_state:
+    st.session_state.pagina = "login"
 
-    col1, col2, col3 = st.columns([1,2,1])
+# =========================
+# FUNZIONI
+# =========================
+import hashlib
 
-    with col2:
-        st.image("frecciarossa.jpg")
-        st.markdown("## 🔐 LOGIN")
+def hash_password(pwd):
+    return hashlib.sha256(pwd.encode()).hexdigest()
 
-        u = st.text_input("Utente").strip().lower()
-        p = st.text_input("Password", type="password").strip()
+def format_nome(txt):
+    return txt.strip().capitalize()
 
-        if st.button("Accedi"):
+# =========================
+# CARICA UTENTI
+# =========================
+@st.cache_data(ttl=60)
+def get_utenti():
+    res = supabase.table("login").select("*").execute()
+    return res.data or []
 
-            user = next(
-                (
-                    x for x in utenti
-                    if str(x.get("Nominativo","")).lower().strip() == u
-                    and str(x.get("Password","")).replace(".0","").strip() == p
-                ),
-                None
-            )
+# =========================
+# LOGIN
+# =========================
+if st.session_state.pagina == "login":
 
-            if user:
-                st.session_state.logged_in = True
-                st.session_state.login_time = datetime.now()
-                st.session_state.utente = user.get("Nominativo")
-                st.session_state.ruolo = user.get("Ruolo")
-                st.session_state.squadra = user.get("Squadra")
-                st.session_state.telefono = user.get("Telefono")
+    st.markdown("## 🔐 Login")
 
-                st.success("Accesso riuscito")
-                st.rerun()
+    matricola = st.text_input("Matricola")
+    password = st.text_input("Password", type="password")
 
-            else:
-                st.error("Credenziali errate")
+    if st.button("Accedi"):
 
-    st.stop()
-    # ============================
-    # ⏱️ CONTROLLO SCADENZA LOGIN
-    # ============================
-    
-    from datetime import datetime
-    
-    if st.session_state.get("logged_in"):
-    
-        login_time = st.session_state.get("login_time")
-    
-        if login_time:
-            durata = datetime.now() - login_time
-    
-            if durata.total_seconds() > 21600:  # 6 ore
-                st.warning("Sessione scaduta, rifai il login")
-                st.session_state.clear()
-                st.rerun()
+        utenti = get_utenti()
+
+        user = next(
+            (
+                x for x in utenti
+                if str(x.get("matricola","")).strip() == matricola.strip()
+                and str(x.get("password","")).strip() == hash_password(password)
+            ),
+            None
+        )
+
+        if user:
+            st.session_state.logged_in = True
+            st.session_state.utente = f"{user.get('nome')} {user.get('cognome')}"
+            st.session_state.ruolo = user.get("ruolo","")
+
+            st.success("Accesso riuscito")
+            st.rerun()
+        else:
+            st.error("Credenziali errate")
+
+    # 🔁 vai a registrazione
+    if st.button("Vai alla registrazione"):
+        st.session_state.pagina = "registrazione"
+        st.rerun()
+
+# =========================
+# REGISTRAZIONE
+# =========================
+elif st.session_state.pagina == "registrazione":
+
+    st.markdown("## 🆕 Registrazione")
+
+    nome = st.text_input("Nome")
+    cognome = st.text_input("Cognome")
+    email = st.text_input("Email")
+    matricola = st.text_input("Matricola")
+
+    ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"])
+
+    password = st.text_input("Password", type="password")
+
+    if st.button("Registrati"):
+
+        nome = nome.strip()
+        cognome = cognome.strip()
+        email = email.strip()
+        matricola = matricola.strip()
+        password = password.strip()
+
+        if not nome or not cognome or not matricola or not password:
+            st.error("Compila i campi obbligatori")
+
+        else:
+            nome = format_nome(nome)
+            cognome = format_nome(cognome)
+
+            try:
+                esiste = (
+                    supabase.table("login")
+                    .select("matricola")
+                    .eq("matricola", matricola)
+                    .execute()
+                )
+
+                if esiste.data:
+                    st.error("Matricola già esistente")
+
+                else:
+                    supabase.table("login").insert({
+                        "nome": nome,
+                        "cognome": cognome,
+                        "email": email,
+                        "matricola": matricola,
+                        "password": hash_password(password),
+                        "ruolo": ruolo
+                    }).execute()
+
+                    st.success("✅ Registrazione effettuata!")
+
+                    # 🔥 TORNA AL LOGIN
+                    st.session_state.pagina = "login"
+                    st.rerun()
+
+            except Exception as e:
+                st.error(f"Errore DB: {e}")
+
+    # 🔁 torna al login manuale
+    if st.button("Torna al login"):
+        st.session_state.pagina = "login"
+        st.rerun()
 
 utente = st.session_state.utente
 ruolo = st.session_state.ruolo.upper()
