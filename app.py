@@ -144,20 +144,7 @@ key = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(url, key)
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
 
-if "utente" not in st.session_state:
-    st.session_state.utente = ""
-
-if "ruolo" not in st.session_state:
-    st.session_state.ruolo = ""
-
-@st.cache_data(ttl=60)
-def get_utenti():
-    res = supabase.table("operatori").select("*").execute()
-    return res.data or[]
-    
 utenti = get_utenti()
 # ============================
 # LOG OPEN ITEM
@@ -176,8 +163,17 @@ def salva_log(item_id, azione, utente, vecchio, nuovo):
         print("Errore log:", e)
 
 # =========================
-# PAGINA
+# SESSION INIT
 # =========================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if "utente" not in st.session_state:
+    st.session_state.utente = ""
+
+if "ruolo" not in st.session_state:
+    st.session_state.ruolo = ""
+
 if "pagina" not in st.session_state:
     st.session_state.pagina = "login"
 
@@ -193,11 +189,16 @@ def format_nome(txt):
     return txt.strip().capitalize()
 
 # =========================
-# CARICA UTENTI
+# DB
 # =========================
 @st.cache_data(ttl=60)
-def get_utenti():
+def get_utenti_login():
     res = supabase.table("login").select("*").execute()
+    return res.data or []
+
+@st.cache_data(ttl=60)
+def get_operatori():
+    res = supabase.table("operatori").select("*").execute()
     return res.data or []
 
 # =========================
@@ -212,7 +213,7 @@ if st.session_state.pagina == "login":
 
     if st.button("Accedi"):
 
-        utenti = get_utenti()
+        utenti = get_utenti_login()
 
         user = next(
             (
@@ -233,7 +234,6 @@ if st.session_state.pagina == "login":
         else:
             st.error("Credenziali errate")
 
-    # 🔁 vai a registrazione
     if st.button("Vai alla registrazione"):
         st.session_state.pagina = "registrazione"
         st.rerun()
@@ -292,17 +292,38 @@ elif st.session_state.pagina == "registrazione":
 
                     st.success("✅ Registrazione effettuata!")
 
-                    # 🔥 TORNA AL LOGIN
+                    # torna al login
                     st.session_state.pagina = "login"
                     st.rerun()
 
             except Exception as e:
                 st.error(f"Errore DB: {e}")
 
-    # 🔁 torna al login manuale
     if st.button("Torna al login"):
         st.session_state.pagina = "login"
         st.rerun()
+
+# =========================
+# DOPO LOGIN
+# =========================
+if st.session_state.logged_in:
+
+    st.write(f"👤 {st.session_state.utente} ({st.session_state.ruolo})")
+
+    if st.button("🚪 Logout"):
+        st.session_state.clear()
+        st.rerun()
+
+    # 🔥 OPERATORI (tabella giusta)
+    operatori_data = get_operatori()
+
+    operatori = [u.get("Nominativo", "") for u in operatori_data]
+
+    # esempio uso
+    st.selectbox("Seleziona operatore", operatori)
+
+    st.title("📊 Gestione Manutenzione")
+            
 
 utente = st.session_state.get("utente", "")
 ruolo = st.session_state.get("ruolo", "")
