@@ -219,6 +219,44 @@ if not st.session_state.logged_in:
             password = st.text_input("Password", type="password")
 
             if st.button("Accedi"):
+                st.markdown("---")
+                st.markdown("### 🔑 Recupera password")
+                
+                email_rec = st.text_input("Inserisci email", key="rec_email")
+                
+                if st.button("Recupera password"):
+                
+                    if not email_rec:
+                        st.error("Inserisci email")
+                
+                    else:
+                        import random
+                        import string
+                
+                        nuova_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+                
+                        try:
+                            user = supabase.table("login")\
+                                .select("*")\
+                                .eq("email", email_rec)\
+                                .execute()
+                
+                            if not user.data:
+                                st.error("Email non trovata")
+                
+                            else:
+                                supabase.table("login")\
+                                    .update({
+                                        "password": hash_password(nuova_password)
+                                    })\
+                                    .eq("email", email_rec)\
+                                    .execute()
+                
+                                st.success("✅ Nuova password generata")
+                                st.warning(f"Password temporanea: {nuova_password}")
+                
+                        except Exception as e:
+                            st.error(f"Errore: {e}")
 
                 utenti_login = get_login()
 
