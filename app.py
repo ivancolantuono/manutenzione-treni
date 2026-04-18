@@ -145,7 +145,7 @@ key = os.getenv("SUPABASE_KEY")
 supabase = create_client(url, key)
 
 
-utenti = get_utenti()
+
 # ============================
 # LOG OPEN ITEM
 # ============================
