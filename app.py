@@ -329,22 +329,6 @@ if not st.session_state.logged_in:
     st.stop()  # 🔥 BLOCCA QUI L'APP
 
 # =========================
-# ⏱️ CONTROLLO SESSIONE
-# =========================
-from datetime import datetime, timedelta
-
-if st.session_state.get("logged_in"):
-
-    login_time = st.session_state.get("login_time")
-
-    if login_time:
-        durata = datetime.now() - login_time
-
-        if durata > timedelta(hours=12):  # 🔥 cambia qui durata
-            st.warning("Sessione scaduta, rifai il login")
-            st.session_state.clear()
-            st.rerun()
-# =========================
 # DOPO LOGIN
 # =========================
 utente = st.session_state.get("utente", "")
