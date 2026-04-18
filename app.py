@@ -376,7 +376,7 @@ else:
         [
             "🚄 MANUTENZIONE",
             "📚 SCHEDE SR",
-            "🗄️ SCHEDE SR VZI6",
+            "📚 SCHEDE SR VZI6",
             "📌 OPEN ITEM",
             "📦 CERCA COMPONENTE"
         ],
