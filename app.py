@@ -265,6 +265,7 @@ if not st.session_state.logged_in:
 
             nome = st.text_input("Nome", key="reg_nome")
             cognome = st.text_input("Cognome", key="reg_cognome")
+            email = st.text_input("Email", key="reg_email")
             matricola = st.text_input("Matricola", key="reg_matricola")
 
             ruolo = st.selectbox(
@@ -297,6 +298,7 @@ if not st.session_state.logged_in:
                             supabase.table("login").insert({
                                 "nome": nome,
                                 "cognome": cognome,
+                                "email": email,
                                 "matricola": matricola,
                                 "password": hash_password(password),
                                 "ruolo": ruolo
