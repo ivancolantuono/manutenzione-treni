@@ -149,11 +149,6 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 @st.cache_data(ttl=60)
-def get_login():
-    res = supabase.table("login").select("*").execute()
-    return res.data or []
-
-@st.cache_data(ttl=60)
 def get_utenti():
     res = supabase.table("operatori").select("*").execute()
     return res.data or[]
@@ -176,70 +171,189 @@ def salva_log(item_id, azione, utente, vecchio, nuovo):
         print("Errore log:", e)
 
 # =========================
+# 🔐 LOGIN + REGISTRAZIONE
+# =========================
+import hashlib
+
+def hash_password(pwd):
+    return hashlib.sha256(pwd.encode()).hexdigest()
+
+def format_nome(txt):
+    return txt.strip().capitalize()
+
+@st.cache_data(ttl=60)
+def get_login():
+    res = supabase.table("login").select("*").execute()
+    return res.data or []
+
+@st.cache_data(ttl=60)
+def get_operatori():
+    res = supabase.table("operatori").select("*").execute()
+    return res.data or []
+
+# =========================
 # SESSION
+# =========================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if "pagina" not in st.session_state:
+    st.session_state.pagina = "login"
+
+# =========================
+# LOGIN / REGISTRAZIONE
 # =========================
 if not st.session_state.logged_in:
 
     col1, col2, col3 = st.columns([1,2,1])
 
     with col2:
+
         st.image("frecciarossa.jpg", width=250)
-        st.markdown("## 🔐 LOGIN")
 
-        matricola = st.text_input("Matricola")
-        password = st.text_input("Password", type="password")
+        tab1, tab2 = st.tabs(["🔐 Login", "🆕 Registrazione"])
 
-        if st.button("Accedi"):
+        # ================= LOGIN =================
+        with tab1:
 
-            utenti_login = get_login()
+            st.markdown("## 🔐 Login")
 
-            user = next(
-                (
-                    x for x in utenti_login
-                    if str(x.get("matricola","")).strip() == matricola.strip()
-                    and str(x.get("password","")).strip() == password
-                ),
-                None
-            )
+            matricola = st.text_input("Matricola", key="login_mat")
+            password = st.text_input("Password", type="password", key="login_pass")
 
-            if user:
+            if st.button("Accedi"):
 
-                # 🔥 prendi dati da OPERATORI
-                operatori = get_utenti()
+                utenti_login = get_login()
 
-                operatore = next(
+                user = next(
                     (
-                        o for o in operatori
-                        if str(o.get("Matricola","")).strip() == matricola.strip()
+                        x for x in utenti_login
+                        if str(x.get("matricola","")).strip().lower() == matricola.strip().lower()
+                        and str(x.get("password","")).strip() == hash_password(password)
                     ),
                     None
                 )
 
-                st.session_state.logged_in = True
-                st.session_state.login_time = datetime.now()
+                if user:
 
-                # 👉 se esiste in operatori uso quello
-                if operatore:
-                    st.session_state.utente = operatore.get("Nominativo")
-                    st.session_state.ruolo = operatore.get("Ruolo")
-                    st.session_state.squadra = operatore.get("Squadra")
-                    st.session_state.telefono = operatore.get("Telefono")
+                    operatori = get_operatori()
+
+                    operatore = next(
+                        (
+                            o for o in operatori
+                            if str(o.get("Matricola","")).strip().lower() == matricola.strip().lower()
+                        ),
+                        None
+                    )
+
+                    st.session_state.logged_in = True
+                    st.session_state.login_time = datetime.now()
+
+                    if operatore:
+                        st.session_state.utente = operatore.get("Nominativo")
+                        st.session_state.ruolo = operatore.get("Ruolo")
+                        st.session_state.squadra = operatore.get("Squadra")
+                        st.session_state.telefono = operatore.get("Telefono")
+                    else:
+                        st.session_state.utente = user.get("nome","")
+                        st.session_state.ruolo = user.get("ruolo","OPERATORE")
+
+                    st.success("Accesso riuscito")
+                    st.rerun()
 
                 else:
-                    # fallback
-                    st.session_state.utente = user.get("nome","")
-                    st.session_state.ruolo = user.get("ruolo","OPERATORE")
+                    st.error("Credenziali errate")
 
-                st.success("Accesso riuscito")
-                st.rerun()
+        # ================= REGISTRAZIONE =================
+        with tab2:
 
-            else:
-                st.error("Credenziali errate")
+            st.markdown("## 🆕 Registrazione")
+
+            nome = st.text_input("Nome", key="reg_nome")
+            cognome = st.text_input("Cognome", key="reg_cognome")
+            matricola = st.text_input("Matricola", key="reg_matricola")
+            telefono = st.text_input("Telefono", key="reg_tel")
+            squadra = st.text_input("Squadra", key="reg_squadra")
+
+            ruolo = st.selectbox(
+                "Ruolo",
+                ["OPERATORE", "CAPOSQUADRA"],
+                key="reg_ruolo"
+            )
+
+            password = st.text_input("Password", type="password", key="reg_pass")
+
+            if st.button("Registrati"):
+
+                if not nome or not cognome or not matricola or not password:
+                    st.error("Compila i campi obbligatori")
+
+                else:
+                    nome = format_nome(nome)
+                    cognome = format_nome(cognome)
+                    nominativo = f"{cognome} {nome}"
+
+                    try:
+                        # 🔍 controllo duplicato LOGIN
+                        esiste = supabase.table("login")\
+                            .select("matricola")\
+                            .eq("matricola", matricola)\
+                            .execute()
+
+                        if esiste.data:
+                            st.error("Matricola già registrata")
+
+                        else:
+                            # ================= LOGIN
+                            supabase.table("login").insert({
+                                "nome": nome,
+                                "cognome": cognome,
+                                "matricola": matricola,
+                                "password": hash_password(password),
+                                "ruolo": ruolo
+                            }).execute()
+
+                            # ================= OPERATORI (NO DUPLICATI)
+                            esiste_op = supabase.table("operatori")\
+                                .select("Matricola")\
+                                .eq("Matricola", matricola)\
+                                .execute()
+
+                            if not esiste_op.data:
+
+                                supabase.table("operatori").insert({
+                                    "Nominativo": nominativo,
+                                    "Matricola": matricola,
+                                    "Telefono": telefono,
+                                    "Squadra": squadra,
+                                    "Ruolo": ruolo
+                                }).execute()
+
+                            st.success("✅ Registrazione completata!")
+
+                            # 🔥 aggiorna cache
+                            st.cache_data.clear()
+
+                            # 🔥 reset campi
+                            st.session_state.reg_nome = ""
+                            st.session_state.reg_cognome = ""
+                            st.session_state.reg_matricola = ""
+                            st.session_state.reg_tel = ""
+                            st.session_state.reg_squadra = ""
+                            st.session_state.reg_pass = ""
+
+                            st.rerun()
+
+                    except Exception as e:
+                        st.error(f"Errore: {e}")
 
     st.stop()
 
-utente = st.session_state.utente
-ruolo = st.session_state.ruolo.upper()
+# =========================
+# DOPO LOGIN
+# =========================
+utente = st.session_state.get("utente", "")
+ruolo = st.session_state.get("ruolo", "").upper()
 
 # =========================
 # HEADER
