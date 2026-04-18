@@ -206,7 +206,7 @@ if not st.session_state.logged_in:
 
     with col2:
 
-        st.image("frecciarossa.jpg", width=450)
+        st.image("frecciarossa.jpg", width=850)
 
         tab1, tab2 = st.tabs(["🔐 Login", "🆕 Registrazione"])
 
