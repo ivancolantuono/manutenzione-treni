@@ -199,9 +199,15 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 # =========================
-# BLOCCO LOGIN
+# BLOCCO LOGIN COMPLETO
 # =========================
 if not st.session_state.logged_in:
+
+    import time
+
+    # stato tab
+    if "tab_attivo" not in st.session_state:
+        st.session_state.tab_attivo = 0
 
     col1, col2, col3 = st.columns([1,2,1])
 
@@ -257,6 +263,7 @@ if not st.session_state.logged_in:
                         st.session_state.ruolo = user.get("ruolo","OPERATORE")
 
                     st.success("✅ Accesso riuscito")
+                    time.sleep(1)
                     st.rerun()
 
                 else:
@@ -266,8 +273,6 @@ if not st.session_state.logged_in:
         # 🆕 REGISTRAZIONE
         # =========================
         with tab2:
-
-            import time
 
             st.markdown("## 🆕 Registrazione")
 
@@ -315,11 +320,10 @@ if not st.session_state.logged_in:
                             st.success("✅ Registrazione completata!")
 
                             st.cache_data.clear()
-
                             time.sleep(2)
 
-                            # 👉 TORNA AL LOGIN
-                            st.session_state.clear()
+                            # 🔥 torna al login
+                            st.session_state.tab_attivo = 0
                             st.rerun()
 
                     except Exception as e:
@@ -351,17 +355,26 @@ if not st.session_state.logged_in:
                             st.error("Matricola non trovata")
 
                         else:
-                            supabase.table("login").update({
+                            update = supabase.table("login").update({
                                 "password": hash_password(nuova_password)
                             }).eq("matricola", matricola_reset).execute()
 
-                            st.success("✅ Password aggiornata")
+                            if update.data:
+                                st.success("✅ Password aggiornata!")
+
+                                st.cache_data.clear()
+                                time.sleep(2)
+
+                                # 🔥 torna al login
+                                st.session_state.tab_attivo = 0
+                                st.rerun()
+                            else:
+                                st.error("Errore aggiornamento password")
 
                     except Exception as e:
                         st.error(f"Errore: {e}")
 
     st.stop()
-
 # =========================
 # DOPO LOGIN
 # =========================
