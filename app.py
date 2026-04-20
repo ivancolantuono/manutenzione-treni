@@ -209,17 +209,19 @@ if not st.session_state.logged_in:
 
         st.image("frecciarossa.jpg", width=1000)
 
-        tab1, tab2 = st.tabs(["🔐 Login", "🆕 Registrazione"])
+        tab1, tab2, tab3 = st.tabs(["🔐 Login", "🆕 Registrazione", "🔑 Reset Password"])
 
-        # ===== LOGIN =====
+        # =========================
+        # 🔐 LOGIN
+        # =========================
         with tab1:
 
             st.markdown("## 🔐 Login")
 
-            matricola = st.text_input("Matricola")
-            password = st.text_input("Password", type="password")
+            matricola = st.text_input("Matricola", key="login_mat")
+            password = st.text_input("Password", type="password", key="login_pass")
 
-            if st.button("Accedi"):                
+            if st.button("Accedi"):
 
                 utenti_login = get_login()
 
@@ -245,6 +247,7 @@ if not st.session_state.logged_in:
                     )
 
                     st.session_state.logged_in = True
+                    st.session_state.login_time = datetime.now()
 
                     if operatore:
                         st.session_state.utente = operatore.get("Nominativo")
@@ -253,57 +256,53 @@ if not st.session_state.logged_in:
                         st.session_state.utente = user.get("nome","")
                         st.session_state.ruolo = user.get("ruolo","OPERATORE")
 
-                    st.success("Accesso riuscito")
+                    st.success("✅ Accesso riuscito")
                     st.rerun()
 
                 else:
-                    st.error("Credenziali errate")
+                    st.error("❌ Credenziali errate")
 
-        # ===== REGISTRAZIONE =====
+        # =========================
+        # 🆕 REGISTRAZIONE
+        # =========================
         with tab2:
-        
+
             import time
-        
+
             st.markdown("## 🆕 Registrazione")
-        
-            # stato pagina
-            if "pagina" not in st.session_state:
-                st.session_state.pagina = "login"
-        
+
             nome = st.text_input("Nome", key="reg_nome")
             cognome = st.text_input("Cognome", key="reg_cognome")
             email = st.text_input("Email", key="reg_email")
             matricola = st.text_input("Matricola", key="reg_matricola")
-        
+
             ruolo = st.selectbox(
                 "Ruolo",
                 ["OPERATORE", "CAPOSQUADRA"],
                 key="reg_ruolo"
             )
-        
+
             password = st.text_input("Password", type="password", key="reg_pass")
-        
+
             if st.button("Registrati"):
-        
+
                 if not nome or not cognome or not matricola or not password or not email:
                     st.error("Compila tutti i campi obbligatori")
-        
+
                 else:
                     nome = format_nome(nome)
                     cognome = format_nome(cognome)
-        
+
                     try:
-                        # 🔍 controllo duplicato
                         esiste = supabase.table("login")\
                             .select("matricola")\
                             .eq("matricola", matricola)\
                             .execute()
-        
+
                         if esiste.data:
                             st.error("Matricola già registrata")
-        
+
                         else:
-                            # 🔥 INSERT LOGIN
                             supabase.table("login").insert({
                                 "nome": nome,
                                 "cognome": cognome,
@@ -312,21 +311,56 @@ if not st.session_state.logged_in:
                                 "password": hash_password(password),
                                 "ruolo": ruolo
                             }).execute()
-        
+
                             st.success("✅ Registrazione completata!")
-        
-                            # aggiorna cache
+
                             st.cache_data.clear()
-        
-                            # ⏱️ mostra messaggio
+
                             time.sleep(2)
-        
+
+                            # 👉 TORNA AL LOGIN
+                            st.session_state.clear()
                             st.rerun()
-        
+
                     except Exception as e:
                         st.error(f"Errore: {e}")
 
-    st.stop()  # 🔥 BLOCCA QUI L'APP
+        # =========================
+        # 🔑 RESET PASSWORD
+        # =========================
+        with tab3:
+
+            st.markdown("## 🔑 Recupera Password")
+
+            matricola_reset = st.text_input("Matricola", key="reset_mat")
+            nuova_password = st.text_input("Nuova Password", type="password", key="reset_pass")
+
+            if st.button("Reimposta Password"):
+
+                if not matricola_reset or not nuova_password:
+                    st.error("Inserisci tutti i campi")
+
+                else:
+                    try:
+                        res = supabase.table("login")\
+                            .select("*")\
+                            .eq("matricola", matricola_reset)\
+                            .execute()
+
+                        if not res.data:
+                            st.error("Matricola non trovata")
+
+                        else:
+                            supabase.table("login").update({
+                                "password": hash_password(nuova_password)
+                            }).eq("matricola", matricola_reset).execute()
+
+                            st.success("✅ Password aggiornata")
+
+                    except Exception as e:
+                        st.error(f"Errore: {e}")
+
+    st.stop()
 
 # =========================
 # DOPO LOGIN
