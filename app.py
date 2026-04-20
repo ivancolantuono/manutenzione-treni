@@ -205,6 +205,10 @@ if not st.session_state.logged_in:
 
     import time
 
+    # 🔥 gestione redirect
+    if "redirect_to_login" not in st.session_state:
+        st.session_state.redirect_to_login = False
+
     col1, col2, col3 = st.columns([1,2,1])
 
     with col2:
@@ -220,6 +224,12 @@ if not st.session_state.logged_in:
             horizontal=True,
             key="pagina_login"
         )
+
+        # 🔥 redirect automatico DOPO rerun
+        if st.session_state.redirect_to_login:
+            st.session_state.pagina_login = "🔐 Login"
+            st.session_state.redirect_to_login = False
+            st.rerun()
 
         # =========================
         # 🔐 LOGIN
@@ -326,8 +336,8 @@ if not st.session_state.logged_in:
                             st.cache_data.clear()
                             time.sleep(2)
 
-                            # 🔥 TORNA AL LOGIN
-                            st.session_state.pagina_login = "🔐 Login"
+                            # 🔥 attiva redirect
+                            st.session_state.redirect_to_login = True
                             st.rerun()
 
                     except Exception as e:
@@ -368,8 +378,8 @@ if not st.session_state.logged_in:
                             st.cache_data.clear()
                             time.sleep(2)
 
-                            # 🔥 TORNA AL LOGIN
-                            st.session_state.pagina_login = "🔐 Login"
+                            # 🔥 attiva redirect
+                            st.session_state.redirect_to_login = True
                             st.rerun()
 
                     except Exception as e:
