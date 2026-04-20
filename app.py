@@ -205,22 +205,26 @@ if not st.session_state.logged_in:
 
     import time
 
-    # stato tab
-    if "tab_attivo" not in st.session_state:
-        st.session_state.tab_attivo = 0
-
     col1, col2, col3 = st.columns([1,2,1])
 
     with col2:
 
         st.image("frecciarossa.jpg", width=1000)
 
-        tab1, tab2, tab3 = st.tabs(["🔐 Login", "🆕 Registrazione", "🔑 Reset Password"])
+        # =========================
+        # NAVIGAZIONE
+        # =========================
+        pagina = st.radio(
+            "",
+            ["🔐 Login", "🆕 Registrazione", "🔑 Reset Password"],
+            horizontal=True,
+            key="pagina_login"
+        )
 
         # =========================
         # 🔐 LOGIN
         # =========================
-        with tab1:
+        if pagina == "🔐 Login":
 
             st.markdown("## 🔐 Login")
 
@@ -272,7 +276,7 @@ if not st.session_state.logged_in:
         # =========================
         # 🆕 REGISTRAZIONE
         # =========================
-        with tab2:
+        elif pagina == "🆕 Registrazione":
 
             st.markdown("## 🆕 Registrazione")
 
@@ -322,8 +326,8 @@ if not st.session_state.logged_in:
                             st.cache_data.clear()
                             time.sleep(2)
 
-                            # 🔥 torna al login
-                            st.session_state.tab_attivo = 0
+                            # 🔥 TORNA AL LOGIN
+                            st.session_state.pagina_login = "🔐 Login"
                             st.rerun()
 
                     except Exception as e:
@@ -332,49 +336,47 @@ if not st.session_state.logged_in:
         # =========================
         # 🔑 RESET PASSWORD
         # =========================
-        with tab3:
+        elif pagina == "🔑 Reset Password":
 
-            st.markdown("## 🔑 Recupera Password")
+            st.markdown("## 🔑 Reset Password")
 
-            matricola_reset = st.text_input("Matricola", key="reset_mat")
+            matricola = st.text_input("Matricola", key="reset_mat")
             nuova_password = st.text_input("Nuova Password", type="password", key="reset_pass")
 
             if st.button("Reimposta Password"):
 
-                if not matricola_reset or not nuova_password:
+                if not matricola or not nuova_password:
                     st.error("Inserisci tutti i campi")
 
                 else:
                     try:
                         res = supabase.table("login")\
                             .select("*")\
-                            .eq("matricola", matricola_reset)\
+                            .eq("matricola", matricola)\
                             .execute()
 
                         if not res.data:
                             st.error("Matricola non trovata")
 
                         else:
-                            update = supabase.table("login").update({
+                            supabase.table("login").update({
                                 "password": hash_password(nuova_password)
-                            }).eq("matricola", matricola_reset).execute()
+                            }).eq("matricola", matricola).execute()
 
-                            if update.data:
-                                st.success("✅ Password aggiornata!")
+                            st.success("✅ Password aggiornata!")
 
-                                st.cache_data.clear()
-                                time.sleep(2)
+                            st.cache_data.clear()
+                            time.sleep(2)
 
-                                # 🔥 torna al login
-                                st.session_state.tab_attivo = 0
-                                st.rerun()
-                            else:
-                                st.error("Errore aggiornamento password")
+                            # 🔥 TORNA AL LOGIN
+                            st.session_state.pagina_login = "🔐 Login"
+                            st.rerun()
 
                     except Exception as e:
                         st.error(f"Errore: {e}")
 
     st.stop()
+
 # =========================
 # DOPO LOGIN
 # =========================
