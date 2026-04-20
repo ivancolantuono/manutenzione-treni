@@ -205,8 +205,13 @@ if not st.session_state.logged_in:
 
     import time
 
-    # 🔥 gestione redirect
-    if "redirect_to_login" not in st.session_state:
+    # 🔥 inizializzazione pagina
+    if "pagina_login" not in st.session_state:
+        st.session_state.pagina_login = "🔐 Login"
+
+    # 🔥 redirect PRIMA del widget
+    if st.session_state.get("redirect_to_login"):
+        st.session_state.pagina_login = "🔐 Login"
         st.session_state.redirect_to_login = False
 
     col1, col2, col3 = st.columns([1,2,1])
@@ -224,12 +229,6 @@ if not st.session_state.logged_in:
             horizontal=True,
             key="pagina_login"
         )
-
-        # 🔥 redirect automatico DOPO rerun
-        if st.session_state.redirect_to_login:
-            st.session_state.pagina_login = "🔐 Login"
-            st.session_state.redirect_to_login = False
-            st.rerun()
 
         # =========================
         # 🔐 LOGIN
@@ -306,39 +305,26 @@ if not st.session_state.logged_in:
             if st.button("Registrati"):
 
                 if not nome or not cognome or not matricola or not password or not email:
-                    st.error("Compila tutti i campi obbligatori")
+                    st.error("Compila tutti i campi")
 
                 else:
-                    nome = format_nome(nome)
-                    cognome = format_nome(cognome)
-
                     try:
-                        esiste = supabase.table("login")\
-                            .select("matricola")\
-                            .eq("matricola", matricola)\
-                            .execute()
+                        supabase.table("login").insert({
+                            "nome": format_nome(nome),
+                            "cognome": format_nome(cognome),
+                            "email": email,
+                            "matricola": matricola,
+                            "password": hash_password(password),
+                            "ruolo": ruolo
+                        }).execute()
 
-                        if esiste.data:
-                            st.error("Matricola già registrata")
+                        st.success("✅ Registrazione completata!")
 
-                        else:
-                            supabase.table("login").insert({
-                                "nome": nome,
-                                "cognome": cognome,
-                                "email": email,
-                                "matricola": matricola,
-                                "password": hash_password(password),
-                                "ruolo": ruolo
-                            }).execute()
+                        time.sleep(2)
 
-                            st.success("✅ Registrazione completata!")
-
-                            st.cache_data.clear()
-                            time.sleep(2)
-
-                            # 🔥 attiva redirect
-                            st.session_state.redirect_to_login = True
-                            st.rerun()
+                        # 🔥 attiva redirect
+                        st.session_state.redirect_to_login = True
+                        st.rerun()
 
                     except Exception as e:
                         st.error(f"Errore: {e}")
@@ -375,7 +361,6 @@ if not st.session_state.logged_in:
 
                             st.success("✅ Password aggiornata!")
 
-                            st.cache_data.clear()
                             time.sleep(2)
 
                             # 🔥 attiva redirect
