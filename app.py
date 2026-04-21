@@ -1496,47 +1496,25 @@ elif menu == "📌 OPEN ITEM":
     # ============================
 
     st.title("📌 Open Item")
-
-    # ============================
-    # RESET FLAG
-    # ============================
-    if "reset_open_item" not in st.session_state:
-        st.session_state.reset_open_item = False
     
     with st.expander("➕ Nuova attività"):
-    
+
         col1, col2, col3 = st.columns(3)
     
         treno = col1.text_input("🚆 Treno", key="oi_treno")
-    
         cassa = col2.multiselect(
             "☑️ Cassa",
             ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"],
             key="oi_cassa"
         )
-    
         impianto = col3.selectbox(
             "⚙️ Impianto",
             ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
              "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"],
             key="oi_impianto"
         )
-    
         descrizione = st.text_area("📝 Descrizione", key="oi_descrizione")
     
-        # ============================
-        # RESET (QUI È LA CHIAVE)
-        # ============================
-        if st.session_state.reset_open_item:
-            st.session_state.oi_treno = ""
-            st.session_state.oi_cassa = []
-            st.session_state.oi_impianto = ""
-            st.session_state.oi_descrizione = ""
-            st.session_state.reset_open_item = False
-    
-        # ============================
-        # INSERT
-        # ============================
         if st.button("➕ Inserisci"):
     
             if not treno or not descrizione:
@@ -1557,8 +1535,10 @@ elif menu == "📌 OPEN ITEM":
     
             st.cache_data.clear()
     
-            # 🔥 attiva reset
-            st.session_state.reset_open_item = True
+            # 🔥 RESET SICURO (QUI È LA DIFFERENZA)
+            for key in ["oi_treno", "oi_cassa", "oi_impianto", "oi_descrizione"]:
+                if key in st.session_state:
+                    del st.session_state[key]
     
             import time
             time.sleep(1)
