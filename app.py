@@ -800,9 +800,20 @@ elif menu == "🚄 MANUTENZIONE":
 
                     # 👉 MOSTRA SUBITO I BOTTONI
                     if numeri:
+
                         links = str(link_raw).split("|") if link_raw else []
 
-                        link_txt = "\n".join([l.strip() for l in links if l.strip()])
+                        nome_scheda = r.get("Scheda", "Scheda")
+
+                        schede_txt = ""
+
+                        for link in links:
+
+                            link = link.strip()
+
+                            if link:
+
+                                schede_txt += f"{nome_scheda}\n{link}\n\n"
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
