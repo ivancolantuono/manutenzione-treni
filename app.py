@@ -376,8 +376,7 @@ if not st.session_state.logged_in:
 # DOPO LOGIN
 # =========================
 utente = st.session_state.get("utente", "")
-ruolo = st.session_state.get("ruolo", "").upper()
-
+ruolo = str(st.session_state.get("ruolo", "")).upper()
 # =========================
 # HEADER
 # =========================
