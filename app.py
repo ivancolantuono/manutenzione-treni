@@ -731,16 +731,43 @@ elif menu == "🚄 MANUTENZIONE":
                     )
     
                     colA, colB, colC = st.columns(3)
-                    # ASSEGNA
+                    # =========================
+                    # 🔧 ASSEGNA
+                    # =========================
                     if colA.button("🔧 Assegna", key=f"assegna_{i}"):
-                        # 🚫 BLOCCO SE NESSUN TECNICO
+
                         if not tecnici_input:
                             st.error("⚠️ Seleziona almeno un tecnico prima di assegnare")
                             st.stop()
 
+                        # =========================
+                        # 🔁 NOMI → MATRICOLE
+                        # =========================
+                        matricole = []
+                        numeri = []
+
+                        for t in tecnici_input:
+                            op = next(
+                                (o for o in operatori_db if o.get("Nominativo") == t),
+                                None
+                            )
+
+                            if op:
+                                matricola = op.get("Matricola")
+                                telefono = str(op.get("Telefono", "")).replace(".0","").strip()
+
+                                if matricola:
+                                    matricole.append(matricola)
+
+                                if telefono.isdigit():
+                                    numeri.append(telefono)
+
                         # 🔁 recupera eventuali note già presenti
                         note_vecchie = record.get("note", "") if record else ""
-                    
+
+                        # =========================
+                        # 💾 SALVATAGGIO
+                        # =========================
                         supabase.table("interventi").upsert({
                             "chiave": str(chiave),
                             "treno": str(treno),
@@ -750,84 +777,42 @@ elif menu == "🚄 MANUTENZIONE":
                             "componente": str(r["Componente"]),
                             "intervento": str(r["Intervento"]),
                             "link": str(link_raw),
-                            "tecnico": str(tecnici_input),
+                            "tecnico": str(matricole),   # 🔥 SOLO MATRICOLE
                             "caposquadra": str(utente),
                             "stato": "APERTO",
                             "inizio": str(ora_italia()),
-                            "note": note_vecchie  # ✅ mantiene le note esistenti
+                            "note": note_vecchie
                         }).execute()
-                    
+
                         st.cache_data.clear()
                         st.success("Assegnato")
+
+                        # =========================
+                        # 📲 WHATSAPP
+                        # =========================
+                        if numeri:
+
+                            msg = f"""🚄 NUOVA ATTIVITÀ
+
+                    🚆 Treno: {treno}
+                    🧾 ODL: {odl}
+                    📅 Data: {data_giorno}
+                    ⏱️ Scadenza: {st.session_state.scadenza}
+
+                    👷 Caposquadra: {utente}
+
+                    🔧 {r['Intervento']}
+                    🔧 {r['Componente']}
+
+                    📄 Scheda tecnica:
+                    {link_raw}
+                    """
+
+                            for num in numeri:
+                                url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
+                                st.link_button(f"📲 Invia a {num}", url)
+
                         st.rerun()
-
-                    # WHATSAPP
-                    import urllib.parse
-
-                    numeri = []
-
-                    for t in tecnici_input:
-                        for u in utenti:
-                            nome = str(u.get("Nominativo","")).lower().strip()
-                            telefono = str(u.get("Telefono","")).replace(".0","").strip()
-                    
-                            if str(t).lower().strip() == nome and telefono.isdigit():
-                                numeri.append(telefono)
-
-                        
-                    if numeri:
-                        
-                        link = r.get("Link", "")
-
-                        msg = f"""🚄 NUOVA ATTIVITÀ
-                        
-    🚆 Treno: {treno}
-    🧾 ODL: {odl}
-    📅 Data: {data_giorno}
-    ⏱️ Scadenza: {st.session_state.scadenza}
-                        
-    👷 Caposquadra: {utente}
-                        
-    🔧 {r['Intervento']}
-    🔧 {r['Componente']}
-                        
-    📄 Scheda tecnica:
-    {link}
-    """
-                    
-                        # 🔥 BOTTONI BELLI (NON LINK BRUTTI)
-                        for num in numeri:
-                            url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
-                            
-                            st.link_button(f"📲 Invia a {num}", url)
-                    # CANCELLA
-                    if colB.button("🗑️ Cancella", key=f"cancella_{i}"):
-
-                        supabase.table("interventi").delete().eq("chiave", chiave).execute()
-                        st.cache_data.clear()
-                        st.warning("Cancellato")
-                        st.rerun()
-
-                    # =========================
-                    # 🔒 CHIUSURA FORZATA CAPOSQUADRA
-                    # =========================
-                    if record and record.get("stato") != "CHIUSO":
-                    
-                        if colC.button("🔒 Chiudi attività", key=f"chiudi_capo_{i}"):
-                    
-                            note_vecchie = record.get("note", "")
-                    
-                            nuove_note = f"{note_vecchie}\n---\nCHIUSO DA CAPOSQUADRA: {utente}"
-                    
-                            supabase.table("interventi").update({
-                                "stato": "CHIUSO",
-                                "fine": ora_italia(),
-                                "note": nuove_note
-                            }).eq("chiave", chiave).execute()
-                    
-                            st.cache_data.clear()
-                            st.success("Attività chiusa dal caposquadra")
-                            st.rerun()
 
     # =========================
     # 👷 OPERATORE
@@ -838,6 +823,9 @@ elif menu == "🚄 MANUTENZIONE":
 
         risultati = []
 
+        # 🔥 PRENDI LA MATRICOLA DELL’UTENTE LOGGATO
+        matricola_utente = st.session_state.get("matricola", "").strip().lower()
+
         for r in rows:
 
             if r.get("stato") == "CHIUSO":
@@ -845,13 +833,18 @@ elif menu == "🚄 MANUTENZIONE":
 
             tecnici = r.get("tecnico", [])
 
+            # 🔁 converte stringa → lista
             if isinstance(tecnici, str):
                 try:
                     tecnici = ast.literal_eval(tecnici)
                 except:
                     tecnici = [tecnici]
 
-            if utente in tecnici:
+            # 🔥 NORMALIZZA
+            tecnici = [str(t).strip().lower() for t in tecnici]
+
+            # 🔥 MATCH SU MATRICOLA
+            if matricola_utente in tecnici:
                 risultati.append(r)
 
         if not risultati:
@@ -872,41 +865,44 @@ elif menu == "🚄 MANUTENZIONE":
                 st.write(f"👷 Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
                 st.write(f"🕒 Inizio: {record.get('inizio','')}")
 
-                # LINK MULTIPLI
+                # =========================
+                # 🔗 LINK
+                # =========================
                 link_raw = record.get("link", "")
                 links = str(link_raw).split("|") if link_raw else []
 
-                for idx, link in enumerate(links):
+                for link in links:
                     link = link.strip()
                     if link:
-                       st.markdown(f"[📄 Apri scheda tecnica]({link})")
-                        
-                # STORICO NOTE
+                        st.markdown(f"[📄 Apri scheda tecnica]({link})")
+
+                # =========================
+                # 📝 NOTE
+                # =========================
                 st.write(f"📝 Storico:\n{record.get('note','')}")
-                
-                # INPUT
+
                 note_input = st.text_area("Nota", key=f"note_{record['chiave']}_{i}")
                 fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}_{i}")
-                
+
                 # =========================
+                # ✅ CHIUSURA
                 # =========================
-                # CHIUSURA ATTIVIT
                 if st.button("✅ Chiudi", key=f"chiudi_{i}"):
 
                     note_vecchie = record.get("note") or ""
                     note_input = note_input.strip()
-                
+
                     if note_input:
                         nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
                     else:
                         nuove_note = note_vecchie
-                
+
                     supabase.table("interventi").update({
                         "stato": "CHIUSO",
                         "fine": str(fine_input),
                         "note": nuove_note
                     }).eq("chiave", record["chiave"]).execute()
-                
+
                     st.cache_data.clear()
                     st.success("Attività chiusa")
                     st.rerun()
@@ -914,6 +910,8 @@ elif menu == "🚄 MANUTENZIONE":
 elif menu == "📊 DASHBOARD":
 
     from streamlit_autorefresh import st_autorefresh
+    import ast
+
     st_autorefresh(interval=8000, key="refresh_dashboard")
 
     st.title("📊 Dashboard Caposquadra")
@@ -922,14 +920,25 @@ elif menu == "📊 DASHBOARD":
     # DATI
     # =========================
     rows = get_interventi()
-
     df = pd.DataFrame(rows)
 
     if df.empty:
         st.warning("Nessuna attività")
         st.stop()
 
-    # pulizia
+    # =========================
+    # 🔁 MAPPA MATRICOLA → NOME
+    # =========================
+    operatori_db = get_operatori()
+
+    mappa_operatori = {
+        str(o.get("Matricola","")).strip().lower(): o.get("Nominativo","")
+        for o in operatori_db
+    }
+
+    # =========================
+    # PULIZIA
+    # =========================
     for col in df.columns:
         df[col] = df[col].astype(str)
 
@@ -976,31 +985,45 @@ elif menu == "📊 DASHBOARD":
 
                 stato = r.get("stato","")
 
-                if stato == "APERTO":
-                    colore = "🟡"
+                colore = "🟡" if stato == "APERTO" else "🟢"
+
+                # =========================
+                # 🔁 TECNICI (MATRICOLE → NOMI)
+                # =========================
+                tecnici_raw = r.get("tecnico", "")
+
+                if isinstance(tecnici_raw, str):
+                    try:
+                        tecnici_list = ast.literal_eval(tecnici_raw)
+                    except:
+                        tecnici_list = [tecnici_raw]
                 else:
-                    colore = "🟢"
+                    tecnici_list = tecnici_raw
+
+                tecnici_nomi = []
+
+                for m in tecnici_list:
+                    m = str(m).strip().lower()
+                    nome = mappa_operatori.get(m, m)
+                    tecnici_nomi.append(nome)
+
+                tecnici = ", ".join(tecnici_nomi)
 
                 # =========================
-                # TECNICI
+                # OUTPUT
                 # =========================
-                tecnici = r.get("tecnico","")
-
                 st.markdown(f"""
-{colore} *{r.get("componente","")}*  
+{colore} **{r.get("componente","")}**  
 🔧 {r.get("intervento","")}  
 👷 TECNICO: {tecnici}  
 👨‍✈️ CAPOSQUADRA: {r.get("caposquadra","")}  
 📅 {r.get("data","")} | ⏱️ {r.get("scadenza","")}  
-🧾 ODL: {r.get('odl','')}
-🕒 Inizio: {r.get('inizio','')}
+🧾 ODL: {r.get('odl','')}  
+🕒 Inizio: {r.get('inizio','')}  
 🏁 Fine: {r.get("fine","")}
 """)
 
-               
-                
-                st.divider()                    
-
+                st.divider()
 # =========================
 # 📦 CATALOGO COMPONENTI (SUPABASE + FAST SEARCH)
 # =========================
