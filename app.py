@@ -238,6 +238,7 @@ if not st.session_state.logged_in:
             st.markdown("## 🔐 Login")
 
             matricola = st.text_input("Matricola", key="login_mat")
+            matricola = matricola.strip().upper()
             password = st.text_input("Password", type="password", key="login_pass")
 
             if st.button("Accedi"):
@@ -294,6 +295,8 @@ if not st.session_state.logged_in:
             cognome = st.text_input("Cognome", key="reg_cognome")
             email = st.text_input("Email", key="reg_email")
             matricola = st.text_input("Matricola", key="reg_matricola")
+
+            matricola = matricola.strip().upper()
 
             ruolo = st.selectbox(
                 "Ruolo",
@@ -359,6 +362,7 @@ if not st.session_state.logged_in:
             st.markdown("## 🔑 Reset Password")
 
             matricola = st.text_input("Matricola", key="reset_mat")
+            matricola_reset = matricola_reset.strip().upper()
             nuova_password = st.text_input("Nuova Password", type="password", key="reset_pass")
 
             if st.button("Reimposta Password"):
