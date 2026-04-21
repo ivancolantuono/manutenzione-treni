@@ -693,56 +693,70 @@ elif menu == "🚄 MANUTENZIONE":
                 if ods and str(ods).lower() != "nan":
                     titolo += f"   ||      **{ods}**"
                 
-                with st.expander(titolo):    
+                with st.expander(titolo):
+
                     st.write(r["Intervento"])
-    
+
+                    # =========================
                     # 🔗 LINK
+                    # =========================
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
-    
-                    for idx, link in enumerate(links):
+
+                    for link in links:
                         link = link.strip()
                         if link:
-                    
-                            nome = r.get("Scheda")
-                    
-                            if not nome:
-                                nome = "Apri scheda tecnica"
-                    
-                            st.markdown(f"[📄 {nome}]({link})")
-    
-                    # 📝 NOTE (DAL DB!)
+                            st.markdown(f"[📄 Apri scheda tecnica]({link})")
+
+                    # =========================
+                    # 📝 NOTE
+                    # =========================
                     note = record.get("note", "") if record else ""
-    
-                    if note and "📎 Allegato:" in note:
-                        note_pulite = note.split("📎 Allegato:")[0]
+                    st.write(note if note else "—")
+
+                    # =========================
+                    # 👷 TECNICI FIX
+                    # =========================
+                    tecnici_raw = record.get("tecnico", []) if record else []
+
+                    if isinstance(tecnici_raw, str):
+                        try:
+                            tecnici_list = ast.literal_eval(tecnici_raw)
+                        except:
+                            tecnici_list = [tecnici_raw]
                     else:
-                        note_pulite = note
-    
-                    st.markdown("<b><u>📝 Note operatore</u></b>", unsafe_allow_html=True)
-                    st.write(note_pulite if note_pulite else "—")
-    
-                    # 👷 TECNICI
+                        tecnici_list = tecnici_raw
+
+                    # 🔁 matricole → nomi
+                    tecnici_default = []
+
+                    for m in tecnici_list:
+                        op = next(
+                            (o for o in operatori_db if str(o.get("Matricola","")).strip().lower() == str(m).strip().lower()),
+                            None
+                        )
+                        if op:
+                            tecnici_default.append(op.get("Nominativo"))
+
                     tecnici_input = st.multiselect(
                         "Tecnici",
                         operatori,
-                        default=tecnici,
+                        default=tecnici_default,
                         key=f"tec_{i}"
                     )
-    
+
+                    # =========================
+                    # BOTTONI
+                    # =========================
                     colA, colB, colC = st.columns(3)
-                    # =========================
+
                     # 🔧 ASSEGNA
-                    # =========================
                     if colA.button("🔧 Assegna", key=f"assegna_{i}"):
 
                         if not tecnici_input:
-                            st.error("⚠️ Seleziona almeno un tecnico prima di assegnare")
+                            st.error("Seleziona almeno un tecnico")
                             st.stop()
 
-                        # =========================
-                        # 🔁 NOMI → MATRICOLE
-                        # =========================
                         matricole = []
                         numeri = []
 
@@ -753,8 +767,8 @@ elif menu == "🚄 MANUTENZIONE":
                             )
 
                             if op:
-                                matricola = op.get("Matricola")
-                                telefono = str(op.get("Telefono", "")).replace(".0","").strip()
+                                matricola = str(op.get("Matricola","")).strip().lower()
+                                telefono = str(op.get("Telefono","")).replace(".0","").strip()
 
                                 if matricola:
                                     matricole.append(matricola)
@@ -762,12 +776,8 @@ elif menu == "🚄 MANUTENZIONE":
                                 if telefono.isdigit():
                                     numeri.append(telefono)
 
-                        # 🔁 recupera eventuali note già presenti
                         note_vecchie = record.get("note", "") if record else ""
 
-                        # =========================
-                        # 💾 SALVATAGGIO
-                        # =========================
                         supabase.table("interventi").upsert({
                             "chiave": str(chiave),
                             "treno": str(treno),
@@ -777,7 +787,7 @@ elif menu == "🚄 MANUTENZIONE":
                             "componente": str(r["Componente"]),
                             "intervento": str(r["Intervento"]),
                             "link": str(link_raw),
-                            "tecnico": str(matricole),   # 🔥 SOLO MATRICOLE
+                            "tecnico": str(matricole),
                             "caposquadra": str(utente),
                             "stato": "APERTO",
                             "inizio": str(ora_italia()),
@@ -787,26 +797,21 @@ elif menu == "🚄 MANUTENZIONE":
                         st.cache_data.clear()
                         st.success("Assegnato")
 
-                        # =========================
                         # 📲 WHATSAPP
-                        # =========================
                         if numeri:
 
                             msg = f"""🚄 NUOVA ATTIVITÀ
 
-                    🚆 Treno: {treno}
-                    🧾 ODL: {odl}
-                    📅 Data: {data_giorno}
-                    ⏱️ Scadenza: {st.session_state.scadenza}
+                🚆 Treno: {treno}
+                🧾 ODL: {odl}
+                📅 Data: {data_giorno}
+                ⏱️ Scadenza: {st.session_state.scadenza}
 
-                    👷 Caposquadra: {utente}
+                👷 Caposquadra: {utente}
 
-                    🔧 {r['Intervento']}
-                    🔧 {r['Componente']}
-
-                    📄 Scheda tecnica:
-                    {link_raw}
-                    """
+                🔧 {r['Intervento']}
+                🔧 {r['Componente']}
+                """
 
                             for num in numeri:
                                 url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
@@ -814,37 +819,61 @@ elif menu == "🚄 MANUTENZIONE":
 
                         st.rerun()
 
+                    # 🗑️ CANCELLA
+                    if colB.button("🗑️ Cancella", key=f"cancella_{i}"):
+                        supabase.table("interventi").delete().eq("chiave", chiave).execute()
+                        st.cache_data.clear()
+                        st.warning("Cancellato")
+                        st.rerun()
+
+                    # 🔒 CHIUDI
+                    if record and record.get("stato") != "CHIUSO":
+                        if colC.button("🔒 Chiudi", key=f"chiudi_{i}"):
+
+                            note_vecchie = record.get("note","")
+
+                            supabase.table("interventi").update({
+                                "stato": "CHIUSO",
+                                "fine": ora_italia(),
+                                "note": note_vecchie + f"\n---\nCHIUSO DA {utente}"
+                            }).eq("chiave", chiave).execute()
+
+                            st.cache_data.clear()
+                            st.success("Chiusa")
+                            st.rerun()
     # =========================
     # 👷 OPERATORE
     # =========================
     else:
 
+        # =========================
+        # 👷 OPERATORE (FIX)
+        # =========================
+
         st.subheader("📋 Attività assegnate")
 
         risultati = []
 
-        # 🔥 PRENDI LA MATRICOLA DELL’UTENTE LOGGATO
-        matricola_utente = st.session_state.get("matricola", "").strip().lower()
+        matricola_utente = str(st.session_state.get("matricola","")).strip().lower()
 
         for r in rows:
 
             if r.get("stato") == "CHIUSO":
                 continue
 
-            tecnici = r.get("tecnico", [])
+            tecnici_raw = r.get("tecnico", [])
 
-            # 🔁 converte stringa → lista
-            if isinstance(tecnici, str):
+            if isinstance(tecnici_raw, str):
                 try:
-                    tecnici = ast.literal_eval(tecnici)
+                    tecnici_list = ast.literal_eval(tecnici_raw)
                 except:
-                    tecnici = [tecnici]
+                    tecnici_list = [tecnici_raw]
+            else:
+                tecnici_list = tecnici_raw
 
-            # 🔥 NORMALIZZA
-            tecnici = [str(t).strip().lower() for t in tecnici]
+            tecnici_norm = [str(t).strip().lower() for t in tecnici_list]
 
-            # 🔥 MATCH SU MATRICOLA
-            if matricola_utente in tecnici:
+            if matricola_utente in tecnici_norm:
                 risultati.append(r)
 
         if not risultati:
@@ -857,17 +886,14 @@ elif menu == "🚄 MANUTENZIONE":
 
                 st.write(record.get("intervento",""))
 
-                # INFO COMPLETE
                 st.write(f"🚆 Treno: {record.get('treno','')}")
                 st.write(f"🧾 ODL: {record.get('odl','')}")
                 st.write(f"📅 Data: {record.get('data','')}")
                 st.write(f"⏱️ Scadenza: {record.get('scadenza','')}")
-                st.write(f"👷 Caposquadra: {record.get('caposquadra','NON DEFINITO')}")
+                st.write(f"👷 Caposquadra: {record.get('caposquadra','')}")
                 st.write(f"🕒 Inizio: {record.get('inizio','')}")
 
-                # =========================
-                # 🔗 LINK
-                # =========================
+                # LINK
                 link_raw = record.get("link", "")
                 links = str(link_raw).split("|") if link_raw else []
 
@@ -876,24 +902,19 @@ elif menu == "🚄 MANUTENZIONE":
                     if link:
                         st.markdown(f"[📄 Apri scheda tecnica]({link})")
 
-                # =========================
-                # 📝 NOTE
-                # =========================
+                # NOTE
                 st.write(f"📝 Storico:\n{record.get('note','')}")
 
                 note_input = st.text_area("Nota", key=f"note_{record['chiave']}_{i}")
                 fine_input = st.time_input("Fine", key=f"fine_{record['chiave']}_{i}")
 
-                # =========================
-                # ✅ CHIUSURA
-                # =========================
+                # CHIUDI
                 if st.button("✅ Chiudi", key=f"chiudi_{i}"):
 
                     note_vecchie = record.get("note") or ""
-                    note_input = note_input.strip()
 
-                    if note_input:
-                        nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input}"
+                    if note_input.strip():
+                        nuove_note = f"{note_vecchie}\n---\n{utente}: {note_input.strip()}"
                     else:
                         nuove_note = note_vecchie
 
