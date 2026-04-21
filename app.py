@@ -263,13 +263,16 @@ if not st.session_state.logged_in:
 
                     st.session_state.logged_in = True
                     st.session_state.login_time = datetime.now()
+
+                    # 🔥 QUESTA È LA RIGA CHE TI SALVA LA VITA
+                    st.session_state.matricola = matricola.strip().lower()
+
                     st.session_state.utente = nome
                     st.session_state.ruolo = user.get("ruolo") or "OPERATORE"
 
                     st.success("✅ Accesso riuscito")
                     time.sleep(1)
                     st.rerun()
-
                 else:
                     st.error("❌ Credenziali errate")
 
