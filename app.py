@@ -310,7 +310,7 @@ if not st.session_state.logged_in:
                     st.stop()
             
                 try:
-                    # 🔍 CONTROLLO LOGIN
+                    # 🔍 controllo login (evita doppioni login)
                     esiste_login = supabase.table("login")\
                         .select("matricola")\
                         .eq("matricola", matricola)\
@@ -319,12 +319,6 @@ if not st.session_state.logged_in:
                     if esiste_login.data:
                         st.error("Matricola già registrata")
                         st.stop()
-            
-                    # 🔍 CONTROLLO OPERATORI
-                    esiste_operatore = supabase.table("operatori")\
-                        .select("Matricola")\
-                        .eq("Matricola", matricola)\
-                        .execute()
             
                     # 🔥 INSERT LOGIN
                     supabase.table("login").insert({
@@ -336,27 +330,27 @@ if not st.session_state.logged_in:
                         "ruolo": ruolo
                     }).execute()
             
-                    # 🔥 INSERT OPERATORI SOLO SE NON ESISTE
+                    # 🔍 controllo operatori
+                    esiste_operatore = supabase.table("operatori")\
+                        .select("Matricola")\
+                        .eq("Matricola", matricola)\
+                        .execute()
+            
+                    # 🔥 INSERT SOLO SE NON ESISTE
                     if not esiste_operatore.data:
                         supabase.table("operatori").insert({
                             "Matricola": matricola,
                             "Nominativo": f"{format_nome(nome)} {format_nome(cognome)}",
-                            "Telefono": "",
-                            "Attivo": True
+                            "Telefono": ""
                         }).execute()
             
                     st.success("✅ Registrazione completata!")
-            
                     st.cache_data.clear()
-            
                     time.sleep(2)
-            
                     st.rerun()
             
-               
                 except Exception as e:
-                        st.error(f"Errore: {e}")
-
+                    st.error(f"Errore: {e}")
         # =========================
         # 🔑 RESET PASSWORD
         # =========================
