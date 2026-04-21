@@ -307,55 +307,54 @@ if not st.session_state.logged_in:
 
                 if not nome or not cognome or not matricola or not password or not email:
                     st.error("Compila tutti i campi")
-
-                else:
-                    try:
-                        # 🔍 CONTROLLO LOGIN
-                        esiste = supabase.table("login")\
-                            .select("matricola")\
-                            .eq("matricola", matricola)\
-                            .execute()
-                    
-                        if esiste.data:
-                            st.error("Matricola già registrata")
-                            st.stop()
-                    
-                        # 🔍 CONTROLLO OPERATORI
-                        esiste_operatore = supabase.table("operatori")\
-                            .select("Matricola")\
-                            .eq("Matricola", matricola)\
-                            .execute()
-                    
-                        # 🔥 INSERT LOGIN
-                        supabase.table("login").insert({
-                            "nome": format_nome(nome),
-                            "cognome": format_nome(cognome),
-                            "email": email,
-                            "matricola": matricola,
-                            "password": hash_password(password),
-                            "ruolo": ruolo
+                    st.stop()
+            
+                try:
+                    # 🔍 CONTROLLO LOGIN
+                    esiste_login = supabase.table("login")\
+                        .select("matricola")\
+                        .eq("matricola", matricola)\
+                        .execute()
+            
+                    if esiste_login.data:
+                        st.error("Matricola già registrata")
+                        st.stop()
+            
+                    # 🔍 CONTROLLO OPERATORI
+                    esiste_operatore = supabase.table("operatori")\
+                        .select("Matricola")\
+                        .eq("Matricola", matricola)\
+                        .execute()
+            
+                    # 🔥 INSERT LOGIN
+                    supabase.table("login").insert({
+                        "nome": format_nome(nome),
+                        "cognome": format_nome(cognome),
+                        "email": email,
+                        "matricola": matricola,
+                        "password": hash_password(password),
+                        "ruolo": ruolo
+                    }).execute()
+            
+                    # 🔥 INSERT OPERATORI SOLO SE NON ESISTE
+                    if not esiste_operatore.data:
+                        supabase.table("operatori").insert({
+                            "Matricola": matricola,
+                            "Nominativo": f"{format_nome(nome)} {format_nome(cognome)}",
+                            "Telefono": "",
+                            "Attivo": True
                         }).execute()
-                    
-                        # 🔥 INSERT OPERATORI SOLO SE NON ESISTE
-                        if not esiste_operatore.data:
-                            supabase.table("operatori").insert({
-                                "Matricola": matricola,
-                                "Nominativo": f"{nome} {cognome}",
-                                "Telefono": "",
-                                "Attivo": True
-                            }).execute()
-                    
-                        st.success("✅ Registrazione completata!")
-                    
-                        st.cache_data.clear()
-                    
-                        time.sleep(2)
-                    
-                        st.rerun()
-                    
-                    except Exception as e:
-                        st.error(f"Errore: {e}")
-                        # 🔥 attiva redirect
+            
+                    st.success("✅ Registrazione completata!")
+            
+                    st.cache_data.clear()
+            
+                    time.sleep(2)
+            
+                    st.rerun()
+            
+                except Exception as e:
+                    st.error(f"Errore: {e}")                        # 🔥 attiva redirect
                         st.session_state.redirect_to_login = True
                         st.rerun()
 
