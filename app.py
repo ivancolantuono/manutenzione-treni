@@ -326,7 +326,7 @@ if not st.session_state.logged_in:
                     if not op.data:
                         supabase.table("operatori").insert({
                             "Matricola": matricola,
-                            "Nominativo": f"{format_nome(nome)} {format_nome(cognome)}",
+                            "Nominativo": f"{format_nome(cognome)} {format_nome(nome)}",
                             "Telefono": ""
                         }).execute()
 
