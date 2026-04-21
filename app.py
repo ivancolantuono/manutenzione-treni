@@ -205,6 +205,14 @@ if "logged_in" not in st.session_state:
 if "pagina_login" not in st.session_state:
     st.session_state.pagina_login = "🔐 Login"
 
+if "redirect_to_login" not in st.session_state:
+    st.session_state.redirect_to_login = False
+
+# 🔥 REDIRECT PRIMA DEL WIDGET
+if st.session_state.redirect_to_login:
+    st.session_state.pagina_login = "🔐 Login"
+    st.session_state.redirect_to_login = False
+
 # =========================
 # BLOCCO LOGIN
 # =========================
@@ -322,7 +330,7 @@ if not st.session_state.logged_in:
                         "ruolo": ruolo
                     }).execute()
 
-                    # 🔍 controllo operatori (SUPER SICURO)
+                    # 🔍 controllo operatori (NO DUPLICATI)
                     operatori = get_operatori()
 
                     esiste_operatore = any(
@@ -330,7 +338,6 @@ if not st.session_state.logged_in:
                         for o in operatori
                     )
 
-                    # 🔥 INSERT SOLO SE NON ESISTE
                     if not esiste_operatore:
                         supabase.table("operatori").insert({
                             "Matricola": matricola,
@@ -340,11 +347,11 @@ if not st.session_state.logged_in:
 
                     st.success("✅ Registrazione completata!")
 
-                    # 🔥 TORNA AL LOGIN
-                    st.session_state.pagina_login = "🔐 Login"
-
                     st.cache_data.clear()
                     time.sleep(1)
+
+                    # 🔥 redirect corretto
+                    st.session_state.redirect_to_login = True
                     st.rerun()
 
                 except Exception as e:
@@ -384,8 +391,8 @@ if not st.session_state.logged_in:
 
                             time.sleep(1)
 
-                            # 🔥 TORNA AL LOGIN
-                            st.session_state.pagina_login = "🔐 Login"
+                            # 🔥 redirect corretto
+                            st.session_state.redirect_to_login = True
                             st.rerun()
 
                     except Exception as e:
