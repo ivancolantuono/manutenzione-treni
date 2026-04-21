@@ -348,8 +348,12 @@ if not st.session_state.logged_in:
                         }).execute()
             
                     st.success("✅ Registrazione completata!")
+
+                    st.session_state.pagina = "login"   # 🔥 QUESTA È LA CHIAVE
+
                     st.cache_data.clear()
-                    time.sleep(2)
+                    time.sleep(1)
+
                     st.rerun()
             
                 except Exception as e:
