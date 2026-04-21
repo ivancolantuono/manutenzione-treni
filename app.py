@@ -1518,43 +1518,35 @@ elif menu == "📌 OPEN ITEM":
 
             if not treno or not descrizione:
                 st.error("Compila i campi obbligatori")
-            else:
-                supabase.table("open_item").insert({
-                    "treno": treno,
-                    "cassa": ", ".join(cassa),
-                    "impianto": impianto,
-                    "descrizione": descrizione,
-                    "stato": "APERTO",
-                    "utente": utente_loggato,
-                    "data_creazione": ora_italia_iso()
-                }).execute()
+                st.stop()
         
-                # ✅ MESSAGGIO
-                st.success("✅ OPEN ITEM INSERITO")
+            # ✅ INSERT
+            supabase.table("open_item").insert({
+                "treno": treno,
+                "cassa": ", ".join(cassa),
+                "impianto": impianto,
+                "descrizione": descrizione,
+                "stato": "APERTO",
+                "utente": utente_loggato,
+                "data_creazione": ora_italia_iso()
+            }).execute()
         
-                # 🔥 RESET CAMPI
-                st.session_state["oi_treno"] = ""
-                st.session_state["oi_cassa"] = []
-                st.session_state["oi_impianto"] = ""
-                st.session_state["oi_descrizione"] = ""
+            # ✅ RESET CAMPI
+            st.session_state["oi_treno"] = ""
+            st.session_state["oi_cassa"] = []
+            st.session_state["oi_impianto"] = ""
+            st.session_state["oi_descrizione"] = ""
         
-                st.cache_data.clear()
-                st.rerun()
-            if not treno or not descrizione:
-                st.error("Compila i campi obbligatori")
-            else:
-                supabase.table("open_item").insert({
-                    "treno": treno,
-                    "cassa": ", ".join(cassa),
-                    "impianto": impianto,
-                    "descrizione": descrizione,
-                    "stato": "APERTO",
-                    "utente": utente_loggato,
-                    "data_creazione": ora_italia_iso()
-                }).execute()
-
-                st.cache_data.clear()
-                st.rerun()
+            # ✅ MESSAGGIO
+            st.success("✅ OPEN ITEM INSERITO")
+        
+            st.cache_data.clear()
+        
+            # 👉 aspetta un attimo così vedi il messaggio
+            import time
+            time.sleep(1)
+        
+            st.rerun()
 
     st.divider()
 
