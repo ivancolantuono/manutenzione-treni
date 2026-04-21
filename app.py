@@ -706,11 +706,13 @@ elif menu == "🚄 MANUTENZIONE":
                     link_raw = r.get("Link", "")
                     links = str(link_raw).split("|") if link_raw else []
 
+                    nome_scheda = r.get("Scheda", "Scheda")
+
                     for link in links:
                         link = link.strip()
                         if link:
-                            st.markdown(f"[📄 Apri scheda tecnica]({link})")
-
+                            st.markdown(f"[📄 {nome_scheda}]({link})")
+                                        
                     # =========================
                     # 📝 NOTE
                     # =========================
