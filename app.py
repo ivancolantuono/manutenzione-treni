@@ -741,6 +741,30 @@ elif menu == "🚄 MANUTENZIONE":
                         if op:
                             tecnici_default.append(op.get("Nominativo"))
 
+                    # =========================
+                    # 👷 TECNICI
+                    # =========================
+                    tecnici_raw = record.get("tecnico", []) if record else []
+
+                    if isinstance(tecnici_raw, str):
+                        try:
+                            tecnici_list = ast.literal_eval(tecnici_raw)
+                        except:
+                            tecnici_list = [tecnici_raw]
+                    else:
+                        tecnici_list = tecnici_raw
+
+                    # 🔁 matricole → nomi
+                    tecnici_default = []
+
+                    for m in tecnici_list:
+                        op = next(
+                            (o for o in operatori_db if str(o.get("Matricola","")).strip().lower() == str(m).strip().lower()),
+                            None
+                        )
+                        if op:
+                            tecnici_default.append(op.get("Nominativo"))
+
                     tecnici_input = st.multiselect(
                         "Tecnici",
                         operatori,
@@ -749,7 +773,51 @@ elif menu == "🚄 MANUTENZIONE":
                     )
 
                     # =========================
-                    # BOTTONI
+                    # 📲 WHATSAPP (SUBITO VISIBILE)
+                    # =========================
+                    numeri = []
+
+                    for t in tecnici_input:
+                        op = next(
+                            (o for o in operatori_db if o.get("Nominativo") == t),
+                            None
+                        )
+
+                        if op:
+                            telefono = str(op.get("Telefono","")).replace(".0","").strip()
+
+                            # 🔥 pulizia numero
+                            telefono = "".join(filter(str.isdigit, telefono))
+
+                            # 🔥 prefisso Italia
+                            if telefono and not telefono.startswith("39"):
+                                telefono = "39" + telefono
+
+                            if telefono:
+                                numeri.append(telefono)
+
+                    # 👉 MOSTRA SUBITO I BOTTONI
+                    if numeri:
+
+                        msg = f"""🚄 NUOVA ATTIVITÀ
+
+                    🚆 Treno: {treno}
+                    🧾 ODL: {odl}
+                    📅 Data: {data_giorno}
+                    ⏱️ Scadenza: {st.session_state.scadenza}
+
+                    👷 Caposquadra: {utente}
+
+                    🔧 {r['Intervento']}
+                    🔧 {r['Componente']}
+                    """
+
+                        for num in numeri:
+                            url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
+                            st.link_button(f"📲 Invia a {num}", url)
+
+                    # =========================
+                    # BOTTONI AZIONE
                     # =========================
                     colA, colB, colC = st.columns(3)
 
@@ -761,7 +829,6 @@ elif menu == "🚄 MANUTENZIONE":
                             st.stop()
 
                         matricole = []
-                        numeri = []
 
                         for t in tecnici_input:
                             op = next(
@@ -770,23 +837,9 @@ elif menu == "🚄 MANUTENZIONE":
                             )
 
                             if op:
-                                # 🔥 MATRICOLA OK
                                 matricola = str(op.get("Matricola","")).strip().lower()
                                 if matricola:
                                     matricole.append(matricola)
-
-                                # 🔥 TELEFONO FIX SERIO
-                                telefono = str(op.get("Telefono","")).replace(".0","").strip()
-
-                                # rimuove tutto tranne numeri
-                                telefono = "".join(filter(str.isdigit, telefono))
-
-                                # aggiunge prefisso Italia se manca
-                                if telefono and not telefono.startswith("39"):
-                                    telefono = "39" + telefono
-
-                                if telefono:
-                                    numeri.append(telefono)
 
                         note_vecchie = record.get("note", "") if record else ""
 
@@ -799,7 +852,7 @@ elif menu == "🚄 MANUTENZIONE":
                             "componente": str(r["Componente"]),
                             "intervento": str(r["Intervento"]),
                             "link": str(link_raw),
-                            "tecnico": str(matricole),
+                            "tecnico": str(matricole),   # 🔥 matricole pulite
                             "caposquadra": str(utente),
                             "stato": "APERTO",
                             "inizio": str(ora_italia()),
@@ -808,27 +861,6 @@ elif menu == "🚄 MANUTENZIONE":
 
                         st.cache_data.clear()
                         st.success("Assegnato")
-
-                        # 📲 WHATSAPP
-                        if numeri:
-
-                            msg = f"""🚄 NUOVA ATTIVITÀ
-
-                🚆 Treno: {treno}
-                🧾 ODL: {odl}
-                📅 Data: {data_giorno}
-                ⏱️ Scadenza: {st.session_state.scadenza}
-
-                👷 Caposquadra: {utente}
-
-                🔧 {r['Intervento']}
-                🔧 {r['Componente']}
-                """
-
-                            for num in numeri:
-                                url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
-                                st.link_button(f"📲 Invia a {num}", url)
-
                         st.rerun()
 
                     # 🗑️ CANCELLA
