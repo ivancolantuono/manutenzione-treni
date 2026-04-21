@@ -270,10 +270,11 @@ if not st.session_state.logged_in:
 
                     if operatore:
                         st.session_state.utente = operatore.get("Nominativo")
-                        st.session_state.ruolo = operatore.get("Ruolo")
                     else:
                         st.session_state.utente = user.get("nome","")
-                        st.session_state.ruolo = user.get("ruolo","OPERATORE")
+                    
+                    # 🔥 RUOLO SEMPRE DAL LOGIN
+                    st.session_state.ruolo = user.get("ruolo") or "OPERATORE"
 
                     st.success("✅ Accesso riuscito")
                     time.sleep(1)
