@@ -1498,29 +1498,51 @@ elif menu == "📌 OPEN ITEM":
     st.title("📌 Open Item")
 
     # ============================
-    # INSERIMENTO
+    # RESET FLAG
     # ============================
-
+    if "reset_open_item" not in st.session_state:
+        st.session_state.reset_open_item = False
+    
     with st.expander("➕ Nuova attività"):
-
+    
         col1, col2, col3 = st.columns(3)
-
+    
         treno = col1.text_input("🚆 Treno", key="oi_treno")
-        cassa = col2.multiselect("☑️ Cassa", ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"], key="oi_cassa")
-        impianto = col3.selectbox("⚙️ Impianto",
-             ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
-             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"],
-             key="oi_impianto"
+    
+        cassa = col2.multiselect(
+            "☑️ Cassa",
+            ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"],
+            key="oi_cassa"
         )
+    
+        impianto = col3.selectbox(
+            "⚙️ Impianto",
+            ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
+             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"],
+            key="oi_impianto"
+        )
+    
         descrizione = st.text_area("📝 Descrizione", key="oi_descrizione")
-
+    
+        # ============================
+        # RESET (QUI È LA CHIAVE)
+        # ============================
+        if st.session_state.reset_open_item:
+            st.session_state.oi_treno = ""
+            st.session_state.oi_cassa = []
+            st.session_state.oi_impianto = ""
+            st.session_state.oi_descrizione = ""
+            st.session_state.reset_open_item = False
+    
+        # ============================
+        # INSERT
+        # ============================
         if st.button("➕ Inserisci"):
-
+    
             if not treno or not descrizione:
                 st.error("Compila i campi obbligatori")
                 st.stop()
-        
-            # ✅ INSERT
+    
             supabase.table("open_item").insert({
                 "treno": treno,
                 "cassa": ", ".join(cassa),
@@ -1530,26 +1552,20 @@ elif menu == "📌 OPEN ITEM":
                 "utente": utente_loggato,
                 "data_creazione": ora_italia_iso()
             }).execute()
-        
-            # ✅ RESET CAMPI
-            st.session_state["oi_treno"] = ""
-            st.session_state["oi_cassa"] = []
-            st.session_state["oi_impianto"] = ""
-            st.session_state["oi_descrizione"] = ""
-        
-            # ✅ MESSAGGIO
+    
             st.success("✅ OPEN ITEM INSERITO")
-        
+    
             st.cache_data.clear()
-        
-            # 👉 aspetta un attimo così vedi il messaggio
+    
+            # 🔥 attiva reset
+            st.session_state.reset_open_item = True
+    
             import time
             time.sleep(1)
-        
+    
             st.rerun()
-
+    
     st.divider()
-
     # ============================
     # DATI
     # ============================
