@@ -849,15 +849,14 @@ elif menu == "🚄 MANUTENZIONE":
     # =========================
     else:
 
-        # =========================
-        # 👷 OPERATORE (FIX)
-        # =========================
-
         st.subheader("📋 Attività assegnate")
 
         risultati = []
 
         matricola_utente = str(st.session_state.get("matricola","")).strip().lower()
+
+        # 🔥 DEBUG (puoi togliere dopo)
+        st.write("👤 Matricola utente:", matricola_utente)
 
         for r in rows:
 
@@ -866,6 +865,7 @@ elif menu == "🚄 MANUTENZIONE":
 
             tecnici_raw = r.get("tecnico", [])
 
+            # 🔁 CONVERSIONE SICURA
             if isinstance(tecnici_raw, str):
                 try:
                     tecnici_list = ast.literal_eval(tecnici_raw)
@@ -874,13 +874,24 @@ elif menu == "🚄 MANUTENZIONE":
             else:
                 tecnici_list = tecnici_raw
 
-            tecnici_norm = [str(t).strip().lower() for t in tecnici_list]
+            # 🔥 NORMALIZZAZIONE FORTE
+            tecnici_norm = [
+                str(t).replace("[","").replace("]","").replace("'","")
+                .strip().lower()
+                for t in tecnici_list
+            ]
+
+            # 🔥 DEBUG
+            # st.write("DB:", tecnici_norm)
 
             if matricola_utente in tecnici_norm:
                 risultati.append(r)
 
+        # =========================
+        # OUTPUT
+        # =========================
         if not risultati:
-            st.info("Nessuna attività assegnata")
+            st.warning("❌ Nessuna attività trovata")
             st.stop()
 
         for i, record in enumerate(risultati):
