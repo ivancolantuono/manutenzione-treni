@@ -1505,16 +1505,41 @@ elif menu == "📌 OPEN ITEM":
 
         col1, col2, col3 = st.columns(3)
 
-        treno = col1.text_input("🚆 Treno")
-        cassa = col2.multiselect("☑️ Cassa", ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"])
+        treno = col1.text_input("🚆 Treno", key="oi_treno")
+        cassa = col2.multiselect("☑️ Cassa", ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"], key="oi_cassa")
         impianto = col3.selectbox("⚙️ Impianto",
-            ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
-             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"]
+             ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
+             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"],
+             key="oi_impianto"
         )
-
-        descrizione = st.text_area("📝 Descrizione")
+        descrizione = st.text_area("📝 Descrizione", key="oi_descrizione")
 
         if st.button("➕ Inserisci"):
+
+            if not treno or not descrizione:
+                st.error("Compila i campi obbligatori")
+            else:
+                supabase.table("open_item").insert({
+                    "treno": treno,
+                    "cassa": ", ".join(cassa),
+                    "impianto": impianto,
+                    "descrizione": descrizione,
+                    "stato": "APERTO",
+                    "utente": utente_loggato,
+                    "data_creazione": ora_italia_iso()
+                }).execute()
+        
+                # ✅ MESSAGGIO
+                st.success("✅ OPEN ITEM INSERITO")
+        
+                # 🔥 RESET CAMPI
+                st.session_state["oi_treno"] = ""
+                st.session_state["oi_cassa"] = []
+                st.session_state["oi_impianto"] = ""
+                st.session_state["oi_descrizione"] = ""
+        
+                st.cache_data.clear()
+                st.rerun()
             if not treno or not descrizione:
                 st.error("Compila i campi obbligatori")
             else:
