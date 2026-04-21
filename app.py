@@ -188,7 +188,7 @@ def format_nome(txt):
     return str(txt or "").strip().capitalize()
 
 def norm(x):
-    return str(x or "").strip().upper()
+    return str(x or "").strip().lower()   # 🔥 TUTTO MINUSCOLO
 
 # =========================
 # SESSION INIT
@@ -251,7 +251,6 @@ if not st.session_state.logged_in:
 
                 if user:
 
-                    # prende nome da operatori se esiste
                     op = supabase.table("operatori")\
                         .select("*")\
                         .eq("Matricola", matricola)\
@@ -316,17 +315,16 @@ if not st.session_state.logged_in:
                         "ruolo": ruolo
                     }).execute()
 
-                    # 🔍 controllo operatori (NO CACHE)
+                    # 🔍 controllo operatori (NO DUPLICATI)
                     op = supabase.table("operatori")\
                         .select("Matricola")\
                         .eq("Matricola", matricola)\
                         .execute()
 
-                    # 🔥 INSERT SOLO SE NON ESISTE
                     if not op.data:
                         supabase.table("operatori").insert({
                             "Matricola": matricola,
-                            "Nominativo": f"{format_nome(cognome)} {format_nome(nome)}",
+                            "Nominativo": f"{format_nome(nome)} {format_nome(cognome)}",
                             "Telefono": ""
                         }).execute()
 
@@ -381,6 +379,7 @@ if not st.session_state.logged_in:
                     st.error(f"Errore: {e}")
 
     st.stop()
+
 # =========================
 # DOPO LOGIN
 # =========================
