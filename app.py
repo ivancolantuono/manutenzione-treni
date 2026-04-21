@@ -770,13 +770,22 @@ elif menu == "🚄 MANUTENZIONE":
                             )
 
                             if op:
+                                # 🔥 MATRICOLA OK
                                 matricola = str(op.get("Matricola","")).strip().lower()
-                                telefono = str(op.get("Telefono","")).replace(".0","").strip()
-
                                 if matricola:
                                     matricole.append(matricola)
 
-                                if telefono.isdigit():
+                                # 🔥 TELEFONO FIX SERIO
+                                telefono = str(op.get("Telefono","")).replace(".0","").strip()
+
+                                # rimuove tutto tranne numeri
+                                telefono = "".join(filter(str.isdigit, telefono))
+
+                                # aggiunge prefisso Italia se manca
+                                if telefono and not telefono.startswith("39"):
+                                    telefono = "39" + telefono
+
+                                if telefono:
                                     numeri.append(telefono)
 
                         note_vecchie = record.get("note", "") if record else ""
