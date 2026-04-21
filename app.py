@@ -353,12 +353,8 @@ if not st.session_state.logged_in:
             
                     st.rerun()
             
+               
                 except Exception as e:
-                    st.error(f"Errore: {e}")                        # 🔥 attiva redirect
-                        st.session_state.redirect_to_login = True
-                        st.rerun()
-
-                    except Exception as e:
                         st.error(f"Errore: {e}")
 
         # =========================
