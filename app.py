@@ -434,12 +434,20 @@ else:
     )
 
 # =========================
-# DATI
+# 📥 CARICA DATABASE (SUPABASE)
 # =========================
+@st.cache_data(ttl=60)
+def get_database_manutenzione():
+    res = supabase.table("database_manutenzione").select("*").execute()
+    return res.data or []
 
-df = pd.read_excel("database_manutenzione.xlsx")
-df.columns = df.columns.str.strip()
+# 👉 converte in DataFrame
+rows_db = get_database_manutenzione()
+df = pd.DataFrame(rows_db)
 
+# 👉 sicurezza colonne
+if not df.empty:
+    df.columns = df.columns.str.strip()
 rows = get_interventi()
 
 utenti = get_utenti()
