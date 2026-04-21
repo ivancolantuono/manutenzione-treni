@@ -450,8 +450,21 @@ if not df.empty:
     df.columns = df.columns.str.strip()
 rows = get_interventi()
 
-utenti = get_utenti()
-operatori = [u.get("Nominativo") for u in utenti if u.get("Nominativo")]
+# =========================
+# 👷 OPERATORI DA SUPABASE
+# =========================
+@st.cache_data(ttl=60)
+def get_operatori():
+    res = supabase.table("operatori").select("*").execute()
+    return res.data or []
+
+operatori_db = get_operatori()
+
+operatori = [
+    o.get("Nominativo")
+    for o in operatori_db
+    if o.get("Nominativo")
+]
 
 if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
