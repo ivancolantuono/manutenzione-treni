@@ -176,16 +176,23 @@ def salva_log(item_id, azione, utente, vecchio, nuovo):
 # =========================
 import hashlib
 import time
+from datetime import datetime
 
+# =========================
+# UTILS
+# =========================
 def hash_password(pwd):
     return hashlib.sha256(pwd.encode()).hexdigest()
 
 def format_nome(txt):
-    return txt.strip().capitalize()
+    return str(txt or "").strip().capitalize()
 
 def norm(x):
-    return x.strip().upper()
+    return str(x or "").strip().upper()
 
+# =========================
+# CACHE
+# =========================
 @st.cache_data(ttl=60)
 def get_login():
     res = supabase.table("login").select("*").execute()
@@ -208,7 +215,7 @@ if "pagina_login" not in st.session_state:
 if "redirect_to_login" not in st.session_state:
     st.session_state.redirect_to_login = False
 
-# 🔥 REDIRECT PRIMA DEL WIDGET
+# 🔥 redirect sicuro (PRIMA del widget)
 if st.session_state.redirect_to_login:
     st.session_state.pagina_login = "🔐 Login"
     st.session_state.redirect_to_login = False
@@ -248,8 +255,8 @@ if not st.session_state.logged_in:
                 user = next(
                     (
                         x for x in utenti_login
-                        if norm(x.get("matricola","")) == matricola
-                        and str(x.get("password","")) == hash_password(password)
+                        if norm(x.get("matricola")) == matricola
+                        and str(x.get("password")) == hash_password(password)
                     ),
                     None
                 )
@@ -258,13 +265,15 @@ if not st.session_state.logged_in:
 
                     operatori = get_operatori()
 
-                    operatore = next(
-                        (
-                            o for o in operatori
-                            if norm(o.get("Matricola","")) == matricola
-                        ),
-                        None
-                    )
+                    # 🔥 ricerca robusta (NO crash)
+                    operatore = None
+                    for o in operatori:
+                        try:
+                            if norm(o.get("Matricola")) == matricola:
+                                operatore = o
+                                break
+                        except:
+                            continue
 
                     st.session_state.logged_in = True
                     st.session_state.login_time = datetime.now()
@@ -330,14 +339,19 @@ if not st.session_state.logged_in:
                         "ruolo": ruolo
                     }).execute()
 
-                    # 🔍 controllo operatori (NO DUPLICATI)
+                    # 🔍 controllo operatori ROBUSTO
                     operatori = get_operatori()
 
-                    esiste_operatore = any(
-                        norm(o.get("Matricola","")) == matricola
-                        for o in operatori
-                    )
+                    esiste_operatore = False
+                    for o in operatori:
+                        try:
+                            if norm(o.get("Matricola")) == matricola:
+                                esiste_operatore = True
+                                break
+                        except:
+                            continue
 
+                    # 🔥 INSERT SOLO SE NON ESISTE
                     if not esiste_operatore:
                         supabase.table("operatori").insert({
                             "Matricola": matricola,
@@ -350,7 +364,6 @@ if not st.session_state.logged_in:
                     st.cache_data.clear()
                     time.sleep(1)
 
-                    # 🔥 redirect corretto
                     st.session_state.redirect_to_login = True
                     st.rerun()
 
@@ -391,7 +404,6 @@ if not st.session_state.logged_in:
 
                             time.sleep(1)
 
-                            # 🔥 redirect corretto
                             st.session_state.redirect_to_login = True
                             st.rerun()
 
