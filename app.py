@@ -436,12 +436,15 @@ df.columns = df.columns.str.strip()
 rows = get_interventi()
 
 utenti = get_utenti()
-operatori = [
-    u.get("Nominativo")
-    for u in utenti
-    if str(u.get("Ruolo","")).strip().upper() == "OPERATORE"
-    and u.get("Nominativo")
-]
+operatori = []
+
+for u in utenti:
+    ruolo = str(u.get("Ruolo", "")).strip().upper()
+
+    if ruolo == "OPERATORE":
+        nome = u.get("Nominativo")
+        if nome:
+            operatori.append(nome)
 
 if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
