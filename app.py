@@ -191,19 +191,6 @@ def norm(x):
     return str(x or "").strip().upper()
 
 # =========================
-# CACHE
-# =========================
-@st.cache_data(ttl=60)
-def get_login():
-    res = supabase.table("login").select("*").execute()
-    return res.data or []
-
-@st.cache_data(ttl=60)
-def get_operatori():
-    res = supabase.table("operatori").select("*").execute()
-    return res.data or []
-
-# =========================
 # SESSION INIT
 # =========================
 if "logged_in" not in st.session_state:
@@ -215,7 +202,7 @@ if "pagina_login" not in st.session_state:
 if "redirect_to_login" not in st.session_state:
     st.session_state.redirect_to_login = False
 
-# 🔥 redirect sicuro (PRIMA del widget)
+# 🔥 redirect PRIMA del widget
 if st.session_state.redirect_to_login:
     st.session_state.pagina_login = "🔐 Login"
     st.session_state.redirect_to_login = False
@@ -245,44 +232,39 @@ if not st.session_state.logged_in:
 
             st.markdown("## 🔐 Login")
 
-            matricola = norm(st.text_input("Matricola", key="login_mat"))
-            password = st.text_input("Password", type="password", key="login_pass")
+            matricola = norm(st.text_input("Matricola"))
+            password = st.text_input("Password", type="password")
 
             if st.button("Accedi"):
 
-                utenti_login = get_login()
+                res = supabase.table("login").select("*").execute()
+                utenti = res.data or []
 
                 user = next(
                     (
-                        x for x in utenti_login
+                        x for x in utenti
                         if norm(x.get("matricola")) == matricola
-                        and str(x.get("password")) == hash_password(password)
+                        and x.get("password") == hash_password(password)
                     ),
                     None
                 )
 
                 if user:
 
-                    operatori = get_operatori()
+                    # prende nome da operatori se esiste
+                    op = supabase.table("operatori")\
+                        .select("*")\
+                        .eq("Matricola", matricola)\
+                        .execute()
 
-                    # 🔥 ricerca robusta (NO crash)
-                    operatore = None
-                    for o in operatori:
-                        try:
-                            if norm(o.get("Matricola")) == matricola:
-                                operatore = o
-                                break
-                        except:
-                            continue
+                    if op.data:
+                        nome = op.data[0].get("Nominativo")
+                    else:
+                        nome = user.get("nome")
 
                     st.session_state.logged_in = True
                     st.session_state.login_time = datetime.now()
-
-                    if operatore:
-                        st.session_state.utente = operatore.get("Nominativo")
-                    else:
-                        st.session_state.utente = user.get("nome","")
-
+                    st.session_state.utente = nome
                     st.session_state.ruolo = user.get("ruolo") or "OPERATORE"
 
                     st.success("✅ Accesso riuscito")
@@ -299,33 +281,28 @@ if not st.session_state.logged_in:
 
             st.markdown("## 🆕 Registrazione")
 
-            nome = st.text_input("Nome", key="reg_nome")
-            cognome = st.text_input("Cognome", key="reg_cognome")
-            email = st.text_input("Email", key="reg_email")
-            matricola = norm(st.text_input("Matricola", key="reg_matricola"))
+            nome = st.text_input("Nome")
+            cognome = st.text_input("Cognome")
+            email = st.text_input("Email")
+            matricola = norm(st.text_input("Matricola"))
 
-            ruolo = st.selectbox(
-                "Ruolo",
-                ["OPERATORE", "CAPOSQUADRA"],
-                key="reg_ruolo"
-            )
-
-            password = st.text_input("Password", type="password", key="reg_pass")
+            ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"])
+            password = st.text_input("Password", type="password")
 
             if st.button("Registrati"):
 
-                if not nome or not cognome or not matricola or not password or not email:
+                if not nome or not cognome or not email or not matricola or not password:
                     st.error("Compila tutti i campi")
                     st.stop()
 
                 try:
                     # 🔍 controllo login
-                    esiste_login = supabase.table("login")\
+                    esiste = supabase.table("login")\
                         .select("matricola")\
                         .eq("matricola", matricola)\
                         .execute()
 
-                    if esiste_login.data:
+                    if esiste.data:
                         st.error("Matricola già registrata")
                         st.stop()
 
@@ -339,20 +316,14 @@ if not st.session_state.logged_in:
                         "ruolo": ruolo
                     }).execute()
 
-                    # 🔍 controllo operatori ROBUSTO
-                    operatori = get_operatori()
-
-                    esiste_operatore = False
-                    for o in operatori:
-                        try:
-                            if norm(o.get("Matricola")) == matricola:
-                                esiste_operatore = True
-                                break
-                        except:
-                            continue
+                    # 🔍 controllo operatori (NO CACHE)
+                    op = supabase.table("operatori")\
+                        .select("Matricola")\
+                        .eq("Matricola", matricola)\
+                        .execute()
 
                     # 🔥 INSERT SOLO SE NON ESISTE
-                    if not esiste_operatore:
+                    if not op.data:
                         supabase.table("operatori").insert({
                             "Matricola": matricola,
                             "Nominativo": f"{format_nome(nome)} {format_nome(cognome)}",
@@ -361,7 +332,6 @@ if not st.session_state.logged_in:
 
                     st.success("✅ Registrazione completata!")
 
-                    st.cache_data.clear()
                     time.sleep(1)
 
                     st.session_state.redirect_to_login = True
@@ -377,41 +347,40 @@ if not st.session_state.logged_in:
 
             st.markdown("## 🔑 Reset Password")
 
-            matricola = norm(st.text_input("Matricola", key="reset_mat"))
-            nuova_password = st.text_input("Nuova Password", type="password", key="reset_pass")
+            matricola = norm(st.text_input("Matricola"))
+            nuova_password = st.text_input("Nuova Password", type="password")
 
             if st.button("Reimposta Password"):
 
                 if not matricola or not nuova_password:
                     st.error("Inserisci tutti i campi")
+                    st.stop()
 
-                else:
-                    try:
-                        res = supabase.table("login")\
-                            .select("*")\
-                            .eq("matricola", matricola)\
-                            .execute()
+                try:
+                    res = supabase.table("login")\
+                        .select("*")\
+                        .eq("matricola", matricola)\
+                        .execute()
 
-                        if not res.data:
-                            st.error("Matricola non trovata")
+                    if not res.data:
+                        st.error("Matricola non trovata")
+                        st.stop()
 
-                        else:
-                            supabase.table("login").update({
-                                "password": hash_password(nuova_password)
-                            }).eq("matricola", matricola).execute()
+                    supabase.table("login").update({
+                        "password": hash_password(nuova_password)
+                    }).eq("matricola", matricola).execute()
 
-                            st.success("✅ Password aggiornata!")
+                    st.success("✅ Password aggiornata!")
 
-                            time.sleep(1)
+                    time.sleep(1)
 
-                            st.session_state.redirect_to_login = True
-                            st.rerun()
+                    st.session_state.redirect_to_login = True
+                    st.rerun()
 
-                    except Exception as e:
-                        st.error(f"Errore: {e}")
+                except Exception as e:
+                    st.error(f"Errore: {e}")
 
     st.stop()
-
 # =========================
 # DOPO LOGIN
 # =========================
