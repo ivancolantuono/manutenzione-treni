@@ -798,20 +798,27 @@ elif menu == "🚄 MANUTENZIONE":
 
                     # 👉 MOSTRA SUBITO I BOTTONI
                     if numeri:
+                        links = str(link_raw).split("|") if link_raw else []
+
+                        link_txt = "\n".join([l.strip() for l in links if l.strip()])
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
-            🚆 Treno: {treno}
-            🧾 ODL: {odl}
-            📅 Data: {data_giorno}
-            ⏱️ Scadenza: {st.session_state.scadenza}
+🚆 Treno: {treno}
+🧾 ODL: {odl}
+📅 Data: {data_giorno}
+⏱️ Scadenza: {st.session_state.scadenza}
 
-            👷 Caposquadra: {utente}
+👷 Caposquadra: {utente}
 
-            🔧 {r['Intervento']}
-            🔧 {r['Componente']}
-            """
+🔧 {r['Intervento']}
+🔧 {r['Componente']}
 
+📄 Scheda tecnica:
+
+{link_txt}
+
+"""
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
                             st.link_button(f"📲 Invia a {num}", url)
