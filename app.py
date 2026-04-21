@@ -801,16 +801,16 @@ elif menu == "🚄 MANUTENZIONE":
 
                         msg = f"""🚄 NUOVA ATTIVITÀ
 
-                    🚆 Treno: {treno}
-                    🧾 ODL: {odl}
-                    📅 Data: {data_giorno}
-                    ⏱️ Scadenza: {st.session_state.scadenza}
+            🚆 Treno: {treno}
+            🧾 ODL: {odl}
+            📅 Data: {data_giorno}
+            ⏱️ Scadenza: {st.session_state.scadenza}
 
-                    👷 Caposquadra: {utente}
+            👷 Caposquadra: {utente}
 
-                    🔧 {r['Intervento']}
-                    🔧 {r['Componente']}
-                    """
+            🔧 {r['Intervento']}
+            🔧 {r['Componente']}
+            """
 
                         for num in numeri:
                             url = f"https://wa.me/{num}?text={urllib.parse.quote(msg)}"
