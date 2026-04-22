@@ -1489,7 +1489,7 @@ elif menu == "📌 OPEN ITEM":
         for l in log:
             st.write(f"{formatta_data(l['data'])} - {l['utente']} → {l['azione']}")
             if l.get("campo"):
-                st.caption(f"{l['campo']}: {l.get('valore_precedente','')} → {l.get('valore_nuovo','')}")
+                st.caption(f"{l['campo']}: {l.get('valore_nuovo','')}")
 
     # ============================
     # UI
