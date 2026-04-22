@@ -390,28 +390,6 @@ if not st.session_state.logged_in:
 utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
 
-from streamlit_autorefresh import st_autorefresh
-st_autorefresh(interval=5000, key="global_refresh")
-
-from datetime import datetime
-
-SESSION_TIMEOUT = 20  # test corto
-
-if st.session_state.get("logged_in"):
-
-    login_time = st.session_state.get("login_time")
-
-    if login_time:
-        durata = (datetime.now() - login_time).total_seconds()
-
-        st.write("⏱️ durata:", durata)
-
-        if durata > SESSION_TIMEOUT:
-            st.warning("Sessione scaduta")
-            st.session_state.clear()
-            st.rerun()
-
-    st.session_state.login_time = datetime.now()
 
 # =========================
 # HEADER
