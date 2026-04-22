@@ -6,6 +6,8 @@ from supabase import create_client
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
+SESSION_TIMEOUT = 8 * 60 * 60  # 8 ore (in secondi)
+
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
@@ -386,8 +388,24 @@ if not st.session_state.logged_in:
 # =========================
 # DOPO LOGIN
 # =========================
+
 utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
+
+if st.session_state.get("logged_in"):
+
+    login_time = st.session_state.get("login_time")
+
+    if login_time:
+        durata = (datetime.now() - login_time).total_seconds()
+
+        if durata > SESSION_TIMEOUT:
+            st.warning("Sessione scaduta, rifai login")
+            st.session_state.clear()
+            st.rerun()
+
+    st.session_state.login_time = datetime.now()
+
 # =========================
 # HEADER
 # =========================
