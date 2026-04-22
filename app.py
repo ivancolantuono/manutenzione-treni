@@ -849,7 +849,7 @@ elif menu == "🚄 MANUTENZIONE":
                             st.error("Seleziona almeno un tecnico")
                             st.stop()
 
-                         matricole = []
+                        matricole = []
 
                         for t in tecnici_input:
                             op = next(
