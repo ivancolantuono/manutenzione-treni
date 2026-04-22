@@ -1496,33 +1496,34 @@ elif menu == "📌 OPEN ITEM":
     # ============================
 
     st.title("📌 Open Item")
-    
+
+    # ✅ INIT
     if "oi_form_id" not in st.session_state:
-    st.session_state.oi_form_id = 0
+        st.session_state.oi_form_id = 0
     
     with st.expander("➕ Nuova attività"):
     
         form_id = st.session_state.oi_form_id
-
+    
         col1, col2, col3 = st.columns(3)
     
         treno = col1.text_input("🚆 Treno", key=f"oi_treno_{form_id}")
-
+    
         cassa = col2.multiselect(
             "☑️ Cassa",
             ["DM1","TT2","M3","T4","T5","M6","TT7","DM8"],
             key=f"oi_cassa_{form_id}"
         )
-        
+    
         impianto = col3.selectbox(
             "⚙️ Impianto",
             ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
              "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"],
             key=f"oi_impianto_{form_id}"
         )
-        
+    
         descrizione = st.text_area("📝 Descrizione", key=f"oi_descrizione_{form_id}")
-            
+    
         if st.button("➕ Inserisci"):
     
             if not treno or not descrizione:
@@ -1543,10 +1544,8 @@ elif menu == "📌 OPEN ITEM":
     
             st.cache_data.clear()
     
-            # 🔥 RESET SICURO (QUI È LA DIFFERENZA)
-            for key in ["oi_treno", "oi_cassa", "oi_impianto", "oi_descrizione"]:
-                if key in st.session_state:
-                    st.session_state.oi_form_id += 1
+            # 🔥 RESET VERO (UNA SOLA RIGA)
+            st.session_state.oi_form_id += 1
     
             import time
             time.sleep(1)
