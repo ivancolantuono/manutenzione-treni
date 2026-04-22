@@ -475,7 +475,7 @@ if "mostra" not in st.session_state:
 if menu == "📊 STORICO":
 
     from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=8000, key="refresh_storico")
+    st_autorefresh(interval=10000, key="refresh_storico")
 
     st.title("📊 Storico Attività")
 
@@ -565,7 +565,7 @@ if menu == "📊 STORICO":
 elif menu == "🚄 MANUTENZIONE":
     
     from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=8000, key="refresh_manutenzione")
+    st_autorefresh(interval=10000, key="refresh_manutenzione")
 
     st.markdown("""
     <h1 style='margin-bottom:0;'>🚄 Gestione Manutenzione</h1>
@@ -1008,7 +1008,7 @@ elif menu == "📊 DASHBOARD":
     from streamlit_autorefresh import st_autorefresh
     import ast
 
-    st_autorefresh(interval=8000, key="refresh_dashboard")
+    st_autorefresh(interval=10000, key="refresh_dashboard")
 
     st.title("📊 Dashboard Caposquadra")
 
