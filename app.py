@@ -262,7 +262,7 @@ if not st.session_state.logged_in:
                         nome = user.get("nome")
 
                     st.session_state.logged_in = True
-                    st.session_state.last_activity = datetime.now()
+                    st.session_state.login_time = datetime.now()
                     # 🔥 QUESTA È LA RIGA CHE TI SALVA LA VITA
                     st.session_state.matricola = matricola.strip().lower()
 
@@ -389,26 +389,6 @@ if not st.session_state.logged_in:
 utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
 
-from streamlit_autorefresh import st_autorefresh
-st_autorefresh(interval=5000, key="global_refresh")  # 5 sec per test
-
-from datetime import datetime
-
-SESSION_TIMEOUT = 20  # test (poi 12 ore)
-
-if st.session_state.get("logged_in"):
-
-    last = st.session_state.get("last_activity")
-
-    if last:
-        durata = (datetime.now() - last).total_seconds()
-
-        st.write("⏱️ inattività:", durata)  # debug
-
-        if durata > SESSION_TIMEOUT:
-            st.warning("Sessione scaduta")
-            st.session_state.clear()
-            st.rerun()
 # =========================
 # HEADER
 # =========================
@@ -868,7 +848,6 @@ elif menu == "🚄 MANUTENZIONE":
                         if not tecnici_input:
                             st.error("Seleziona almeno un tecnico")
                             st.stop()
-                        st.session_state.last_activity = datetime.now()
 
                          matricole = []
 
@@ -1551,7 +1530,6 @@ elif menu == "📌 OPEN ITEM":
             if not treno or not descrizione:
                 st.error("Compila i campi obbligatori")
                 st.stop()
-            st.session_state.last_activity = datetime.now()
 
             supabase.table("open_item").insert({
                 "treno": treno,
