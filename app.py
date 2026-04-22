@@ -6,7 +6,7 @@ from supabase import create_client
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
-SESSION_TIMEOUT = 8 * 60 * 60  # 8 ore (in secondi)
+SESSION_TIMEOUT = 20
 
 st.set_page_config(
     layout="wide",
