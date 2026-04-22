@@ -829,7 +829,7 @@ elif menu == "🚄 MANUTENZIONE":
 
 📄 Scheda tecnica:
 
-{link_txt}
+{schede_txt}
 
 """
                         for num in numeri:
