@@ -1194,33 +1194,38 @@ elif menu == "📦 CERCA COMPONENTE":
     # =========================
     # INPUT
     # =========================
-    col1, col2 = st.columns([3,1])
-
+    col1, col2, col3 = st.columns([3,1,2])
+    
     with col1:
         ricerca = st.text_input(
             "🔍 Cerca componente o codice",
             placeholder="es. cilindro, compressore, 100360165"
         )
-
+    
     with col2:
         limite = st.selectbox("Mostra", [50, 100, 200], index=0)
-
+    
+    with col3:
+        assiemi = sorted(df_mag["assieme"].dropna().unique())
+        filtro_assieme = st.selectbox("📦 Assieme", ["Tutti"] + assiemi)
+    
     risultati = df_mag.copy()
-
-    # =========================
-    # 🔍 RICERCA VELOCE
-    # =========================
+    
+    # 🔍 ricerca
     if ricerca:
-
         ricerca_norm = ricerca.lower().strip()
         ricerca_norm = ricerca_norm.replace("_", " ").replace("-", " ")
-
+    
         risultati = risultati[
             risultati["search"].str.contains(ricerca_norm, na=False)
         ]
+    
+    filtro_assieme = st.multiselect("📦 Assieme", assiemi)
 
-    totale = len(risultati)
-
+    if filtro_assieme:
+        risultati = risultati[risultati["assieme"].isin(filtro_assieme)]    
+        totale = len(risultati)
+    
     # =========================
     # LIMITA RISULTATI
     # =========================
