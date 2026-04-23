@@ -1194,7 +1194,7 @@ elif menu == "📦 CERCA COMPONENTE":
     # =========================
     # INPUT
     # =========================
-    col1, col2, col3 = st.columns([3,1,2])
+    col1, col2 = st.columns([3,1])
     
     with col1:
         ricerca = st.text_input(
