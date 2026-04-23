@@ -1194,7 +1194,7 @@ elif menu == "📦 CERCA COMPONENTE":
     # =========================
     # INPUT
     # =========================
-    col1, col2, col3 = st.columns([3,1,2])
+    col1, col2 = st.columns([3,1])
     
     with col1:
         ricerca = st.text_input(
@@ -1205,7 +1205,7 @@ elif menu == "📦 CERCA COMPONENTE":
     with col2:
         limite = st.selectbox("Mostra", [50, 100, 200], index=0)
     
-    with col3:
+
         assiemi = sorted(df_mag["assieme"].dropna().unique())
         filtro_assieme = st.selectbox("📦 Assieme", ["Tutti"] + assiemi)
     
