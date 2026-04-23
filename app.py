@@ -1205,11 +1205,6 @@ elif menu == "📦 CERCA COMPONENTE":
     with col2:
         limite = st.selectbox("Mostra", [50, 100, 200], index=0)
     
-
-        assiemi = sorted(df_mag["assieme"].dropna().unique())
-        filtro_assieme = st.selectbox("📦 Assieme", ["Tutti"] + assiemi)
-    
-    risultati = df_mag.copy()
     
     # 🔍 ricerca
     if ricerca:
