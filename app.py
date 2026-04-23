@@ -1220,19 +1220,22 @@ elif menu == "📦 CERCA COMPONENTE":
             risultati["search"].str.contains(ricerca_norm, na=False)
         ]
     
+    # 📦 filtro assieme
     filtro_assieme = st.multiselect("📦 Assieme", assiemi)
-
+    
     if filtro_assieme:
-        risultati = risultati[risultati["assieme"].isin(filtro_assieme)]    
-        totale = len(risultati)
+        risultati = risultati[risultati["assieme"].isin(filtro_assieme)]
+    
+    # ✅ SEMPRE QUI (fuori dagli if)
+    totale = len(risultati)
     
     # =========================
     # LIMITA RISULTATI
     # =========================
     risultati = risultati.head(limite)
-
+    
     st.markdown(f"🔎 Trovati: {totale} | Mostrati: {len(risultati)}")
-
+    
     if risultati.empty:
         st.warning("Nessun risultato trovato")
         st.stop()
