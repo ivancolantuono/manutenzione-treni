@@ -1205,6 +1205,11 @@ elif menu == "📦 CERCA COMPONENTE":
     with col2:
         limite = st.selectbox("Mostra", [50, 100, 200], index=0)
     
+    # 👉 filtro unico
+    assiemi = sorted(df_mag["assieme"].dropna().unique())
+    filtro_assieme = st.multiselect("📦 Assieme", assiemi)
+    
+    risultati = df_mag.copy()
     
     # 🔍 ricerca
     if ricerca:
@@ -1216,12 +1221,10 @@ elif menu == "📦 CERCA COMPONENTE":
         ]
     
     # 📦 filtro assieme
-    filtro_assieme = st.multiselect("📦 Assieme", assiemi)
-    
     if filtro_assieme:
         risultati = risultati[risultati["assieme"].isin(filtro_assieme)]
     
-    # ✅ SEMPRE QUI (fuori dagli if)
+    # totale SEMPRE fuori
     totale = len(risultati)
     
     # =========================
