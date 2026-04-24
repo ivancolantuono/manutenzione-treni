@@ -411,10 +411,11 @@ if ruolo == "CAPOSQUADRA":
         ["CAPOSQUADRA", "OPERATORE"],
         horizontal=True
     )
-
+    
     st.session_state.modalita = scelta
+    st.divider()
 modalita = st.session_state.get("modalita", ruolo)
-st.divider()             
+        
 
 with colB:
     st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
