@@ -1524,7 +1524,7 @@ elif menu == "📌 OPEN ITEM":
     
         impianto = col3.selectbox(
             "⚙️ Impianto",
-            ["","Porte Interne","Freno","Antincendio","Pis","Arredo",
+            ["","Porte Interne","Freno","Antincendio","Pis","Arredo","Trazione",
              "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"],
             key=f"oi_impianto_{form_id}"
         )
