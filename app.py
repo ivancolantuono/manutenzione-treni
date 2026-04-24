@@ -1708,7 +1708,7 @@ elif menu == "📌 OPEN ITEM":
             if col4.button("📜 Log", key=f"log_{id}"):
                 mostra_cronologia(id)
 
-           if col5.button("✏️ Modifica", key=f"edit_{id}"):
+            if col5.button("✏️ Modifica", key=f"edit_{id}"):
                 if st.session_state.edit_item_id == id:
                     st.session_state.edit_item_id = None
                 else:
