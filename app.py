@@ -392,36 +392,27 @@ ruolo = str(st.session_state.get("ruolo", "")).upper()
 # =========================
 # HEADER
 # =========================
-colA, colB = st.columns([6,2])
+colA, colB, colC = st.columns([4,2,1])
 
 with colA:
-    st.markdown(f"""
-    <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
-    👤 {utente} ({ruolo})
-    </div>
-    """, unsafe_allow_html=True)
-st.divider()
-# 👇 QUI
-if ruolo == "CAPOSQUADRA":
-    if "modalita" not in st.session_state:
-        st.session_state.modalita = "CAPOSQUADRA"
-
-    scelta = st.radio(
-        "Modalità",
-        ["CAPOSQUADRA", "OPERATORE"],
-        horizontal=True
-    )
-    
-    st.session_state.modalita = scelta
-    st.divider()
-modalita = st.session_state.get("modalita", ruolo)
-        
+    st.markdown(f"👤 **{utente} ({ruolo})**")
 
 with colB:
-    st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
-    if st.button("🔓 LOGOUT"):
+    if ruolo == "CAPOSQUADRA":
+        scelta = st.radio(
+            "",
+            ["CAPOSQUADRA", "OPERATORE"],
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+        st.session_state.modalita = scelta
+
+with colC:
+    if st.button("🔓 Logout"):
         st.session_state.clear()
         st.rerun()
+
+st.divider()
 
 # =========================
 # MENU ORIZZONTALE
