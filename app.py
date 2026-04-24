@@ -417,7 +417,7 @@ with colA:
     if ruolo == "CAPOSQUADRA":
 
         scelta = st.radio(
-            "Modalità",
+            
             ["CAPOSQUADRA", "OPERATORE"],
             horizontal=True
         )
