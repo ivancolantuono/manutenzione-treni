@@ -453,7 +453,7 @@ if modalita == "CAPOSQUADRA":
             "📊 STORICO",
             "📚 SCHEDE SR",
             "📚 SCHEDE SR VZI6",
-            "📦 CERCA COMPONENTE",
+            "⚙️ CERCA COMPONENTE",
             "📌 OPEN ITEM"
         ],
         horizontal=True
@@ -466,7 +466,7 @@ else:
             "📚 SCHEDE SR",
             "📚 SCHEDE SR VZI6",
             "📌 OPEN ITEM",
-            "📦 CERCA COMPONENTE"
+            "⚙️ CERCA COMPONENTE"
         ],
         horizontal=True
     )
@@ -1158,12 +1158,12 @@ elif menu == "📊 DASHBOARD":
 # =========================
 # 📦 CATALOGO COMPONENTI (SUPABASE + FAST SEARCH)
 # =========================
-elif menu == "📦 CERCA COMPONENTE":
+elif menu == "⚙️ CERCA COMPONENTE":
 
     import pandas as pd
     import re
 
-    st.title("📦 Cerca componente")
+    st.title("⚙️ Cerca componente")
 
     # =========================
     # 📥 CARICAMENTO COMPLETO + COLONNA SEARCH
