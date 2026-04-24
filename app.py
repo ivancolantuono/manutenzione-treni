@@ -392,26 +392,52 @@ ruolo = str(st.session_state.get("ruolo", "")).upper()
 # =========================
 # HEADER
 # =========================
-colA, colB, colC = st.columns([4,2,1])
+colA, colB = st.columns([6,2])
 
+# =========================
+# DATI UTENTE
+# =========================
+utente = st.session_state.get("utente", "")
+ruolo = str(st.session_state.get("ruolo", "")).upper()
+
+# 🔥 SEMPRE QUI (globale)
+modalita = st.session_state.get("modalita", ruolo)
+
+# =========================
+# HEADER
+# =========================
 with colA:
-    st.markdown(f"👤 **{utente} ({ruolo})**")
+    st.markdown(f"""
+    <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
+    👤 {utente} ({ruolo})
+    </div>
+    """, unsafe_allow_html=True)
 
-with colB:
+    # 👇 SWITCH SOLO PER CAPOSQUADRA
     if ruolo == "CAPOSQUADRA":
-        scelta = st.radio(
-            "",
-            ["CAPOSQUADRA", "OPERATORE"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-        st.session_state.modalita = scelta
 
-with colC:
-    if st.button("🔓 Logout"):
+        scelta = st.radio(
+            "Modalità",
+            ["CAPOSQUADRA", "OPERATORE"],
+            horizontal=True
+        )
+
+        st.session_state.modalita = scelta
+        modalita = scelta  # 🔥 aggiorna subito
+
+# =========================
+# LOGOUT
+# =========================
+with colB:
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
+    if st.button("🔓 LOGOUT"):
         st.session_state.clear()
         st.rerun()
 
+# =========================
+# DIVIDER
+# =========================
 st.divider()
 
 # =========================
