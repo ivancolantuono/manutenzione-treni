@@ -419,7 +419,7 @@ with colA:
         scelta = st.radio(
             "Modalità",
             ["CAPOSQUADRA", "OPERATORE"],
-            horizontal=True
+            horizontal=True,
             label_visibility="collapsed"
         )
 
