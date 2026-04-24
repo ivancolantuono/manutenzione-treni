@@ -400,6 +400,21 @@ with colA:
     👤 {utente} ({ruolo})
     </div>
     """, unsafe_allow_html=True)
+st.divider()
+# 👇 QUI
+if ruolo == "CAPOSQUADRA":
+    if "modalita" not in st.session_state:
+        st.session_state.modalita = "CAPOSQUADRA"
+
+    scelta = st.radio(
+        "Modalità",
+        ["CAPOSQUADRA", "OPERATORE"],
+        horizontal=True
+    )
+
+    st.session_state.modalita = scelta
+modalita = st.session_state.get("modalita", ruolo)
+              
 
 with colB:
     st.markdown("<br><br>", unsafe_allow_html=True)  # 👈 sposta in basso
