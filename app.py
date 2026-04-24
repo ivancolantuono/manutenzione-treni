@@ -1503,6 +1503,8 @@ elif menu == "📌 OPEN ITEM":
     # ============================
 
     st.title("📌 Open Item")
+    if "edit_item_id" not in st.session_state:
+        st.session_state.edit_item_id = None
 
     # ✅ INIT
     if "oi_form_id" not in st.session_state:
@@ -1614,20 +1616,40 @@ elif menu == "📌 OPEN ITEM":
 
         with st.expander(f"🔴 {item['treno']} - {item['descrizione']}"):
 
-            st.write(f"☑️ {item.get('cassa','-')}")
-            st.write(f"⚙️ {item.get('impianto','-')}")
+            in_modifica = st.session_state.edit_item_id == id
+
+            cassa_edit = st.text_input(
+                "☑️ Cassa",
+                value=item.get("cassa",""),
+                disabled=not in_modifica,
+                key=f"cassa_{id}"
+            )
+            
+            impianto_edit = st.text_input(
+                "⚙️ Impianto",
+                value=item.get("impianto",""),
+                disabled=not in_modifica,
+                key=f"imp_{id}"
+            )
+
+            descrizione_edit = st.text_area(
+                "📝 Descrizione",
+                value=item.get("descrizione",""),
+                disabled=not in_modifica,
+                key=f"desc_{id}"
+            )
             st.write(f"👤 {item.get('utente','-')}")
             st.write(f"📅 {formatta_data(item.get('data_creazione'))}")
 
+            
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{id}")
-
             avanzamento = st.text_area(
                 "📈 Avanzamento / Monitoraggio",
                 value=item.get("avanzamento","") or "",
                 key=f"av_{id}"
             )
 
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5 = st.columns(5)
 
             # 🟡 MONITORAGGIO (SALVA + VALUTAZIONE)
             if col1.button("🟡 Monitoraggio", key=f"monitor_{id}"):
@@ -1686,6 +1708,40 @@ elif menu == "📌 OPEN ITEM":
             if col4.button("📜 Log", key=f"log_{id}"):
                 mostra_cronologia(id)
 
+           if col5.button("✏️ Modifica", key=f"edit_{id}"):
+                if st.session_state.edit_item_id == id:
+                    st.session_state.edit_item_id = None
+                else:
+                    st.session_state.edit_item_id = id
+                st.rerun()
+            # =========================
+            # ✏️ MODIFICA ATTIVA
+            # =========================
+            if in_modifica:
+            
+                st.divider()
+            
+                colA, colB = st.columns(2)
+            
+                if colA.button("💾 Salva", key=f"save_{id}"):
+            
+                    supabase.table("open_item").update({
+                        "cassa": cassa_edit,
+                        "impianto": impianto_edit,
+                        "descrizione": descrizione_edit
+                    }).eq("id", id).execute()
+            
+                    salva_log(id, "MODIFICA", utente_loggato, "", descrizione_edit, "descrizione")
+            
+                    st.session_state.edit_item_id = None
+                    st.cache_data.clear()
+                    st.success("Modificato")
+                    st.rerun()
+            
+                if colB.button("❌ Annulla", key=f"cancel_{id}"):
+                    st.session_state.edit_item_id = None
+                    st.rerun()
+
     # ============================
     # 🟡 VALUTAZIONE
     # ============================
@@ -1704,7 +1760,6 @@ elif menu == "📌 OPEN ITEM":
             st.write(f"📅 {formatta_data(item.get('data_creazione'))}")
 
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_val_{id}")
-
             avanzamento = st.text_area(
                 "📈 Avanzamento",
                 value=item.get("avanzamento","") or "",
