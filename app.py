@@ -621,7 +621,7 @@ elif menu == "🚄 MANUTENZIONE":
     # =========================
     # 👨‍🔧 CAPOSQUADRA
     # =========================
-    if ruolo == "CAPOSQUADRA":
+    if modalita == "CAPOSQUADRA":
 
              # 🔧 BOX PARAMETRI
         with st.container():
