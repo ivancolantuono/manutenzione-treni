@@ -411,7 +411,7 @@ if ruolo == "CAPOSQUADRA":
         ["CAPOSQUADRA", "OPERATORE"],
         horizontal=True
     )
-
+st.divider()
     st.session_state.modalita = scelta
 modalita = st.session_state.get("modalita", ruolo)
               
