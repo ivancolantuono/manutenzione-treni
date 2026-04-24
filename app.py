@@ -425,7 +425,7 @@ with colB:
 # =========================
 # MENU ORIZZONTALE
 # =========================
-if ruolo == "CAPOSQUADRA":
+if modalita == "CAPOSQUADRA":
     menu = st.radio(
         "",
         [
