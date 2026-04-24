@@ -417,9 +417,10 @@ with colA:
     if ruolo == "CAPOSQUADRA":
 
         scelta = st.radio(
-            
+            "Modalità",
             ["CAPOSQUADRA", "OPERATORE"],
             horizontal=True
+            label_visibility="collapsed"
         )
 
         st.session_state.modalita = scelta
