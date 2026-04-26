@@ -1498,7 +1498,7 @@ elif menu == "📌 OPEN ITEM":
     @st.cache_data(ttl=10)
     def get_open_item_fast():
         return supabase.table("open_item")\
-            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura,allegato")\
+            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura,allegato,allegati")\
             .order("data_creazione", desc=True)\
             .execute().data
 
@@ -1697,13 +1697,22 @@ elif menu == "📌 OPEN ITEM":
             )
             st.write(f"👤 {item.get('utente','-')}")
             st.write(f"📅 {formatta_data(item.get('data_creazione'))}")
-            if item.get("allegati"):
-                for url in item["allegati"]:
-                    st.link_button("Apri file", url)
+            allegati = item.get("allegati")
+
+            # 🔧 se arriva come stringa (capita con Supabase)
+            if isinstance(allegati, str):
+                import json
+                try:
+                    allegati = json.loads(allegati)
+                except:
+                    allegati = []
+            
+            if allegati:
+                for i, url in enumerate(allegati):
+                    st.link_button(f"📎 Allegato {i+1}", url)
             
             elif item.get("allegato"):
-                st.link_button("Apri allegato", item["allegato"])
-
+                st.link_button("📎 Allegato", item["allegato"])
             
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{id}")
             avanzamento = st.text_area(
