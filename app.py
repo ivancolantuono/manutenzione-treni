@@ -1550,7 +1550,7 @@ elif menu == "📌 OPEN ITEM":
     
         treno = col1.text_input("🚆 Treno", key=f"oi_treno_{form_id}")
 
-        allegato = st.file_uploader("📎 Allegato", type=["pdf", "jpg", "png", "xlsx"])
+        allegato = st.file_uploader("📎 Allegato", type=["pdf", "jpg", "png", "xlsx", "txt"])
     
         cassa = col2.multiselect(
             "☑️ Cassa",
