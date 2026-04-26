@@ -1771,28 +1771,30 @@ elif menu == "📌 OPEN ITEM":
 
                 file_urls = item.get("allegati", [])
 
+                # 🔧 gestisce anche stringa JSON
+                if isinstance(file_urls, str):
+                    import json
+                    try:
+                        file_urls = json.loads(file_urls)
+                    except:
+                        file_urls = []
+                
+                # 🗑️ elimina tutti i file
                 for file_url in file_urls:
+                
                     if file_url and "allegati/" in file_url:
                         file_path = file_url.split("allegati/")[1]
-                        supabase.storage.from_("allegati").remove([file_path])
-            
-                # 🔧 estrai path
-                file_path = None
-                if file_url and "allegati/" in file_url:
-                    file_path = file_url.split("allegati/")[1]
-            
-                # 🗑️ elimina file
-                if file_path:
-                    try:
-                        supabase.storage.from_("allegati").remove([file_path])
-                    except Exception as e:
-                        st.warning(f"Errore eliminazione file: {e}")
-            
-                # 🗑️ elimina record
+                
+                        try:
+                            supabase.storage.from_("allegati").remove([file_path])
+                        except Exception as e:
+                            st.warning(f"Errore eliminazione file: {e}")
+                
+                # 🗑️ elimina record DB
                 supabase.table("open_item").delete().eq("id", id).execute()
-            
-                salva_log(id,"ELIMINAZIONE",utente_loggato,"","")
-            
+                
+                salva_log(id, "ELIMINAZIONE", utente_loggato, "", "")
+                
                 st.cache_data.clear()
                 st.rerun()
                 
