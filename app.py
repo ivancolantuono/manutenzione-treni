@@ -1550,7 +1550,11 @@ elif menu == "📌 OPEN ITEM":
     
         treno = col1.text_input("🚆 Treno", key=f"oi_treno_{form_id}")
 
-        allegato = st.file_uploader("📎 Allegato", type=["pdf", "jpg", "png", "xlsx", "txt"])
+        allegato = st.file_uploader(
+            "📎 Allegato",
+            type=["pdf","jpg","png","xlsx","txt"],
+            key=f"oi_file_{form_id}"   # 🔥 QUESTA È LA MODIFICA
+        )
     
         cassa = col2.multiselect(
             "☑️ Cassa",
@@ -1749,13 +1753,28 @@ elif menu == "📌 OPEN ITEM":
             # 🗑️ ELIMINA
             if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
+                file_url = item.get("allegato")
+            
+                # 🔧 estrai path
+                file_path = None
+                if file_url and "allegati/" in file_url:
+                    file_path = file_url.split("allegati/")[1]
+            
+                # 🗑️ elimina file
+                if file_path:
+                    try:
+                        supabase.storage.from_("allegati").remove([file_path])
+                    except Exception as e:
+                        st.warning(f"Errore eliminazione file: {e}")
+            
+                # 🗑️ elimina record
                 supabase.table("open_item").delete().eq("id", id).execute()
-
+            
                 salva_log(id,"ELIMINAZIONE",utente_loggato,"","")
-
+            
                 st.cache_data.clear()
                 st.rerun()
-
+                
             # 📜 LOG
             if col4.button("📜 Log", key=f"log_{id}"):
                 mostra_cronologia(id)
