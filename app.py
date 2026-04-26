@@ -436,29 +436,21 @@ with colB:
         st.session_state.clear()
         st.rerun()
 
-# =========================
-# DIVIDER
-# =========================
+
 st.divider()
 
 # =========================
 # MENU ORIZZONTALE
 # =========================
 if modalita == "CAPOSQUADRA":
-    menu = st.radio(
-        "",
-        [
-            "🚄 MANUTENZIONE",
-            "📊 DASHBOARD",
-            "📊 STORICO",
-            "📚 SCHEDE SR",
-            "📚 SCHEDE SR VZI6",
-            "⚙️ CERCA COMPONENTE",
-            "📌 OPEN ITEM"
-        ],
-        horizontal=True,
-        label_visibility="collapsed"
-    )
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "🚆 Manutenzione",
+    "📊 Dashboard",
+    "📂 Storico",
+    "📋 Schede SR",
+    "📌 Open Item",
+    "🔍 Componenti"
+])
 else:
     menu = st.radio(
         "",
@@ -598,7 +590,8 @@ if menu == "📊 STORICO":
 # =========================
 # 🚄 MANUTENZIONE
 # =========================
-elif menu == "🚄 MANUTENZIONE":
+with tab1:
+    "🚄 MANUTENZIONE":
     
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=10000, key="refresh_manutenzione")
