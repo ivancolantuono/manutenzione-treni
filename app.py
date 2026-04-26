@@ -1767,7 +1767,7 @@ elif menu == "📌 OPEN ITEM":
                 st.rerun()
                 
              # 🗑️ elimina tutti i file
-            if col3.button("🗑️ Elimina", key=f"del_{id}_{i}"):
+            if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
                 file_url = item.get("allegato")
             
