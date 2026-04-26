@@ -1766,8 +1766,8 @@ elif menu == "📌 OPEN ITEM":
                 st.cache_data.clear()
                 st.rerun()
                 
-                # 🗑️ elimina tutti i file
-                if col3.button("🗑️ Elimina", key=f"del_{id}"):
+             # 🗑️ elimina tutti i file
+            if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
                     file_urls = item.get("allegati", [])
                 
@@ -1805,7 +1805,7 @@ elif menu == "📌 OPEN ITEM":
                     salva_log(id, "ELIMINAZIONE", utente_loggato, "", "")
                 
                     st.cache_data.clear()
-                    st.rerun()
+                    st.rerun()   
                 
             # 📜 LOG
             if col4.button("📜 Log", key=f"log_{id}"):
