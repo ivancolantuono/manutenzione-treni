@@ -456,7 +456,7 @@ if modalita == "CAPOSQUADRA":
             "⚙️ CERCA COMPONENTE",
             "📌 OPEN ITEM"
         ],
-        horizontal=True
+        horizontal=True,
         lbel_visibility="collapsed"
     )
 else:
