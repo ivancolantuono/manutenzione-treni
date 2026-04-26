@@ -1687,6 +1687,8 @@ elif menu == "📌 OPEN ITEM":
             )
             st.write(f"👤 {item.get('utente','-')}")
             st.write(f"📅 {formatta_data(item.get('data_creazione'))}")
+            if item.get("allegato"):
+                st.markdown(f"📎 [Apri allegato]({item['allegato']})")
 
             
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{id}")
