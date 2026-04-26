@@ -1766,17 +1766,14 @@ elif menu == "📌 OPEN ITEM":
                 st.cache_data.clear()
                 st.rerun()
                 
-             # 🗑️ elimina tutti i file
+            # 🗑️ elimina file + record
             if col3.button("🗑️ Elimina", key=f"del_{id}"):
-
-                file_urls = item.get("allegato") or []
             
-                # 🔥 se è stringa → trasformo in lista
-                if isinstance(file_urls, str):
-                    file_urls = [file_urls]
+                file_urls = item.get("allegati") or []
             
-                # 🔥 se è salvato come stringa tipo '["url"]'
                 import ast
+            
+                # 🔁 sicurezza (stringa → lista)
                 if isinstance(file_urls, str):
                     try:
                         file_urls = ast.literal_eval(file_urls)
@@ -1784,23 +1781,18 @@ elif menu == "📌 OPEN ITEM":
                         file_urls = [file_urls]
             
                 # =========================
-                # 🗑️ CANCELLA FILE DA STORAGE
+                # 🗑️ DELETE STORAGE
                 # =========================
                 for url in file_urls:
                     try:
                         if url:
-                            file_path = url.split("allegati/")[-1]
-            
-                            # debug (puoi togliere dopo)
-                            st.write("DELETE PATH:", file_path)
-            
+                            file_path = url.split("/storage/v1/object/public/allegati/")[-1]
                             supabase.storage.from_("allegati").remove([file_path])
-            
                     except Exception as e:
                         st.error(f"Errore file: {e}")
             
                 # =========================
-                # 🗑️ CANCELLA RECORD DB
+                # 🗑️ DELETE DB
                 # =========================
                 supabase.table("open_item").delete().eq("id", id).execute()
             
