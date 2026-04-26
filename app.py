@@ -1782,43 +1782,43 @@ elif menu == "📌 OPEN ITEM":
                 # 🗑️ elimina tutti i file
                 if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
-                file_urls = item.get("allegati", [])
-            
-                # 🔧 se arriva come stringa
-                if isinstance(file_urls, str):
-                    import json
-                    try:
-                        file_urls = json.loads(file_urls)
-                    except:
-                        file_urls = []
-            
-                paths = []
-            
-                for url in file_urls:
-                    if not url:
-                        continue
-            
-                    try:
-                        path = url.split("/storage/v1/object/public/allegati/")[1]
-                        paths.append(path)
-                    except:
-                        st.warning(f"URL non valido: {url}")
-            
-                # 🔥 DEBUG (VEDI COSA SUCCEDE)
-                st.write("PATH DA ELIMINARE:", paths)
-            
-                # 🗑️ elimina da storage
-                if paths:
-                    res = supabase.storage.from_("allegati").remove(paths)
-                    st.write("RISPOSTA DELETE:", res)
-            
-                # 🗑️ elimina record DB
-                supabase.table("open_item").delete().eq("id", id).execute()
-            
-                salva_log(id, "ELIMINAZIONE", utente_loggato, "", "")
-            
-                st.cache_data.clear()
-                st.rerun()
+                    file_urls = item.get("allegati", [])
+                
+                    # 🔧 se arriva come stringa
+                    if isinstance(file_urls, str):
+                        import json
+                        try:
+                            file_urls = json.loads(file_urls)
+                        except:
+                            file_urls = []
+                
+                    paths = []
+                
+                    for url in file_urls:
+                        if not url:
+                            continue
+                
+                        try:
+                            path = url.split("/storage/v1/object/public/allegati/")[1]
+                            paths.append(path)
+                        except:
+                            st.warning(f"URL non valido: {url}")
+                
+                    # 🔥 DEBUG (VEDI COSA SUCCEDE)
+                    st.write("PATH DA ELIMINARE:", paths)
+                
+                    # 🗑️ elimina da storage
+                    if paths:
+                        res = supabase.storage.from_("allegati").remove(paths)
+                        st.write("RISPOSTA DELETE:", res)
+                
+                    # 🗑️ elimina record DB
+                    supabase.table("open_item").delete().eq("id", id).execute()
+                
+                    salva_log(id, "ELIMINAZIONE", utente_loggato, "", "")
+                
+                    st.cache_data.clear()
+                    st.rerun()
                 
             # 📜 LOG
             if col4.button("📜 Log", key=f"log_{id}"):
