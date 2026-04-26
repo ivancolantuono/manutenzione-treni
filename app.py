@@ -591,7 +591,7 @@ if menu == "📊 STORICO":
 # 🚄 MANUTENZIONE
 # =========================
 with tab1:
-    "🚄 MANUTENZIONE":
+    🚄 MANUTENZIONE()
     
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=10000, key="refresh_manutenzione")
