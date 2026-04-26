@@ -443,14 +443,19 @@ st.divider()
 # MENU ORIZZONTALE
 # =========================
 if modalita == "CAPOSQUADRA":
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "🚆 Manutenzione",
-    "📊 Dashboard",
-    "📂 Storico",
-    "📋 Schede SR",
-    "📌 Open Item",
-    "🔍 Componenti"
-])
+    menu = st.radio(
+        "",
+        [
+            "🚄 MANUTENZIONE",
+            "📊 DASHBOARD",
+            "📊 STORICO",
+            "📚 SCHEDE SR",
+            "📚 SCHEDE SR VZI6",
+            "⚙️ CERCA COMPONENTE",
+            "📌 OPEN ITEM"
+        ],
+        horizontal=True,
+    )
 else:
     menu = st.radio(
         "",
@@ -590,8 +595,7 @@ if menu == "📊 STORICO":
 # =========================
 # 🚄 MANUTENZIONE
 # =========================
-with tab1:
-    🚄 MANUTENZIONE()
+elif menu == "🚄 MANUTENZIONE":
     
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=10000, key="refresh_manutenzione")
