@@ -1769,28 +1769,43 @@ elif menu == "📌 OPEN ITEM":
              # 🗑️ elimina tutti i file
             if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
-                file_url = item.get("allegato")
+                file_urls = item.get("allegato") or []
             
-                if file_url:
+                # 🔥 se è stringa → trasformo in lista
+                if isinstance(file_urls, str):
+                    file_urls = [file_urls]
+            
+                # 🔥 se è salvato come stringa tipo '["url"]'
+                import ast
+                if isinstance(file_urls, str):
                     try:
-                        # 🔥 PRENDE SOLO IL PATH DOPO "allegati/"
-                        file_path = file_url.split("allegati/")[-1]
+                        file_urls = ast.literal_eval(file_urls)
+                    except:
+                        file_urls = [file_urls]
             
-                        # 🔥 AGGIUNGE CARTELLA (IMPORTANTE)
-                        file_path = "open_item/" + file_path if not file_path.startswith("open_item/") else file_path
+                # =========================
+                # 🗑️ CANCELLA FILE DA STORAGE
+                # =========================
+                for url in file_urls:
+                    try:
+                        if url:
+                            file_path = url.split("allegati/")[-1]
             
-                        st.write("PATH FINALE:", file_path)
+                            # debug (puoi togliere dopo)
+                            st.write("DELETE PATH:", file_path)
             
-                        res = supabase.storage.from_("allegati").remove([file_path])
-            
-                        st.write("DELETE:", res)
+                            supabase.storage.from_("allegati").remove([file_path])
             
                     except Exception as e:
-                        st.error(e)
+                        st.error(f"Errore file: {e}")
             
+                # =========================
+                # 🗑️ CANCELLA RECORD DB
+                # =========================
                 supabase.table("open_item").delete().eq("id", id).execute()
             
                 st.cache_data.clear()
+                st.success("Eliminato")
                 st.rerun()
                 
             # 📜 LOG
