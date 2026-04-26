@@ -1549,6 +1549,8 @@ elif menu == "📌 OPEN ITEM":
         col1, col2, col3 = st.columns(3)
     
         treno = col1.text_input("🚆 Treno", key=f"oi_treno_{form_id}")
+
+        allegato = st.file_uploader("📎 Allegato", type=["pdf", "jpg", "png", "xlsx"])
     
         cassa = col2.multiselect(
             "☑️ Cassa",
@@ -1566,16 +1568,29 @@ elif menu == "📌 OPEN ITEM":
         descrizione = st.text_area("📝 Descrizione", key=f"oi_descrizione_{form_id}")
     
         if st.button("➕ Inserisci"):
-    
+
             if not treno or not descrizione:
                 st.error("Compila i campi obbligatori")
                 st.stop()
-
+        
+            file_url = None
+        
+            if allegato:
+                file_name = f"{datetime.now().timestamp()}_{allegato.name}"
+        
+                supabase.storage.from_("allegati").upload(
+                    file_name,
+                    allegato.getvalue()
+                )
+        
+                file_url = supabase.storage.from_("allegati").get_public_url(file_name)
+        
             supabase.table("open_item").insert({
                 "treno": treno,
                 "cassa": ", ".join(cassa),
                 "impianto": impianto,
                 "descrizione": descrizione,
+                "allegato": file_url,   # 👈 nuova colonna
                 "stato": "APERTO",
                 "utente": utente_loggato,
                 "data_creazione": ora_italia_iso()
