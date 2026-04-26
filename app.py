@@ -1498,7 +1498,7 @@ elif menu == "📌 OPEN ITEM":
     @st.cache_data(ttl=10)
     def get_open_item_fast():
         return supabase.table("open_item")\
-            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura")\
+            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura,allegato")\
             .order("data_creazione", desc=True)\
             .execute().data
 
