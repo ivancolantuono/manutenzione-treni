@@ -1550,10 +1550,11 @@ elif menu == "📌 OPEN ITEM":
     
         treno = col1.text_input("🚆 Treno", key=f"oi_treno_{form_id}")
 
-        allegato = st.file_uploader(
-            "📎 Allegato",
+        allegati = st.file_uploader(
+            "📎 Allegati",
             type=["pdf","jpg","png","xlsx","txt"],
-            key=f"oi_file_{form_id}"   # 🔥 QUESTA È LA MODIFICA
+            accept_multiple_files=True,
+            key=f"oi_file_{form_id}"
         )
     
         cassa = col2.multiselect(
@@ -1577,27 +1578,29 @@ elif menu == "📌 OPEN ITEM":
                 st.error("Compila i campi obbligatori")
                 st.stop()
         
-            file_url = None
-        
-            if allegato:
-                file_name = f"{datetime.now().timestamp()}_{allegato.name}"
-        
-                file_path = f"open_item/{datetime.now().timestamp()}_{allegato.name}"
+            file_urls = []
 
-                supabase.storage.from_("allegati").upload(
-                    file_path,
-                    allegato.getvalue(),
-                    {"content-type": allegato.type}  # 🔥 QUESTA È LA CHIAVE
-                )
-                
-                file_url = supabase.storage.from_("allegati").get_public_url(file_path)
+            if allegati:
+                for file in allegati:
+            
+                    file_path = f"open_item/{datetime.now().timestamp()}_{file.name}"
+            
+                    supabase.storage.from_("allegati").upload(
+                        file_path,
+                        file.getvalue(),
+                        {"content-type": file.type}
+                    )
+            
+                    url = supabase.storage.from_("allegati").get_public_url(file_path)
+            
+                    file_urls.append(url)
         
             supabase.table("open_item").insert({
                 "treno": treno,
                 "cassa": ", ".join(cassa),
                 "impianto": impianto,
                 "descrizione": descrizione,
-                "allegato": file_url,   # 👈 nuova colonna
+                "allegati": file_urls,   # 👈 nuova colonna
                 "stato": "APERTO",
                 "utente": utente_loggato,
                 "data_creazione": ora_italia_iso()
@@ -1757,7 +1760,12 @@ elif menu == "📌 OPEN ITEM":
             # 🗑️ ELIMINA
             if col3.button("🗑️ Elimina", key=f"del_{id}"):
 
-                file_url = item.get("allegato")
+                file_urls = item.get("allegati", [])
+
+                for file_url in file_urls:
+                    if file_url and "allegati/" in file_url:
+                        file_path = file_url.split("allegati/")[1]
+                        supabase.storage.from_("allegati").remove([file_path])
             
                 # 🔧 estrai path
                 file_path = None
