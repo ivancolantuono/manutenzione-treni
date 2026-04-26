@@ -1765,19 +1765,6 @@ elif menu == "📌 OPEN ITEM":
 
                 st.cache_data.clear()
                 st.rerun()
-
-            # 🗑️ ELIMINA
-            if col3.button("🗑️ Elimina", key=f"del_{id}"):
-
-                file_urls = item.get("allegati", [])
-
-                # 🔧 gestisce anche stringa JSON
-                if isinstance(file_urls, str):
-                    import json
-                    try:
-                        file_urls = json.loads(file_urls)
-                    except:
-                        file_urls = []
                 
                 # 🗑️ elimina tutti i file
                 if col3.button("🗑️ Elimina", key=f"del_{id}"):
