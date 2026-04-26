@@ -457,7 +457,7 @@ if modalita == "CAPOSQUADRA":
             "📌 OPEN ITEM"
         ],
         horizontal=True,
-        lbel_visibility="collapsed"
+        label_visibility="collapsed"
     )
 else:
     menu = st.radio(
