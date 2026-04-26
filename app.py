@@ -1578,12 +1578,15 @@ elif menu == "📌 OPEN ITEM":
             if allegato:
                 file_name = f"{datetime.now().timestamp()}_{allegato.name}"
         
+                file_path = f"open_item/{datetime.now().timestamp()}_{allegato.name}"
+
                 supabase.storage.from_("allegati").upload(
-                    file_name,
-                    allegato.getvalue()
+                    file_path,
+                    allegato.getvalue(),
+                    {"content-type": allegato.type}  # 🔥 QUESTA È LA CHIAVE
                 )
-        
-                file_url = supabase.storage.from_("allegati").get_public_url(file_name)
+                
+                file_url = supabase.storage.from_("allegati").get_public_url(file_path)
         
             supabase.table("open_item").insert({
                 "treno": treno,
