@@ -390,29 +390,6 @@ utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
 
 # =========================
-# 🔧 MIGRAZIONE ALLEGATI (UNA VOLTA)
-# =========================
-
-if "migrazione_allegati" not in st.session_state:
-
-    rows = supabase.table("open_item").select("*").execute().data
-
-    for r in rows:
-
-        if r.get("allegato") and not r.get("allegati"):
-
-            allegati = [r["allegato"]]
-            paths = [r.get("allegato_path")] if r.get("allegato_path") else []
-
-            supabase.table("open_item").update({
-                "allegati": allegati,
-                "allegati_path": paths
-            }).eq("id", r["id"]).execute()
-
-    st.session_state.migrazione_allegati = True
-    st.success("✅ Migrazione allegati completata")
-
-# =========================
 # HEADER
 # =========================
 colA, colB = st.columns([6,2])
