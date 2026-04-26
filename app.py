@@ -1773,23 +1773,24 @@ elif menu == "📌 OPEN ITEM":
             
                 if file_url:
                     try:
-                        # 🔥 ESTRAI PATH CORRETTO
-                        file_path = file_url.split("/storage/v1/object/public/allegati/")[1]
+                        # 🔥 PRENDE SOLO IL PATH DOPO "allegati/"
+                        file_path = file_url.split("allegati/")[-1]
             
-                        st.write("PATH CORRETTO:", file_path)  # debug
+                        # 🔥 AGGIUNGE CARTELLA (IMPORTANTE)
+                        file_path = "open_item/" + file_path if not file_path.startswith("open_item/") else file_path
+            
+                        st.write("PATH FINALE:", file_path)
             
                         res = supabase.storage.from_("allegati").remove([file_path])
             
-                        st.write("RISPOSTA DELETE:", res)
+                        st.write("DELETE:", res)
             
                     except Exception as e:
-                        st.error(f"Errore eliminazione file: {e}")
+                        st.error(e)
             
-                # 🗑️ elimina record DB
                 supabase.table("open_item").delete().eq("id", id).execute()
             
                 st.cache_data.clear()
-                st.success("Eliminato")
                 st.rerun()
                 
             # 📜 LOG
