@@ -240,7 +240,6 @@ if not st.session_state.logged_in:
                     st.session_state.ruolo = user.get("ruolo") or "OPERATORE"
 
                     st.success("✅ Accesso riuscito")
-                    time.sleep(1)
                     st.rerun()
                 else:
                     st.error("❌ Credenziali errate")
@@ -299,10 +298,10 @@ if not st.session_state.logged_in:
                             "Nominativo": f"{format_nome(cognome)} {format_nome(nome)}",
                             "Telefono": ""
                         }).execute()
+                        get_utenti.clear()
+                        get_operatori.clear()
 
                     st.success("✅ Registrazione completata!")
-
-                    time.sleep(1)
 
                     st.session_state.redirect_to_login = True
                     st.rerun()
@@ -331,6 +330,9 @@ if not st.session_state.logged_in:
                         .select("*")\
                         .eq("matricola", matricola)\
                         .execute()
+                    
+                    user = res.data[0] if res.data else None
+                    if user and user.get("password") == hash_password(password):
 
                     if not res.data:
                         st.error("Matricola non trovata")
@@ -341,9 +343,7 @@ if not st.session_state.logged_in:
                     }).eq("matricola", matricola).execute()
 
                     st.success("✅ Password aggiornata!")
-
-                    time.sleep(1)
-
+                    
                     st.session_state.redirect_to_login = True
                     st.rerun()
 
@@ -860,7 +860,7 @@ elif menu == "🚄 MANUTENZIONE":
                     # 🗑️ CANCELLA
                     if colB.button("🗑️ Cancella", key=f"cancella_{i}"):
                         supabase.table("interventi").delete().eq("chiave", chiave).execute()
-                        st.cache_data.clear()
+                        get_interventi.clear()
                         st.warning("Cancellato")
                         st.rerun()
 
@@ -876,7 +876,7 @@ elif menu == "🚄 MANUTENZIONE":
                                 "note": note_vecchie + f"\n---\nCHIUSO DA {utente}"
                             }).eq("chiave", chiave).execute()
 
-                            st.cache_data.clear()
+                            get_interventi.clear()
                             st.success("Chiusa")
                             st.rerun()
     # =========================
@@ -970,7 +970,7 @@ elif menu == "🚄 MANUTENZIONE":
                         "note": nuove_note
                     }).eq("chiave", record["chiave"]).execute()
 
-                    st.cache_data.clear()
+                    get_interventi.clear()
                     st.success("Attività chiusa")
                     st.rerun()
     
@@ -1544,14 +1544,11 @@ elif menu == "📌 OPEN ITEM":
     
             st.success("✅ OPEN ITEM INSERITO")
     
-            st.cache_data.clear()
-    
-            # 🔥 RESET VERO (UNA SOLA RIGA)
+            get_open_item_fast.clear()
+            
             st.session_state.oi_form_id += 1
     
             import time
-            time.sleep(1)
-    
             st.rerun()
     
     st.divider()
@@ -1678,7 +1675,7 @@ elif menu == "📌 OPEN ITEM":
                     "avanzamento"
                 )
             
-                st.cache_data.clear()
+                get_open_item_fast.clear()
                 st.rerun()
                 
             # ✅ CHIUDI
@@ -1697,7 +1694,7 @@ elif menu == "📌 OPEN ITEM":
 
                 salva_log(id,"CHIUSURA",utente_loggato,"","CHIUSO","stato")
 
-                st.cache_data.clear()
+                get_open_item_fast.clear()
                 st.rerun()
                 
             # 🗑️ elimina file + record
@@ -1730,7 +1727,7 @@ elif menu == "📌 OPEN ITEM":
                 # =========================
                 supabase.table("open_item").delete().eq("id", id).execute()
             
-                st.cache_data.clear()
+                get_open_item_fast.clear()
                 st.success("Eliminato")
                 st.rerun()
                 
@@ -1764,7 +1761,7 @@ elif menu == "📌 OPEN ITEM":
                     salva_log(id, "MODIFICA", utente_loggato, "", descrizione_edit, "descrizione")
             
                     st.session_state.edit_item_id = None
-                    st.cache_data.clear()
+                    get_open_item_fast.clear()
                     st.success("Modificato")
                     st.rerun()
             
@@ -1806,7 +1803,7 @@ elif menu == "📌 OPEN ITEM":
 
                 salva_log(id,"STATO",utente_loggato,"VALUTAZIONE","APERTO","stato")
 
-                st.cache_data.clear()
+                get_open_item_fast.clear()
                 st.rerun()
 
             if col2.button("✅ Chiudi", key=f"close_val_{id}"):
@@ -1824,7 +1821,7 @@ elif menu == "📌 OPEN ITEM":
 
                 salva_log(id,"CHIUSURA",utente_loggato,"","CHIUSO","stato")
 
-                st.cache_data.clear()
+                get_open_item_fast.clear()
                 st.rerun()
 
             if col3.button("💾 Aggiorna", key=f"update_av_{id}"):
@@ -1846,7 +1843,7 @@ elif menu == "📌 OPEN ITEM":
                     "avanzamento"
                 )
     
-                st.cache_data.clear()
+                get_open_item_fast.clear()
                 st.rerun()
 
             if col4.button("📜 Log", key=f"log_val_{id}"):
@@ -1886,7 +1883,7 @@ elif menu == "📌 OPEN ITEM":
 
                 salva_log(id,"RIAPERTURA",utente_loggato,"CHIUSO","APERTO","stato")
 
-                st.cache_data.clear()
+                get_open_item_fast.clear()
                 st.rerun()
 
             if col2.button("📜 Log", key=f"log_ch_{id}"):
