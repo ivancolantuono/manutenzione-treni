@@ -331,7 +331,7 @@ if not st.session_state.logged_in:
                         .eq("matricola", matricola)\
                         .execute()
                     
-                if not res.data:
+                    if not res.data:
                         st.error("Matricola non trovata")
                         st.stop()
 
