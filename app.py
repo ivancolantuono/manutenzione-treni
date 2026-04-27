@@ -115,28 +115,9 @@ label {
 }
 </style>
 """, unsafe_allow_html=True)
-
-@st.cache_data(ttl=5)
-def get_interventi():
-    res = supabase.table("interventi").select("*").execute()
-    return res.data or []
-
-@st.cache_data(ttl=10)
-def get_open_item():
-    res = supabase.table("open_item").select("*").execute()
-    return res.data or []
-
-
-# =========================
-# ORAIO
-# =========================
-def ora_italia():
-    return datetime.now(ZoneInfo("Europe/Rome")).strftime("%H:%M")
-
 # =========================
 # SUPABASE
 # =========================
-
 import os
 
 url = os.getenv("SUPABASE_URL")
@@ -144,40 +125,29 @@ key = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(url, key)
 
+@st.cache_data(ttl=5)
+def get_interventi():
+    res = supabase.table("interventi").select("*").execute()
+    return res.data or []
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+# =========================
+# ORAIO
+# =========================
+def ora_italia():
+    return datetime.now(ZoneInfo("Europe/Rome")).strftime("%H:%M")
 
 @st.cache_data(ttl=60)
 def get_utenti():
 
     res = supabase.table("operatori").select("*").execute()
-    return res.data or[]
+    return res.data or []
     
 utenti = get_utenti()
-# ============================
-# LOG OPEN ITEM
-# ============================
-def salva_log(item_id, azione, utente, vecchio, nuovo):
-    try:
-        supabase.table("open_item_log").insert({
-            "item_id": item_id,
-            "azione": azione,
-            "utente": utente,
-            "data": datetime.now(ZoneInfo("Europe/Rome")).isoformat(),
-            "valore_precedente": vecchio,
-            "valore_nuovo": nuovo
-        }).execute()
-    except Exception as e:
-        print("Errore log:", e)
-
 # =========================
 # 🔐 LOGIN + REGISTRAZIONE
 # =========================
 import hashlib
 import time
-from datetime import datetime
-
 # =========================
 # UTILS
 # =========================
@@ -397,9 +367,6 @@ colA, colB = st.columns([6,2])
 # =========================
 # DATI UTENTE
 # =========================
-utente = st.session_state.get("utente", "")
-ruolo = str(st.session_state.get("ruolo", "")).upper()
-
 # 🔥 SEMPRE QUI (globale)
 modalita = st.session_state.get("modalita", ruolo)
 
@@ -507,7 +474,6 @@ if "mostra" not in st.session_state:
 
 if menu == "📊 STORICO":
 
-    from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=10000, key="refresh_storico")
 
     st.title("📊 Storico Attività")
@@ -597,7 +563,6 @@ if menu == "📊 STORICO":
 # =========================
 elif menu == "🚄 MANUTENZIONE":
     
-    from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=10000, key="refresh_manutenzione")
 
     st.markdown("""
@@ -700,7 +665,7 @@ elif menu == "🚄 MANUTENZIONE":
                 data_giorno = st.session_state.data
     
                 # ✅ CHIAVE UNICA
-                chiave = f"{r['Scheda']}{r['Intervento']}{treno}{odl}{data_giorno}"
+                chiave = f"{r['Scheda']}|{r['Intervento']}|{treno}|{odl}|{data_giorno}"
     
                 # ✅ CERCA RECORD CORRETTO
                 record = next(
@@ -751,30 +716,6 @@ elif menu == "🚄 MANUTENZIONE":
                     # =========================
                     note = record.get("note", "") if record else ""
                     st.write(note if note else "—")
-
-                    # =========================
-                    # 👷 TECNICI FIX
-                    # =========================
-                    tecnici_raw = record.get("tecnico", []) if record else []
-
-                    if isinstance(tecnici_raw, str):
-                        try:
-                            tecnici_list = ast.literal_eval(tecnici_raw)
-                        except:
-                            tecnici_list = [tecnici_raw]
-                    else:
-                        tecnici_list = tecnici_raw
-
-                    # 🔁 matricole → nomi
-                    tecnici_default = []
-
-                    for m in tecnici_list:
-                        op = next(
-                            (o for o in operatori_db if str(o.get("Matricola","")).strip().lower() == str(m).strip().lower()),
-                            None
-                        )
-                        if op:
-                            tecnici_default.append(op.get("Nominativo"))
 
                     # =========================
                     # 👷 TECNICI
@@ -912,7 +853,7 @@ elif menu == "🚄 MANUTENZIONE":
                             "note": note_vecchie
                         }).execute()
 
-                        st.cache_data.clear()
+                        get_interventi.clear()
                         st.success("Assegnato")
                         st.rerun()
 
@@ -948,9 +889,6 @@ elif menu == "🚄 MANUTENZIONE":
         risultati = []
 
         matricola_utente = str(st.session_state.get("matricola","")).strip().lower()
-
-        # 🔥 DEBUG (puoi togliere dopo)
-        st.write("👤 Matricola utente:", matricola_utente)
 
         for r in rows:
 
@@ -1038,7 +976,6 @@ elif menu == "🚄 MANUTENZIONE":
     
 elif menu == "📊 DASHBOARD":
 
-    from streamlit_autorefresh import st_autorefresh
     import ast
 
     st_autorefresh(interval=10000, key="refresh_dashboard")
@@ -1474,8 +1411,7 @@ elif menu == "📚 SCHEDE SR":
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
             
 elif menu == "📌 OPEN ITEM":
-
-    from datetime import datetime
+    
     from zoneinfo import ZoneInfo
 
     utente_loggato = st.session_state.get("utente", "Sconosciuto")
@@ -1495,10 +1431,10 @@ elif menu == "📌 OPEN ITEM":
         except:
             return data_str
 
-    @st.cache_data(ttl=10)
+    @st.cache_data(ttl=30)
     def get_open_item_fast():
         return supabase.table("open_item")\
-            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura,allegato,allegati")\
+            .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura,allegati")\
             .order("data_creazione", desc=True)\
             .execute().data
 
@@ -1711,9 +1647,7 @@ elif menu == "📌 OPEN ITEM":
                 for i, url in enumerate(allegati):
                     st.link_button(f"📎 Allegato {i+1}", url)
             
-            elif item.get("allegato"):
-                st.link_button("📎 Allegato", item["allegato"])
-            
+                       
             lavori = st.text_area("🔧 Lavorazioni", key=f"lav_{id}")
             avanzamento = st.text_area(
                 "📈 Avanzamento / Monitoraggio",
@@ -1786,7 +1720,7 @@ elif menu == "📌 OPEN ITEM":
                 for url in file_urls:
                     try:
                         if url:
-                            file_path = url.split("/storage/v1/object/public/allegati/")[-1]
+                            file_path = url.split("allegati/")[-1]
                             supabase.storage.from_("allegati").remove([file_path])
                     except Exception as e:
                         st.error(f"Errore file: {e}")
