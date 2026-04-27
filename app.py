@@ -135,14 +135,6 @@ def get_interventi():
 # =========================
 def ora_italia():
     return datetime.now(ZoneInfo("Europe/Rome")).strftime("%H:%M")
-
-@st.cache_data(ttl=60)
-def get_utenti():
-
-    res = supabase.table("operatori").select("*").execute()
-    return res.data or []
-    
-utenti = get_utenti()
 # =========================
 # 🔐 LOGIN + REGISTRAZIONE
 # =========================
@@ -594,8 +586,8 @@ elif menu == "🚄 MANUTENZIONE":
     # =========================
     rows = get_interventi()
 
-    utenti = get_utenti()
-    operatori = [u.get("Nominativo") for u in utenti if u.get("Nominativo")]
+    operatori_db = get_operatori()
+    operatori = [o.get("Nominativo") for o in operatori_db if o.get("Nominativo")]
     
     # =========================
     # 👨‍🔧 CAPOSQUADRA
