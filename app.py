@@ -331,10 +331,7 @@ if not st.session_state.logged_in:
                         .eq("matricola", matricola)\
                         .execute()
                     
-                    user = res.data[0] if res.data else None
-                    if user and user.get("password") == hash_password(password):
-
-                    if not res.data:
+                if not res.data:
                         st.error("Matricola non trovata")
                         st.stop()
 
