@@ -293,6 +293,7 @@ def planning_page():
         fig.update_traces(textposition="inside")
     
         fig.update_yaxes(autorange="reversed")
+        fig.update_layout(yaxis_title=None)
     
         st.plotly_chart(fig, use_container_width=True)
     
