@@ -219,86 +219,43 @@ def planning_page():
 
     if df.empty:
         st.info("Nessuna attività pianificata")
-    
     else:
+        
         # =========================
-        # 🧠 PREPARAZIONE DATI
+        # MAPPING
         # =========================
         mappa_nome = {
             str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
             for o in operatori_db
         }
-    
-        mappa_squadra = {
-            str(o.get("Matricola")).strip().lower(): o.get("Squadra")
-            for o in operatori_db
-        }
-    
+        
         df["operatore_nome"] = df["operatore"].apply(
             lambda x: mappa_nome.get(str(x).strip().lower(), x)
         )
-    
-        df["squadra"] = df["operatore"].apply(
-            lambda x: mappa_squadra.get(str(x).strip().lower(), "")
-        )
-    
-        df["inizio"] = pd.to_datetime(df["inizio"])
-        df["fine"] = pd.to_datetime(df["fine"])
-    
-        now = datetime.now()
-    
+        
         # =========================
-        # 📊 TABELLA PULITA
+        # LOOP RIGHE (PRO)
         # =========================
-        df_display = df.copy()
-    
-        def stato_icon(row):
-            if row["inizio"] <= now <= row["fine"]:
-                return "🔴"
-            elif row["inizio"] > now:
-                return "🟡"
-            else:
-                return "🟢"
-    
-        df_display["Stato"] = df_display.apply(stato_icon, axis=1)
-        df_display["Operatore"] = df_display["operatore_nome"]
-        df_display["Squadra"] = df_display["squadra"]
-        df_display["Attività"] = df_display["attivita"]
-        df_display["Inizio"] = df_display["inizio"].dt.strftime("%H:%M")
-        df_display["Fine"] = df_display["fine"].dt.strftime("%H:%M")
-    
-        st.dataframe(
-            df_display[["Stato", "Operatore", "Squadra", "Attività", "Inizio", "Fine"]],
-            use_container_width=True,
-            hide_index=True
-        )
-    
-        st.divider()
-    
-        # =========================
-        # ⚙️ AZIONI
-        # =========================
-        st.markdown("### ⚙️ Gestione attività")
-    
         for i, r in df.iterrows():
-    
-            stato = "🟢"
-            if r["inizio"] <= now <= r["fine"]:
-                stato = "🔴"
-            elif r["inizio"] > now:
-                stato = "🟡"
-    
+        
             with st.container():
-                col1, col2, col3 = st.columns([5,1,1])
-    
-                col1.write(f"{stato} {r['operatore_nome']} — {r['attivita']}")
-    
+                col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
+        
+                col1.write(r["operatore_nome"])
+                col2.write(r["attivita"])
+                col3.write(r["inizio"].strftime("%H:%M"))
+                col4.write(r["fine"].strftime("%H:%M"))
+        
+                # =========================
                 # ✏️ MODIFICA
-                if col2.button("✏️", key=f"edit_{r['id']}"):
+                # =========================
+                if col5.button("✏️", key=f"edit_{r['id']}"):
                     st.session_state["edit_id"] = r["id"]
-    
+        
+                # =========================
                 # 🗑️ CANCELLA
-                if col3.button("🗑️", key=f"delete_{r['id']}"):
+                # =========================
+                if col5.button("🗑️", key=f"delete_{r['id']}"):
                     supabase.table("planning").delete().eq("id", r["id"]).execute()
                     get_planning.clear()
                     st.rerun()
