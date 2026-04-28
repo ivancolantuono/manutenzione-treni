@@ -186,7 +186,7 @@ if not st.session_state.logged_in:
             ["🔐 Login", "🆕 Registrazione", "🔑 Reset Password"],
             horizontal=True,
             key="pagina_login"
-        
+        )
 
         # =========================
         # 🔐 LOGIN
