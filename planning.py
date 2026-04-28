@@ -215,51 +215,62 @@ def planning_page():
             except Exception as e:
                 st.error(f"Errore insert: {e}")
 
-    with st.expander("📊 Pianificazione", expanded=True):
+    st.subheader("📊 Pianificazione")
 
-        if df.empty:
-            st.info("Nessuna attività pianificata")
-        else:
+    if df.empty:
+        st.info("Nessuna attività pianificata")
+        return
+    # =========================
+    # 📊 HEADER TABELLA
+    # =========================
+    st.markdown("### 📊 Pianificazione")
+    
+    colH1, colH2, colH3, colH4, colH5 = st.columns([2,2,2,2,2])
+    colH1.markdown("**Operatore**")
+    colH2.markdown("**Attività**")
+    colH3.markdown("**Inizio**")
+    colH4.markdown("**Fine**")
+    colH5.markdown("**Azioni**")
+    
+    st.divider()
+    # =========================
+    # MAPPING
+    # =========================
+    mappa_nome = {
+        str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
+        for o in operatori_db
+    }
+    
+    df["operatore_nome"] = df["operatore"].apply(
+        lambda x: mappa_nome.get(str(x).strip().lower(), x)
+    )
+    
+    # =========================
+    # LOOP RIGHE (PRO)
+    # =========================
+    for i, r in df.iterrows():
+    
+        with st.container():
+            col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
+    
+            col1.write(r["operatore_nome"])
+            col2.write(r["attivita"])
+            col3.write(r["inizio"].strftime("%H:%M"))
+            col4.write(r["fine"].strftime("%H:%M"))
     
             # =========================
-            # MAPPING
+            # ✏️ MODIFICA
             # =========================
-            mappa_nome = {
-                str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
-                for o in operatori_db
-            }
-            
-            df["operatore_nome"] = df["operatore"].apply(
-                lambda x: mappa_nome.get(str(x).strip().lower(), x)
-            )
-            
+            if col5.button("✏️", key=f"edit_{r['id']}"):
+                st.session_state["edit_id"] = r["id"]
+    
             # =========================
-            # LOOP RIGHE (PRO)
+            # 🗑️ CANCELLA
             # =========================
-            for i, r in df.iterrows():
-            
-                with st.container():
-                    col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
-            
-                    col1.write(r["operatore_nome"])
-                    col2.write(r["attivita"])
-                    col3.write(r["inizio"].strftime("%H:%M"))
-                    col4.write(r["fine"].strftime("%H:%M"))
-            
-                    # =========================
-                    # ✏️ MODIFICA
-                    # =========================
-                    if col5.button("✏️", key=f"edit_{r['id']}"):
-                        st.session_state["edit_id"] = r["id"]
-            
-                    # =========================
-                    # 🗑️ CANCELLA
-                    # =========================
-                    if col5.button("🗑️", key=f"delete_{r['id']}"):
-                        supabase.table("planning").delete().eq("id", r["id"]).execute()
-                        get_planning.clear()
-                        st.rerun()
-
+            if col5.button("🗑️", key=f"delete_{r['id']}"):
+                supabase.table("planning").delete().eq("id", r["id"]).execute()
+                get_planning.clear()
+                st.rerun()
     # =========================
     # 📊 TIMELINE
     # =========================
