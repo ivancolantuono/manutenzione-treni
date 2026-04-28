@@ -1,181 +1,165 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-import plotly.express as px
-
-from db import supabase, get_planning, get_operatori
-
+from db import supabase, get_operatori
 
 # =========================
-# 🔒 CHECK SOVRAPPOSIZIONE
+# 🔄 GET PLANNING
+# =========================
+@st.cache_data(ttl=10)
+def get_planning():
+    res = supabase.table("planning").select("*").execute()
+    return res.data or []
+
+# =========================
+# 🔍 CHECK OVERLAP
 # =========================
 def check_overlap(matricola, inizio, fine):
 
-    try:
-        res = supabase.table("planning") \
-            .select("*") \
-            .eq("operatore", matricola) \
-            .execute()
+    res = supabase.table("planning")\
+        .select("*")\
+        .eq("operatore", matricola)\
+        .execute()
 
-        st.write(res)  # 👈 IMPORTANTISSIMO
-        return False
+    records = res.data or []
 
-    except Exception as e:
-        st.error(e)
-        return False
+    for r in records:
+        try:
+            start_db = datetime.fromisoformat(r["inizio"])
+            end_db = datetime.fromisoformat(r["fine"])
+        except:
+            continue
 
+        # 🔥 LOGICA OVERLAP
+        if not (fine <= start_db or inizio >= end_db):
+            return True
+
+    return False
 
 # =========================
-# 🧠 UI PLANNING COMPLETA
+# 🔁 NOME → MATRICOLA
+# =========================
+def get_matricola(nome, operatori_db):
+
+    op = next(
+        (o for o in operatori_db if o.get("Nominativo") == nome),
+        None
+    )
+
+    if op:
+        return str(op.get("Matricola", "")).strip().lower()
+
+    return None
+
+# =========================
+# 🧠 PAGINA PRINCIPALE
 # =========================
 def planning_page():
 
     st.title("🧠 Pianificazione Operatori")
 
     # =========================
-    # AUTO REFRESH
-    # =========================
-    from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=5000, key="planning_refresh")
-
-    # =========================
-    # DATI
+    # 👷 OPERATORI
     # =========================
     operatori_db = get_operatori()
-    planning = get_planning()
 
-    # =========================
-    # MAPPE
-    # =========================
-    mappa_nome_to_op = {
-        o.get("Nominativo"): o
+    operatori = [
+        o.get("Nominativo")
         for o in operatori_db
-    }
-
-    nomi_operatori = list(mappa_nome_to_op.keys())
+        if o.get("Nominativo")
+    ]
 
     # =========================
-    # ➕ INSERIMENTO
+    # ➕ NUOVA ATTIVITÀ
     # =========================
-    with st.expander("➕ Nuova attività"):
+    with st.expander("➕ Nuova attività", expanded=True):
 
         col1, col2 = st.columns(2)
 
-        with col1:
-            operatore = st.selectbox("Operatore", nomi_operatori)
-            attivita = st.text_input("Attività")
+        operatore_input = col1.selectbox("Operatore", operatori)
+        attivita = col2.text_input("Attività")
 
-        with col2:
-            inizio = st.datetime_input("Inizio", value=datetime.now())
-            durata = st.number_input("Durata (min)", min_value=5, step=5)
+        col3, col4 = st.columns(2)
 
-        fine = inizio + timedelta(minutes=int(durata))
+        inizio = col3.datetime_input("Inizio", value=datetime.now())
+        durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
+
+        fine = inizio + timedelta(minutes=durata)
 
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
         if st.button("🚀 Assegna"):
 
-            if not attivita.strip():
+            # 🔁 conversione
+            matricola = get_matricola(operatore_input, operatori_db)
+
+            if not matricola:
+                st.error("Operatore non valido")
+                st.stop()
+
+            if not attivita:
                 st.error("Inserisci attività")
                 st.stop()
 
-            op = mappa_nome_to_op.get(operatore)
-            matricola = str(op.get("Matricola")).strip().lower()
-
+            # 🔥 CHECK OVERLAP
             if check_overlap(matricola, inizio, fine):
-                st.error("⚠️ Operatore già occupato in questo orario")
+                st.error("⚠️ Operatore già occupato in questo intervallo")
                 st.stop()
 
-            supabase.table("planning").insert({
-                "matricola": matricola,
-                "nome": operatore,
-                "attivita": attivita,
-                "inizio": inizio.isoformat(),
-                "fine": fine.isoformat(),
-                "stato": "ATTIVO"
-            }).execute()
+            try:
+                supabase.table("planning").insert({
+                    "operatore": matricola,
+                    "attivita": attivita,
+                    "inizio": inizio.isoformat(),
+                    "fine": fine.isoformat()
+                }).execute()
 
-            get_planning.clear()
-            st.success("✅ Attività assegnata")
-            st.rerun()
+                get_planning.clear()
 
-    st.divider()
+                st.success("✅ Attività assegnata")
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Errore insert: {e}")
 
     # =========================
-    # 📊 DATAFRAME
+    # 📊 VISUALIZZAZIONE
     # =========================
-    df = pd.DataFrame(planning)
+    st.subheader("📊 Pianificazione")
 
-    if df.empty:
-        st.warning("Nessuna attività pianificata")
+    dati = get_planning()
+
+    if not dati:
+        st.info("Nessuna attività pianificata")
         return
 
+    df = pd.DataFrame(dati)
+
+    # =========================
+    # 🔁 MATRICOLA → NOME
+    # =========================
+    mappa = {
+        str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
+        for o in operatori_db
+    }
+
+    df["operatore_nome"] = df["operatore"].apply(
+        lambda x: mappa.get(str(x).strip().lower(), x)
+    )
+
+    # =========================
+    # FORMAT DATE
+    # =========================
     df["inizio"] = pd.to_datetime(df["inizio"])
     df["fine"] = pd.to_datetime(df["fine"])
 
-    # =========================
-    # 🟢🔴 STATO LIVE
-    # =========================
-    now = datetime.now()
+    df = df.sort_values("inizio")
 
-    df["occupato"] = df.apply(
-        lambda x: x["inizio"] <= now <= x["fine"],
-        axis=1
+    # =========================
+    # 📄 TABELLA
+    # =========================
+    st.dataframe(
+        df[["operatore_nome", "attivita", "inizio", "fine"]],
+        use_container_width=True,
+        hide_index=True
     )
-
-    occupati = df[df["occupato"]]["nome"].unique()
-    liberi = [o for o in nomi_operatori if o not in occupati]
-
-    colA, colB = st.columns(2)
-
-    with colA:
-        st.subheader("🔴 Occupati")
-        for o in occupati:
-            st.write(o)
-
-    with colB:
-        st.subheader("🟢 Liberi")
-        for o in liberi:
-            st.write(o)
-
-    st.divider()
-
-    # =========================
-    # 📊 TIMELINE GANTT
-    # =========================
-    st.subheader("📊 Timeline Operatori")
-
-    fig = px.timeline(
-        df,
-        x_start="inizio",
-        x_end="fine",
-        y="nome",
-        color="attivita"
-    )
-
-    fig.update_yaxes(autorange="reversed")
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    # =========================
-    # 🔒 CHIUSURA ATTIVITÀ
-    # =========================
-    st.subheader("🔒 Chiudi attività")
-
-    for i, r in df.iterrows():
-
-        if r["stato"] == "ATTIVO":
-
-            with st.expander(f"🔧 {r['nome']} - {r['attivita']}"):
-
-                st.write(f"🕒 {r['inizio']} → {r['fine']}")
-
-                if st.button("✅ Chiudi", key=f"close_{i}"):
-
-                    supabase.table("planning").update({
-                        "stato": "CHIUSO"
-                    }).eq("id", r["id"]).execute()
-
-                    get_planning.clear()
-                    st.success("Attività chiusa")
-                    st.rerun()
