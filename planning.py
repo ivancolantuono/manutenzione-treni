@@ -153,7 +153,6 @@ def planning_page():
 
                     supabase.table("planning").insert({
                         "operatore": m,
-                        "operatore_nome": nome,
                         "attivita": attivita,
                         "inizio": inizio.isoformat(),
                         "fine": fine.isoformat()
