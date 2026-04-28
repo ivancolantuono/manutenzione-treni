@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 import plotly.express as px
 from db import supabase, get_operatori
 from streamlit_autorefresh import st_autorefresh
-st_autorefresh(interval=10000, key="refresh_planning")
+st_autorefresh(interval=8000, key="refresh_planning")
 # =========================
 # 🔄 GET PLANNING
 # =========================
@@ -241,38 +241,98 @@ def planning_page():
             except Exception as e:
                 st.error(f"Errore insert: {e}")
 
-    # =========================
-    # 📊 TABELLA
-    # =========================
     st.subheader("📊 Pianificazione")
 
     if df.empty:
         st.info("Nessuna attività pianificata")
         return
-
+    
+    # =========================
+    # MAPPING
+    # =========================
     mappa_nome = {
         str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
         for o in operatori_db
     }
-
-    mappa_squadra = {
-        str(o.get("Matricola")).strip().lower(): o.get("Squadra")
-        for o in operatori_db
-    }
-
+    
     df["operatore_nome"] = df["operatore"].apply(
         lambda x: mappa_nome.get(str(x).strip().lower(), x)
     )
+    
+    # =========================
+    # LOOP RIGHE (PRO)
+    # =========================
+    for i, r in df.iterrows():
+    
+        with st.container():
+            col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
+    
+            col1.write(r["operatore_nome"])
+            col2.write(r["attivita"])
+            col3.write(r["inizio"].strftime("%H:%M"))
+            col4.write(r["fine"].strftime("%H:%M"))
+    
+            # =========================
+            # ✏️ MODIFICA
+            # =========================
+            if col5.button("✏️", key=f"edit_{r['id']}"):
+                st.session_state["edit_id"] = r["id"]
+    
+            # =========================
+            # 🗑️ CANCELLA
+            # =========================
+            if col5.button("🗑️", key=f"delete_{r['id']}"):
+                supabase.table("planning").delete().eq("id", r["id"]).execute()
+                get_planning.clear()
+                st.rerun()
 
-    df["squadra"] = df["operatore"].apply(
-        lambda x: mappa_squadra.get(str(x).strip().lower(), "")
+    # =========================
+# ✏️ MODIFICA ATTIVITÀ
+# =========================
+if "edit_id" in st.session_state:
+
+    st.subheader("✏️ Modifica attività")
+
+    record = next(
+        (x for x in df.to_dict("records") if x["id"] == st.session_state["edit_id"]),
+        None
     )
 
-    st.dataframe(
-        df[["operatore_nome", "squadra", "attivita", "inizio", "fine"]],
-        use_container_width=True,
-        hide_index=True
-    )
+    if record:
+
+        nuova_attivita = st.text_input("Attività", value=record["attivita"])
+
+        nuovo_inizio = st.datetime_input(
+            "Inizio",
+            value=record["inizio"]
+        )
+
+        nuova_fine = st.datetime_input(
+            "Fine",
+            value=record["fine"]
+        )
+
+        if st.button("💾 Salva modifica"):
+
+            try:
+                supabase.table("planning").update({
+                    "attivita": nuova_attivita,
+                    "inizio": nuovo_inizio.isoformat(),
+                    "fine": nuova_fine.isoformat()
+                }).eq("id", record["id"]).execute()
+
+                get_planning.clear()
+                del st.session_state["edit_id"]
+
+                st.success("Modificato!")
+                st.rerun()
+
+            except Exception as e:
+                st.error(e)
+
+        if st.button("❌ Annulla"):
+            del st.session_state["edit_id"]
+            st.rerun()
 
     # =========================
     # 📊 TIMELINE
