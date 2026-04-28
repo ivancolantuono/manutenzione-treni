@@ -337,17 +337,17 @@ if "edit_id" in st.session_state:
 # =========================
 # 📊 TIMELINE
 # =========================
-    st.subheader("📊 Timeline Operatori")
-
+st.subheader("📊 Timeline Operatori")
+    
     fig = px.timeline(
-        df,
-        x_start="inizio",
-        x_end="fine",
-        y="operatore_nome",
-        color="squadra"
+    df,
+    x_start="inizio",
+    x_end="fine",
+    y="operatore_nome",
+    color="squadra"
     )
-
-    fig.update_yaxes(autorange="reversed")        
+    
+fig.update_yaxes(autorange="reversed")        
 
     st.plotly_chart(fig, use_container_width=True)
    
