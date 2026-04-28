@@ -287,6 +287,7 @@ def planning_page():
             x_start="inizio",
             x_end="fine",
             y="operatore_nome",
+            y="attivita",
             color="squadra"
         )
     
