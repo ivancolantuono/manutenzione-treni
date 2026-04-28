@@ -31,29 +31,13 @@ def check_overlap(matricola, inizio, fine):
         except:
             continue
 
-        # overlap reale
         if not (fine <= start_db or inizio >= end_db):
             return True
 
     return False
 
 # =========================
-# 🔁 NOME → MATRICOLA
-# =========================
-def get_matricola(nome, operatori_db):
-
-    op = next(
-        (o for o in operatori_db if o.get("Nominativo") == nome),
-        None
-    )
-
-    if op:
-        return str(op.get("Matricola", "")).strip().lower()
-
-    return None
-
-# =========================
-# 🧠 PAGINA
+# 🧠 PAGINA PRINCIPALE
 # =========================
 def planning_page():
 
@@ -70,6 +54,15 @@ def planning_page():
         if o.get("Nominativo")
     ]
 
+    # 👉 squadre dal DB
+    squadre = sorted(
+        list({
+            o.get("Squadra")
+            for o in operatori_db
+            if o.get("Squadra")
+        })
+    )
+
     # =========================
     # ➕ NUOVA ATTIVITÀ
     # =========================
@@ -77,7 +70,13 @@ def planning_page():
 
         col1, col2 = st.columns(2)
 
-        operatore_input = col1.selectbox("Operatore", operatori)
+        modo = col1.radio("Assegna a:", ["Operatore", "Squadra"], horizontal=True)
+
+        if modo == "Operatore":
+            selezione = col1.selectbox("Operatore", operatori)
+        else:
+            selezione = col1.selectbox("Squadra", squadre)
+
         attivita = col2.text_input("Attività")
 
         col3, col4 = st.columns(2)
@@ -89,29 +88,73 @@ def planning_page():
 
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
+        # 👉 mostra membri squadra
+        if modo == "Squadra":
+            membri = [
+                o.get("Nominativo")
+                for o in operatori_db
+                if o.get("Squadra") == selezione
+            ]
+            st.info("👥 " + ", ".join(membri))
+
         if st.button("🚀 Assegna"):
 
-            matricola = get_matricola(operatore_input, operatori_db)
+            matricole = []
 
-            if not matricola:
-                st.error("Operatore non valido")
+            # =========================
+            # 🔁 CONVERSIONE
+            # =========================
+            if modo == "Operatore":
+
+                op = next(
+                    (o for o in operatori_db if o.get("Nominativo") == selezione),
+                    None
+                )
+
+                if op:
+                    m = str(op.get("Matricola", "")).strip().lower()
+                    if m:
+                        matricole.append(m)
+
+            else:
+                membri = [
+                    o for o in operatori_db
+                    if o.get("Squadra") == selezione
+                ]
+
+                for op in membri:
+                    m = str(op.get("Matricola", "")).strip().lower()
+                    if m:
+                        matricole.append(m)
+
+            if not matricole:
+                st.error("Nessun operatore valido")
                 st.stop()
 
             if not attivita:
                 st.error("Inserisci attività")
                 st.stop()
 
-            if check_overlap(matricola, inizio, fine):
-                st.error("⚠️ Operatore già occupato in questo intervallo")
-                st.stop()
+            # =========================
+            # 🔍 OVERLAP
+            # =========================
+            for m in matricole:
+                if check_overlap(m, inizio, fine):
+                    st.error(f"⚠️ Operatore occupato: {m}")
+                    st.stop()
 
+            # =========================
+            # 💾 INSERT
+            # =========================
             try:
-                supabase.table("planning").insert({
-                    "operatore": matricola,
-                    "attivita": attivita,
-                    "inizio": inizio.isoformat(),
-                    "fine": fine.isoformat()
-                }).execute()
+                for m in matricole:
+
+                    supabase.table("planning").insert({
+                        "operatore": m,
+                        "attivita": attivita,
+                        "inizio": inizio.isoformat(),
+                        "fine": fine.isoformat()
+                    }).execute()
 
                 get_planning.clear()
 
@@ -137,17 +180,26 @@ def planning_page():
     # =========================
     # 🔁 MATRICOLA → NOME
     # =========================
-    mappa = {
+    mappa_nome = {
         str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
         for o in operatori_db
     }
 
+    mappa_squadra = {
+        str(o.get("Matricola")).strip().lower(): o.get("Squadra")
+        for o in operatori_db
+    }
+
     df["operatore_nome"] = df["operatore"].apply(
-        lambda x: mappa.get(str(x).strip().lower(), x)
+        lambda x: mappa_nome.get(str(x).strip().lower(), x)
+    )
+
+    df["squadra"] = df["operatore"].apply(
+        lambda x: mappa_squadra.get(str(x).strip().lower(), "")
     )
 
     # =========================
-    # 📅 DATE
+    # DATE
     # =========================
     df["inizio"] = pd.to_datetime(df["inizio"])
     df["fine"] = pd.to_datetime(df["fine"])
@@ -158,13 +210,13 @@ def planning_page():
     # 📄 TABELLA
     # =========================
     st.dataframe(
-        df[["operatore_nome", "attivita", "inizio", "fine"]],
+        df[["operatore_nome", "squadra", "attivita", "inizio", "fine"]],
         use_container_width=True,
         hide_index=True
     )
 
     # =========================
-    # 📊 TIMELINE (GANTT)
+    # 📊 TIMELINE
     # =========================
     st.subheader("📊 Timeline Operatori")
 
@@ -173,7 +225,7 @@ def planning_page():
         x_start="inizio",
         x_end="fine",
         y="operatore_nome",
-        color="attivita",
+        color="squadra"
     )
 
     fig.update_yaxes(autorange="reversed")
@@ -181,7 +233,7 @@ def planning_page():
     st.plotly_chart(fig, use_container_width=True)
 
     # =========================
-    # 🟢 OPERATORI LIBERI ORA
+    # 🟢 DISPONIBILI ORA
     # =========================
     st.subheader("🟢 Operatori disponibili ora")
 
@@ -196,6 +248,6 @@ def planning_page():
     liberi = [o for o in operatori if o not in occupati]
 
     if liberi:
-        st.success("Disponibili: " + ", ".join(liberi))
+        st.success(", ".join(liberi))
     else:
         st.warning("Nessun operatore disponibile")
