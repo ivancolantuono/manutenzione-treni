@@ -1,217 +1,253 @@
 import streamlit as st
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from db import supabase, get_operatori
 import pandas as pd
+from datetime import datetime, timedelta
+import plotly.express as px
+from db import supabase, get_operatori
 
 # =========================
-# UTILS
+# 🔄 GET PLANNING
 # =========================
-def ora_italia_iso():
-    return datetime.now(ZoneInfo("Europe/Rome")).isoformat()
-
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=10)
 def get_planning():
     res = supabase.table("planning").select("*").execute()
     return res.data or []
 
+# =========================
+# 🔍 CHECK OVERLAP
+# =========================
 def check_overlap(matricola, inizio, fine):
+
     res = supabase.table("planning")\
         .select("*")\
         .eq("operatore", matricola)\
         .execute()
 
-    rows = res.data or []
+    records = res.data or []
 
-    for r in rows:
+    for r in records:
         try:
-            start = datetime.fromisoformat(r["inizio"])
-            end = datetime.fromisoformat(r["fine"])
+            start_db = datetime.fromisoformat(r["inizio"])
+            end_db = datetime.fromisoformat(r["fine"])
         except:
             continue
 
-        if inizio < end and fine > start:
+        if not (fine <= start_db or inizio >= end_db):
             return True
 
     return False
 
-
 # =========================
-# PAGINA
+# 🧠 PAGINA PRINCIPALE
 # =========================
 def planning_page():
 
-    st.title("📅 Planning Operatori")
+    st.title("🧠 Pianificazione Operatori")
 
+    # =========================
+    # 👷 OPERATORI
+    # =========================
     operatori_db = get_operatori()
-    planning = get_planning()
 
-    # =========================
-    # INPUT ATTIVITÀ
-    # =========================
-    st.subheader("➕ Nuova attività")
+    operatori = [
+        o.get("Nominativo")
+        for o in operatori_db
+        if o.get("Nominativo")
+    ]
 
-    col1, col2 = st.columns(2)
-
-    attivita = col1.text_input("🔧 Attività")
-
-    inizio = col2.datetime_input("⏱️ Inizio", value=datetime.now())
-
-    fine = st.datetime_input("🏁 Fine", value=datetime.now())
-
-    # =========================
-    # MODALITÀ
-    # =========================
-    modo = st.radio(
-        "Modalità assegnazione",
-        ["Operatore singolo", "Squadra"],
-        horizontal=True
+    # 👉 squadre dal DB
+    squadre = sorted(
+        list({
+            o.get("Squadra")
+            for o in operatori_db
+            if o.get("Squadra")
+        })
     )
 
-    operatori_selezionati = []
-
     # =========================
-    # OPERATORE SINGOLO
+    # ➕ NUOVA ATTIVITÀ
     # =========================
-    if modo == "Operatore singolo":
+    with st.expander("➕ Nuova attività", expanded=True):
 
-        nomi = [o.get("Nominativo") for o in operatori_db if o.get("Nominativo")]
+        col1, col2 = st.columns(2)
 
-        selezionato = st.selectbox("Operatore", nomi)
+        modo = col1.radio("Assegna a:", ["Operatore", "Squadra"], horizontal=True)
 
-        operatori_selezionati = [selezionato]
+        if modo == "Operatore":
+            selezione = col1.selectbox("Operatore", operatori)
+        else:
+            selezione = col1.selectbox("Squadra", squadre)
 
-    # =========================
-    # SQUADRA
-    # =========================
-    else:
+        attivita = col2.text_input("Attività")
 
-        squadre = sorted(list(set(
-            o.get("Squadra") for o in operatori_db if o.get("Squadra")
-        )))
+        col3, col4 = st.columns(2)
 
-        squadra_sel = st.selectbox("Squadra", squadre)
+        inizio = col3.datetime_input("Inizio", value=datetime.now())
+        durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
 
-        membri = [
-            o for o in operatori_db
-            if o.get("Squadra") == squadra_sel
-        ]
+        fine = inizio + timedelta(minutes=durata)
 
-        nomi_membri = [m.get("Nominativo") for m in membri]
+        st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
-        st.write("👥 Seleziona operatori della squadra")
+        # 👉 mostra membri squadra
+        if modo == "Squadra":
+            membri = [
+                o.get("Nominativo")
+                for o in operatori_db
+                if o.get("Squadra") == selezione
+            ]
+            st.info("👥 " + ", ".join(membri))
 
-        operatori_selezionati = st.multiselect(
-            "Operatori",
-            nomi_membri,
-            default=nomi_membri
-        )
+        if st.button("🚀 Assegna"):
 
-        # =========================
-        # OCCUPATI ORA
-        # =========================
-        now = datetime.now()
-        occupati = []
+            matricole = []
 
-        for p in planning:
-            try:
-                start = datetime.fromisoformat(p["inizio"])
-                end = datetime.fromisoformat(p["fine"])
-            except:
-                continue
+            # =========================
+            # 🔁 CONVERSIONE
+            # =========================
+            if modo == "Operatore":
 
-            if start <= now <= end:
-                occupati.append(p["operatore"])
+                op = next(
+                    (o for o in operatori_db if o.get("Nominativo") == selezione),
+                    None
+                )
 
-        occupati_nomi = [
-            o.get("Nominativo")
-            for o in operatori_db
-            if str(o.get("Matricola","")).strip().lower() in occupati
-        ]
+                if op:
+                    m = str(op.get("Matricola", "")).strip().lower()
+                    if m:
+                        matricole.append(m)
 
-        if occupati_nomi:
-            st.warning("🔴 Occupati ora: " + ", ".join(occupati_nomi))
+            else:
+                membri = [
+                    o for o in operatori_db
+                    if o.get("Squadra") == selezione
+                ]
 
-    # =========================
-    # ASSEGNA
-    # =========================
-    if st.button("🚀 Assegna"):
+                for op in membri:
+                    m = str(op.get("Matricola", "")).strip().lower()
+                    if m:
+                        matricole.append(m)
 
-        if not attivita:
-            st.error("Inserisci attività")
-            st.stop()
-
-        if not operatori_selezionati:
-            st.error("Seleziona almeno un operatore")
-            st.stop()
-
-        matricole = []
-
-        for nome in operatori_selezionati:
-
-            op = next(
-                (o for o in operatori_db if o.get("Nominativo") == nome),
-                None
-            )
-
-            if op:
-                m = str(op.get("Matricola","")).strip().lower()
-                if m:
-                    matricole.append(m)
-
-        # =========================
-        # CHECK OVERLAP
-        # =========================
-        for m in matricole:
-            if check_overlap(m, inizio, fine):
-                st.error(f"⛔ Operatore occupato: {m}")
+            if not matricole:
+                st.error("Nessun operatore valido")
                 st.stop()
 
-        # =========================
-        # INSERT
-        # =========================
-        for nome, m in zip(operatori_selezionati, matricole):
+            if not attivita:
+                st.error("Inserisci attività")
+                st.stop()
 
-            supabase.table("planning").insert({
-                "operatore": m,
-                "operatore_nome": nome,
-                "attivita": attivita,
-                "inizio": inizio.isoformat(),
-                "fine": fine.isoformat(),
-                "created_at": ora_italia_iso()
-            }).execute()
+            # =========================
+            # 🔍 OVERLAP
+            # =========================
+            for m in matricole:
+                if check_overlap(m, inizio, fine):
+                    st.error(f"⚠️ Operatore occupato: {m}")
+                    st.stop()
 
-        get_planning.clear()
+            # =========================
+            # 💾 INSERT
+            # =========================
+            try:
+                for m in matricole:
 
-        st.success("✅ Attività assegnata")
-        st.rerun()
+                    supabase.table("planning").insert({
+                        "operatore": m,
+                        "attivita": attivita,
+                        "inizio": inizio.isoformat(),
+                        "fine": fine.isoformat()
+                    }).execute()
 
-    st.divider()
+                get_planning.clear()
+
+                st.success("✅ Attività assegnata")
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Errore insert: {e}")
 
     # =========================
-    # VISUALIZZAZIONE
+    # 📊 DATI
     # =========================
-    st.subheader("📊 Planning attuale")
+    st.subheader("📊 Pianificazione")
 
-    if not planning:
-        st.info("Nessuna attività")
+    dati = get_planning()
+
+    if not dati:
+        st.info("Nessuna attività pianificata")
         return
 
-    df = pd.DataFrame(planning)
+    df = pd.DataFrame(dati)
 
-    if not df.empty:
+    # =========================
+    # 🔁 MATRICOLA → NOME
+    # =========================
+    mappa_nome = {
+        str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
+        for o in operatori_db
+    }
 
-        df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
-        df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
+    mappa_squadra = {
+        str(o.get("Matricola")).strip().lower(): o.get("Squadra")
+        for o in operatori_db
+    }
 
-        df = df.sort_values("inizio")
+    df["operatore_nome"] = df["operatore"].apply(
+        lambda x: mappa_nome.get(str(x).strip().lower(), x)
+    )
 
-        for _, r in df.iterrows():
+    df["squadra"] = df["operatore"].apply(
+        lambda x: mappa_squadra.get(str(x).strip().lower(), "")
+    )
 
-            st.markdown(f"""
-🧑‍🔧 **{r.get("operatore_nome","")}**  
-🔧 {r.get("attivita","")}  
-⏱️ {r.get("inizio")} → {r.get("fine")}
-""")
+    # =========================
+    # DATE
+    # =========================
+    df["inizio"] = pd.to_datetime(df["inizio"])
+    df["fine"] = pd.to_datetime(df["fine"])
 
-            st.divider()
+    df = df.sort_values("inizio")
+
+    # =========================
+    # 📄 TABELLA
+    # =========================
+    st.dataframe(
+        df[["operatore_nome", "squadra", "attivita", "inizio", "fine"]],
+        use_container_width=True,
+        hide_index=True
+    )
+
+    # =========================
+    # 📊 TIMELINE
+    # =========================
+    st.subheader("📊 Timeline Operatori")
+
+    fig = px.timeline(
+        df,
+        x_start="inizio",
+        x_end="fine",
+        y="operatore_nome",
+        color="squadra"
+    )
+
+    fig.update_yaxes(autorange="reversed")
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # =========================
+    # 🟢 DISPONIBILI ORA
+    # =========================
+    st.subheader("🟢 Operatori disponibili ora")
+
+    now = datetime.now()
+
+    occupati = set()
+
+    for _, r in df.iterrows():
+        if r["inizio"] <= now <= r["fine"]:
+            occupati.add(r["operatore_nome"])
+
+    liberi = [o for o in operatori if o not in occupati]
+
+    if liberi:
+        st.success(", ".join(liberi))
+    else:
+        st.warning("Nessun operatore disponibile")
