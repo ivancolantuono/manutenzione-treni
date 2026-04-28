@@ -3,7 +3,7 @@ import pandas as pd
 from zoneinfo import ZoneInfo
 from datetime import date, datetime
 from supabase import create_client
-from plannig import plannig
+from planning import planning_page
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
