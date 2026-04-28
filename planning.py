@@ -308,7 +308,7 @@ def planning_page():
                 del st.session_state["edit_id"]
                 st.rerun()
 
-     st.plotly_chart(fig, use_container_width=True)
+    
 
     # =========================
     # 📊 TIMELINE
