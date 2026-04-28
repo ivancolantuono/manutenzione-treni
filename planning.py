@@ -60,111 +60,185 @@ def planning_page():
     )
 
     # =========================
-    # ➕ NUOVA ATTIVITÀ
+    # ➕ NUOVA ATTIVITÀ (PRO)
     # =========================
     with st.expander("➕ Nuova attività", expanded=True):
-
-        col1, col2 = st.columns(2)
-
-        modo = col1.radio("Assegna a:", ["Operatore", "Squadra"], horizontal=True)
-
-        operatori_scelti = []
-
+    
         # =========================
-        # OPERATORE SINGOLO
+        # 🔄 INIT SESSION STATE
+        # =========================
+        if "modo" not in st.session_state:
+            st.session_state.modo = "Operatore"
+    
+        if "selezione" not in st.session_state:
+            st.session_state.selezione = None
+    
+        if "attivita" not in st.session_state:
+            st.session_state.attivita = ""
+    
+        if "inizio" not in st.session_state:
+            st.session_state.inizio = datetime.now()
+    
+        if "durata" not in st.session_state:
+            st.session_state.durata = 60
+    
+        col1, col2 = st.columns(2)
+    
+        # =========================
+        # 🎯 MODALITÀ
+        # =========================
+        modo = col1.radio(
+            "Assegna a:",
+            ["Operatore", "Squadra"],
+            horizontal=True,
+            key="modo"
+        )
+    
+        # =========================
+        # 🧠 DATI BASE
+        # =========================
+        attivita = col2.text_input("Attività", key="attivita")
+    
+        col3, col4 = st.columns(2)
+    
+        inizio = col3.datetime_input("Inizio", key="inizio")
+        durata = col4.number_input("Durata (min)", min_value=5, step=5, key="durata")
+    
+        fine = inizio + timedelta(minutes=durata)
+    
+        st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
+    
+        # =========================
+        # 👷 FILTRO OPERATORI DISPONIBILI
+        # =========================
+        operatori_disponibili = []
+    
+        for o in operatori_db:
+            nome = o.get("Nominativo")
+            matricola = str(o.get("Matricola", "")).strip().lower()
+    
+            if not nome or not matricola:
+                continue
+    
+            if not check_overlap(matricola, inizio, fine):
+                operatori_disponibili.append(o)
+    
+        # =========================
+        # 👤 MODALITÀ OPERATORE
         # =========================
         if modo == "Operatore":
-
-            selezione = col1.selectbox("Operatore", operatori)
-            operatori_scelti = [selezione]
-
+    
+            nomi = [o.get("Nominativo") for o in operatori_disponibili]
+    
+            selezione = col1.selectbox(
+                "Operatore disponibile",
+                nomi,
+                key="selezione"
+            )
+    
         # =========================
-        # SQUADRA → SCELTA OPERATORI
+        # 👥 MODALITÀ SQUADRA
         # =========================
         else:
-
-            squadra_sel = col1.selectbox("Squadra", squadre)
-
+    
+            squadra = col1.selectbox("Squadra", squadre, key="selezione")
+    
             membri = [
-                o.get("Nominativo")
-                for o in operatori_db
-                if o.get("Squadra") == squadra_sel
+                o for o in operatori_disponibili
+                if o.get("Squadra") == squadra
             ]
-
-            st.info("👥 " + ", ".join(membri))
-
-            operatori_scelti = st.multiselect(
-                "Seleziona operatori della squadra",
-                membri,
-                default=membri
+    
+            nomi_membri = [o.get("Nominativo") for o in membri]
+    
+            selezionati = st.multiselect(
+                "Seleziona operatori disponibili",
+                nomi_membri,
+                key="multi_operatori"
             )
-
-        attivita = col2.text_input("Attività")
-
-        col3, col4 = st.columns(2)
-
-        inizio = col3.datetime_input("Inizio", value=datetime.now())
-        durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
-
-        fine = inizio + timedelta(minutes=durata)
-
-        st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
-
+    
+            if not membri:
+                st.warning("⚠️ Nessun operatore disponibile in questa squadra")
+    
         # =========================
         # 🚀 ASSEGNA
         # =========================
         if st.button("🚀 Assegna"):
-
-            if not operatori_scelti:
-                st.error("Seleziona almeno un operatore")
-                st.stop()
-
+    
+            matricole = []
+    
             if not attivita:
                 st.error("Inserisci attività")
                 st.stop()
-
-            matricole = []
-
-            for nome in operatori_scelti:
-
+    
+            # -------------------------
+            # OPERATORE SINGOLO
+            # -------------------------
+            if modo == "Operatore":
+    
                 op = next(
-                    (o for o in operatori_db if o.get("Nominativo") == nome),
+                    (o for o in operatori_disponibili if o.get("Nominativo") == selezione),
                     None
                 )
-
+    
                 if op:
                     m = str(op.get("Matricola", "")).strip().lower()
                     if m:
                         matricole.append(m)
-
-            # =========================
-            # 🔍 OVERLAP
-            # =========================
-            for m in matricole:
-                if check_overlap(m, inizio, fine):
-                    st.error(f"⚠️ Operatore occupato: {m}")
+    
+            # -------------------------
+            # SQUADRA MULTI
+            # -------------------------
+            else:
+    
+                if not selezionati:
+                    st.error("Seleziona almeno un operatore")
                     st.stop()
-
+    
+                for nome in selezionati:
+                    op = next(
+                        (o for o in membri if o.get("Nominativo") == nome),
+                        None
+                    )
+                    if op:
+                        m = str(op.get("Matricola", "")).strip().lower()
+                        if m:
+                            matricole.append(m)
+    
+            if not matricole:
+                st.error("Nessun operatore valido")
+                st.stop()
+    
             # =========================
             # 💾 INSERT
             # =========================
             try:
-                for nome, m in zip(operatori_scelti, matricole):
-
+                for m in matricole:
                     supabase.table("planning").insert({
                         "operatore": m,
                         "attivita": attivita,
                         "inizio": inizio.isoformat(),
                         "fine": fine.isoformat()
                     }).execute()
-
+    
                 get_planning.clear()
 
-                st.success("✅ Attività assegnata")
-                st.rerun()
+            # =========================
+            # 🔄 RESET FORM (PRO)
+            # =========================
+            st.session_state.attivita = ""
+            st.session_state.durata = 60
+            st.session_state.inizio = datetime.now()
 
-            except Exception as e:
-                st.error(f"Errore insert: {e}")
+            if modo == "Operatore":
+                st.session_state.selezione = None
+            else:
+                st.session_state.multi_operatori = []
+
+            st.success("✅ Attività assegnata")
+            st.rerun()
+
+        except Exception as e:
+            st.error(f"Errore insert: {e}")
 
     # =========================
     # 📊 DATI
