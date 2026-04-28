@@ -313,15 +313,34 @@ def planning_page():
 # =========================
 st.subheader("📊 Timeline Operatori")
 
-fig = px.timeline(
-    df,
-    x_start="inizio",
-    x_end="fine",
-    y="operatore_nome",
-    color="squadra"
+# mapping squadra
+mappa_squadra = {
+    str(o.get("Matricola")).strip().lower(): o.get("Squadra")
+    for o in operatori_db
+}
+
+df["squadra"] = df["operatore"].apply(
+    lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
 )
 
-fig.update_yaxes(autorange="reversed")
+# sicurezza datetime
+df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
+df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
+df = df.dropna(subset=["inizio", "fine"])
 
-st.plotly_chart(fig, use_container_width=True)
-   
+if not df.empty:
+
+    fig = px.timeline(
+        df,
+        x_start="inizio",
+        x_end="fine",
+        y="operatore_nome",
+        color="squadra"
+    )
+
+    fig.update_yaxes(autorange="reversed")
+
+    st.plotly_chart(fig, use_container_width=True)
+
+else:
+    st.warning("Nessun dato per la timeline")
