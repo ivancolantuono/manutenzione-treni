@@ -219,7 +219,7 @@ def planning_page():
 
     if df.empty:
         st.info("Nessuna attività pianificata")
-        return
+        
     
     # =========================
     # MAPPING
