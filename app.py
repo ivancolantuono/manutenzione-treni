@@ -2072,4 +2072,4 @@ elif menu == "📚 SCHEDE SR VZI6":
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
 
 elif menu == "🧠 PLANNING":
-    plannig()
+    planning()
