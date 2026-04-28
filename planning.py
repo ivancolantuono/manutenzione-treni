@@ -82,6 +82,9 @@ def planning_page():
         if "durata" not in st.session_state:
             st.session_state.durata = 60
     
+        if "multi_operatori" not in st.session_state:
+            st.session_state.multi_operatori = []
+    
         col1, col2 = st.columns(2)
     
         # =========================
@@ -95,7 +98,7 @@ def planning_page():
         )
     
         # =========================
-        # 🧠 DATI BASE
+        # 🧠 ATTIVITÀ
         # =========================
         attivita = col2.text_input("Attività", key="attivita")
     
@@ -109,7 +112,7 @@ def planning_page():
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
     
         # =========================
-        # 👷 FILTRO OPERATORI DISPONIBILI
+        # 🔍 FILTRO DISPONIBILITÀ
         # =========================
         operatori_disponibili = []
     
@@ -124,20 +127,23 @@ def planning_page():
                 operatori_disponibili.append(o)
     
         # =========================
-        # 👤 MODALITÀ OPERATORE
+        # 👤 OPERATORE SINGOLO
         # =========================
         if modo == "Operatore":
     
             nomi = [o.get("Nominativo") for o in operatori_disponibili]
     
-            selezione = col1.selectbox(
-                "Operatore disponibile",
-                nomi,
-                key="selezione"
-            )
+            if not nomi:
+                st.warning("⚠️ Nessun operatore disponibile")
+            else:
+                selezione = col1.selectbox(
+                    "Operatore disponibile",
+                    nomi,
+                    key="selezione"
+                )
     
         # =========================
-        # 👥 MODALITÀ SQUADRA
+        # 👥 SQUADRA
         # =========================
         else:
     
@@ -150,14 +156,14 @@ def planning_page():
     
             nomi_membri = [o.get("Nominativo") for o in membri]
     
-            selezionati = st.multiselect(
-                "Seleziona operatori disponibili",
-                nomi_membri,
-                key="multi_operatori"
-            )
-    
-            if not membri:
+            if not nomi_membri:
                 st.warning("⚠️ Nessun operatore disponibile in questa squadra")
+            else:
+                selezionati = st.multiselect(
+                    "Seleziona operatori disponibili",
+                    nomi_membri,
+                    key="multi_operatori"
+                )
     
         # =========================
         # 🚀 ASSEGNA
@@ -171,7 +177,7 @@ def planning_page():
                 st.stop()
     
             # -------------------------
-            # OPERATORE SINGOLO
+            # OPERATORE
             # -------------------------
             if modo == "Operatore":
     
@@ -186,15 +192,15 @@ def planning_page():
                         matricole.append(m)
     
             # -------------------------
-            # SQUADRA MULTI
+            # SQUADRA
             # -------------------------
             else:
     
-                if not selezionati:
+                if not st.session_state.multi_operatori:
                     st.error("Seleziona almeno un operatore")
                     st.stop()
     
-                for nome in selezionati:
+                for nome in st.session_state.multi_operatori:
                     op = next(
                         (o for o in membri if o.get("Nominativo") == nome),
                         None
@@ -209,7 +215,7 @@ def planning_page():
                 st.stop()
     
             # =========================
-            # 💾 INSERT
+            # 💾 INSERT DB
             # =========================
             try:
                 for m in matricole:
@@ -221,24 +227,21 @@ def planning_page():
                     }).execute()
     
                 get_planning.clear()
-
-            # =========================
-            # 🔄 RESET FORM (PRO)
-            # =========================
-            st.session_state.attivita = ""
-            st.session_state.durata = 60
-            st.session_state.inizio = datetime.now()
-
-            if modo == "Operatore":
+    
+                # =========================
+                # 🔄 RESET FORM
+                # =========================
+                st.session_state.attivita = ""
+                st.session_state.durata = 60
+                st.session_state.inizio = datetime.now()
                 st.session_state.selezione = None
-            else:
                 st.session_state.multi_operatori = []
-
-            st.success("✅ Attività assegnata")
-            st.rerun()
-
-        except Exception as e:
-            st.error(f"Errore insert: {e}")
+    
+                st.success("✅ Attività assegnata")
+                st.rerun()
+    
+            except Exception as e:
+                st.error(f"Errore insert: {e}")
 
     # =========================
     # 📊 DATI
