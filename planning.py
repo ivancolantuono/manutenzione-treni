@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from db import supabase, get_operatori
 import pandas as pd
 
 # =========================
