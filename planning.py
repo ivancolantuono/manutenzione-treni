@@ -9,23 +9,20 @@ from db import supabase, get_planning, get_operatori
 # =========================
 # 🔒 CHECK SOVRAPPOSIZIONE
 # =========================
-def check_overlap(matricola, start, end):
+def check_overlap(matricola, inizio, fine):
 
-    res = supabase.table("planning")\
-        .select("*")\
-        .eq("matricola", matricola)\
-        .eq("stato", "ATTIVO")\
-        .execute()
+    try:
+        res = supabase.table("planning") \
+            .select("*") \
+            .eq("operatore", matricola) \
+            .execute()
 
-    for r in res.data:
+        st.write(res)  # 👈 IMPORTANTISSIMO
+        return False
 
-        existing_start = datetime.fromisoformat(r["inizio"])
-        existing_end = datetime.fromisoformat(r["fine"])
-
-        if start < existing_end and end > existing_start:
-            return True
-
-    return False
+    except Exception as e:
+        st.error(e)
+        return False
 
 
 # =========================
