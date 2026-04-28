@@ -215,7 +215,7 @@ def planning_page():
             except Exception as e:
                 st.error(f"Errore insert: {e}")
 
-    st.subheader("📊 Pianificazione")
+    st.expander("📊 Pianificazione")
 
     if df.empty:
         st.info("Nessuna attività pianificata")
