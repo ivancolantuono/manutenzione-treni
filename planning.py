@@ -43,9 +43,6 @@ def planning_page():
 
     st.title("🧠 Pianificazione Operatori")
 
-    # =========================
-    # 👷 OPERATORI
-    # =========================
     operatori_db = get_operatori()
 
     operatori = [
@@ -54,7 +51,6 @@ def planning_page():
         if o.get("Nominativo")
     ]
 
-    # 👉 squadre dal DB
     squadre = sorted(
         list({
             o.get("Squadra")
@@ -72,10 +68,36 @@ def planning_page():
 
         modo = col1.radio("Assegna a:", ["Operatore", "Squadra"], horizontal=True)
 
+        operatori_scelti = []
+
+        # =========================
+        # OPERATORE SINGOLO
+        # =========================
         if modo == "Operatore":
+
             selezione = col1.selectbox("Operatore", operatori)
+            operatori_scelti = [selezione]
+
+        # =========================
+        # SQUADRA → SCELTA OPERATORI
+        # =========================
         else:
-            selezione = col1.selectbox("Squadra", squadre)
+
+            squadra_sel = col1.selectbox("Squadra", squadre)
+
+            membri = [
+                o.get("Nominativo")
+                for o in operatori_db
+                if o.get("Squadra") == squadra_sel
+            ]
+
+            st.info("👥 " + ", ".join(membri))
+
+            operatori_scelti = st.multiselect(
+                "Seleziona operatori della squadra",
+                membri,
+                default=membri
+            )
 
         attivita = col2.text_input("Attività")
 
@@ -88,26 +110,25 @@ def planning_page():
 
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
-        # 👉 mostra membri squadra
-        if modo == "Squadra":
-            membri = [
-                o.get("Nominativo")
-                for o in operatori_db
-                if o.get("Squadra") == selezione
-            ]
-            st.info("👥 " + ", ".join(membri))
-
+        # =========================
+        # 🚀 ASSEGNA
+        # =========================
         if st.button("🚀 Assegna"):
+
+            if not operatori_scelti:
+                st.error("Seleziona almeno un operatore")
+                st.stop()
+
+            if not attivita:
+                st.error("Inserisci attività")
+                st.stop()
 
             matricole = []
 
-            # =========================
-            # 🔁 CONVERSIONE
-            # =========================
-            if modo == "Operatore":
+            for nome in operatori_scelti:
 
                 op = next(
-                    (o for o in operatori_db if o.get("Nominativo") == selezione),
+                    (o for o in operatori_db if o.get("Nominativo") == nome),
                     None
                 )
 
@@ -115,25 +136,6 @@ def planning_page():
                     m = str(op.get("Matricola", "")).strip().lower()
                     if m:
                         matricole.append(m)
-
-            else:
-                membri = [
-                    o for o in operatori_db
-                    if o.get("Squadra") == selezione
-                ]
-
-                for op in membri:
-                    m = str(op.get("Matricola", "")).strip().lower()
-                    if m:
-                        matricole.append(m)
-
-            if not matricole:
-                st.error("Nessun operatore valido")
-                st.stop()
-
-            if not attivita:
-                st.error("Inserisci attività")
-                st.stop()
 
             # =========================
             # 🔍 OVERLAP
@@ -147,10 +149,11 @@ def planning_page():
             # 💾 INSERT
             # =========================
             try:
-                for m in matricole:
+                for nome, m in zip(operatori_scelti, matricole):
 
                     supabase.table("planning").insert({
                         "operatore": m,
+                        "operatore_nome": nome,
                         "attivita": attivita,
                         "inizio": inizio.isoformat(),
                         "fine": fine.isoformat()
@@ -198,9 +201,6 @@ def planning_page():
         lambda x: mappa_squadra.get(str(x).strip().lower(), "")
     )
 
-    # =========================
-    # DATE
-    # =========================
     df["inizio"] = pd.to_datetime(df["inizio"])
     df["fine"] = pd.to_datetime(df["fine"])
 
