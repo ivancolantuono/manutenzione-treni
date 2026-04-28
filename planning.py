@@ -287,9 +287,10 @@ def planning_page():
             x_start="inizio",
             x_end="fine",
             y="operatore_nome",
-            y="attivita",
+            text="attivita",
             color="squadra"
         )
+        fig.update_traces(textposition="inside")
     
         fig.update_yaxes(autorange="reversed")
     
