@@ -308,22 +308,20 @@ def planning_page():
                 del st.session_state["edit_id"]
                 st.rerun()
 
-    
+# =========================
+# 📊 TIMELINE
+# =========================
+st.subheader("📊 Timeline Operatori")
 
-    # =========================
-    # 📊 TIMELINE
-    # =========================
-    st.subheader("📊 Timeline Operatori")
+fig = px.timeline(
+    df,
+    x_start="inizio",
+    x_end="fine",
+    y="operatore_nome",
+    color="squadra"
+)
 
-    fig = px.timeline(
-        df,
-        x_start="inizio",
-        x_end="fine",
-        y="operatore_nome",
-        color="squadra"
-    )
+fig.update_yaxes(autorange="reversed")
 
-    fig.update_yaxes(autorange="reversed")
-
-    st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True)
    
