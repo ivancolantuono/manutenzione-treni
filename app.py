@@ -3,6 +3,7 @@ import pandas as pd
 from zoneinfo import ZoneInfo
 from datetime import date, datetime
 from supabase import create_client
+from planning import planning_page
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
@@ -185,7 +186,7 @@ if not st.session_state.logged_in:
             ["🔐 Login", "🆕 Registrazione", "🔑 Reset Password"],
             horizontal=True,
             key="pagina_login"
-        )
+        
 
         # =========================
         # 🔐 LOGIN
@@ -408,7 +409,8 @@ if modalita == "CAPOSQUADRA":
             "📚 SCHEDE SR",
             "📚 SCHEDE SR VZI6",
             "⚙️ CERCA COMPONENTE",
-            "📌 OPEN ITEM"
+            "📌 OPEN ITEM",
+            "🧠 PLANNING"
         ],
         horizontal=True,
     )
@@ -2068,3 +2070,6 @@ elif menu == "📚 SCHEDE SR VZI6":
 
             st.caption(f"📂 {sottogruppo}")
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
+
+elif menu == "🧠 PLANNING":
+    planning_page()
