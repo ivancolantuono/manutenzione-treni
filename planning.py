@@ -282,22 +282,4 @@ def planning_page():
     fig.update_yaxes(autorange="reversed")
 
     st.plotly_chart(fig, use_container_width=True)
-    # =========================
-    # 🟢 DISPONIBILI ORA
-    # =========================
-    st.subheader("🟢 Operatori disponibili ora")
-
-    now = datetime.now()
-
-    occupati = set()
-
-    for _, r in df.iterrows():
-        if r["inizio"] <= now <= r["fine"]:
-            occupati.add(r["operatore_nome"])
-
-    liberi = [o for o in operatori if o not in occupati]
-
-    if liberi:
-        st.success(", ".join(liberi))
-    else:
-        st.warning("Nessun operatore disponibile")
+   
