@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+import plotly.express as px
 from db import supabase, get_operatori
 
 # =========================
@@ -30,7 +31,7 @@ def check_overlap(matricola, inizio, fine):
         except:
             continue
 
-        # 🔥 LOGICA OVERLAP
+        # overlap reale
         if not (fine <= start_db or inizio >= end_db):
             return True
 
@@ -52,7 +53,7 @@ def get_matricola(nome, operatori_db):
     return None
 
 # =========================
-# 🧠 PAGINA PRINCIPALE
+# 🧠 PAGINA
 # =========================
 def planning_page():
 
@@ -90,7 +91,6 @@ def planning_page():
 
         if st.button("🚀 Assegna"):
 
-            # 🔁 conversione
             matricola = get_matricola(operatore_input, operatori_db)
 
             if not matricola:
@@ -101,7 +101,6 @@ def planning_page():
                 st.error("Inserisci attività")
                 st.stop()
 
-            # 🔥 CHECK OVERLAP
             if check_overlap(matricola, inizio, fine):
                 st.error("⚠️ Operatore già occupato in questo intervallo")
                 st.stop()
@@ -123,7 +122,7 @@ def planning_page():
                 st.error(f"Errore insert: {e}")
 
     # =========================
-    # 📊 VISUALIZZAZIONE
+    # 📊 DATI
     # =========================
     st.subheader("📊 Pianificazione")
 
@@ -148,7 +147,7 @@ def planning_page():
     )
 
     # =========================
-    # FORMAT DATE
+    # 📅 DATE
     # =========================
     df["inizio"] = pd.to_datetime(df["inizio"])
     df["fine"] = pd.to_datetime(df["fine"])
@@ -163,3 +162,40 @@ def planning_page():
         use_container_width=True,
         hide_index=True
     )
+
+    # =========================
+    # 📊 TIMELINE (GANTT)
+    # =========================
+    st.subheader("📊 Timeline Operatori")
+
+    fig = px.timeline(
+        df,
+        x_start="inizio",
+        x_end="fine",
+        y="operatore_nome",
+        color="attivita",
+    )
+
+    fig.update_yaxes(autorange="reversed")
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # =========================
+    # 🟢 OPERATORI LIBERI ORA
+    # =========================
+    st.subheader("🟢 Operatori disponibili ora")
+
+    now = datetime.now()
+
+    occupati = set()
+
+    for _, r in df.iterrows():
+        if r["inizio"] <= now <= r["fine"]:
+            occupati.add(r["operatore_nome"])
+
+    liberi = [o for o in operatori if o not in occupati]
+
+    if liberi:
+        st.success("Disponibili: " + ", ".join(liberi))
+    else:
+        st.warning("Nessun operatore disponibile")
