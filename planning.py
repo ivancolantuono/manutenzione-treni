@@ -3,7 +3,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import plotly.express as px
 from db import supabase, get_operatori
-
+from streamlit_autorefresh import st_autorefresh
+st_autorefresh(interval=10000, key="refresh_planning")
 # =========================
 # 🔄 GET PLANNING
 # =========================
@@ -15,22 +16,25 @@ def get_planning():
 # =========================
 # 🔍 CHECK OVERLAP
 # =========================
-def check_overlap(matricola, inizio, fine):
+def check_overlap_local(matricola, inizio, fine):
 
-    res = supabase.table("planning")\
-        .select("*")\
-        .eq("operatore", matricola)\
-        .execute()
+    if df.empty:
+        return False
 
-    records = res.data or []
+    now = datetime.now().replace(tzinfo=None)
 
-    for r in records:
-        try:
-            start_db = datetime.fromisoformat(r["inizio"])
-            end_db = datetime.fromisoformat(r["fine"])
-        except:
+    records = df[df["operatore"] == matricola]
+
+    for _, r in records.iterrows():
+
+        start_db = r["inizio"]
+        end_db = r["fine"]
+
+        # 🔥 IGNORA ATTIVITÀ GIÀ FINITE
+        if end_db <= now:
             continue
 
+        # 🔥 CONTROLLO OVERLAP
         if not (fine <= start_db or inizio >= end_db):
             return True
 
@@ -54,6 +58,8 @@ def planning_page():
     if not df.empty:
         df["inizio"] = pd.to_datetime(df["inizio"])
         df["fine"] = pd.to_datetime(df["fine"])
+        df["inizio"] = df["inizio"].dt.tz_localize(None)
+        df["fine"] = df["fine"].dt.tz_localize(None)
 
     # =========================
     # 🔍 CHECK OVERLAP (VELOCE)
