@@ -3,7 +3,7 @@ import pandas as pd
 from zoneinfo import ZoneInfo
 from datetime import date, datetime
 from supabase import create_client
-from planning import planning_page
+from planning import planning
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
@@ -2072,4 +2072,4 @@ elif menu == "📚 SCHEDE SR VZI6":
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
 
 elif menu == "🧠 PLANNING":
-    planning_page()
+    planning()
