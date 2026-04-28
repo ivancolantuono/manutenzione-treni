@@ -14,32 +14,6 @@ def get_planning():
     res = supabase.table("planning").select("*").execute()
     return res.data or []
 
-# =========================
-# 🔍 CHECK OVERLAP
-# =========================
-def check_overlap_local(matricola, inizio, fine):
-
-    if df.empty:
-        return False
-
-    now = datetime.now().replace(tzinfo=None)
-
-    records = df[df["operatore"] == matricola]
-
-    for _, r in records.iterrows():
-
-        start_db = r["inizio"]
-        end_db = r["fine"]
-
-        # 🔥 IGNORA ATTIVITÀ GIÀ FINITE
-        if end_db <= now:
-            continue
-
-        # 🔥 CONTROLLO OVERLAP
-        if not (fine <= start_db or inizio >= end_db):
-            return True
-
-    return False
 
 # =========================
 # 🧠 PAGINA PRINCIPALE
@@ -287,52 +261,54 @@ def planning_page():
                 st.rerun()
 
     # =========================
-# ✏️ MODIFICA ATTIVITÀ
-# =========================
-if "edit_id" in st.session_state:
-
-    st.subheader("✏️ Modifica attività")
-
-    record = next(
-        (x for x in df.to_dict("records") if x["id"] == st.session_state["edit_id"]),
-        None
-    )
-
-    if record:
-
-        nuova_attivita = st.text_input("Attività", value=record["attivita"])
-
-        nuovo_inizio = st.datetime_input(
-            "Inizio",
-            value=record["inizio"]
+    # ✏️ MODIFICA ATTIVITÀ
+    # =========================
+    if "edit_id" in st.session_state:
+    
+        st.subheader("✏️ Modifica attività")
+    
+        record = next(
+            (x for x in df.to_dict("records") if x["id"] == st.session_state["edit_id"]),
+            None
         )
-
-        nuova_fine = st.datetime_input(
-            "Fine",
-            value=record["fine"]
-        )
-
-        if st.button("💾 Salva modifica"):
-
-            try:
-                supabase.table("planning").update({
-                    "attivita": nuova_attivita,
-                    "inizio": nuovo_inizio.isoformat(),
-                    "fine": nuova_fine.isoformat()
-                }).eq("id", record["id"]).execute()
-
-                get_planning.clear()
+    
+        if record:
+    
+            nuova_attivita = st.text_input("Attività", value=record["attivita"])
+    
+            nuovo_inizio = st.datetime_input(
+                "Inizio",
+                value=record["inizio"]
+            )
+    
+            nuova_fine = st.datetime_input(
+                "Fine",
+                value=record["fine"]
+            )
+    
+            if st.button("💾 Salva modifica"):
+    
+                try:
+                    supabase.table("planning").update({
+                        "attivita": nuova_attivita,
+                        "inizio": nuovo_inizio.isoformat(),
+                        "fine": nuova_fine.isoformat()
+                    }).eq("id", record["id"]).execute()
+    
+                    get_planning.clear()
+                    del st.session_state["edit_id"]
+    
+                    st.success("Modificato!")
+                    st.rerun()
+    
+                except Exception as e:
+                    st.error(e)
+    
+            if st.button("❌ Annulla"):
                 del st.session_state["edit_id"]
-
-                st.success("Modificato!")
                 st.rerun()
 
-            except Exception as e:
-                st.error(e)
-
-        if st.button("❌ Annulla"):
-            del st.session_state["edit_id"]
-            st.rerun()
+    st.plotly_chart(fig, use_container_width=True)
 
     # =========================
     # 📊 TIMELINE
@@ -349,6 +325,5 @@ if "edit_id" in st.session_state:
 
     fig.update_yaxes(autorange="reversed")
 
-    st.plotly_chart(fig, use_container_width=True)
     st.plotly_chart(fig, use_container_width=True)
    
