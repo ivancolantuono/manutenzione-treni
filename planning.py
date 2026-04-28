@@ -43,8 +43,37 @@ def planning_page():
 
     st.title("🧠 Pianificazione Operatori")
 
+    # =========================
+    # 📥 DATI
+    # =========================
     operatori_db = get_operatori()
+    dati = get_planning()
 
+    df = pd.DataFrame(dati)
+
+    if not df.empty:
+        df["inizio"] = pd.to_datetime(df["inizio"])
+        df["fine"] = pd.to_datetime(df["fine"])
+
+    # =========================
+    # 🔍 CHECK OVERLAP (VELOCE)
+    # =========================
+    def check_overlap_local(matricola, inizio, fine):
+
+        if df.empty:
+            return False
+
+        records = df[df["operatore"] == matricola]
+
+        for _, r in records.iterrows():
+            if not (fine <= r["inizio"] or inizio >= r["fine"]):
+                return True
+
+        return False
+
+    # =========================
+    # 👷 LISTE
+    # =========================
     operatori = [
         o.get("Nominativo")
         for o in operatori_db
@@ -66,38 +95,11 @@ def planning_page():
 
         col1, col2 = st.columns(2)
 
-        modo = col1.radio("Assegna a:", ["Operatore", "Squadra"], horizontal=True)
-
-        operatori_scelti = []
-
-        # =========================
-        # OPERATORE SINGOLO
-        # =========================
-        if modo == "Operatore":
-
-            selezione = col1.selectbox("Operatore", operatori)
-            operatori_scelti = [selezione]
-
-        # =========================
-        # SQUADRA → SCELTA OPERATORI
-        # =========================
-        else:
-
-            squadra_sel = col1.selectbox("Squadra", squadre)
-
-            membri = [
-                o.get("Nominativo")
-                for o in operatori_db
-                if o.get("Squadra") == squadra_sel
-            ]
-
-            st.info("👥 " + ", ".join(membri))
-
-            operatori_scelti = st.multiselect(
-                "Seleziona operatori della squadra",
-                membri,
-                default=membri
-            )
+        modo = col1.radio(
+            "Assegna a:",
+            ["Operatore", "Squadra"],
+            horizontal=True
+        )
 
         attivita = col2.text_input("Attività")
 
@@ -111,13 +113,53 @@ def planning_page():
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
         # =========================
+        # 👤 OPERATORE SINGOLO
+        # =========================
+        if modo == "Operatore":
+
+            selezione = col1.selectbox("Operatore", operatori)
+
+        # =========================
+        # 👥 SQUADRA
+        # =========================
+        else:
+
+            squadra = col1.selectbox("Squadra", squadre)
+
+            membri = [
+                o for o in operatori_db
+                if o.get("Squadra") == squadra
+            ]
+
+            nomi_membri = []
+            occupati = []
+
+            for o in membri:
+                nome = o.get("Nominativo")
+                matricola = str(o.get("Matricola", "")).strip().lower()
+
+                if not nome or not matricola:
+                    continue
+
+                nomi_membri.append(nome)
+
+                if check_overlap_local(matricola, inizio, fine):
+                    occupati.append(nome)
+
+            # 👇 VISUALIZZAZIONE STATO
+            st.write("👥 Membri squadra:")
+            for nome in nomi_membri:
+                if nome in occupati:
+                    st.markdown(f"🔴 {nome} (occupato)")
+                else:
+                    st.markdown(f"🟢 {nome}")
+
+            selezionati = st.multiselect("Seleziona operatori", nomi_membri)
+
+        # =========================
         # 🚀 ASSEGNA
         # =========================
         if st.button("🚀 Assegna"):
-
-            if not operatori_scelti:
-                st.error("Seleziona almeno un operatore")
-                st.stop()
 
             if not attivita:
                 st.error("Inserisci attività")
@@ -125,32 +167,57 @@ def planning_page():
 
             matricole = []
 
-            for nome in operatori_scelti:
+            # -------------------------
+            # OPERATORE
+            # -------------------------
+            if modo == "Operatore":
 
                 op = next(
-                    (o for o in operatori_db if o.get("Nominativo") == nome),
+                    (o for o in operatori_db if o.get("Nominativo") == selezione),
                     None
                 )
 
                 if op:
                     m = str(op.get("Matricola", "")).strip().lower()
-                    if m:
+
+                    if check_overlap_local(m, inizio, fine):
+                        st.error("⚠️ Operatore occupato")
+                        st.stop()
+
+                    matricole.append(m)
+
+            # -------------------------
+            # SQUADRA
+            # -------------------------
+            else:
+
+                if not selezionati:
+                    st.error("Seleziona almeno un operatore")
+                    st.stop()
+
+                for nome in selezionati:
+
+                    if nome in occupati:
+                        continue  # 👉 BLOCCO OCCUPATI
+
+                    op = next(
+                        (o for o in membri if o.get("Nominativo") == nome),
+                        None
+                    )
+
+                    if op:
+                        m = str(op.get("Matricola", "")).strip().lower()
                         matricole.append(m)
 
-            # =========================
-            # 🔍 OVERLAP
-            # =========================
-            for m in matricole:
-                if check_overlap(m, inizio, fine):
-                    st.error(f"⚠️ Operatore occupato: {m}")
+                if not matricole:
+                    st.error("Tutti gli operatori selezionati sono occupati")
                     st.stop()
 
             # =========================
             # 💾 INSERT
             # =========================
             try:
-                for nome, m in zip(operatori_scelti, matricole):
-
+                for m in matricole:
                     supabase.table("planning").insert({
                         "operatore": m,
                         "attivita": attivita,
@@ -167,21 +234,14 @@ def planning_page():
                 st.error(f"Errore insert: {e}")
 
     # =========================
-    # 📊 DATI
+    # 📊 TABELLA
     # =========================
     st.subheader("📊 Pianificazione")
 
-    dati = get_planning()
-
-    if not dati:
+    if df.empty:
         st.info("Nessuna attività pianificata")
         return
 
-    df = pd.DataFrame(dati)
-
-    # =========================
-    # 🔁 MATRICOLA → NOME
-    # =========================
     mappa_nome = {
         str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
         for o in operatori_db
@@ -200,14 +260,6 @@ def planning_page():
         lambda x: mappa_squadra.get(str(x).strip().lower(), "")
     )
 
-    df["inizio"] = pd.to_datetime(df["inizio"])
-    df["fine"] = pd.to_datetime(df["fine"])
-
-    df = df.sort_values("inizio")
-
-    # =========================
-    # 📄 TABELLA
-    # =========================
     st.dataframe(
         df[["operatore_nome", "squadra", "attivita", "inizio", "fine"]],
         use_container_width=True,
@@ -230,7 +282,6 @@ def planning_page():
     fig.update_yaxes(autorange="reversed")
 
     st.plotly_chart(fig, use_container_width=True)
-
     # =========================
     # 🟢 DISPONIBILI ORA
     # =========================
