@@ -261,6 +261,44 @@ def planning_page():
                 st.rerun()
 
     # =========================
+    # 📊 TIMELINE
+    # =========================
+    st.subheader("📊 Timeline Operatori")
+    
+    # mapping squadra
+    mappa_squadra = {
+        str(o.get("Matricola")).strip().lower(): o.get("Squadra")
+        for o in operatori_db
+    }
+    
+    df["squadra"] = df["operatore"].apply(
+        lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
+    )
+    
+    # sicurezza datetime
+    df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
+    df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
+    df = df.dropna(subset=["inizio", "fine"])
+    
+    if not df.empty:
+    
+        fig = px.timeline(
+            df,
+            x_start="inizio",
+            x_end="fine",
+            y="operatore_nome",
+            color="squadra"
+        )
+    
+        fig.update_yaxes(autorange="reversed")
+    
+        st.plotly_chart(fig, use_container_width=True)
+    
+    else:
+        st.warning("Nessun dato per la timeline")
+
+
+    # =========================
     # ✏️ MODIFICA ATTIVITÀ
     # =========================
     if "edit_id" in st.session_state:
@@ -308,39 +346,3 @@ def planning_page():
                 del st.session_state["edit_id"]
                 st.rerun()
 
-# =========================
-# 📊 TIMELINE
-# =========================
-st.subheader("📊 Timeline Operatori")
-
-# mapping squadra
-mappa_squadra = {
-    str(o.get("Matricola")).strip().lower(): o.get("Squadra")
-    for o in operatori_db
-}
-
-df["squadra"] = df["operatore"].apply(
-    lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
-)
-
-# sicurezza datetime
-df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
-df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
-df = df.dropna(subset=["inizio", "fine"])
-
-if not df.empty:
-
-    fig = px.timeline(
-        df,
-        x_start="inizio",
-        x_end="fine",
-        y="operatore_nome",
-        color="squadra"
-    )
-
-    fig.update_yaxes(autorange="reversed")
-
-    st.plotly_chart(fig, use_container_width=True)
-
-else:
-    st.warning("Nessun dato per la timeline")
