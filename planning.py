@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import plotly.express as px
 from db import supabase, get_operatori
 from streamlit_autorefresh import st_autorefresh
@@ -111,7 +112,8 @@ def planning_page():
 
         col3, col4 = st.columns(2)
 
-        inizio = col3.datetime_input("Inizio", value=datetime.now())
+        now = datetime.now(ZoneInfo("Europe/Rome"))
+        inizio = col3.datetime_input("Inizio", value=now)
         durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
 
         fine = inizio + timedelta(minutes=durata)
