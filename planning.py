@@ -226,6 +226,21 @@ def planning_page():
             except Exception as e:
                 st.error(f"Errore insert: {e}")
 
+    st.subheader("🟢 Stato operatori")
+
+    for o in operatori_db:
+        nome = o.get("Nominativo")
+        matricola = str(o.get("Matricola", "")).strip().lower()
+    
+        if matricola in [
+            str(x["operatore"]).strip().lower()
+            for _, x in df.iterrows()
+            if x["inizio"] <= now <= x["fine"]
+        ]:
+            st.markdown(f"🔴 {nome}")
+        else:
+            st.markdown(f"🟢 {nome}")
+
     st.subheader("📊 Pianificazione")
 
     with st.expander("Mostra pianificazione", expanded=False):
@@ -267,11 +282,16 @@ def planning_page():
         
             with st.container():
                 col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
+
+                now = datetime.now(ZoneInfo("Europe/Rome"))
         
-                col1.write(r["operatore_nome"])
-                col2.write(r["attivita"])
-                col3.write(r["inizio"].strftime("%H:%M"))
-                col4.write(r["fine"].strftime("%H:%M"))
+                if r["inizio"] <= now <= r["fine"]:
+                    col1.markdown(f"🔴 **{r['operatore_nome']}**")
+                else:
+                    col1.write(r["operatore_nome"])
+                    col2.write(r["attivita"])
+                    col3.write(r["inizio"].strftime("%H:%M"))
+                    col4.write(r["fine"].strftime("%H:%M"))
         
                 # =========================
                 # ✏️ MODIFICA
