@@ -31,6 +31,8 @@ def planning_page():
     dati = get_planning()
 
     df = pd.DataFrame(dati)
+    if not df.empty:
+        df["operatore"] = df["operatore"].astype(str).str.strip().str.lower()
 
     if not df.empty:
         df["inizio"] = pd.to_datetime(df["inizio"], utc=True).dt.tz_convert("Europe/Rome")
@@ -156,7 +158,7 @@ def planning_page():
 
                 nomi_membri.append(nome)
 
-                if matricola in occupati_global:
+                if str(matricola).strip().lower() in occupati_global:
                     occupati.append(nome)
 
             # 👇 VISUALIZZAZIONE STATO
