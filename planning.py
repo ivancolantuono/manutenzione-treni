@@ -33,7 +33,6 @@ def planning_page():
     df = pd.DataFrame(dati)
 
     if not df.empty:
-       
         df["inizio"] = pd.to_datetime(df["inizio"], utc=True).dt.tz_convert("Europe/Rome")
         df["fine"] = pd.to_datetime(df["fine"], utc=True).dt.tz_convert("Europe/Rome")
     now = datetime.now(ZoneInfo("Europe/Rome"))
@@ -66,7 +65,7 @@ def planning_page():
         if df.empty:
             return False
     
-        now = datetime.now()
+        now = datetime.now(ZoneInfo("Europe/Rome"))
     
         records = df[
             df["operatore"].astype(str).str.strip().str.lower() == matricola
@@ -118,7 +117,7 @@ def planning_page():
 
         col3, col4 = st.columns(2)
 
-        now = datetime.now()
+        now = datetime.now(ZoneInfo("Europe/Rome"))
         inizio = col3.datetime_input("Inizio", value=now)
         durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
 
@@ -265,9 +264,7 @@ def planning_page():
                 lambda x: mappa_nome.get(str(x).strip().lower(), x)
             )
     
-            df["inizio"] = pd.to_datetime(df["inizio"])
-            df["fine"] = pd.to_datetime(df["fine"])
-    
+               
             df_display = df.copy()
     
             df_display["Operatore"] = df_display["operatore_nome"]
@@ -373,9 +370,6 @@ def planning_page():
             lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
         )
     
-        # sicurezza datetime
-        df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
-        df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
         df = df.dropna(subset=["inizio", "fine"])
     
         if df.empty:
