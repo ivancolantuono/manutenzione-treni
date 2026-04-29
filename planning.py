@@ -217,21 +217,37 @@ def planning_page():
 
     st.subheader("📊 Pianificazione")
 
-    if df.empty:
-        st.info("Nessuna attività pianificata")
-    else:
-        
-        # =========================
-        # MAPPING
-        # =========================
-        mappa_nome = {
-            str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
-            for o in operatori_db
-        }
-        
-        df["operatore_nome"] = df["operatore"].apply(
-            lambda x: mappa_nome.get(str(x).strip().lower(), x)
-        )
+    with st.expander("Mostra pianificazione", expanded=False):
+    
+        if df.empty:
+            st.info("Nessuna attività pianificata")
+    
+        else:
+            # mapping
+            mappa_nome = {
+                str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
+                for o in operatori_db
+            }
+    
+            df["operatore_nome"] = df["operatore"].apply(
+                lambda x: mappa_nome.get(str(x).strip().lower(), x)
+            )
+    
+            df["inizio"] = pd.to_datetime(df["inizio"])
+            df["fine"] = pd.to_datetime(df["fine"])
+    
+            df_display = df.copy()
+    
+            df_display["Operatore"] = df_display["operatore_nome"]
+            df_display["Attività"] = df_display["attivita"]
+            df_display["Inizio"] = df_display["inizio"].dt.strftime("%H:%M")
+            df_display["Fine"] = df_display["fine"].dt.strftime("%H:%M")
+    
+            st.dataframe(
+                df_display[["Operatore", "Attività", "Inizio", "Fine"]],
+                use_container_width=True,
+                hide_index=True
+            )
         
         # =========================
         # LOOP RIGHE (PRO)
