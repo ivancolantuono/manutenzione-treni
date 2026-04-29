@@ -121,10 +121,13 @@ def planning_page():
 
         now = datetime.now(ZoneInfo("Europe/Rome"))
         inizio = col3.datetime_input("Inizio", value=now)
+
+        # 🔥 FIX FONDAMENTALE
+        inizio = inizio.replace(tzinfo=ZoneInfo("Europe/Rome"))
+        
         durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
-
+        
         fine = inizio + timedelta(minutes=durata)
-
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
         # =========================
