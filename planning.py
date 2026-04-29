@@ -33,8 +33,7 @@ def planning_page():
     df = pd.DataFrame(dati)
 
     if not df.empty:
-        df["inizio"] = pd.to_datetime(df["inizio"])
-        df["fine"] = pd.to_datetime(df["fine"])
+       
         df["inizio"] = pd.to_datetime(df["inizio"], utc=True).dt.tz_convert("Europe/Rome")
         df["fine"] = pd.to_datetime(df["fine"], utc=True).dt.tz_convert("Europe/Rome")
     now = datetime.now(ZoneInfo("Europe/Rome"))
