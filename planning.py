@@ -31,59 +31,37 @@ def planning_page():
     dati = get_planning()
 
     df = pd.DataFrame(dati)
-    if not df.empty:
-        df["operatore"] = df["operatore"].astype(str).str.strip().str.lower()
 
     if not df.empty:
-        df["inizio"] = pd.to_datetime(df["inizio"], utc=True).dt.tz_convert("Europe/Rome")
-        df["fine"] = pd.to_datetime(df["fine"], utc=True).dt.tz_convert("Europe/Rome")
-    now = datetime.now(ZoneInfo("Europe/Rome"))
-    # =========================
-    # 🟢🔴 STATO OPERATORI (LIVE) 
-    # =========================
-    occupati_global = set()
-    
-    if not df.empty:
-    
-        for _, r in df.iterrows():
-    
-            # 🔥 IGNORA attività finite
-    
-            if r["fine"] <= now:
-    
-                continue
-    
-            # 🔴 occupato se dentro intervallo
-    
-            if r["inizio"] <= now <= r["fine"]:
-    
-                occupati_global.add(str(r["operatore"]).strip().lower())
+        df["inizio"] = pd.to_datetime(df["inizio"])
+        df["fine"] = pd.to_datetime(df["fine"])
+        df["inizio"] = df["inizio"].dt.tz_localize(None)
+        df["fine"] = df["fine"].dt.tz_localize(None)
+
+    now = datetime.now()
 
     # =========================
     # 🔍 CHECK OVERLAP (VELOCE)
     # =========================
     def check_overlap_local(matricola, inizio, fine):
 
-        if df.empty:
-            return False
-    
-        now = datetime.now(ZoneInfo("Europe/Rome"))
-    
-        records = df[
-            df["operatore"].astype(str).str.strip().str.lower() == matricola
-        ]
-    
-        for _, r in records.iterrows():
-    
-            # ignora attività finite
-            if r["fine"] <= now:
-                continue
-    
-            # overlap vero
-            if not (fine <= r["inizio"] or inizio >= r["fine"]):
-                return True
-    
+    if df.empty:
         return False
+
+    now = datetime.now()
+
+    records = df[df["operatore"] == matricola]
+
+    for _, r in records.iterrows():
+
+        # 🔥 IGNORA ATTIVITÀ GIÀ FINITE
+        if r["fine"] <= now:
+            continue
+
+        if not (fine <= r["inizio"] or inizio >= r["fine"]):
+            return True
+
+    return False
 
     # =========================
     # 👷 LISTE
@@ -121,13 +99,10 @@ def planning_page():
 
         now = datetime.now(ZoneInfo("Europe/Rome"))
         inizio = col3.datetime_input("Inizio", value=now)
-
-        # 🔥 FIX FONDAMENTALE
-        inizio = inizio.replace(tzinfo=ZoneInfo("Europe/Rome"))
-        
         durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
-        
+
         fine = inizio + timedelta(minutes=durata)
+
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
         # =========================
@@ -161,7 +136,7 @@ def planning_page():
 
                 nomi_membri.append(nome)
 
-                if str(matricola).strip().lower() in occupati_global:
+                if check_overlap_local(matricola, inizio, fine):
                     occupati.append(nome)
 
             # 👇 VISUALIZZAZIONE STATO
@@ -269,7 +244,9 @@ def planning_page():
                 lambda x: mappa_nome.get(str(x).strip().lower(), x)
             )
     
-               
+            df["inizio"] = pd.to_datetime(df["inizio"])
+            df["fine"] = pd.to_datetime(df["fine"])
+    
             df_display = df.copy()
     
             df_display["Operatore"] = df_display["operatore_nome"]
@@ -283,32 +260,32 @@ def planning_page():
                 hide_index=True
             )
         
-            # =========================
-            # LOOP RIGHE (PRO)
-            # =========================
-            for i, r in df.iterrows():
-            
-                with st.container():
-                    col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
-            
-                    col1.write(r["operatore_nome"])
-                    col2.write(r["attivita"])
-                    col3.write(r["inizio"].strftime("%H:%M"))
-                    col4.write(r["fine"].strftime("%H:%M"))
-            
-                    # =========================
-                    # ✏️ MODIFICA
-                    # =========================
-                    if col5.button("✏️", key=f"edit_{r['id']}"):
-                        st.session_state["edit_id"] = r["id"]
-            
-                    # =========================
-                    # 🗑️ CANCELLA
-                    # =========================
-                    if col5.button("🗑️", key=f"delete_{r['id']}"):
-                        supabase.table("planning").delete().eq("id", r["id"]).execute()
-                        get_planning.clear()
-                        st.rerun()
+        # =========================
+        # LOOP RIGHE (PRO)
+        # =========================
+        for i, r in df.iterrows():
+        
+            with st.container():
+                col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
+        
+                col1.write(r["operatore_nome"])
+                col2.write(r["attivita"])
+                col3.write(r["inizio"].strftime("%H:%M"))
+                col4.write(r["fine"].strftime("%H:%M"))
+        
+                # =========================
+                # ✏️ MODIFICA
+                # =========================
+                if col5.button("✏️", key=f"edit_{r['id']}"):
+                    st.session_state["edit_id"] = r["id"]
+        
+                # =========================
+                # 🗑️ CANCELLA
+                # =========================
+                if col5.button("🗑️", key=f"delete_{r['id']}"):
+                    supabase.table("planning").delete().eq("id", r["id"]).execute()
+                    get_planning.clear()
+                    st.rerun()
 
     # =========================
     # ✏️ MODIFICA ATTIVITÀ
@@ -361,39 +338,38 @@ def planning_page():
     # 📊 TIMELINE
     # =========================
     st.subheader("📊 Timeline Operatori")
-
-    if df.empty:
-        st.info("Nessuna attività da visualizzare")
-    else:
-        # mapping squadra
-        mappa_squadra = {
-            str(o.get("Matricola")).strip().lower(): o.get("Squadra")
-            for o in operatori_db
-        }
     
-        df["squadra"] = df["operatore"].apply(
-            lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
+    # mapping squadra
+    mappa_squadra = {
+        str(o.get("Matricola")).strip().lower(): o.get("Squadra")
+        for o in operatori_db
+    }
+    
+    df["squadra"] = df["operatore"].apply(
+        lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
+    )
+    
+    # sicurezza datetime
+    df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
+    df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
+    df = df.dropna(subset=["inizio", "fine"])
+    
+    if not df.empty:
+    
+        fig = px.timeline(
+            df,
+            x_start="inizio",
+            x_end="fine",
+            y="operatore_nome",
+            text="attivita",
+            color="squadra"
         )
+        fig.update_traces(textposition="inside")
     
-        df = df.dropna(subset=["inizio", "fine"])
+        fig.update_yaxes(autorange="reversed")
+        fig.update_layout(yaxis_title=None)
     
-        if df.empty:
-            st.warning("Nessun dato valido per la timeline")
-        else:
-            fig = px.timeline(
-                df,
-                x_start="inizio",
-                x_end="fine",
-                y="operatore_nome",
-                text="attivita",
-                color="squadra"
-            )
+        st.plotly_chart(fig, use_container_width=True)
     
-            fig.update_traces(textposition="inside")
-            fig.update_yaxes(autorange="reversed")
-            fig.update_layout(yaxis_title=None)
-    
-            st.plotly_chart(fig, use_container_width=True)
-
-
-    
+    else:
+        st.warning("Nessun dato per la timeline")
