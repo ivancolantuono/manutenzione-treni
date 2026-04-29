@@ -45,23 +45,23 @@ def planning_page():
     # =========================
     def check_overlap_local(matricola, inizio, fine):
 
-    if df.empty:
+        if df.empty:
+            return False
+    
+        now = datetime.now()
+    
+        records = df[df["operatore"] == matricola]
+    
+        for _, r in records.iterrows():
+    
+            # 🔥 IGNORA ATTIVITÀ GIÀ FINITE
+            if r["fine"] <= now:
+                continue
+    
+            if not (fine <= r["inizio"] or inizio >= r["fine"]):
+                return True
+    
         return False
-
-    now = datetime.now()
-
-    records = df[df["operatore"] == matricola]
-
-    for _, r in records.iterrows():
-
-        # 🔥 IGNORA ATTIVITÀ GIÀ FINITE
-        if r["fine"] <= now:
-            continue
-
-        if not (fine <= r["inizio"] or inizio >= r["fine"]):
-            return True
-
-    return False
 
     # =========================
     # 👷 LISTE
