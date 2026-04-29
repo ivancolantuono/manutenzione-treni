@@ -361,41 +361,42 @@ def planning_page():
     # 📊 TIMELINE
     # =========================
     st.subheader("📊 Timeline Operatori")
-    
-    # mapping squadra
-    mappa_squadra = {
-        str(o.get("Matricola")).strip().lower(): o.get("Squadra")
-        for o in operatori_db
-    }
-    
-    df["squadra"] = df["operatore"].apply(
-        lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
-    )
-    
-    # sicurezza datetime
-    df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
-    df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
-    df = df.dropna(subset=["inizio", "fine"])
-    
-    if not df.empty:
-    
-        fig = px.timeline(
-            df,
-            x_start="inizio",
-            x_end="fine",
-            y="operatore_nome",
-            text="attivita",
-            color="squadra"
-        )
-        fig.update_traces(textposition="inside")
-    
-        fig.update_yaxes(autorange="reversed")
-        fig.update_layout(yaxis_title=None)
-    
-        st.plotly_chart(fig, use_container_width=True)
-    
+
+    if df.empty:
+        st.info("Nessuna attività da visualizzare")
     else:
-        st.warning("Nessun dato per la timeline")
+        # mapping squadra
+        mappa_squadra = {
+            str(o.get("Matricola")).strip().lower(): o.get("Squadra")
+            for o in operatori_db
+        }
+    
+        df["squadra"] = df["operatore"].apply(
+            lambda x: mappa_squadra.get(str(x).strip().lower(), "N/A")
+        )
+    
+        # sicurezza datetime
+        df["inizio"] = pd.to_datetime(df["inizio"], errors="coerce")
+        df["fine"] = pd.to_datetime(df["fine"], errors="coerce")
+        df = df.dropna(subset=["inizio", "fine"])
+    
+        if df.empty:
+            st.warning("Nessun dato valido per la timeline")
+        else:
+            fig = px.timeline(
+                df,
+                x_start="inizio",
+                x_end="fine",
+                y="operatore_nome",
+                text="attivita",
+                color="squadra"
+            )
+    
+            fig.update_traces(textposition="inside")
+            fig.update_yaxes(autorange="reversed")
+            fig.update_layout(yaxis_title=None)
+    
+            st.plotly_chart(fig, use_container_width=True)
 
 
     
