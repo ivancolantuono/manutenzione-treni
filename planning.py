@@ -35,10 +35,9 @@ def planning_page():
     if not df.empty:
         df["inizio"] = pd.to_datetime(df["inizio"])
         df["fine"] = pd.to_datetime(df["fine"])
-        df["inizio"] = df["inizio"].dt.tz_localize(None)
-        df["fine"] = df["fine"].dt.tz_localize(None)
-
-    now = datetime.now()
+        df["inizio"] = pd.to_datetime(df["inizio"], utc=True).dt.tz_convert("Europe/Rome")
+        df["fine"] = pd.to_datetime(df["fine"], utc=True).dt.tz_convert("Europe/Rome")
+    now = datetime.now(ZoneInfo("Europe/Rome"))
     # =========================
     # 🟢🔴 STATO OPERATORI (LIVE) 
     # =========================
