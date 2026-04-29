@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 import plotly.express as px
 from db import supabase, get_operatori
 from streamlit_autorefresh import st_autorefresh
-st_autorefresh(interval=8000, key="refresh_planning")
+
 # =========================
 # 🔄 GET PLANNING
 # =========================
@@ -21,6 +21,8 @@ def get_planning():
 def planning_page():
 
     st.title("🧠 Pianificazione Operatori")
+    st_autorefresh(interval=8000, key="refresh_planning")
+    get_planning.clear()
 
     # =========================
     # 📥 DATI
@@ -36,6 +38,28 @@ def planning_page():
         df["inizio"] = df["inizio"].dt.tz_localize(None)
         df["fine"] = df["fine"].dt.tz_localize(None)
 
+    now = datetime.now()
+    # =========================
+    # 🟢🔴 STATO OPERATORI (LIVE) 
+    # =========================
+    occupati_global = set()
+    
+    if not df.empty:
+    
+        for _, r in df.iterrows():
+    
+            # 🔥 IGNORA attività finite
+    
+            if r["fine"] <= now:
+    
+                continue
+    
+            # 🔴 occupato se dentro intervallo
+    
+            if r["inizio"] <= now <= r["fine"]:
+    
+                occupati_global.add(str(r["operatore"]).strip().lower())
+
     # =========================
     # 🔍 CHECK OVERLAP (VELOCE)
     # =========================
@@ -43,13 +67,20 @@ def planning_page():
 
         if df.empty:
             return False
-
+    
+        now = datetime.now()
+    
         records = df[df["operatore"] == matricola]
-
+    
         for _, r in records.iterrows():
+    
+            # 🔥 IGNORA ATTIVITÀ GIÀ FINITE
+            if r["inizio"] <= now <= r["fine"]:
+                occupati_global.add(str(r["operatore"]).strip().lower())
+    
             if not (fine <= r["inizio"] or inizio >= r["fine"]):
                 return True
-
+    
         return False
 
     # =========================
@@ -125,7 +156,7 @@ def planning_page():
 
                 nomi_membri.append(nome)
 
-                if check_overlap_local(matricola, inizio, fine):
+                if matricola in occupati_global:
                     occupati.append(nome)
 
             # 👇 VISUALIZZAZIONE STATO
