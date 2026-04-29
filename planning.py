@@ -70,14 +70,17 @@ def planning_page():
     
         now = datetime.now()
     
-        records = df[df["operatore"] == matricola]
+        records = df[
+            df["operatore"].astype(str).str.strip().str.lower() == matricola
+        ]
     
         for _, r in records.iterrows():
     
-            # 🔥 IGNORA ATTIVITÀ GIÀ FINITE
-            if r["inizio"] <= now <= r["fine"]:
-                occupati_global.add(str(r["operatore"]).strip().lower())
+            # ignora attività finite
+            if r["fine"] <= now:
+                continue
     
+            # overlap vero
             if not (fine <= r["inizio"] or inizio >= r["fine"]):
                 return True
     
@@ -117,7 +120,7 @@ def planning_page():
 
         col3, col4 = st.columns(2)
 
-        now = datetime.now(ZoneInfo("Europe/Rome"))
+        now = datetime.now()
         inizio = col3.datetime_input("Inizio", value=now)
         durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
 
@@ -280,32 +283,32 @@ def planning_page():
                 hide_index=True
             )
         
-        # =========================
-        # LOOP RIGHE (PRO)
-        # =========================
-        for i, r in df.iterrows():
-        
-            with st.container():
-                col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
-        
-                col1.write(r["operatore_nome"])
-                col2.write(r["attivita"])
-                col3.write(r["inizio"].strftime("%H:%M"))
-                col4.write(r["fine"].strftime("%H:%M"))
-        
-                # =========================
-                # ✏️ MODIFICA
-                # =========================
-                if col5.button("✏️", key=f"edit_{r['id']}"):
-                    st.session_state["edit_id"] = r["id"]
-        
-                # =========================
-                # 🗑️ CANCELLA
-                # =========================
-                if col5.button("🗑️", key=f"delete_{r['id']}"):
-                    supabase.table("planning").delete().eq("id", r["id"]).execute()
-                    get_planning.clear()
-                    st.rerun()
+            # =========================
+            # LOOP RIGHE (PRO)
+            # =========================
+            for i, r in df.iterrows():
+            
+                with st.container():
+                    col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
+            
+                    col1.write(r["operatore_nome"])
+                    col2.write(r["attivita"])
+                    col3.write(r["inizio"].strftime("%H:%M"))
+                    col4.write(r["fine"].strftime("%H:%M"))
+            
+                    # =========================
+                    # ✏️ MODIFICA
+                    # =========================
+                    if col5.button("✏️", key=f"edit_{r['id']}"):
+                        st.session_state["edit_id"] = r["id"]
+            
+                    # =========================
+                    # 🗑️ CANCELLA
+                    # =========================
+                    if col5.button("🗑️", key=f"delete_{r['id']}"):
+                        supabase.table("planning").delete().eq("id", r["id"]).execute()
+                        get_planning.clear()
+                        st.rerun()
 
     # =========================
     # ✏️ MODIFICA ATTIVITÀ
