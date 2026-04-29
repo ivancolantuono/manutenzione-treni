@@ -48,7 +48,7 @@ def planning_page():
         if df.empty:
             return False
     
-        now = datetime.now()
+        now = datetime.now(ZoneInfo("Europe/Rome"))
     
         records = df[df["operatore"] == matricola]
     
