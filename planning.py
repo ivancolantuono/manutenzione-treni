@@ -31,6 +31,15 @@ def planning_page():
     dati = get_planning()
 
     df = pd.DataFrame(dati)
+    dati_interventi = supabase.table("interventi").select("*").execute().data
+    df_interventi = pd.DataFrame(dati_interventi)
+    
+    if not df_interventi.empty:
+        df_interventi = df_interventi.rename(columns={
+            "descrizione": "attivita"   # adattalo se serve
+        })
+    
+        df = pd.concat([df, df_interventi], ignore_index=True)
 
     if not df.empty:
         df["inizio"] = pd.to_datetime(df["inizio"])
