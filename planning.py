@@ -20,7 +20,7 @@ def get_planning():
 # =========================
 def planning_page():
 
-    st.title("🧠 Pianificazione Operatori")
+    st.title("🗓️ Pianificazione Operatori")
     st_autorefresh(interval=8000, key="refresh_planning")
     get_planning.clear()
 
