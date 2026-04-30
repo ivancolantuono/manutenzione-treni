@@ -407,8 +407,8 @@ if modalita == "CAPOSQUADRA":
             "🗓️ PLANNING",
             "📊 DASHBOARD",
             "📊 STORICO",
-            "📚 SCHEDE SR",
-            "📚 SCHEDE SR VZI6",
+            "📇 SCHEDE SR",
+            "📇 SCHEDE SR VZI6",
             "⚙️ CERCA COMPONENTE",
             "📌 OPEN ITEM"
             
@@ -420,8 +420,8 @@ else:
         "",
         [
             "🚄 MANUTENZIONE",
-            "📚 SCHEDE SR",
-            "📚 SCHEDE SR VZI6",
+            "📇 SCHEDE SR",
+            "📇 SCHEDE SR VZI6",
             "📌 OPEN ITEM",
             "⚙️ CERCA COMPONENTE"
         ],
@@ -1214,12 +1214,12 @@ elif menu == "⚙️ CERCA COMPONENTE":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "📚 SCHEDE SR":
+elif menu == "📇 SCHEDE SR":
 
     import pandas as pd
     import re
 
-    st.title("📚 Ricerca Schede SR")
+    st.title("📇 Ricerca Schede SR")
 
     # =========================
     # 📥 CARICAMENTO
@@ -1884,12 +1884,12 @@ elif menu == "📌 OPEN ITEM":
 # =========================
 # 📚 SCHEDE SR VZI6 (SUPABASE)
 # =========================
-elif menu == "📚 SCHEDE SR VZI6":
+elif menu == "📇 SCHEDE SR VZI6":
 
     import pandas as pd
     import re
 
-    st.title("📚 Ricerca Schede SR VZI6")
+    st.title("📇 Ricerca Schede SR VZI6")
 
     # =========================
     # 📥 CARICAMENTO
@@ -1932,7 +1932,7 @@ elif menu == "📚 SCHEDE SR VZI6":
     # CACHE
     # =========================
     if "schede_sr_vzi6" not in st.session_state:
-        with st.spinner("🔄 Caricamento schede SR..."):
+        with st.spinner("🔄 Caricamento schede SR VZI6..."):
             st.session_state.schede_sr_vzi6 = carica_schede()
 
     df_sr = st.session_state.schede_sr_vzi6
