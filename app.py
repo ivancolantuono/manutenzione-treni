@@ -403,15 +403,14 @@ if modalita == "CAPOSQUADRA":
     menu = st.radio(
         "",
         [
+            "📌 OPEN ITEM",
+            "📇 SCHEDE SR",
+            "📇 SCHEDE SR VZI6",
             "🚄 MANUTENZIONE",
             "🗓️ PLANNING",
             "📊 DASHBOARD",
-            "📊 STORICO",
-            "📇 SCHEDE SR",
-            "📇 SCHEDE SR VZI6",
-            "⚙️ CERCA COMPONENTE",
-            "📌 OPEN ITEM"
-            
+            "📊 STORICO",            
+            "⚙️ CERCA COMPONENTE"      
         ],
         horizontal=True,
     )
@@ -419,10 +418,10 @@ else:
     menu = st.radio(
         "",
         [
-            "🚄 MANUTENZIONE",
+            "📌 OPEN ITEM",
             "📇 SCHEDE SR",
             "📇 SCHEDE SR VZI6",
-            "📌 OPEN ITEM",
+            "🚄 MANUTENZIONE",
             "⚙️ CERCA COMPONENTE"
         ],
         horizontal=True
