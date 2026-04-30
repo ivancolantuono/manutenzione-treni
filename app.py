@@ -404,13 +404,14 @@ if modalita == "CAPOSQUADRA":
         "",
         [
             "🚄 MANUTENZIONE",
+            "🗓️ PLANNING",
             "📊 DASHBOARD",
             "📊 STORICO",
             "📚 SCHEDE SR",
             "📚 SCHEDE SR VZI6",
             "⚙️ CERCA COMPONENTE",
-            "📌 OPEN ITEM",
-            "🧠 PLANNING"
+            "📌 OPEN ITEM"
+            
         ],
         horizontal=True,
     )
@@ -2071,5 +2072,5 @@ elif menu == "📚 SCHEDE SR VZI6":
             st.caption(f"📂 {sottogruppo}")
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
 
-elif menu == "🧠 PLANNING":
+elif menu == "🗓️ PLANNING":
     planning_page()
