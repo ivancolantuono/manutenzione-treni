@@ -33,7 +33,35 @@ def planning_page():
     df = pd.DataFrame(dati)
     dati_interventi = supabase.table("interventi").select("*").execute().data
     df_interventi = pd.DataFrame(dati_interventi)
+
+    # ✅ rinomina colonne
+    df_interventi = df_interventi.rename(columns={
+        "tecnico": "operatore",
+        "intervento": "attivita"
+    })
     
+    # ✅ estrai matricola da json
+    df_interventi["operatore"] = df_interventi["operatore"].apply(
+        lambda x: x.get("matricola") if isinstance(x, dict) else None
+    )
+    
+    # ✅ conversione date (fondamentale)
+    df_interventi["inizio"] = pd.to_datetime(
+        df_interventi["inizio"],
+        errors="coerce"
+    )
+    
+    df_interventi["fine"] = pd.to_datetime(
+        df_interventi["fine"],
+        errors="coerce"
+    )
+    
+    # ✅ elimina righe rotte
+    df_interventi = df_interventi.dropna(subset=["inizio", "fine"])
+    
+    # ✅ uniforma formato operatore
+    df_interventi["operatore"] = df_interventi["operatore"].astype(str).str.strip().str.lower()
+        
     if not df_interventi.empty:
         df_interventi = df_interventi.rename(columns={
             "descrizione": "attivita"   # adattalo se serve
