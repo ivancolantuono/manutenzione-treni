@@ -566,7 +566,7 @@ def openitem_page():
                         st.link_button(f"📎 Allegato {i+1}", url)
             
                     # ⬇️ download
-                    colB.markdown(
+                    st.markdown(
                         f'<a href="{url}" download target="_blank">⬇️</a>',
                         unsafe_allow_html=True
                     )
