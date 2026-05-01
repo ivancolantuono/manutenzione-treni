@@ -434,14 +434,14 @@ def openitem_page():
 
     for item in valutazione:
         
+        id = item["id"]
+        
         nuovi_allegati_val = st.file_uploader(
             "📎 Aggiungi allegati",
             type=["pdf","jpg","png","xlsx","txt"],
             accept_multiple_files=True,
             key=f"file_val_{id}"
         )
-
-        id = item["id"]
 
         with st.expander(f"🟡 {item['treno']} - {item['descrizione']}"):
 
