@@ -294,8 +294,7 @@ if not st.session_state.logged_in:
                             "Nominativo": f"{format_nome(cognome)} {format_nome(nome)}",
                             "Telefono": ""
                         }).execute()
-                        get_utenti.clear()
-                        get_operatori.clear()
+                     
 
                     st.success("✅ Registrazione completata!")
 
