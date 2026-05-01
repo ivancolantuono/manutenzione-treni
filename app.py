@@ -187,7 +187,7 @@ if not st.session_state.logged_in:
         pagina = st.segmented_control(
             "",
             ["🔐Login", "🆕Registrazione", "🔑Reset Password"],
-            
+            default="🔐Login",
             key="pagina_login"
         )
 
@@ -243,7 +243,7 @@ if not st.session_state.logged_in:
         # =========================
         # 🆕REGISTRAZIONE
         # =========================
-        elif pagina == "🆕 Registrazione":
+        elif pagina == "🆕Registrazione":
 
             st.markdown("## 🆕 Registrazione")
 
