@@ -1402,7 +1402,7 @@ elif menu == "📇 SCHEDE SR":
             st.caption(f"📂 {sottogruppo}")
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
             
-elif menu == "📌 OPEN ITEM"
+elif menu == "📌 OPEN ITEM":
     openitem_page()
 
                 
