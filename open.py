@@ -571,7 +571,7 @@ def openitem_page():
 
             st.text_area(
                 "🔒 Lavorazioni",
-                value=item.get("lavorazioni","")
+                value=item.get("lavorazioni",""),
                 disabled=True,
                 key=f"view_{id}"
             )
