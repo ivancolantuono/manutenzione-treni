@@ -194,7 +194,7 @@ if not st.session_state.logged_in:
         # =========================
         # 🔐 LOGIN
         # =========================
-        if pagina == "🔐 Login":
+        if pagina == "🔐Login":
 
             st.markdown("## 🔐 Login")
 
@@ -241,7 +241,7 @@ if not st.session_state.logged_in:
                     st.error("❌ Credenziali errate")
 
         # =========================
-        # 🆕 REGISTRAZIONE
+        # 🆕REGISTRAZIONE
         # =========================
         elif pagina == "🆕 Registrazione":
 
@@ -307,7 +307,7 @@ if not st.session_state.logged_in:
         # =========================
         # 🔑 RESET PASSWORD
         # =========================
-        elif pagina == "🔑 Reset Password":
+        elif pagina == "🔑Reset Password":
 
             st.markdown("## 🔑 Reset Password")
 
