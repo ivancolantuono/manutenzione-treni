@@ -542,6 +542,35 @@ def openitem_page():
             st.write(f"👤 {item.get('utente','-')}")
             st.write(f"📅 {formatta_data(item.get('data_creazione'))}")
 
+            allegati = item.get("allegati")
+
+            # 🔧 sicurezza (stringa → lista)
+            if isinstance(allegati, str):
+                import json
+                try:
+                    allegati = json.loads(allegati)
+                except:
+                    allegati = []
+            
+            if allegati:
+                st.markdown("### 📎 Allegati")
+            
+                for i, url in enumerate(allegati):
+            
+                    colA, colB = st.columns([4,1])
+            
+                    # 👁️ visualizza
+                    if url.endswith((".jpg",".png",".jpeg")):
+                        st.image(url, width=200)
+                    else:
+                        st.link_button(f"📎 Allegato {i+1}", url)
+            
+                    # ⬇️ download
+                    colB.markdown(
+                        f'<a href="{url}" download target="_blank">⬇️</a>',
+                        unsafe_allow_html=True
+                    )
+
             st.text_area(
                 "🔒 Lavorazioni",
                 value=item.get("lavorazioni",""),
