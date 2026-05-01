@@ -186,7 +186,7 @@ if not st.session_state.logged_in:
 
         pagina = st.segmented_control(
             "",
-            ["🔐 Login", "🆕 Registrazione", "🔑 Reset Password"],
+            ["🔐Login", "🆕Registrazione", "🔑Reset Pass."],
             
             key="pagina_login"
         )
