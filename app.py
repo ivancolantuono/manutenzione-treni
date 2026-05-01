@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from datetime import date, datetime
 from supabase import create_client
 from planning import planning_page
+from open import openitem_page
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
@@ -1402,7 +1403,7 @@ elif menu == "📇 SCHEDE SR":
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
             
 elif menu == "📌 OPEN ITEM"
-    planning_page()
+    openitem_page()
 
                 
 # =========================
