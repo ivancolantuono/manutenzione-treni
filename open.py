@@ -553,7 +553,7 @@ def openitem_page():
                     allegati = []
             
             if allegati:
-                st.markdown("### 📎 Allegati")
+                st.markdown("### 🖇️ Allegati")
             
                 for i, url in enumerate(allegati):
             
