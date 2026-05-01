@@ -182,7 +182,7 @@ if not st.session_state.logged_in:
 
         st.image("frecciarossa.jpg", width=1000)
 
-        pagina = st.radio(
+        pagina = st.segmented_control(
             "",
             ["🔐 Login", "🆕 Registrazione", "🔑 Reset Password"],
             horizontal=True,
