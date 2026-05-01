@@ -401,20 +401,11 @@ st.divider()
 # MENU ORIZZONTALE
 # =========================
 if modalita == "CAPOSQUADRA":
-    menu = st.radio(
-        "",
-        [
-            "📌 OPEN ITEM",
-            "📇 SCHEDE SR",
-            "📇 SCHEDE SR VZI6",
-            "🚄 MANUTENZIONE",
-            "🗓️ PLANNING",
-            "📊 DASHBOARD",
-            "📊 STORICO",            
-            "⚙️ CERCA COMPONENTE"      
-        ],
-        horizontal=True,
-    )
+    menu = st.segmented_control(
+    "Navigazione",
+    ["Open Item", "Manutenzione", "Planning", "Dashboard", "Storico"],
+    default="Open Item"
+)
 else:
     menu = st.radio(
         "",
