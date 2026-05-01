@@ -63,6 +63,24 @@ def openitem_page():
             if l.get("campo"):
                 st.caption(f"{l['campo']}: {l.get('valore_nuovo','')}")
 
+    def carica_allegati(files):
+        urls = []
+    
+        if files:
+            for file in files:
+                file_path = f"open_item/{datetime.now().timestamp()}_{file.name}"
+    
+                supabase.storage.from_("allegati").upload(
+                    file_path,
+                    file.getvalue(),
+                    {"content-type": file.type}
+                )
+    
+                url = supabase.storage.from_("allegati").get_public_url(file_path)
+                urls.append(url)
+    
+        return urls
+
     # ============================
     # UI
     # ============================
@@ -248,19 +266,43 @@ def openitem_page():
                 value=item.get("avanzamento","") or "",
                 key=f"av_{id}"
             )
+            nuovi_allegati = st.file_uploader(
+                "📎 Aggiungi allegati",
+                type=["pdf","jpg","png","xlsx","txt"],
+                accept_multiple_files=True,
+                key=f"file_update_{id}"
+            )
 
             col1, col2, col3, col4, col5 = st.columns(5)
 
             # 🟡 MONITORAGGIO (SALVA + VALUTAZIONE)
             if col1.button("🟡 Monitoraggio", key=f"monitor_{id}"):
-            
+
                 if not avanzamento.strip():
                     st.error("Inserisci avanzamento")
                     st.stop()
             
+                # 📎 allegati esistenti
+                allegati_attuali = item.get("allegati") or []
+            
+                if isinstance(allegati_attuali, str):
+                    import json
+                    try:
+                        allegati_attuali = json.loads(allegati_attuali)
+                    except:
+                        allegati_attuali = []
+            
+                # 📤 nuovi file
+                nuovi_url = carica_allegati(nuovi_allegati)
+            
+                # 🔗 merge
+                allegati_finali = allegati_attuali + nuovi_url
+            
+                # 💾 update
                 supabase.table("open_item").update({
                     "avanzamento": avanzamento.strip(),
-                    "stato": "VALUTAZIONE"
+                    "stato": "VALUTAZIONE",
+                    "allegati": allegati_finali
                 }).eq("id", id).execute()
             
                 salva_log(
@@ -281,16 +323,34 @@ def openitem_page():
                 if not lavori.strip():
                     st.error("Inserisci lavorazioni")
                     st.stop()
-
+            
+                # 📎 allegati esistenti
+                allegati_attuali = item.get("allegati") or []
+            
+                if isinstance(allegati_attuali, str):
+                    import json
+                    try:
+                        allegati_attuali = json.loads(allegati_attuali)
+                    except:
+                        allegati_attuali = []
+            
+                # 📤 nuovi file
+                nuovi_url = carica_allegati(nuovi_allegati)
+            
+                # 🔗 merge
+                allegati_finali = allegati_attuali + nuovi_url
+            
+                # 💾 update
                 supabase.table("open_item").update({
                     "stato": "CHIUSO",
                     "lavorazioni": lavori.strip(),
                     "data_chiusura": ora_italia_iso(),
-                    "utente_chiusura": utente_loggato
+                    "utente_chiusura": utente_loggato,
+                    "allegati": allegati_finali
                 }).eq("id", id).execute()
-
+            
                 salva_log(id,"CHIUSURA",utente_loggato,"","CHIUSO","stato")
-
+            
                 get_open_item_fast.clear()
                 st.rerun()
                 
@@ -373,6 +433,13 @@ def openitem_page():
     st.subheader("🟡 Monitoraggio")
 
     for item in valutazione:
+        
+        nuovi_allegati_val = st.file_uploader(
+            "📎 Aggiungi allegati",
+            type=["pdf","jpg","png","xlsx","txt"],
+            accept_multiple_files=True,
+            key=f"file_val_{id}"
+        )
 
         id = item["id"]
 
@@ -408,16 +475,29 @@ def openitem_page():
                 if not lavori.strip():
                     st.error("Inserisci lavorazioni")
                     st.stop()
-
+            
+                allegati_attuali = item.get("allegati") or []
+            
+                if isinstance(allegati_attuali, str):
+                    import json
+                    try:
+                        allegati_attuali = json.loads(allegati_attuali)
+                    except:
+                        allegati_attuali = []
+            
+                nuovi_url = carica_allegati(nuovi_allegati_val)
+                allegati_finali = allegati_attuali + nuovi_url
+            
                 supabase.table("open_item").update({
                     "stato": "CHIUSO",
                     "lavorazioni": lavori.strip(),
                     "data_chiusura": ora_italia_iso(),
-                    "utente_chiusura": utente_loggato
+                    "utente_chiusura": utente_loggato,
+                    "allegati": allegati_finali
                 }).eq("id", id).execute()
-
+            
                 salva_log(id,"CHIUSURA",utente_loggato,"","CHIUSO","stato")
-
+            
                 get_open_item_fast.clear()
                 st.rerun()
 
