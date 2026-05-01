@@ -413,10 +413,10 @@ if modalita == "CAPOSQUADRA":
             "📊 STORICO",            
             "⚙️ CERCA COMPONENTE"      
         ],
-        
+        default="📌 OPEN ITEM",
     )
 else:
-    menu = st.radio(
+    menu = st.segmented_control(
         "",
         [
             "📌 OPEN ITEM",
@@ -425,7 +425,7 @@ else:
             "🚄 MANUTENZIONE",
             "⚙️ CERCA COMPONENTE"
         ],
-        horizontal=True
+        default="📌 OPEN ITEM",
     )
 
 # =========================
