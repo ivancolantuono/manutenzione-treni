@@ -557,7 +557,7 @@ def openitem_page():
             
                 for i, url in enumerate(allegati):
             
-                    colA, colB = st.columns([4,1])
+                    colA, colB = st.columns([4,4])
             
                     # 👁️ visualizza
                     if url.endswith((".jpg",".png",".jpeg")):
