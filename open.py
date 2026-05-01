@@ -557,8 +557,6 @@ def openitem_page():
             
                 for i, url in enumerate(allegati):
             
-                    colA, colB = st.columns([4,4])
-            
                     # 👁️ visualizza
                     if url.endswith((".jpg",".png",".jpeg")):
                         st.image(url, width=200)
@@ -573,7 +571,7 @@ def openitem_page():
 
             st.text_area(
                 "🔒 Lavorazioni",
-                value=item.get("lavorazioni",""),
+                value=item.get("lavorazioni","")
                 disabled=True,
                 key=f"view_{id}"
             )
