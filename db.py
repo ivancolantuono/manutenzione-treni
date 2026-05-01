@@ -16,3 +16,7 @@ def get_operatori():
 def get_planning():
     res = supabase.table("planning").select("*").execute()
     return res.data or []
+
+def get_utenti():
+    res = supabase.table("utenti").select("*").execute()
+    return res.data or []
