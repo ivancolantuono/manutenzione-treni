@@ -413,7 +413,7 @@ if modalita == "CAPOSQUADRA":
             "📊 STORICO",            
             "⚙️ CERCA COMPONENTE"      
         ],
-        horizontal=True,
+        
     )
 else:
     menu = st.radio(
