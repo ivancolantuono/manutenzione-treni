@@ -5,6 +5,7 @@ from datetime import date, datetime
 from supabase import create_client
 from planning import planning_page
 from open import openitem_page
+from db import get_utenti
 from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
