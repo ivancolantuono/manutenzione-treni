@@ -435,13 +435,6 @@ def openitem_page():
     for item in valutazione:
         
         id = item["id"]
-        
-        nuovi_allegati_val = st.file_uploader(
-            "📎 Aggiungi allegati",
-            type=["pdf","jpg","png","xlsx","txt"],
-            accept_multiple_files=True,
-            key=f"file_val_{id}"
-        )
 
         with st.expander(f"🟡 {item['treno']} - {item['descrizione']}"):
 
@@ -455,6 +448,12 @@ def openitem_page():
                 "📈 Avanzamento",
                 value=item.get("avanzamento","") or "",
                 key=f"av_val_{id}"
+            )
+            nuovi_allegati_val = st.file_uploader(
+                "📎 Aggiungi allegati",
+                type=["pdf","jpg","png","xlsx","txt"],
+                accept_multiple_files=True,
+                key=f"file_val_{id}"
             )
 
             col1, col2, col3, col4 = st.columns(4)
