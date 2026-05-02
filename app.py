@@ -552,7 +552,8 @@ if menu == "📊 STORICO":
 # =========================
 elif menu == "🚄 MANUTENZIONE":
     
-    st_autorefresh(interval=10000, key="refresh_manutenzione")
+    if not st.session_state.get("mostra", False):
+        st_autorefresh(interval=15000, key="refresh_manutenzione")
 
     st.markdown("""
     <h1 style='margin-bottom:0;'>🚄 Gestione Manutenzione</h1>
@@ -625,6 +626,13 @@ elif menu == "🚄 MANUTENZIONE":
                     scelte,
                     index=scelte.index(st.session_state.scadenza)
                 )
+                # 🔥 RESET AUTO REFRESH
+
+                if "scadenza_old" not in st.session_state:
+                    st.session_state.scadenza_old = st.session_state.scadenza
+                if st.session_state.scadenza != st.session_state.scadenza_old:
+                    st.session_state.mostra = False
+                st.session_state.scadenza_old = st.session_state.scadenza
     
             st.session_state.data = st.date_input(
                 "📅 Data",
