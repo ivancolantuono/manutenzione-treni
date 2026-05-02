@@ -430,6 +430,15 @@ def get_database_manutenzione():
     res = supabase.table("database_manutenzione").select("*").execute()
     return res.data or []
 
+def load_database():
+    return get_database_manutenzione()
+
+def load_operatori():
+    return get_operatori()
+
+def load_interventi():
+    return get_interventi()
+
 # 👉 converte in DataFrame
 rows_db = get_database_manutenzione()
 df = pd.DataFrame(rows_db)
@@ -442,8 +451,6 @@ rows = get_interventi()
 # =========================
 # 👷 OPERATORI DA SUPABASE
 # =========================
-
-operatori_db = get_operatori()
 
 operatori = [
     o.get("Nominativo")
@@ -577,9 +584,14 @@ elif menu == "🚄 MANUTENZIONE":
     # =========================
     # DATI
     # =========================
-    rows = get_interventi()
-
-    operatori = [o.get("Nominativo") for o in operatori_db if o.get("Nominativo")]
+    rows = load_interventi()
+    operatori_db = load_operatori()
+    
+    operatori = [
+        o.get("Nominativo")
+        for o in operatori_db
+        if o.get("Nominativo")
+    ]
     
     # =========================
     # 👨‍🔧 CAPOSQUADRA
@@ -966,7 +978,9 @@ elif menu == "📊 DASHBOARD":
     # =========================
     # DATI
     # =========================
-    rows = get_interventi()
+    rows = load_interventi()
+    operatori_db = load_operatori()
+    
     df = pd.DataFrame(rows)
 
     if df.empty:
