@@ -578,7 +578,6 @@ elif menu == "🚄 MANUTENZIONE":
     # =========================
     rows = get_interventi()
 
-    operatori_db = get_operatori()
     operatori = [o.get("Nominativo") for o in operatori_db if o.get("Nominativo")]
     
     # =========================
@@ -976,8 +975,7 @@ elif menu == "📊 DASHBOARD":
     # =========================
     # 🔁 MAPPA MATRICOLA → NOME
     # =========================
-    operatori_db = get_operatori()
-
+   
     mappa_operatori = {
         str(o.get("Matricola","")).strip().lower(): o.get("Nominativo","")
         for o in operatori_db
