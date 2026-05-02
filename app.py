@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
+import os
 from zoneinfo import ZoneInfo
 from datetime import date, datetime
-from supabase import create_client
+from db import supabase
 from planning import planning_page
 from open import openitem_page
 from db import get_utenti
@@ -119,15 +120,6 @@ label {
 }
 </style>
 """, unsafe_allow_html=True)
-# =========================
-# SUPABASE
-# =========================
-import os
-
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
-
-supabase = create_client(url, key)
 
 @st.cache_data(ttl=5)
 def get_interventi():
@@ -449,10 +441,6 @@ rows = get_interventi()
 # =========================
 # 👷 OPERATORI DA SUPABASE
 # =========================
-@st.cache_data(ttl=60)
-def get_operatori():
-    res = supabase.table("operatori").select("*").execute()
-    return res.data or []
 
 operatori_db = get_operatori()
 
