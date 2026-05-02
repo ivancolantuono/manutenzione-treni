@@ -8,7 +8,7 @@ from streamlit_autorefresh import st_autorefresh
 
 
 def openitem_page():
-    
+    st_autorefresh(interval=10000, key="auto_refresh_openitem")
     from zoneinfo import ZoneInfo
 
     utente_loggato = st.session_state.get("utente", "Sconosciuto")
@@ -28,7 +28,7 @@ def openitem_page():
         except:
             return data_str
 
-    @st.cache_data(ttl=30)
+    @st.cache_data(ttl=5)
     def get_open_item_fast():
         return supabase.table("open_item")\
             .select("id,treno,cassa,impianto,descrizione,stato,utente,data_creazione,avanzamento,lavorazioni,data_chiusura,utente_chiusura,allegati")\
