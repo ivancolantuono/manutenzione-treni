@@ -465,8 +465,6 @@ if "mostra" not in st.session_state:
 
 if menu == "📊 STORICO":
 
-    st_autorefresh(interval=10000, key="refresh_storico")
-
     st.title("📊 Storico Attività")
 
     # 🔥 RICARICA DATI SEMPRE
@@ -613,7 +611,11 @@ elif menu == "🚄 MANUTENZIONE":
                 )
     
             with col3:
-                scelte = list(df["Scadenza"].unique())
+                if "Scadenza" not in df.columns or df.empty:
+                    st.error("Database manutenzione vuoto o colonna 'Scadenza' mancante")
+                    st.stop()
+                
+                scelte = sorted(df["Scadenza"].dropna().unique())
     
                 if st.session_state.scadenza not in scelte:
                     st.session_state.scadenza = scelte[0]
@@ -965,8 +967,6 @@ elif menu == "🚄 MANUTENZIONE":
 elif menu == "📊 DASHBOARD":
 
     import ast
-
-    st_autorefresh(interval=10000, key="refresh_dashboard")
 
     st.title("📊 Dashboard Caposquadra")
     
