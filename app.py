@@ -440,17 +440,19 @@ def load_interventi():
     return get_interventi()
 
 # 👉 converte in DataFrame
-rows_db = get_database_manutenzione()
+rows_db = load_database()
 df = pd.DataFrame(rows_db)
 
 # 👉 sicurezza colonne
 if not df.empty:
     df.columns = df.columns.str.strip()
-rows = get_interventi()
+rows = load_interventi()
 
 # =========================
 # 👷 OPERATORI DA SUPABASE
 # =========================
+
+operatori_db = load_operatori()
 
 operatori = [
     o.get("Nominativo")
