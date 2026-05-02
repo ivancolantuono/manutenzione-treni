@@ -682,7 +682,7 @@ elif menu == "🚄 MANUTENZIONE":
             risultati = df[df["Scadenza"] == st.session_state.scadenza]
     
             # ✅ PRENDE I DATI DAL DB
-            interventi_db = rows
+            interventi_db = supabase.table("interventi").select("*").execute().data or []
     
             for i, r in risultati.iterrows():
     
