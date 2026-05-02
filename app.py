@@ -470,7 +470,7 @@ if menu == "📊 STORICO":
     st.title("📊 Storico Attività")
 
     # 🔥 RICARICA DATI SEMPRE
-    rows = get_interventi()
+    rows = load_interventi()
 
     df = pd.DataFrame(rows)
 
@@ -581,13 +581,6 @@ elif menu == "🚄 MANUTENZIONE":
 
     if "mostra" not in st.session_state:
         st.session_state.mostra = False
-
-
-    # =========================
-    # DATI
-    # =========================
-    rows = load_interventi()
-    operatori_db = load_operatori()
     
     operatori = [
         o.get("Nominativo")
@@ -976,12 +969,6 @@ elif menu == "📊 DASHBOARD":
     st_autorefresh(interval=10000, key="refresh_dashboard")
 
     st.title("📊 Dashboard Caposquadra")
-
-    # =========================
-    # DATI
-    # =========================
-    rows = load_interventi()
-    operatori_db = load_operatori()
     
     df = pd.DataFrame(rows)
 
