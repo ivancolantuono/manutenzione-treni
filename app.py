@@ -632,14 +632,22 @@ elif menu == "🚄 MANUTENZIONE":
                     st.stop()
                 
                 scelte = sorted(df["Scadenza"].dropna().unique())
-    
-                if st.session_state.scadenza not in scelte:
+
+                if not scelte:
+                    st.warning("⚠️ Nessuna scadenza disponibile")
+                    st.stop()
+                
+                # 🔥 indice safe
+                try:
+                    idx = scelte.index(st.session_state.scadenza)
+                except:
+                    idx = 0
                     st.session_state.scadenza = scelte[0]
-    
+                
                 st.session_state.scadenza = st.selectbox(
                     "📋 Scadenza",
                     scelte,
-                    index=scelte.index(st.session_state.scadenza)
+                    index=idx
                 )
                 # 🔥 RESET AUTO REFRESH
 
