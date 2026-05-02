@@ -610,6 +610,21 @@ elif menu == "🚄 MANUTENZIONE":
                     "📝 ODL Padre",
                     value=st.session_state.odl
                 )
+
+            if "treno_old" not in st.session_state:
+                st.session_state.treno_old = st.session_state.treno
+            
+            if "odl_old" not in st.session_state:
+                st.session_state.odl_old = st.session_state.odl
+            
+            if (
+                st.session_state.treno != st.session_state.treno_old
+                or st.session_state.odl != st.session_state.odl_old
+            ):
+                st.session_state.mostra = False
+            
+            st.session_state.treno_old = st.session_state.treno
+            st.session_state.odl_old = st.session_state.odl
     
             with col3:
                 if "Scadenza" not in df.columns or df.empty:
