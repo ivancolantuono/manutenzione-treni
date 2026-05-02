@@ -552,8 +552,13 @@ if menu == "📊 STORICO":
 # =========================
 elif menu == "🚄 MANUTENZIONE":
     
-    if not st.session_state.get("mostra", False):
-        st_autorefresh(interval=15000, key="refresh_manutenzione")
+    # 🔥 attiva refresh SOLO quando sei in idle reale
+    if (
+        not st.session_state.get("mostra", False)
+        and not st.session_state.get("treno")
+        and not st.session_state.get("odl")
+    ):
+        st_autorefresh(interval=30000, key="refresh_manutenzione")
 
     st.markdown("""
     <h1 style='margin-bottom:0;'>🚄 Gestione Manutenzione</h1>
