@@ -432,7 +432,7 @@ def openitem_page():
     # 🟡 VALUTAZIONE
     # ============================
 
-    with st.expander("🟡 Monitoraggio", expanded=True):
+    with st.expander("**🟡 Monitoraggio**", expanded=True):
 
         for item in valutazione:
     
