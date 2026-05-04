@@ -215,16 +215,14 @@ def openitem_page():
 
     st.subheader("🔴 Attività Aperte")
 
-        with st.expander(
-            f"🔴 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
-            expanded=False
-        ):
     for item in aperti:
 
         id = item["id"]
 
-        with st.expander(f"🔴 {item['treno']} - {item['descrizione']}"):
-
+        with st.expander(
+            f"🔴 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
+            expanded=False
+        ):
             in_modifica = st.session_state.edit_item_id == id
 
             cassa_edit = st.text_input(
