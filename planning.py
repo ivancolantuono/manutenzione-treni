@@ -140,14 +140,14 @@ def planning_page():
                     occupati.append(nome)
 
             # 👇 VISUALIZZAZIONE STATO
-            
+            selezionati = st.multiselect("Seleziona operatori", nomi_membri)
             for nome in nomi_membri:
                 if nome in occupati:
                     st.markdown(f"🔴 {nome} (occupato)")
                 else:
                     st.markdown(f"🟢 {nome}")
 
-            selezionati = st.multiselect("Seleziona operatori", nomi_membri)
+            
 
         # =========================
         # 🚀 ASSEGNA
