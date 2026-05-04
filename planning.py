@@ -148,9 +148,7 @@ def planning_page():
                     st.markdown(f"🔴 {nome} (occupato)")
                 else:
                     st.markdown(f"🟢 {nome}")
-
-            selezionati = st.multiselect("Seleziona operatori", nomi_membri)
-
+            
         # =========================
         # 🚀 ASSEGNA
         # =========================
