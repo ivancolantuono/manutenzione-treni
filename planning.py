@@ -89,7 +89,7 @@ def planning_page():
 
         modo = col1.radio(
             "**Assegna a:**",
-            ["**Operatore**", "**Squadra**"],
+            ["Operatore", "Squadra"],
             horizontal=True
         )
 
