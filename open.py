@@ -214,6 +214,10 @@ def openitem_page():
     # ============================
 
     with st.expander("**🔴 ATTIVITA' APERTE 🔴**", expanded=False):
+        
+        for item in aperti:
+
+            id = item["id"]
     
             with st.expander(
                 f"🔴 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
