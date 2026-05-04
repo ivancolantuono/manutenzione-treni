@@ -529,65 +529,65 @@ def openitem_page():
     # 🟢 CHIUSI
     # ============================
 
-    st.subheader("🟢 Attività Chiuse")
-
-    for item in chiusi:
-
-        id = item["id"]
-
-        with st.expander(f"🟢 {item['treno']} - {item['descrizione']}"):
-
-            st.write(f"☑️ {item.get('cassa','-')}")
-            st.write(f"⚙️ {item.get('impianto','-')}")
-            st.write(f"👤 {item.get('utente','-')}")
-            st.write(f"📅 {formatta_data(item.get('data_creazione'))}")
-
-            allegati = item.get("allegati")
-
-            # 🔧 sicurezza (stringa → lista)
-            if isinstance(allegati, str):
-                import json
-                try:
-                    allegati = json.loads(allegati)
-                except:
-                    allegati = []
-            
-            if allegati:
-                st.markdown("### 🖇️ Allegati")
-            
-                for i, url in enumerate(allegati):
-            
-                    # 👁️ visualizza
-                    if url.endswith((".jpg",".png",".jpeg")):
-                        st.image(url, width=200)
-                    else:
-                        st.link_button(f"📎 Allegato {i+1}", url)
-            
-                    # ⬇️ download
-                    st.markdown(
-                        f'<a href="{url}" download target="_blank">⬇️</a>',
-                        unsafe_allow_html=True
-                    )
-
-            st.text_area(
-                "🔒 Lavorazioni",
-                value=item.get("lavorazioni",""),
-                disabled=True,
-                key=f"view_{id}"
-            )
-
-            col1, col2 = st.columns(2)
-
-            if col1.button("🔓 Riapri", key=f"riapri_{id}"):
-
-                supabase.table("open_item").update({
-                    "stato": "APERTO"
-                }).eq("id", id).execute()
-
-                salva_log(id,"RIAPERTURA",utente_loggato,"CHIUSO","APERTO","stato")
-
-                get_open_item_fast.clear()
-                st.rerun()
-
-            if col2.button("📜 Log", key=f"log_ch_{id}"):
-                mostra_cronologia(id)
+    with st.expander("🟢 Attività Chiuse")
+    
+        for item in chiusi:
+    
+            id = item["id"]
+    
+            with st.expander(f"🟢 {item['treno']} - {item['descrizione']}"):
+    
+                st.write(f"☑️ {item.get('cassa','-')}")
+                st.write(f"⚙️ {item.get('impianto','-')}")
+                st.write(f"👤 {item.get('utente','-')}")
+                st.write(f"📅 {formatta_data(item.get('data_creazione'))}")
+    
+                allegati = item.get("allegati")
+    
+                # 🔧 sicurezza (stringa → lista)
+                if isinstance(allegati, str):
+                    import json
+                    try:
+                        allegati = json.loads(allegati)
+                    except:
+                        allegati = []
+                
+                if allegati:
+                    st.markdown("### 🖇️ Allegati")
+                
+                    for i, url in enumerate(allegati):
+                
+                        # 👁️ visualizza
+                        if url.endswith((".jpg",".png",".jpeg")):
+                            st.image(url, width=200)
+                        else:
+                            st.link_button(f"📎 Allegato {i+1}", url)
+                
+                        # ⬇️ download
+                        st.markdown(
+                            f'<a href="{url}" download target="_blank">⬇️</a>',
+                            unsafe_allow_html=True
+                        )
+    
+                st.text_area(
+                    "🔒 Lavorazioni",
+                    value=item.get("lavorazioni",""),
+                    disabled=True,
+                    key=f"view_{id}"
+                )
+    
+                col1, col2 = st.columns(2)
+    
+                if col1.button("🔓 Riapri", key=f"riapri_{id}"):
+    
+                    supabase.table("open_item").update({
+                        "stato": "APERTO"
+                    }).eq("id", id).execute()
+    
+                    salva_log(id,"RIAPERTURA",utente_loggato,"CHIUSO","APERTO","stato")
+    
+                    get_open_item_fast.clear()
+                    st.rerun()
+    
+                if col2.button("📜 Log", key=f"log_ch_{id}"):
+                    mostra_cronologia(id)
