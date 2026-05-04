@@ -93,7 +93,7 @@ def planning_page():
             horizontal=True
         )
 
-        attivita = col2.text_input("Attività")
+        attivita = col2.text_input("**Attività**")
 
         col3, col4 = st.columns(2)
 
