@@ -534,7 +534,7 @@ def openitem_page():
     # 🟢 CHIUSI
     # ============================
 
-     with st.expander("**🟢 ATTIVITA' CHIUSE 🟢**", expanded=True):
+    with st.expander("**🟢 ATTIVITA' CHIUSE 🟢**", expanded=True):
 
         for item in valutazione:
         
