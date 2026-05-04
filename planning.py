@@ -88,12 +88,12 @@ def planning_page():
         col1, col2 = st.columns(2)
 
         modo = col1.radio(
-            "Assegna a:",
-            ["Operatore", "Squadra"],
+            "**Assegna a:**",
+            ["**Operatore**", "**Squadra**"],
             horizontal=True
         )
 
-        attivita = col2.text_input("Attività")
+        attivita = col2.text_input("**Attività**")
 
         col3, col4 = st.columns(2)
 
