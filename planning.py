@@ -103,6 +103,9 @@ def planning_page():
 
         fine = inizio + timedelta(minutes=durata)
 
+        selezionati = st.multiselect("Seleziona operatori", nomi_membri)
+
+
         st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
         # =========================
