@@ -215,10 +215,10 @@ def openitem_page():
 
     st.subheader("🔴 Attività Aperte")
 
-    with st.expander(
-        f"🔴 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
-        expanded=False
-    ):
+        with st.expander(
+            f"🔴 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
+            expanded=False
+        ):
     for item in aperti:
 
         id = item["id"]
