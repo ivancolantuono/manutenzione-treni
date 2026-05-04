@@ -29,6 +29,11 @@ def planning_page():
     # =========================
     operatori_db = get_operatori()
     dati = get_planning()
+    operatori_map = {
+        f"{o.get('Nominativo')} ({o.get('Matricola')})": o
+        for o in operatori_db
+        if o.get("Nominativo") and o.get("Matricola")
+    }
 
     df = pd.DataFrame(dati)
 
@@ -111,7 +116,7 @@ def planning_page():
         # =========================
         if modo == "Operatore":
 
-            selezione = col1.selectbox("Operatore", operatori)
+            selezione = col1.selectbox("Operatore", list(operatori_map.keys()))
 
         # =========================
         # 👥 SQUADRA
@@ -164,10 +169,7 @@ def planning_page():
             # -------------------------
             if modo == "Operatore":
 
-                op = next(
-                    (o for o in operatori_db if o.get("Nominativo") == selezione),
-                    None
-                )
+                op = operatori_map.get(selezione)
 
                 if op:
                     m = str(op.get("Matricola", "")).strip().lower()
