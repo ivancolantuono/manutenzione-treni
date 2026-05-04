@@ -111,7 +111,7 @@ def planning_page():
         # =========================
         if modo == "Operatore":
 
-            selezione = col1.selectbox("**Operatore**", operatori)
+            selezione = col1.selectbox("Operatore", operatori)
 
         # =========================
         # 👥 SQUADRA
@@ -122,7 +122,7 @@ def planning_page():
 
             membri = [
                 o for o in operatori_db
-                if o.get("**Squadra**") == squadra
+                if o.get("Squadra") == squadra
             ]
 
             nomi_membri = []
@@ -141,7 +141,7 @@ def planning_page():
                     occupati.append(nome)
 
             # 👇 VISUALIZZAZIONE STATO
-            selezionati = st.multiselect("**Seleziona operatori**", nomi_membri)
+            selezionati = st.multiselect("Seleziona operatori", nomi_membri)
             for nome in nomi_membri:
                 if nome in occupati:
                     st.markdown(f"🔴 {nome} (occupato)")
