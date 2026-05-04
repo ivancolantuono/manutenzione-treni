@@ -537,7 +537,7 @@ def openitem_page():
 
     with st.expander("**🟢 ATTIVITA' CHIUSE 🟢**", expanded=False):
 
-        for item in valutazione:
+        for item in chiusi:
         
             id = item["id"]
     
