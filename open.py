@@ -544,8 +544,6 @@ def openitem_page():
                 f"🟢 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
                 expanded=False
             ):
-
-    
                 st.write(f"☑️ {item.get('cassa','-')}")
                 st.write(f"⚙️ {item.get('impianto','-')}")
                 st.write(f"👤 {item.get('utente','-')}")
