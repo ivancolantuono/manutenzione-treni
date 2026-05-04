@@ -536,7 +536,7 @@ def openitem_page():
 
      with st.expander("**🟢 ATTIVITA' CHIUSE 🟢**", expanded=True):
 
-         for item in valutazione:
+        for item in valutazione:
         
             id = item["id"]
     
@@ -598,5 +598,5 @@ def openitem_page():
     
                 if col2.button("📜 Log", key=f"log_ch_{id}"):
                     mostra_cronologia(id)
-
+    
         
