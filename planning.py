@@ -83,7 +83,7 @@ def planning_page():
     # =========================
     # ➕ NUOVA ATTIVITÀ
     # =========================
-    with st.expander("➕ Nuova attività", expanded=True):
+    with st.expander("**➕ Nuova attività**", expanded=True):
 
         col1, col2 = st.columns(2)
 
@@ -98,12 +98,12 @@ def planning_page():
         col3, col4 = st.columns(2)
 
         now = datetime.now(ZoneInfo("Europe/Rome"))
-        inizio = col3.datetime_input("Inizio", value=now)
-        durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
+        inizio = col3.datetime_input("**Inizio**", value=now)
+        durata = col4.number_input("**Durata (min)**", min_value=5, step=5, value=60)
 
         fine = inizio + timedelta(minutes=durata)
 
-        st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
+        st.write(f"**⏱️ Fine prevista: {fine.strftime('%H:%M')}**")
 
         # =========================
         # 👤 OPERATORE SINGOLO
@@ -140,7 +140,7 @@ def planning_page():
                     occupati.append(nome)
 
             # 👇 VISUALIZZAZIONE STATO
-            st.write("👥 Membri squadra:")
+            
             for nome in nomi_membri:
                 if nome in occupati:
                     st.markdown(f"🔴 {nome} (occupato)")
