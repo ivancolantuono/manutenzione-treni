@@ -213,17 +213,17 @@ def openitem_page():
     # 🔴 APERTI
     # ============================
 
-    st.subheader("🔴 Attività Aperte")
+    with st.expander("**🔴 ATTIVITA' APERTE 🔴**", expanded=True):
 
-    for item in aperti:
-
-        id = item["id"]
-
-        with st.expander(
-            f"🔴 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
-            expanded=False
-        ):
-            in_modifica = st.session_state.edit_item_id == id
+        for item in valutazione:
+        
+            id = item["id"]
+    
+            with st.expander(
+                f"🔴 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
+                expanded=False
+            ):            
+                in_modifica = st.session_state.edit_item_id == id
 
             cassa_edit = st.text_input(
                 "☑️ Cassa",
