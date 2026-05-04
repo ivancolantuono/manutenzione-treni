@@ -142,7 +142,6 @@ def planning_page():
 
             # 👇 VISUALIZZAZIONE STATO
             selezionati = st.multiselect("**Seleziona operatori**", nomi_membri)
-            st.write("👥 Membri squadra:")
             for nome in nomi_membri:
                 if nome in occupati:
                     st.markdown(f"🔴 {nome} (occupato)")
