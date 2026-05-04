@@ -588,6 +588,8 @@ def openitem_page():
     
                     get_open_item_fast.clear()
                     st.rerun()
+
+            )
     
                 if col2.button("📜 Log", key=f"log_ch_{id}"):
                     mostra_cronologia(id)
