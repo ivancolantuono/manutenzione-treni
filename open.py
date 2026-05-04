@@ -432,16 +432,16 @@ def openitem_page():
     # 🟡 VALUTAZIONE
     # ============================
 
-    st.subheader("🟡 Monitoraggio")
+    with st.expander("🟡 Monitoraggio", expanded=True):
 
-    for item in valutazione:
-        
-        id = item["id"]
-
-        with st.expander(
-            f"🟡 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
-            expanded=False
-        ):
+        for item in valutazione:
+    
+            id = item["id"]
+    
+            with st.expander(
+                f"🟡 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
+                expanded=False
+            ):
 
             st.write(f"☑️ {item.get('cassa','-')}")
             st.write(f"⚙️ {item.get('impianto','-')}")
