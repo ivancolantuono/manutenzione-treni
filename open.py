@@ -530,8 +530,8 @@ def openitem_page():
     # ============================
 
     st.subheader("🟢 Attività Chiuse")
-    
-        for item in chiusi:
+
+    for item in chiusi:
     
             id = item["id"]
     
@@ -591,3 +591,5 @@ def openitem_page():
     
                 if col2.button("📜 Log", key=f"log_ch_{id}"):
                     mostra_cronologia(id)
+
+        
