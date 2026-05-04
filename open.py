@@ -213,7 +213,7 @@ def openitem_page():
     # 🔴 APERTI
     # ============================
 
-    with st.expander("**🔴 ATTIVITA' APERTE 🔴**", expanded=True):
+    with st.expander("**🔴 ATTIVITA' APERTE 🔴**", expanded=False):
 
         for item in valutazione:
         
@@ -535,7 +535,7 @@ def openitem_page():
     # 🟢 CHIUSI
     # ============================
 
-    with st.expander("**🟢 ATTIVITA' CHIUSE 🟢**", expanded=True):
+    with st.expander("**🟢 ATTIVITA' CHIUSE 🟢**", expanded=False):
 
         for item in valutazione:
         
