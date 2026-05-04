@@ -534,13 +534,18 @@ def openitem_page():
     # 🟢 CHIUSI
     # ============================
 
-    st.subheader("🟢 Attività Chiuse")
+    with st.expander("🟢 Attività Chiuse")
+        expanded=False
+    ):
 
     for item in chiusi:
     
             id = item["id"]
     
-            with st.expander(f"🟢 {item['treno']} - {item['descrizione']}"):
+            with st.expander(
+                f"🟢 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
+                expanded=False
+            ):
     
                 st.write(f"☑️ {item.get('cassa','-')}")
                 st.write(f"⚙️ {item.get('impianto','-')}")
