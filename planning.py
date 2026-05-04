@@ -118,7 +118,7 @@ def planning_page():
         # =========================
         else:
 
-            squadra = col1.selectbox("Squadra", squadre)
+            squadra = col1.selectbox("**Squadra**", squadre)
 
             membri = [
                 o for o in operatori_db
