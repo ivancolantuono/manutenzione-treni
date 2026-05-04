@@ -432,7 +432,7 @@ def openitem_page():
     # 🟡 VALUTAZIONE
     # ============================
 
-    with st.expander("**🟡 Monitoraggio**", expanded=True):
+    with st.expander("**🟡 MONITORAGGIO 🟡**", expanded=True):
 
         for item in valutazione:
     
@@ -534,9 +534,9 @@ def openitem_page():
     # 🟢 CHIUSI
     # ============================
 
-    st.subheader("🟢 Attività Chiuse")
-    
-    for item in chiusi:
+     with st.expander("**🟢 ATTIVITA' CHIUSE 🟢**", expanded=True):
+
+        for item in valutazione:
     
             id = item["id"]
     
@@ -544,6 +544,7 @@ def openitem_page():
                 f"🟢 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
                 expanded=False
             ):
+
     
                 st.write(f"☑️ {item.get('cassa','-')}")
                 st.write(f"⚙️ {item.get('impianto','-')}")
