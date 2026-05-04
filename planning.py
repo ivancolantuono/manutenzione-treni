@@ -20,7 +20,7 @@ def get_planning():
 # =========================
 def planning_page():
 
-    st.title("🗓️ Pianificazione Operatori")
+    st.title("🧠 Pianificazione Operatori")
     st_autorefresh(interval=8000, key="refresh_planning")
     get_planning.clear()
 
@@ -29,11 +29,6 @@ def planning_page():
     # =========================
     operatori_db = get_operatori()
     dati = get_planning()
-    operatori_map = {
-        f"{o.get('Nominativo')} ({o.get('Matricola')})": o
-        for o in operatori_db
-        if o.get("Nominativo") and o.get("Matricola")
-    }
 
     df = pd.DataFrame(dati)
 
@@ -71,6 +66,11 @@ def planning_page():
     # =========================
     # 👷 LISTE
     # =========================
+    operatori = [
+        o.get("Nominativo")
+        for o in operatori_db
+        if o.get("Nominativo")
+    ]
 
     squadre = sorted(
         list({
@@ -88,41 +88,40 @@ def planning_page():
         col1, col2 = st.columns(2)
 
         modo = col1.radio(
-            "**Assegna a:**",
-            ["**Operatore**", "**Squadra**"],
+            "Assegna a:",
+            ["Operatore", "Squadra"],
             horizontal=True
         )
 
-        attivita = col2.text_input("**Attività**")
+        attivita = col2.text_input("Attività")
 
         col3, col4 = st.columns(2)
 
         now = datetime.now(ZoneInfo("Europe/Rome"))
-        inizio = col3.datetime_input("**Inizio**", value=now)
-        durata = col4.number_input("**Durata (min)**", min_value=5, step=5, value=60)
+        inizio = col3.datetime_input("Inizio", value=now)
+        durata = col4.number_input("Durata (min)", min_value=5, step=5, value=60)
 
         fine = inizio + timedelta(minutes=durata)
 
-        
-        st.write(f"**⏱️ Fine prevista: {fine.strftime('%H:%M')}**")
+        st.write(f"⏱️ Fine prevista: {fine.strftime('%H:%M')}")
 
         # =========================
         # 👤 OPERATORE SINGOLO
         # =========================
         if modo == "Operatore":
 
-            selezione = col1.selectbox("Operatore", list(operatori_map.keys()))
+            selezione = col1.selectbox("Operatore", operatori)
 
         # =========================
         # 👥 SQUADRA
         # =========================
         else:
 
-            squadra = col1.selectbox("**Squadra**", squadre)
+            squadra = col1.selectbox("Squadra", squadre)
 
             membri = [
                 o for o in operatori_db
-                if str(o.get("Squadra","")).strip().lower() == squadra.strip().lower()
+                if o.get("Squadra") == squadra
             ]
 
             nomi_membri = []
@@ -141,13 +140,15 @@ def planning_page():
                     occupati.append(nome)
 
             # 👇 VISUALIZZAZIONE STATO
-            selezionati = st.multiselect("Seleziona operatori", nomi_membri)
+            st.write("👥 Membri squadra:")
             for nome in nomi_membri:
                 if nome in occupati:
                     st.markdown(f"🔴 {nome} (occupato)")
                 else:
                     st.markdown(f"🟢 {nome}")
-            
+
+            selezionati = st.multiselect("Seleziona operatori", nomi_membri)
+
         # =========================
         # 🚀 ASSEGNA
         # =========================
@@ -164,7 +165,10 @@ def planning_page():
             # -------------------------
             if modo == "Operatore":
 
-                op = operatori_map.get(selezione)
+                op = next(
+                    (o for o in operatori_db if o.get("Nominativo") == selezione),
+                    None
+                )
 
                 if op:
                     m = str(op.get("Matricola", "")).strip().lower()
