@@ -220,7 +220,7 @@ def openitem_page():
         id = item["id"]
 
         with st.expander(
-            f"🔴 [{item[**'treno'**]}] {item['impianto']} → {item['descrizione']}",
+            f"🔴 [{**item['treno']**}] {item['impianto']} → {item['descrizione']}",
             expanded=False
         ):
             in_modifica = st.session_state.edit_item_id == id
