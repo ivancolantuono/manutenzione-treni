@@ -71,11 +71,6 @@ def planning_page():
     # =========================
     # 👷 LISTE
     # =========================
-    operatori = [
-        o.get("Nominativo")
-        for o in operatori_db
-        if o.get("Nominativo")
-    ]
 
     squadre = sorted(
         list({
@@ -127,7 +122,7 @@ def planning_page():
 
             membri = [
                 o for o in operatori_db
-                if o.get("Squadra") == squadra
+                if str(o.get("Squadra","")).strip().lower() == squadra.strip().lower()
             ]
 
             nomi_membri = []
