@@ -529,7 +529,7 @@ def openitem_page():
     # 🟢 CHIUSI
     # ============================
 
-    with st.expander("🟢 Attività Chiuse")
+    st.subheader("🟢 Attività Chiuse")
 
     for item in chiusi:
 
