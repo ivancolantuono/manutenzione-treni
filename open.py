@@ -441,7 +441,7 @@ def openitem_page():
     
             with st.expander(
                 f"🟡 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
-                expanded=False
+                expanded=True
             ):
 
                 st.write(f"☑️ {item.get('cassa','-')}")
