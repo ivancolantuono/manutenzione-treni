@@ -365,8 +365,8 @@ with colA:
     </div>
     """, unsafe_allow_html=True)
     
-        st.session_state.modalita = scelta
-        modalita = scelta  # 🔥 aggiorna subito
+    st.session_state.modalita = scelta
+    modalita = scelta  # 🔥 aggiorna subito
 
 # =========================
 # LOGOUT
