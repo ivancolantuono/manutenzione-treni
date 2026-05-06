@@ -440,7 +440,7 @@ def openitem_page():
             id = item["id"]
     
             with st.expander(
-                f"🟡 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
+                f"🟡 [{item['treno']}] {item['impianto']} → {item['cassa']} → {item['descrizione']}",
                 expanded=False
             ):
 
@@ -542,7 +542,7 @@ def openitem_page():
             id = item["id"]
     
             with st.expander(
-                f"🟢 [{item['treno']}] {item['impianto']} → {item['descrizione']}",
+                f"🟢 [{item['treno']}] {item['impianto']} → {item['cassa']} → {item['descrizione']}",
                 expanded=False
             ):
                 st.write(f"☑️ {item.get('cassa','-')}")
