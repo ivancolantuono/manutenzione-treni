@@ -366,10 +366,6 @@ with colA:
     """, unsafe_allow_html=True)
     
  
-# =========================
-# LOGOUT
-# =========================
-with colB:
     st.markdown("<br><br>", unsafe_allow_html=True)
 
     if st.button("🔓 LOGOUT"):
