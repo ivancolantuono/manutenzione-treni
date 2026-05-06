@@ -342,7 +342,7 @@ if not st.session_state.logged_in:
 # =========================
 
 utente = st.session_state.get("utente", "")
-ruolo = str(st.session_state.get("ruolo", "")).upper()
+
 
 # =========================
 # HEADER
