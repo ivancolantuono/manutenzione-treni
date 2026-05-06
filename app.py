@@ -364,17 +364,7 @@ with colA:
     👤 {utente} 
     </div>
     """, unsafe_allow_html=True)
-
-    # 👇 SWITCH SOLO PER CAPOSQUADRA
-    if ruolo == "CAPOSQUADRA":
-
-        scelta = st.radio(
-            "Modalità",
-            ["CAPOSQUADRA", "OPERATORE"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-
+    
         st.session_state.modalita = scelta
         modalita = scelta  # 🔥 aggiorna subito
 
