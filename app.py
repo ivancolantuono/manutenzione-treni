@@ -361,7 +361,7 @@ modalita = st.session_state.get("modalita", ruolo)
 with colA:
     st.markdown(f"""
     <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
-    👤 {utente} 
+    👤 Benvenuto {utente} 
     </div>
     """, unsafe_allow_html=True)
     
