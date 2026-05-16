@@ -156,14 +156,16 @@ def openitem_page():
                 "utente": utente_loggato,
                 "data_creazione": ora_italia_iso()
             }).execute()
+            st.success("✅ OPEN ITEM INSERITO")
     
             get_open_item_fast.clear()
             
             st.session_state.oi_form_id += 1
     
             import time
+            time.sleep(1)
             st.rerun()
-            st.success("✅ OPEN ITEM INSERITO")
+            
     
     st.divider()
     # ============================
