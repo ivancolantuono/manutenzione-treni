@@ -167,6 +167,7 @@ def openitem_page():
     
             import time
             st.rerun()
+            st.success("✅ OPEN ITEM INSERITO")
     
     st.divider()
     # ============================
