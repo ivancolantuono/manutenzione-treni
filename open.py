@@ -160,8 +160,6 @@ def openitem_page():
             st.success("✅ OPEN ITEM INSERITO")
     
             get_open_item_fast.clear()
-
-            st.success("✅ OPEN ITEM INSERITO")
             
             st.session_state.oi_form_id += 1
     
