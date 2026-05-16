@@ -157,8 +157,6 @@ def openitem_page():
                 "data_creazione": ora_italia_iso()
             }).execute()
     
-            st.success("✅ OPEN ITEM INSERITO")
-    
             get_open_item_fast.clear()
             
             st.session_state.oi_form_id += 1
