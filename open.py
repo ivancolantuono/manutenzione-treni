@@ -103,7 +103,7 @@ def openitem_page():
 
         allegati = st.file_uploader(
             "📎 Allegati",
-            type=["pdf","jpg","png","xlsx","txt"],
+            type=["pdf","jpg","png","xlsx","txt","msg"],
             accept_multiple_files=True,
             key=f"oi_file_{form_id}"
         )
