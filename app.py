@@ -404,7 +404,7 @@ else:
             "📇 SCHEDE SR VZI6",
             "🚄 MANUTENZIONE",
             "⚙️ CERCA COMPONENTE",
-            "🏖️ Ferie e Permessi"
+            "🏖️ FERIE E PERMESSI"
         ],
         default="📌 OPEN ITEM",
     )
@@ -1608,7 +1608,7 @@ elif menu == "📇 SCHEDE SR VZI6":
 elif menu == "🗓️ PLANNING":
     planning_page()
 
-elif menu == "🏖️ Ferie e Permessi":
+elif menu == "🏖️ FERIE E PERMESSI":
 
     pagina_permessi(
         supabase,
