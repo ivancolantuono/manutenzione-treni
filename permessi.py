@@ -2,30 +2,16 @@ import streamlit as st
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-
 def pagina_permessi(supabase, utente):
+
+    ruolo = st.session_state.get("ruolo", "")
+    squadra = st.session_state.get("squadra", "")
 
     st.title("🏖️ Ferie e Permessi")
 
-    # =====================================
-    # DATI OPERATORE
-    # =====================================
-
-    operatore = supabase.table("operatori") \
-        .select("*") \
-        .eq("Nominativo", utente) \
-        .execute()
-
-    squadra = ""
-    ruolo = "Operatore"
-
-    if operatore.data:
-        squadra = operatore.data[0].get("Squadra", "")
-        ruolo = operatore.data[0].get("ruolo", "Operatore")
-
-    # =====================================
+    # ====================================
     # NUOVA RICHIESTA
-    # =====================================
+    # ====================================
 
     st.subheader("📝 Nuova richiesta")
 
@@ -34,8 +20,8 @@ def pagina_permessi(supabase, utente):
         ["Ferie", "ROL", "Permesso", "Recupero"]
     )
 
-    data_inizio = st.date_input("Data inizio")
-    data_fine = st.date_input("Data fine")
+    data_inizio = st.date_input("📅 Data inizio")
+    data_fine = st.date_input("📅 Data fine")
 
     ora_inizio = st.time_input("🕒 Ora inizio")
     ora_fine = st.time_input("🕒 Ora fine")
@@ -64,9 +50,9 @@ def pagina_permessi(supabase, utente):
 
     st.divider()
 
-    # =====================================
+    # ====================================
     # MIE RICHIESTE
-    # =====================================
+    # ====================================
 
     st.subheader("📋 Le mie richieste")
 
@@ -91,8 +77,8 @@ def pagina_permessi(supabase, utente):
 
             st.write(f"📅 Dal: {r['data_inizio']}")
             st.write(f"📅 Al: {r['data_fine']}")
-            st.write(f"🕒 Dalle: {r.get('ora_inizio','')}")
-            st.write(f"🕒 Alle: {r.get('ora_fine','')}")
+            st.write(f"🕒 Dalle: {r['ora_inizio']}")
+            st.write(f"🕒 Alle: {r['ora_fine']}")
             st.write(f"📌 Note: {r.get('note','')}")
 
             if r.get("approvato_da"):
@@ -102,9 +88,9 @@ def pagina_permessi(supabase, utente):
 
     st.divider()
 
-    # =====================================
+    # ====================================
     # APPROVAZIONI
-    # =====================================
+    # ====================================
 
     if ruolo in ["Caposquadra", "Ingegneria"]:
 
@@ -117,7 +103,6 @@ def pagina_permessi(supabase, utente):
             "IN ATTESA"
         ).execute().data
 
-        # caposquadra vede solo la sua squadra
         if ruolo == "Caposquadra":
 
             richieste = [
@@ -131,32 +116,15 @@ def pagina_permessi(supabase, utente):
         for r in richieste:
 
             with st.expander(
-                f"👤 {r['utente']} | {r['tipo']}"
+                f"👤 {r['utente']} - {r['tipo']}"
             ):
 
-                st.write(
-                    f"👥 Squadra: {r.get('squadra','')}"
-                )
-
-                st.write(
-                    f"📅 Dal: {r['data_inizio']}"
-                )
-
-                st.write(
-                    f"📅 Al: {r['data_fine']}"
-                )
-
-                st.write(
-                    f"🕒 Dalle: {r.get('ora_inizio','')}"
-                )
-
-                st.write(
-                    f"🕒 Alle: {r.get('ora_fine','')}"
-                )
-
-                st.write(
-                    f"📌 Note: {r.get('note','')}"
-                )
+                st.write(f"👥 Squadra: {r['squadra']}")
+                st.write(f"📅 Dal: {r['data_inizio']}")
+                st.write(f"📅 Al: {r['data_fine']}")
+                st.write(f"🕒 Dalle: {r['ora_inizio']}")
+                st.write(f"🕒 Alle: {r['ora_fine']}")
+                st.write(f"📌 Note: {r.get('note','')}")
 
                 col1, col2 = st.columns(2)
 
@@ -170,23 +138,18 @@ def pagina_permessi(supabase, utente):
                         supabase.table(
                             "richieste_permessi"
                         ).update({
-
                             "stato": "APPROVATO",
                             "approvato_da": utente,
                             "data_approvazione":
                             datetime.now(
                                 ZoneInfo("Europe/Rome")
                             ).isoformat()
-
                         }).eq(
                             "id",
                             r["id"]
                         ).execute()
 
-                        st.success(
-                            "Richiesta approvata"
-                        )
-
+                        st.success("Richiesta approvata")
                         st.rerun()
 
                 with col2:
@@ -199,21 +162,16 @@ def pagina_permessi(supabase, utente):
                         supabase.table(
                             "richieste_permessi"
                         ).update({
-
                             "stato": "RIFIUTATO",
                             "approvato_da": utente,
                             "data_approvazione":
                             datetime.now(
                                 ZoneInfo("Europe/Rome")
                             ).isoformat()
-
                         }).eq(
                             "id",
                             r["id"]
                         ).execute()
 
-                        st.warning(
-                            "Richiesta rifiutata"
-                        )
-
+                        st.warning("Richiesta rifiutata")
                         st.rerun()
