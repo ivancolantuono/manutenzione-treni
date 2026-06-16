@@ -391,7 +391,7 @@ if modalita == "CAPOSQUADRA":
             "📊 DASHBOARD",
             "📊 STORICO",            
             "⚙️ CERCA COMPONENTE",
-            "🏖️ Ferie e Permessi"
+            "🏖️ FERIE E PERMESSI"
         ],
         default="📌 OPEN ITEM",
     )
