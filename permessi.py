@@ -268,7 +268,8 @@ def pagina_permessi(supabase, utente):
         
             approvate = [
                 r for r in approvate
-                if str(r.get("squadra")) == str(squadra)
+                if str(r.get("squadra","")).strip().upper()
+                == str(squadra).strip().upper()
             ]
         
         for r in approvate:
