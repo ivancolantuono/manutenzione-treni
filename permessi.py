@@ -45,7 +45,10 @@ def pagina_permessi(supabase, utente):
     ora_inizio = st.time_input("🕒 Ora inizio")
     ora_fine = st.time_input("🕒 Ora fine")
 
-    note = st.text_area("📌 Note")
+    note = st.text_area(
+        "📌 Note",
+        key="note_permesso"
+    )
 
     if st.button("📨 Invia richiesta"):
 
@@ -75,9 +78,10 @@ def pagina_permessi(supabase, utente):
         }).execute()
 
         st.success("✅ Richiesta inviata")
-       
-        st.rerun()
 
+        st.session_state.pop("note_permesso", None)
+
+        st.rerun()
     st.divider()
 
     # =====================
@@ -164,9 +168,13 @@ def pagina_permessi(supabase, utente):
 
             richieste = [
                 r for r in richieste
-                if r.get("squadra") == squadra
+                if str(r.get("squadra")) == str(squadra)
             ]
-
+        
+        elif ruolo.upper() == "INGEGNERIA":
+        
+            richieste = richieste
+            
         for r in richieste:
 
             with st.expander(
@@ -238,4 +246,81 @@ def pagina_permessi(supabase, utente):
 
                         st.rerun()
                         
+    # =====================
+    # APPROVATE
+    # =====================
     
+    st.divider()
+    st.subheader("🟢 Richieste approvate")
+    
+    approvate = supabase.table(
+        "richieste_permessi"
+    ).select("*").eq(
+        "stato",
+        "APPROVATO"
+    ).order(
+        "id",
+        desc=True
+    ).execute().data
+    
+    if ruolo.upper() == "CAPOSQUADRA":
+    
+        approvate = [
+            r for r in approvate
+            if str(r.get("squadra")) == str(squadra)
+        ]
+    
+    for r in approvate:
+    
+        with st.expander(
+            f"🟢 {r['utente']} - {r['tipo']}"
+        ):
+    
+            st.write(f"👥 Squadra: {r['squadra']}")
+            st.write(f"📅 Dal: {r['data_inizio']}")
+            st.write(f"📅 Al: {r['data_fine']}")
+            st.write(f"👤 Approvato da: {r.get('approvato_da','-')}")
+    
+    # =====================
+    # RIFIUTATE
+    # =====================
+    
+    st.divider()
+    st.subheader("🔴 Richieste rifiutate")
+    
+    rifiutate = supabase.table(
+        "richieste_permessi"
+    ).select("*").eq(
+        "stato",
+        "RIFIUTATO"
+    ).order(
+        "id",
+        desc=True
+    ).execute().data
+    
+    if ruolo.upper() == "CAPOSQUADRA":
+    
+        rifiutate = [
+            r for r in rifiutate
+            if str(r.get("squadra")) == str(squadra)
+        ]
+    
+    for r in rifiutate:
+    
+        with st.expander(
+            f"🔴 {r['utente']} - {r['tipo']}"
+        ):
+    
+            st.write(f"👥 Squadra: {r['squadra']}")
+            st.write(f"📅 Dal: {r['data_inizio']}")
+            st.write(f"📅 Al: {r['data_fine']}")
+            st.write(
+                f"👤 Gestita da: {r.get('approvato_da','-')}"
+            )
+    
+            st.error(
+                f"Motivo: "
+                f"{r.get('motivo_rifiuto','Non specificato')}"
+            )
+                            
+        
