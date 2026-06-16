@@ -75,7 +75,7 @@ def pagina_permessi(supabase, utente):
         }).execute()
 
         st.success("✅ Richiesta inviata")
-        st.session_state.clear()
+       
         st.rerun()
 
     st.divider()
