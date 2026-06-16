@@ -26,7 +26,7 @@ def pagina_permessi(supabase, utente):
         squadra = operatore.data[0].get("Squadra", "")
         ruolo = operatore.data[0].get("ruolo", "")
 
-    st.title("🏖️ Ferie e Permessi")
+    st.title("🏖️ FERIE E PERMESSI")
 
     # =====================
     # NUOVA RICHIESTA
