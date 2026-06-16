@@ -3,7 +3,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 
-def pagina_permessi():
+def pagina_permessi(supabase, utente, squadra):
 
     st.title("🏖️ Ferie e Permessi")
 
