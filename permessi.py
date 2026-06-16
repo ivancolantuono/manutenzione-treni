@@ -1,6 +1,11 @@
 import streamlit as st
 from datetime import datetime
+import pandas as pd
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+import plotly.express as px
+from db import supabase, get_operatori
+from streamlit_autorefresh import st_autorefresh
 
 
 def pagina_permessi(supabase, utente):
