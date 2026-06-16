@@ -82,6 +82,7 @@ def pagina_permessi(supabase, utente):
         st.session_state.pop("note_permesso", None)
 
         st.rerun()
+        
     st.divider()
 
     # =====================
@@ -151,7 +152,7 @@ def pagina_permessi(supabase, utente):
 
     if ruolo.upper() in [
         "CAPOSQUADRA",
-        "INGEGNERIA"
+        "Ingegneria"
     ]:
 
         st.divider()
@@ -171,7 +172,7 @@ def pagina_permessi(supabase, utente):
                 if str(r.get("squadra")) == str(squadra)
             ]
         
-        elif ruolo.upper() == "INGEGNERIA":
+        elif ruolo.upper() == "Ingegneria":
         
             richieste = richieste
             
