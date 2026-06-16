@@ -1612,6 +1612,5 @@ elif menu == "🏖️ Ferie e Permessi":
 
     pagina_permessi(
         supabase,
-        utente,
-        st.session_state.get("squadra", "")
+        utente        
     )
