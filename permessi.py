@@ -69,6 +69,7 @@ def pagina_permessi(supabase, utente):
         }).execute()
 
         st.success("✅ Richiesta inviata")
+        st.session_state.clear()
         st.rerun()
 
     st.divider()
@@ -76,28 +77,64 @@ def pagina_permessi(supabase, utente):
     # =====================
     # LE MIE RICHIESTE
     # =====================
-
+    
+    st.divider()
+    
     st.subheader("📋 Le mie richieste")
-
+    
     mie = supabase.table(
         "richieste_permessi"
     ).select("*").eq(
         "utente",
         utente
+    ).order(
+        "id",
+        desc=True
     ).execute().data
-
+    
+    if not mie:
+        st.info("Nessuna richiesta presente")
+    
     for r in mie:
-
+    
+        stato = r.get("stato", "IN ATTESA")
+    
+        icona = "🟡"
+    
+        if stato == "APPROVATO":
+            icona = "🟢"
+    
+        elif stato == "RIFIUTATO":
+            icona = "🔴"
+    
         with st.expander(
-            f"{r['tipo']} - {r['stato']}"
+            f"{icona} {r['tipo']} - {stato}"
         ):
-
-            st.write("📅 Dal:", r["data_inizio"])
-            st.write("📅 Al:", r["data_fine"])
-            st.write("🕒 Dalle:", r["ora_inizio"])
-            st.write("🕒 Alle:", r["ora_fine"])
-            st.write("📌 Note:", r.get("note", ""))
-
+    
+            st.write(f"📅 Dal: {r['data_inizio']}")
+            st.write(f"📅 Al: {r['data_fine']}")
+    
+            st.write(f"🕒 Dalle: {r['ora_inizio']}")
+            st.write(f"🕒 Alle: {r['ora_fine']}")
+    
+            st.write(f"📝 Note: {r.get('note','')}")
+    
+            if r.get("approvato_da"):
+                st.write(
+                    f"👤 Gestita da: {r['approvato_da']}"
+                )
+    
+            if r.get("data_approvazione"):
+                st.write(
+                    f"📅 Data approvazione: {r['data_approvazione']}"
+                )
+    
+            if stato == "RIFIUTATO":
+    
+                st.error(
+                    f"❌ Motivo rifiuto: "
+                    f"{r.get('motivo_rifiuto','Non specificato')}"
+                )
     # =====================
     # APPROVAZIONI
     # =====================
