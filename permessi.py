@@ -5,116 +5,157 @@ from zoneinfo import ZoneInfo
 
 def pagina_permessi(supabase, utente, squadra):
 
-    st.title("🏖️ Ferie e Permessi")
+    ruolo = st.session_state.get("ruolo", "").upper()
 
-    # =========================
-    # NUOVA RICHIESTA
-    # =========================
+st.title("🏖️ Ferie e Permessi")
 
-    st.subheader("➕ Nuova richiesta")
+# ==================================
+# NUOVA RICHIESTA
+# ==================================
 
-    tipo = st.selectbox(
-        "Tipo richiesta",
-        ["Ferie", "ROL", "Permesso", "Recupero"]
-    )
+st.subheader("➕ Nuova richiesta")
 
-    data_inizio = st.date_input("📅 Data inizio")
-    data_fine = st.date_input("📅 Data fine")
+tipo = st.selectbox(
+    "Tipo richiesta",
+    [
+        "FERIE",
+        "ROL",
+        "PERMESSO",
+        "RECUPERO"
+    ]
+)
 
-    ora_inizio = st.time_input("🕒 Ora inizio")
-    ora_fine = st.time_input("🕒 Ora fine")
+data_inizio = st.date_input("📅 Data inizio")
+data_fine = st.date_input("📅 Data fine")
 
-    note = st.text_area("📝 Note")
+ora_inizio = st.time_input("🕒 Ora inizio")
+ora_fine = st.time_input("🕒 Ora fine")
 
-    if st.button("📨 Invia richiesta"):
+note = st.text_area("📝 Note")
 
-        try:
+if st.button("📨 Invia richiesta"):
 
-            supabase.table("richieste_permessi").insert({
-                "utente": utente,
-                "squadra": squadra,
-                "tipo": tipo,
-                "data_inizio": str(data_inizio),
-                "data_fine": str(data_fine),
-                "ora_inizio": str(ora_inizio),
-                "ora_fine": str(ora_fine),
-                "note": note,
-                "stato": "IN ATTESA",
-                "data_richiesta": datetime.now(
-                    ZoneInfo("Europe/Rome")
-                ).isoformat()
-            }).execute()
+    try:
 
-            st.success("✅ Richiesta inviata")
-            st.rerun()
+        supabase.table("richieste_permessi").insert({
 
-        except Exception as e:
-            st.error(f"Errore Supabase: {e}")
+            "utente": utente,
+            "squadra": squadra,
+
+            "tipo": tipo,
+
+            "data_inizio": str(data_inizio),
+            "data_fine": str(data_fine),
+
+            "ora_inizio": str(ora_inizio),
+            "ora_fine": str(ora_fine),
+
+            "note": note,
+
+            "stato": "IN ATTESA",
+
+            "data_richiesta":
+            datetime.now(
+                ZoneInfo("Europe/Rome")
+            ).isoformat()
+
+        }).execute()
+
+        st.success("✅ Richiesta inviata")
+        st.rerun()
+
+    except Exception as e:
+
+        st.error(str(e))
+
+# ==================================
+# LE MIE RICHIESTE
+# ==================================
+
+st.divider()
+
+st.subheader("📋 Le mie richieste")
+
+mie = supabase.table(
+    "richieste_permessi"
+).select("*").eq(
+    "utente",
+    utente
+).order(
+    "id",
+    desc=True
+).execute().data
+
+if not mie:
+    st.info("Nessuna richiesta presente")
+
+for r in mie:
+
+    stato = r.get("stato", "")
+
+    if stato == "APPROVATO":
+        colore = "🟢"
+    elif stato == "RIFIUTATO":
+        colore = "🔴"
+    else:
+        colore = "🟡"
+
+    with st.expander(
+        f"{colore} {r['tipo']} - {stato}"
+    ):
+
+        st.write(
+            f"📅 Dal {r['data_inizio']} al {r['data_fine']}"
+        )
+
+        st.write(
+            f"🕒 {r.get('ora_inizio','')} - {r.get('ora_fine','')}"
+        )
+
+        st.write(
+            f"📝 {r.get('note','')}"
+        )
+
+        if r.get("approvato_da"):
+            st.write(
+                f"👤 Approvato da: {r['approvato_da']}"
+            )
+
+        if r.get("motivo_rifiuto"):
+            st.write(
+                f"❌ Motivo rifiuto: {r['motivo_rifiuto']}"
+            )
+
+# ==================================
+# APPROVAZIONI
+# ==================================
+
+if ruolo in ["CAPOSQUADRA", "INGEGNERIA"]:
 
     st.divider()
 
-    # =========================
-    # LE MIE RICHIESTE
-    # =========================
+    st.subheader("✅ Richieste da approvare")
 
-    st.subheader("📋 Le mie richieste")
+    if ruolo == "CAPOSQUADRA":
 
-    mie_richieste = supabase.table(
-        "richieste_permessi"
-    ).select("*").eq(
-        "utente",
-        utente
-    ).order(
-        "id",
-        desc=True
-    ).execute().data
+        richieste = supabase.table(
+            "richieste_permessi"
+        ).select("*").eq(
+            "squadra",
+            squadra
+        ).eq(
+            "stato",
+            "IN ATTESA"
+        ).execute().data
 
-    if not mie_richieste:
-        st.info("Nessuna richiesta presente")
+    else:
 
-    for r in mie_richieste:
-
-        with st.expander(
-            f"{r['tipo']} - {r['stato']}"
-        ):
-
-            st.write(
-                f"📅 Dal {r['data_inizio']} al {r['data_fine']}"
-            )
-
-            st.write(
-                f"🕒 {r.get('ora_inizio','')} - {r.get('ora_fine','')}"
-            )
-
-            st.write(
-                f"📝 {r.get('note','')}"
-            )
-
-            if r.get("approvato_da"):
-                st.write(
-                    f"👤 Gestita da: {r['approvato_da']}"
-                )
-
-    st.divider()
-
-    # =========================
-    # APPROVAZIONE CAPOSQUADRA
-    # =========================
-
-    st.subheader("👨‍✈️ Richieste della squadra")
-
-    richieste = supabase.table(
-        "richieste_permessi"
-    ).select("*").eq(
-        "squadra",
-        squadra
-    ).eq(
-        "stato",
-        "IN ATTESA"
-    ).order(
-        "id",
-        desc=True
-    ).execute().data
+        richieste = supabase.table(
+            "richieste_permessi"
+        ).select("*").eq(
+            "stato",
+            "IN ATTESA"
+        ).execute().data
 
     if not richieste:
         st.info("Nessuna richiesta da approvare")
@@ -125,8 +166,10 @@ def pagina_permessi(supabase, utente, squadra):
             continue
 
         with st.expander(
-            f"👤 {r['utente']} - {r['tipo']}"
+            f"👤 {r['utente']} | {r['tipo']}"
         ):
+
+            st.write(f"👥 Squadra: {r['squadra']}")
 
             st.write(
                 f"📅 Dal {r['data_inizio']} al {r['data_fine']}"
@@ -138,6 +181,11 @@ def pagina_permessi(supabase, utente, squadra):
 
             st.write(
                 f"📝 {r.get('note','')}"
+            )
+
+            motivo = st.text_input(
+                "Motivo rifiuto",
+                key=f"motivo_{r['id']}"
             )
 
             col1, col2 = st.columns(2)
@@ -152,11 +200,16 @@ def pagina_permessi(supabase, utente, squadra):
                     supabase.table(
                         "richieste_permessi"
                     ).update({
+
                         "stato": "APPROVATO",
+
                         "approvato_da": utente,
-                        "data_approvazione": datetime.now(
+
+                        "data_approvazione":
+                        datetime.now(
                             ZoneInfo("Europe/Rome")
                         ).isoformat()
+
                     }).eq(
                         "id",
                         r["id"]
@@ -167,11 +220,6 @@ def pagina_permessi(supabase, utente, squadra):
 
             with col2:
 
-                motivo = st.text_input(
-                    "Motivo rifiuto",
-                    key=f"motivo_{r['id']}"
-                )
-
                 if st.button(
                     "❌ Rifiuta",
                     key=f"ko_{r['id']}"
@@ -180,12 +228,18 @@ def pagina_permessi(supabase, utente, squadra):
                     supabase.table(
                         "richieste_permessi"
                     ).update({
+
                         "stato": "RIFIUTATO",
+
                         "approvato_da": utente,
+
                         "motivo_rifiuto": motivo,
-                        "data_approvazione": datetime.now(
+
+                        "data_approvazione":
+                        datetime.now(
                             ZoneInfo("Europe/Rome")
                         ).isoformat()
+
                     }).eq(
                         "id",
                         r["id"]
