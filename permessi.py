@@ -165,14 +165,14 @@ def pagina_permessi(supabase, utente):
             "IN ATTESA"
         ).execute().data
 
-        if ruolo.upper() == "CAPOSQUADRA":
+        if ruolo.upper() == "Ingegneria":
 
             richieste = [
                 r for r in richieste
                 if str(r.get("squadra")) == str(squadra)
             ]
         
-        elif ruolo.upper() == "Ingegneria":
+        elif ruolo.upper() == "CAPOSQUADRA":
         
             richieste = richieste
             
