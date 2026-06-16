@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 def pagina_permessi(supabase, utente):
     st.write("Utente:", utente)
     st.write("Ruolo:", st.session_state.get("ruolo"))
-    st.write("Squadra:", squadra)
+    
 
     ruolo = st.session_state.get("ruolo", "")
 
@@ -27,6 +27,7 @@ def pagina_permessi(supabase, utente):
                 "Squadra",
                 ""
             )
+            st.write("Squadra:", squadra)
 
     except Exception as e:
 
