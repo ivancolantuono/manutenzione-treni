@@ -1609,8 +1609,11 @@ elif menu == "🗓️ PLANNING":
     planning_page()
 
 elif menu == "🏖️ Ferie e Permessi":
+
+    squadra = st.session_state.get("squadra", utente)
+
     pagina_permessi(
         supabase,
         utente,
-        st.session_state.squadra
+        squadra
     )
