@@ -390,7 +390,8 @@ if modalita == "CAPOSQUADRA":
             "🗓️ PLANNING",
             "📊 DASHBOARD",
             "📊 STORICO",            
-            "⚙️ CERCA COMPONENTE"      
+            "⚙️ CERCA COMPONENTE",
+            "🏖️ Ferie e Permessi"
         ],
         default="📌 OPEN ITEM",
     )
@@ -402,7 +403,8 @@ else:
             "📇 SCHEDE SR",
             "📇 SCHEDE SR VZI6",
             "🚄 MANUTENZIONE",
-            "⚙️ CERCA COMPONENTE"
+            "⚙️ CERCA COMPONENTE",
+            "🏖️ Ferie e Permessi"
         ],
         default="📌 OPEN ITEM",
     )
