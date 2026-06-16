@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from zoneinfo import ZoneInfo
+from permessi import pagina_permessi
 from datetime import date, datetime
 from db import supabase
 from planning import planning_page
@@ -1604,3 +1605,10 @@ elif menu == "📇 SCHEDE SR VZI6":
 
 elif menu == "🗓️ PLANNING":
     planning_page()
+
+elif menu == "🏖️ Ferie e Permessi":
+    pagina_permessi(
+        supabase,
+        utente,
+        st.session_state.squadra
+    )
