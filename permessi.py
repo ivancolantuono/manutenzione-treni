@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-def pagina_permessi(supabase, utente, squadra):
+def pagina_permessi():
 
     st.title("🏖️ Ferie e Permessi")
 
