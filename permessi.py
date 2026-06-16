@@ -27,30 +27,29 @@ def pagina_permessi(supabase, utente, squadra):
 
     if st.button("📨 Invia richiesta"):
 
-        supabase.table("richieste_permessi").insert({
+        try:
 
-            "utente": utente,
-            "squadra": squadra,
-            "tipo": tipo,
-
-            "data_inizio": str(data_inizio),
-            "data_fine": str(data_fine),
-
-            "ora_inizio": str(ora_inizio),
-            "ora_fine": str(ora_fine),
-
-            "note": note,
-
-            "stato": "IN ATTESA",
-
-            "data_richiesta": datetime.now(
-                ZoneInfo("Europe/Rome")
-            ).isoformat()
-
-        }).execute()
-
-        st.success("✅ Richiesta inviata")
-        st.rerun()
+            supabase.table("richieste_permessi").insert({
+                "utente": utente,
+                "squadra": squadra,
+                "tipo": tipo,
+                "data_inizio": str(data_inizio),
+                "data_fine": str(data_fine),
+                "ora_inizio": str(ora_inizio),
+                "ora_fine": str(ora_fine),
+                "note": note,
+                "stato": "IN ATTESA",
+                "data_richiesta": datetime.now(
+                    ZoneInfo("Europe/Rome")
+                ).isoformat()
+            }).execute()
+        
+            st.success("✅ Richiesta inviata")
+        
+        except Exception as e:
+            st.error(str(e))
+                st.success("✅ Richiesta inviata")
+                st.rerun()
 
     st.divider()
 
