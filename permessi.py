@@ -9,6 +9,7 @@ from streamlit_autorefresh import st_autorefresh
 
 
 def pagina_permessi(supabase, utente):
+    st_autorefresh(interval=10000, key="auto_refresh_permessi")
 
     # LETTURA OPERATORE
     operatore = supabase.table(
