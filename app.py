@@ -274,6 +274,7 @@ if not st.session_state.logged_in:
                         "matricola": matricola,
                         "password": hash_password(password),
                         "ruolo": ruolo
+                        "squadra": squadra
                     }).execute()
 
                     # 🔍 controllo operatori (NO DUPLICATI)
