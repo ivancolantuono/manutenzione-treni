@@ -246,6 +246,7 @@ if not st.session_state.logged_in:
             matricola = norm(st.text_input("Matricola"))
 
             ruolo = st.selectbox("Ruolo", ["OPERATORE", "CAPOSQUADRA"])
+            squadra = st.selectbox("Squadra", ["1-COR-H24", "2-COR-H24", "3-COR-H24", "4-COR-H24", "5-COR-H24", "1-PRO-H24", "2-PRO-H24", "3-PRO-H24", "4-PRO-H24", "5-PRO-H24"])
             password = st.text_input("Password", type="password")
 
             if st.button("Registrati"):
