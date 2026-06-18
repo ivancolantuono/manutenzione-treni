@@ -9,25 +9,15 @@ from streamlit_autorefresh import st_autorefresh
 
 
 def pagina_permessi(supabase, utente):
+
     st_autorefresh(interval=10000, key="auto_refresh_permessi")
 
-    # LETTURA OPERATORE
-    operatore = supabase.table(
-        "operatori"
-    ).select("*").eq(
-        "Nominativo",
-        utente
-    ).execute()
-
-    squadra = ""
-    ruolo = ""
-
-    if operatore.data:
-        squadra = operatore.data[0].get("Squadra", "")
-        ruolo = operatore.data[0].get("ruolo", "")
+    # DATI DAL LOGIN
+    ruolo = st.session_state.get("ruolo", "")
+    squadra = st.session_state.get("squadra", "")
 
     st.title("🏖️ FERIE E PERMESSI")
-
+    
     # =====================
     # NUOVA RICHIESTA
     # =====================
