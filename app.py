@@ -273,7 +273,7 @@ if not st.session_state.logged_in:
                         "email": email,
                         "matricola": matricola,
                         "password": hash_password(password),
-                        "ruolo": ruolo
+                        "ruolo": ruolo,
                         "squadra": squadra
                     }).execute()
 
