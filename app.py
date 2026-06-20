@@ -229,7 +229,7 @@ if not st.session_state.logged_in:
 
                     st.session_state.utente = nome
                     st.session_state.ruolo = user.get("ruolo") or "OPERATORE"
-                     st.session_state.squadra = squadra
+                    st.session_state.squadra = squadra
 
                     st.success("✅ Accesso riuscito")
                     st.rerun()
