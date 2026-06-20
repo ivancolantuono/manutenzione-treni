@@ -220,7 +220,7 @@ if not st.session_state.logged_in:
                         squadra = op.data[0].get("Squadra", "")
                     else:
                         nome = user.get("nome")
-                         squadra = ""
+                        squadra = ""
 
                     st.session_state.logged_in = True
                     st.session_state.login_time = datetime.now()
