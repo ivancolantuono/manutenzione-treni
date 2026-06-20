@@ -217,20 +217,17 @@ if not st.session_state.logged_in:
 
                     if op.data:
                         nome = op.data[0].get("Nominativo")
-                        squadra = op.data[0].get("Squadra", "")
                     else:
                         nome = user.get("nome")
-                        squadra = ""
-
+                    
                     st.session_state.logged_in = True
                     st.session_state.login_time = datetime.now()
-                    # 🔥 QUESTA È LA RIGA CHE TI SALVA LA VITA
                     st.session_state.matricola = matricola.strip().lower()
-
+                    
                     st.session_state.utente = nome
-                    st.session_state.ruolo = user.get("ruolo") or "OPERATORE"
-                    st.session_state.squadra = squadra
-
+                    st.session_state.ruolo = user.get("ruolo", "OPERATORE")
+                    st.session_state.squadra = user.get("squadra", "")
+                    
                     st.success("✅ Accesso riuscito")
                     st.rerun()
                 else:
