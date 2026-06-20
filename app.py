@@ -217,7 +217,7 @@ if not st.session_state.logged_in:
 
                     if op.data:
                         nome = op.data[0].get("Nominativo")
-                         squadra = op.data[0].get("Squadra", "")
+                        squadra = op.data[0].get("Squadra", "")
                     else:
                         nome = user.get("nome")
                          squadra = ""
