@@ -217,8 +217,10 @@ if not st.session_state.logged_in:
 
                     if op.data:
                         nome = op.data[0].get("Nominativo")
+                         squadra = op.data[0].get("Squadra", "")
                     else:
                         nome = user.get("nome")
+                         squadra = ""
 
                     st.session_state.logged_in = True
                     st.session_state.login_time = datetime.now()
@@ -227,6 +229,7 @@ if not st.session_state.logged_in:
 
                     st.session_state.utente = nome
                     st.session_state.ruolo = user.get("ruolo") or "OPERATORE"
+                     st.session_state.squadra = squadra
 
                     st.success("✅ Accesso riuscito")
                     st.rerun()
