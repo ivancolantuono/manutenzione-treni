@@ -24,9 +24,8 @@ def pagina_permessi(supabase, utente):
     ruolo = st.session_state.get("ruolo", "")
     squadra = st.session_state.get("squadra", "")
     
-    st.write("UTENTE:", utente)
-    st.write("RUOLO:", ruolo)
-    st.write("SQUADRA LOGIN:", squadra)
+    ruolo = st.session_state.get("ruolo", "")
+    squadra = st.session_state.get("squadra", "")
 
     st.title("🏖️ FERIE E PERMESSI")
     
