@@ -381,6 +381,15 @@ st.divider()
 # =========================
 # MENU ORIZZONTALE
 # =========================
+
+if modalita == "SUPERVISORE":
+    menu = st.segmented_control(
+        "",
+        [
+            "📊 CONTROLLO PERMESSI"
+        ]
+    )
+
 if modalita == "CAPOSQUADRA":
     menu = st.segmented_control(
         "",
@@ -1616,3 +1625,15 @@ elif menu == "🏖️ FERIE E PERMESSI":
         supabase,
         utente        
     )
+    
+elif menu == "📊 CONTROLLO PERMESSI":
+
+    st.title("📊 Supervisione Permessi")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        data_da = st.date_input("Da")
+
+    with col2:
+        data_a = st.date_input("A")
