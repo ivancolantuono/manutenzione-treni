@@ -7,7 +7,15 @@ import plotly.express as px
 from db import supabase, get_operatori
 from streamlit_autorefresh import st_autorefresh
 
-
+def formatta_data(data_str):
+    try:
+        return datetime.strptime(
+            str(data_str),
+            "%Y-%m-%d"
+        ).strftime("%d/%m/%Y")
+    except:
+        return data_str
+        
 def pagina_permessi(supabase, utente):
 
     st_autorefresh(interval=10000, key="auto_refresh_permessi")
@@ -112,8 +120,8 @@ def pagina_permessi(supabase, utente):
             f"{icona} {r['tipo']} - {stato}"
         ):
     
-            st.write(f"📅 Dal: {r['data_inizio']}")
-            st.write(f"📅 Al: {r['data_fine']}")
+            st.write(f"📅 Dal: {formatta_data(r['data_inizio'])}")
+            st.write(f"📅 Al: {formatta_data(r['data_fine'])}")
     
             st.write(f"🕒 Dalle: {r['ora_inizio']}")
             st.write(f"🕒 Alle: {r['ora_fine']}")
@@ -171,8 +179,8 @@ def pagina_permessi(supabase, utente):
             ):
     
                 st.write("👥 Squadra:", r["squadra"])
-                st.write("📅 Dal:", r["data_inizio"])
-                st.write("📅 Al:", r["data_fine"])
+                st.write(f"📅 Dal: {formatta_data(r['data_inizio'])}")
+                st.write(f"📅 Al: {formatta_data(r['data_fine'])}")
                 st.write("🕒 Dalle:", r["ora_inizio"])
                 st.write("🕒 Alle:", r["ora_fine"])
                 st.write("📌 Note:", r["note"])
