@@ -150,17 +150,18 @@ def pagina_permessi(supabase, utente):
                 )
     
             if r.get("data_approvazione"):
-                st.write(
-                    f"✅ Approvata il: "
-                    f"{formatta_datetime(r['data_approvazione'])}"
-                )
-    
-            if stato == "RIFIUTATO":
-    
-                st.error(
-                    f"❌ Motivo rifiuto: "
-                    f"{r.get('motivo_rifiuto','Non specificato')}"
-                )
+
+                if stato == "APPROVATO":
+                    st.success(
+                        f"✅ Approvata il: "
+                        f"{formatta_datetime(r['data_approvazione'])}"
+                    )
+            
+                elif stato == "RIFIUTATO":
+                    st.error(
+                        f"❌ Rifiutata il: "
+                        f"{formatta_datetime(r['data_approvazione'])}"
+                    )
     # =====================
     # APPROVAZIONI
     # =====================
