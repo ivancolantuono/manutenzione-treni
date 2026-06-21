@@ -44,7 +44,7 @@ def pagina_permessi(supabase, utente):
 
     tipo = st.selectbox(
         "Tipo richiesta",
-        ["Ferie", "ROL", "Permesso", "Recupero"]
+        ["Ferie", "ROL", "Permesso", "Recupero", "Legge 104", "Cambio Turno"]
     )
 
     data_inizio = st.date_input("📅 Data inizio")
