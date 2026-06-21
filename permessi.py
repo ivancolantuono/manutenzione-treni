@@ -47,8 +47,15 @@ def pagina_permessi(supabase, utente):
         ["Ferie", "ROL", "Permesso", "Recupero", "Legge 104", "Cambio Turno"]
     )
 
-    data_inizio = st.date_input("📅 Data inizio")
-    data_fine = st.date_input("📅 Data fine")
+    data_inizio = st.date_input(
+        "📅 Data inizio",
+        format="DD/MM/YYYY"
+    )
+
+    data_fine = st.date_input(
+        "📅 Data fine",
+        format="DD/MM/YYYY"
+    )
 
     ora_inizio = st.time_input("🕒 Ora inizio")
     ora_fine = st.time_input("🕒 Ora fine")
