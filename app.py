@@ -1628,12 +1628,53 @@ elif menu == "🏖️ FERIE E PERMESSI":
     
 elif menu == "📊 CONTROLLO PERMESSI":
 
-    st.title("📊 Supervisione Permessi")
+    st.title("📊 Controllo Permessi")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        data_da = st.date_input("Da")
+        data_da = st.date_input(
+            "Da",
+            key="sup_da"
+        )
 
     with col2:
-        data_a = st.date_input("A")
+        data_a = st.date_input(
+            "A",
+            key="sup_a"
+        )
+
+    richieste = supabase.table(
+        "richieste_permessi"
+    ).select("*").execute().data
+
+    richieste = [
+        r for r in richieste
+        if r.get("stato") in [
+            "APPROVATO",
+            "RIFIUTATO"
+        ]
+    ]
+
+    filtrate = []
+
+    for r in richieste:
+
+        try:
+
+            data_richiesta = datetime.fromisoformat(
+                r["data_richiesta"]
+            ).date()
+
+            if data_da <= data_richiesta <= data_a:
+                filtrate.append(r)
+
+        except:
+            pass
+
+    df = pd.DataFrame(filtrate)
+
+    st.dataframe(
+        df,
+        use_container_width=True
+    )
