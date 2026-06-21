@@ -384,6 +384,7 @@ st.divider()
 
 
 if modalita == "CAPOSQUADRA":
+
     menu = st.segmented_control(
         "",
         [
@@ -393,13 +394,25 @@ if modalita == "CAPOSQUADRA":
             "🚄 MANUTENZIONE",
             "🗓️ PLANNING",
             "📊 DASHBOARD",
-            "📊 STORICO",            
+            "📊 STORICO",
             "⚙️ CERCA COMPONENTE",
             "🏖️ FERIE E PERMESSI"
         ],
-        default="📌 OPEN ITEM",
+        default="📌 OPEN ITEM"
     )
+
+elif modalita == "SUPERVISORE":
+
+    menu = st.segmented_control(
+        "",
+        [
+            "📊 CONTROLLO PERMESSI"
+        ],
+        default="📊 CONTROLLO PERMESSI"
+    )
+
 else:
+
     menu = st.segmented_control(
         "",
         [
@@ -410,7 +423,7 @@ else:
             "⚙️ CERCA COMPONENTE",
             "🏖️ FERIE E PERMESSI"
         ],
-        default="📌 OPEN ITEM",
+        default="📌 OPEN ITEM"
     )
 
 # =========================
