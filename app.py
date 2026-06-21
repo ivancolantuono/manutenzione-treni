@@ -382,12 +382,14 @@ st.divider()
 # MENU ORIZZONTALE
 # =========================
 
-if modalita == "SUPERVISORE":
+elif modalita == "SUPERVISORE":
+
     menu = st.segmented_control(
         "",
         [
             "📊 CONTROLLO PERMESSI"
-        ]
+        ],
+        default="📊 CONTROLLO PERMESSI"
     )
 
 if modalita == "CAPOSQUADRA":
