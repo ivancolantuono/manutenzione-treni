@@ -382,7 +382,7 @@ st.divider()
 # MENU ORIZZONTALE
 # =========================
 
-elif modalita == "SUPERVISORE":
+if modalita == "SUPERVISORE":
 
     menu = st.segmented_control(
         "",
