@@ -363,9 +363,10 @@ def pagina_permessi(supabase, utente):
                 )
     
                 st.write(
-                    f"📅 Data gestione: {r.get('data_approvazione','-')}"
+                    f"📨 Richiesta inviata: {formatta_datetime(r.get('data_richiesta',''))}"
                 )
-    
-                st.error(
-                    f"❌ Motivo: {r.get('motivo_rifiuto','Non specificato')}"
+                
+                st.write(
+                    f"❌ Rifiutata: {formatta_datetime(r.get('data_approvazione',''))}"
                 )
+                
