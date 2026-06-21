@@ -16,6 +16,14 @@ def formatta_data(data_str):
     except:
         return data_str
         
+def formatta_datetime(data_str):
+    try:
+        return datetime.fromisoformat(
+            str(data_str)
+        ).strftime("%d/%m/%Y %H:%M")
+    except:
+        return data_str
+        
 def pagina_permessi(supabase, utente):
 
     st_autorefresh(interval=10000, key="auto_refresh_permessi")
