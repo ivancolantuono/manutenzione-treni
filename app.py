@@ -1687,43 +1687,44 @@ elif menu == "📊 CONTROLLO PERMESSI":
     import io 
     if not df.empty:
 
-    colonne = [
-        "utente",
-        "squadra",
-        "tipo",
-        "data_inizio",
-        "data_fine",
-        "stato",
-        "approvato_da",
-        "data_richiesta",
-        "data_approvazione",
-        "motivo_rifiuto"
-    ]
-
-    colonne_presenti = [
-        c for c in colonne
-        if c in df.columns
-    ]
-
-    df_export = df[colonne_presenti]
-
-    buffer = io.BytesIO()
-
-    with pd.ExcelWriter(
-        buffer,
-        engine="openpyxl"
-    ) as writer:
-
-        df_export.to_excel(
-            writer,
-            index=False,
-            sheet_name="Permessi"
+        colonne = [
+            "utente",
+            "squadra",
+            "tipo",
+            "data_inizio",
+            "data_fine",
+            "stato",
+            "approvato_da",
+            "data_richiesta",
+            "data_approvazione",
+            "motivo_rifiuto"
+        ]
+    
+        colonne_presenti = [
+            c for c in colonne
+            if c in df.columns
+        ]
+    
+        df_export = df[colonne_presenti]
+    
+        buffer = io.BytesIO()
+    
+        with pd.ExcelWriter(
+            buffer,
+            engine="openpyxl"
+        ) as writer:
+    
+            df_export.to_excel(
+                writer,
+                index=False,
+                sheet_name="Permessi"
+            )
+    
+        st.download_button(
+            "📥 Scarica Excel",
+            data=buffer.getvalue(),
+            file_name=f"permessi_{data_da}_{data_a}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
-    st.download_button(
-        "📥 Scarica Excel",
-        data=buffer.getvalue(),
-        file_name=f"permessi_{data_da}_{data_a}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
+    
+    
