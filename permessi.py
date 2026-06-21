@@ -135,9 +135,16 @@ def pagina_permessi(supabase, utente):
                     f"👤 Gestita da: {r['approvato_da']}"
                 )
     
+            if r.get("data_richiesta"):
+                st.write(
+                    f"📨 Richiesta inviata il: "
+                    f"{formatta_datetime(r['data_richiesta'])}"
+                )
+    
             if r.get("data_approvazione"):
                 st.write(
-                    f"📅 Data approvazione: {r['data_approvazione']}"
+                    f"✅ Approvata il: "
+                    f"{formatta_datetime(r['data_approvazione'])}"
                 )
     
             if stato == "RIFIUTATO":
