@@ -328,8 +328,8 @@ def pagina_permessi(supabase, utente):
             ):
     
                 st.write(f"👥 Squadra: {r.get('squadra','-')}")
-                st.write(f"📅 Dal: {r.get('data_inizio','-')}")
-                st.write(f"📅 Al: {r.get('data_fine','-')}")
+                st.write(f"📅 Dal: {formatta_data(r['data_inizio'])}")
+                st.write(f"📅 Al: {formatta_data(r['data_fine'])}")
                 st.write(f"🕒 Dalle: {r.get('ora_inizio','-')}")
                 st.write(f"🕒 Alle: {r.get('ora_fine','-')}")
     
