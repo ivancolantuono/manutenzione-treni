@@ -310,7 +310,11 @@ def pagina_permessi(supabase, utente):
                 )
     
                 st.write(
-                    f"📅 Data approvazione: {r.get('data_approvazione','-')}"
+                    f"📨 Richiesta inviata: {formatta_datetime(r.get('data_richiesta',''))}"
+                )
+                
+                st.write(
+                    f"✅ Approvata: {formatta_datetime(r.get('data_approvazione',''))}"
                 )
     
     
