@@ -150,10 +150,7 @@ def pagina_permessi(supabase, utente):
     # APPROVAZIONI
     # =====================
     
-    if ruolo.upper() in [
-        "CAPOSQUADRA",
-        "Ingegneria"
-    ]:
+    if ruolo.upper() == "CAPOSQUADRA":
     
         st.divider()
         st.subheader("✅ Richieste da approvare")
