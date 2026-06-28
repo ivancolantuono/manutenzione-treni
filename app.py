@@ -1735,7 +1735,7 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
     st.title("📚 Piani di Manutenzione")
 
     piani = {
-        "F0": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf",
+        "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf",
         "F1": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F1.pdf",
         "F2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2.pdf",
         "F3": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F3.pdf",
