@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import streamlit.components.v1 as components
 import os
 from zoneinfo import ZoneInfo
 from permessi import pagina_permessi
@@ -1736,12 +1737,21 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
 
     with col1:
         if st.button("🟦 F0", use_container_width=True):
-            st.session_state["pdf"] = "F0"
+            st.session_state["pdf_url"] = ""
 
     with col2:
-        st.button("🟩 F1", disabled=True, use_container_width=True)
+        if st.button("🟩 F1", use_container_width=True):
+            st.info("Da caricare")
 
     with col3:
-        st.button("🟨 F2", disabled=True, use_container_width=True)
-    
+        if st.button("🟨 F2", use_container_width=True):
+            st.info("Da caricare")
+
+    if st.session_state.get("pdf_url"):
+
+        components.iframe(
+            st.session_state["pdf_url"],
+            height=900,
+            scrolling=True
+        )
     
