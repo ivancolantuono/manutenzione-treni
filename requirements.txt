@@ -4,3 +4,4 @@ openpyxl
 supabase
 streamlit-autorefresh
 plotly
+streamlit-pdf-viewer
