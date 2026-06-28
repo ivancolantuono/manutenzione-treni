@@ -1734,20 +1734,26 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
     st.title("📚 Piani di Manutenzione")
 
     piani = {
-        "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf",
-        "F1": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F1.pdf",
-        "F2": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F2.pdf",
-        "F3": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F3.pdf",
-        "F4": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F4.pdf"
+        "F0": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf",
+        "F1": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F1.pdf",
+        "F2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2.pdf",
+        "F3": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F3.pdf",
+        "F4": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F4.pdf",
+        "F5": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F5.pdf",
+        "C2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/C2.pdf",
+        "C4": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/C4.pdf",
     }
 
     cols = st.columns(4)
 
-    for i, piano in enumerate(piani.keys()):
+    for i, nome in enumerate(piani):
+
         with cols[i % 4]:
-            if st.button(piano, use_container_width=True):
-                st.session_state["pdf_piano"] = piani[piano]
-                st.session_state["nome_piano"] = piano
+
+            if st.button(nome, use_container_width=True):
+
+                st.session_state["nome_piano"] = nome
+                st.session_state["pdf_piano"] = piani[nome]
 
     if "pdf_piano" in st.session_state:
 
@@ -1755,8 +1761,19 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
 
         st.subheader(f"📄 Piano {st.session_state['nome_piano']}")
 
-        components.iframe(
-            st.session_state["pdf_piano"],
+        st.link_button(
+            "🔗 Apri PDF in una nuova scheda",
+            st.session_state["pdf_piano"]
+        )
+
+        components.html(
+            f"""
+            <iframe
+                src="{st.session_state['pdf_piano']}"
+                width="100%"
+                height="900"
+                style="border:none;">
+            </iframe>
+            """,
             height=900,
-            scrolling=True,
         )
