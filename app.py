@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
+import requests
+from streamlit_pdf_viewer import pdf_viewer
 import os
 from zoneinfo import ZoneInfo
 from permessi import pagina_permessi
@@ -1746,14 +1747,14 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
 
     cols = st.columns(4)
 
-    for i, nome in enumerate(piani):
+    for i, nome in enumerate(piani.keys()):
 
         with cols[i % 4]:
 
             if st.button(nome, use_container_width=True):
 
-                st.session_state["nome_piano"] = nome
                 st.session_state["pdf_piano"] = piani[nome]
+                st.session_state["nome_piano"] = nome
 
     if "pdf_piano" in st.session_state:
 
@@ -1762,18 +1763,27 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
         st.subheader(f"📄 Piano {st.session_state['nome_piano']}")
 
         st.link_button(
-            "🔗 Apri PDF in una nuova scheda",
+            "🔗 Apri in una nuova scheda",
             st.session_state["pdf_piano"]
         )
 
-        components.html(
-            f"""
-            <iframe
-                src="{st.session_state['pdf_piano']}"
-                width="100%"
-                height="900"
-                style="border:none;">
-            </iframe>
-            """,
-            height=900,
-        )
+        try:
+
+            response = requests.get(
+                st.session_state["pdf_piano"]
+            )
+
+            if response.status_code == 200:
+
+                pdf_viewer(
+                    response.content,
+                    width="100%"
+                )
+
+            else:
+
+                st.error("Impossibile caricare il PDF.")
+
+        except Exception as e:
+
+            st.error(e)
