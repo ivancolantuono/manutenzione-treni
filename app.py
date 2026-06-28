@@ -1737,7 +1737,7 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
 
     with col1:
         if st.button("🟦 F0", use_container_width=True):
-            st.session_state["pdf_url"] = ""
+            st.session_state["pdf_url"] = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf"
 
     with col2:
         if st.button("🟩 F1", use_container_width=True):
