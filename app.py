@@ -396,7 +396,8 @@ if modalita == "CAPOSQUADRA":
             "📊 DASHBOARD",
             "📊 STORICO",
             "⚙️ CERCA COMPONENTE",
-            "🏖️ FERIE E PERMESSI"
+            "🏖️ FERIE E PERMESSI",
+            "📚 PIANI DI MANUTENZIONE"
         ],
         default="📌 OPEN ITEM"
     )
@@ -1726,5 +1727,21 @@ elif menu == "📊 CONTROLLO PERMESSI":
             file_name=f"permessi_{data_da}_{data_a}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+        
+elif menu == "📚 PIANI DI MANUTENZIONE":
+
+    st.title("📚 Piani di Manutenzione")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("🟦 F0", use_container_width=True):
+            st.session_state["pdf"] = "F0"
+
+    with col2:
+        st.button("🟩 F1", disabled=True, use_container_width=True)
+
+    with col3:
+        st.button("🟨 F2", disabled=True, use_container_width=True)
     
     
