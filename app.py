@@ -1733,25 +1733,33 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
 
     st.title("📚 Piani di Manutenzione")
 
-    col1, col2, col3 = st.columns(3)
+    piani = {
+        "F0": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F0.pdf",
+        "F1": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F1.pdf",
+        "F2": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F2.pdf",
+        "F3": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F3.pdf",
+        "F4": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F4.pdf",
+        "F5": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/F5.pdf",
+        "C2": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/C2.pdf",
+        "C4": "https://TUO-PROGETTO.supabase.co/storage/v1/object/public/manuali/C4.pdf"
+    }
 
-    with col1:
-        if st.button("🟦 F0", use_container_width=True):
-            st.session_state["pdf_url"] = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf"
+    cols = st.columns(4)
 
-    with col2:
-        if st.button("🟩 F1", use_container_width=True):
-            st.info("Da caricare")
+    for i, piano in enumerate(piani.keys()):
+        with cols[i % 4]:
+            if st.button(piano, use_container_width=True):
+                st.session_state["pdf_piano"] = piani[piano]
+                st.session_state["nome_piano"] = piano
 
-    with col3:
-        if st.button("🟨 F2", use_container_width=True):
-            st.info("Da caricare")
+    if "pdf_piano" in st.session_state:
 
-    if st.session_state.get("pdf_url"):
+        st.divider()
+
+        st.subheader(f"📄 Piano {st.session_state['nome_piano']}")
 
         components.iframe(
-            st.session_state["pdf_url"],
+            st.session_state["pdf_piano"],
             height=900,
-            scrolling=True
+            scrolling=True,
         )
-    
