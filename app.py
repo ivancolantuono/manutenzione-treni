@@ -399,7 +399,7 @@ if modalita == "CAPOSQUADRA":
             "📊 STORICO",
             "⚙️ CERCA COMPONENTE",
             "🏖️ FERIE E PERMESSI",
-            "📚 PIANI DI MANUTENZIONE"
+            "📚 SCADENZE TEMPORALI"
         ],
         default="📌 OPEN ITEM"
     )
@@ -424,6 +424,7 @@ else:
             "📇 SCHEDE SR VZI6",
             "🚄 MANUTENZIONE",
             "⚙️ CERCA COMPONENTE",
+            "📚 SCADENZE TEMPORALI",
             "🏖️ FERIE E PERMESSI"
         ],
         default="📌 OPEN ITEM"
@@ -1730,9 +1731,9 @@ elif menu == "📊 CONTROLLO PERMESSI":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-elif menu == "📚 PIANI DI MANUTENZIONE":
+elif menu == "📚 SCADENZE TEMPORALI":
 
-    st.title("📚 Piani di Manutenzione")
+    st.title("📚 SCADENZE")
 
     piani = {
         "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf",
@@ -1740,9 +1741,6 @@ elif menu == "📚 PIANI DI MANUTENZIONE":
         "F2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2.pdf",
         "F3": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F3.pdf",
         "F4": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F4.pdf",
-        "F5": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F5.pdf",
-        "C2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/C2.pdf",
-        "C4": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/C4.pdf",
     }
 
     cols = st.columns(4)
