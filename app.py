@@ -1758,7 +1758,7 @@ elif menu == "📚 SCADENZE TEMPORALI":
 
         st.divider()
 
-        st.subheader(f"📄 Piano {st.session_state['nome_piano']}")
+        st.subheader(f"📄 SCADENZA {st.session_state['nome_piano']}")
 
         st.link_button(
             "🔗 Apri in una nuova scheda",
