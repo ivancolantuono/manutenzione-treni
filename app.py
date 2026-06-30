@@ -1126,7 +1126,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
     
     if not st.session_state.admin_componenti:
     
-        with st.expander("🔒 Area amministratore"):
+        with st.expander("**🔒 Area amministratore**"):
     
             pwd = st.text_input(
                 "LA TUA PASSWORD",
