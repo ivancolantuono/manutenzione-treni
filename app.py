@@ -1269,8 +1269,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
                 "elemento": elemento,
                 "assieme": assieme,
                 "componente": componente,
-                "part_number": part_number,
-            
+                "part_number": part_number,        
             }).execute()
             st.success("✅ Componente inserito")
             st.session_state.nuovo = False
