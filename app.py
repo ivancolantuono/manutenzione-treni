@@ -1334,39 +1334,39 @@ elif menu == "⚙️ CERCA COMPONENTE":
 
             with col1:
             
-            if st.button("💾 Salva modifiche", type="primary"):
-            
-                supabase.table("magazzino").update({
-            
-                    "ELEMENTO": elemento,
-                    "ASSIEME": assieme,
-                    "COMPONENTE": componente,
-                    "Part_Number": part_number
-            
-                }).eq(
-                    "id",
-                    int(r["id"])
-                ).execute()
-                st.success("✅ Componente aggiornato")
-                st.cache_data.clear()
-                st.session_state.magazzino = carica_magazzino()
-                st.rerun()
-
-            st.markdown("---")
+                if st.button("💾 Salva modifiche", type="primary"):
+                
+                    supabase.table("magazzino").update({
+                
+                        "ELEMENTO": elemento,
+                        "ASSIEME": assieme,
+                        "COMPONENTE": componente,
+                        "Part_Number": part_number
+                
+                    }).eq(
+                        "id",
+                        int(r["id"])
+                    ).execute()
+                    st.success("✅ Componente aggiornato")
+                    st.cache_data.clear()
+                    st.session_state.magazzino = carica_magazzino()
+                    st.rerun()
+    
+                st.markdown("---")
 
             with col2:
-            if st.button("🗑️ Elimina componente", type="secondary"):
-            
-                supabase.table("magazzino")\
-                    .delete()\
-                    .eq("id", int(r["id"]))\
-                    .execute()
-            
-                st.success("🗑️ Componente eliminato")
-            
-                st.cache_data.clear()
-                st.session_state.magazzino = carica_magazzino()
-                st.rerun()
+                if st.button("🗑️ Elimina componente", type="secondary"):
+                
+                    supabase.table("magazzino")\
+                        .delete()\
+                        .eq("id", int(r["id"]))\
+                        .execute()
+                
+                    st.success("🗑️ Componente eliminato")
+                
+                    st.cache_data.clear()
+                    st.session_state.magazzino = carica_magazzino()
+                    st.rerun()
 
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
