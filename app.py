@@ -1129,13 +1129,13 @@ elif menu == "⚙️ CERCA COMPONENTE":
         with st.expander("🔒 Area amministratore"):
     
             pwd = st.text_input(
-                "1111",
+                "LA TUA PASSWORD",
                 type="password"
             )
     
             if st.button("Accedi"):
     
-                if pwd == "LaTuaPassword":
+                if pwd == "1111":
                     st.session_state.admin_componenti = True
                     st.rerun()
                 else:
