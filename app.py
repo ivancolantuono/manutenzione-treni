@@ -1187,8 +1187,11 @@ elif menu == "⚙️ CERCA COMPONENTE":
 
         return df
 
-    with st.spinner("🔄 LOADING"):
-        df_mag = carica_magazzino()
+    if "magazzino" not in st.session_state:
+        with st.spinner("🔄 LOADING"):
+            st.session_state.magazzino = carica_magazzino()
+
+    df_mag = st.session_state.magazzino
     
     if df_mag.empty:
         st.warning("Catalogo vuoto")
@@ -1265,12 +1268,16 @@ elif menu == "⚙️ CERCA COMPONENTE":
             "ELEMENTO": elemento,
             "ASSIEME": assieme,
             "COMPONENTE": componente,
-            "Part_Number": Part_Number,
+            "Part_Number": part_number,
         }).execute()
             st.success("✅ Componente inserito")
+
             st.session_state.nuovo = False
+
             st.cache_data.clear()
-            st.rerun()
+            st.session_state.magazzino = carica_magazzino()
+
+            st.rerun())
         
     # =========================
     # 📄 TABELLA
@@ -1320,7 +1327,6 @@ elif menu == "⚙️ CERCA COMPONENTE":
             part_number = st.text_input(
                 "Part Number",
                 value=r["part_number"],
-                disabled=True,
                 key="mod_part"
             )
             
@@ -1330,7 +1336,8 @@ elif menu == "⚙️ CERCA COMPONENTE":
             
                     "ELEMENTO": elemento,
                     "ASSIEME": assieme,
-                    "COMPONENTE": componente
+                    "COMPONENTE": componente,
+                    "Part_Number": part_number
             
                 }).eq(
                     "id",
@@ -1340,7 +1347,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
                 st.success("✅ Componente aggiornato")
             
                 st.cache_data.clear()
-            
+                st.session_state.magazzino = carica_magazzino()
                 st.rerun()
 
 # =========================
