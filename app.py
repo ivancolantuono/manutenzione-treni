@@ -1121,6 +1121,26 @@ elif menu == "⚙️ CERCA COMPONENTE":
 
     st.title("⚙️ Cerca componente")
 
+    if "admin_componenti" not in st.session_state:
+        st.session_state.admin_componenti = False
+    
+    if not st.session_state.admin_componenti:
+    
+        with st.expander("🔒 Area amministratore"):
+    
+            pwd = st.text_input(
+                "1111",
+                type="password"
+            )
+    
+            if st.button("Accedi"):
+    
+                if pwd == "LaTuaPassword":
+                    st.session_state.admin_componenti = True
+                    st.rerun()
+                else:
+                    st.error("Password errata")
+
     # =========================
     # 📥 CARICAMENTO COMPLETO + COLONNA SEARCH
     # =========================
@@ -1228,6 +1248,35 @@ elif menu == "⚙️ CERCA COMPONENTE":
         st.warning("Nessun risultato trovato")
         st.stop()
 
+    if st.session_state.admin_componenti:
+    
+        st.divider()
+    
+        if st.button("➕ Nuovo componente"):
+            st.session_state.nuovo = True
+
+    if st.session_state.get("nuovo", False):
+
+        st.subheader("➕ Nuovo componente")    
+        codice = st.text_input("Codice")
+        descrizione = st.text_input("Descrizione")
+        assieme = st.text_input("Assieme")
+        costruttore = st.text_input("Costruttore")
+        note = st.text_area("Note")
+    
+        if st.button("💾 Salva componente"):
+            supabase.table("magazzino").insert({
+                "codice": codice,
+                "descrizione": descrizione,
+                "assieme": assieme,
+                "costruttore": costruttore,
+                "note": note
+            }).execute()
+            st.success("✅ Componente inserito")
+            st.session_state.nuovo = False
+            st.cache_data.clear()
+            st.rerun()
+        
     # =========================
     # 📄 TABELLA
     # =========================
