@@ -1283,7 +1283,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
     # 📄 TABELLA
     # =========================
     evento = st.dataframe(
-        risultati.drop(columns=["search"]),
+        risultati.drop(columns=["search", "id"]),
         use_container_width=True,
         height=500,
         hide_index=True,
