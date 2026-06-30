@@ -1152,7 +1152,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
         start = 0
 
         while True:
-            res = supabase.table("magazzino").select("*").range(start, start + step - 1).execute()
+            res = supabase.table("magazzino").select("*").order("id").range(start, start + step - 1).execute()
 
             if not res.data:
                 break
