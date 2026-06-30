@@ -1144,7 +1144,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
     # =========================
     # 📥 CARICAMENTO COMPLETO + COLONNA SEARCH
     # =========================
-    @st.cache_data(ttl=300)
+    @st.cache_data(ttl=5)
     def carica_magazzino():
 
         dati = []
@@ -1186,8 +1186,6 @@ elif menu == "⚙️ CERCA COMPONENTE":
         )
 
         return df
-
-    if "magazzino" not in st.session_state:
 
         with st.spinner("🔄 LOADING"):
             df_mag = carica_magazzino()
