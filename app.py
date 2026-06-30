@@ -1257,20 +1257,20 @@ elif menu == "⚙️ CERCA COMPONENTE":
 
     if st.session_state.get("nuovo", False):
 
-        st.subheader("➕ Nuovo componente")    
-        codice = st.text_input("Codice")
-        descrizione = st.text_input("Descrizione")
+        st.subheader("➕ Nuovo componente")   
+        elemento = st.text_input("Elemento")
         assieme = st.text_input("Assieme")
-        costruttore = st.text_input("Costruttore")
-        note = st.text_area("Note")
+        componente = st.text_input("Componenete")
+        part_number = st.text_input("Part Number")
+        
     
         if st.button("💾 Salva componente"):
             supabase.table("magazzino").insert({
-                "codice": codice,
-                "descrizione": descrizione,
+                "elemento": elemento,
                 "assieme": assieme,
-                "costruttore": costruttore,
-                "note": note
+                "componente": componente,
+                "part_number": part_number,
+            
             }).execute()
             st.success("✅ Componente inserito")
             st.session_state.nuovo = False
