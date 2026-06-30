@@ -1190,9 +1190,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
     if "magazzino" not in st.session_state:
 
         with st.spinner("🔄 LOADING"):
-            st.session_state.magazzino = carica_magazzino()
-
-    df_mag = st.session_state.magazzino
+            df_mag = carica_magazzino()
     
     if df_mag.empty:
         st.warning("Catalogo vuoto")
