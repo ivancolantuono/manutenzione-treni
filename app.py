@@ -1352,9 +1352,9 @@ elif menu == "⚙️ CERCA COMPONENTE":
                     st.session_state.magazzino = carica_magazzino()
                     st.rerun()
     
-                st.markdown("---")
-
+            
             with col2:
+               
                 if st.button("🗑️ Elimina componente", type="secondary"):
                 
                     supabase.table("magazzino")\
