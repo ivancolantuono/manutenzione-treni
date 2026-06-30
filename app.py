@@ -1187,8 +1187,8 @@ elif menu == "⚙️ CERCA COMPONENTE":
 
         return df
 
-        with st.spinner("🔄 LOADING"):
-            df_mag = carica_magazzino()
+    with st.spinner("🔄 LOADING"):
+        df_mag = carica_magazzino()
     
     if df_mag.empty:
         st.warning("Catalogo vuoto")
@@ -1265,7 +1265,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
             "ELEMENTO": elemento,
             "ASSIEME": assieme,
             "COMPONENTE": componente,
-            "Part_Number": part_number,
+            "Part_Number": Part_Number,
         }).execute()
             st.success("✅ Componente inserito")
             st.session_state.nuovo = False
