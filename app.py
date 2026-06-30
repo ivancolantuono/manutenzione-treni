@@ -1135,7 +1135,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
     
             if st.button("Accedi"):
     
-                if pwd == "1111":
+                if pwd == "280188":
                     st.session_state.admin_componenti = True
                     st.rerun()
                 else:
