@@ -1332,13 +1332,13 @@ elif menu == "⚙️ CERCA COMPONENTE":
             
                 supabase.table("magazzino").update({
             
-                    "elemento": elemento,
-                    "assieme": assieme,
-                    "componente": componente
+                    "ELEMENTO": elemento,
+                    "ASSIEME": assieme,
+                    "COMPONENTE": componente
             
                 }).eq(
-                    "part_number",
-                    r["part_number"]
+                    "Part_Number",
+                    r["Part_Number"]
                 ).execute()
             
                 st.success("✅ Componente aggiornato")
