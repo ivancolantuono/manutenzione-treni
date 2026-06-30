@@ -1348,6 +1348,9 @@ elif menu == "⚙️ CERCA COMPONENTE":
                     int(r["id"])
                 ).execute()
                 st.success("✅ Componente aggiornato")
+                st.cache_data.clear()
+                st.session_state.magazzino = carica_magazzino()
+                st.rerun()
 
             st.markdown("---")
 
@@ -1360,9 +1363,6 @@ elif menu == "⚙️ CERCA COMPONENTE":
                     .execute()
             
                 st.success("🗑️ Componente eliminato")
-
-            
-                
             
                 st.cache_data.clear()
                 st.session_state.magazzino = carica_magazzino()
