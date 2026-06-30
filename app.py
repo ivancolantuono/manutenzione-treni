@@ -1279,14 +1279,73 @@ elif menu == "⚙️ CERCA COMPONENTE":
     # =========================
     # 📄 TABELLA
     # =========================
-    st.dataframe(
-        risultati.drop(columns=["search"]),  # nasconde colonna tecnica
+    evento = st.dataframe(
+        risultati.drop(columns=["search"]),
         use_container_width=True,
         height=500,
-        hide_index=True
+        hide_index=True,
+        on_select="rerun",
+        selection_mode="single-row"
     )
 
     st.caption("🔍 Ricerca veloce su tutto il catalogo")
+
+    if st.session_state.admin_componenti:
+    
+        righe = evento.selection.rows
+    
+        if righe:
+    
+            indice = righe[0]
+    
+            r = risultati.iloc[indice]
+    
+            st.divider()
+    
+            st.subheader("✏️ Modifica componente")
+            elemento = st.text_input(
+                "Elemento",
+                value=r["elemento"],
+                key="mod_elemento"
+            )
+            
+            assieme = st.text_input(
+                "Assieme",
+                value=r["assieme"],
+                key="mod_assieme"
+            )
+            
+            componente = st.text_input(
+                "Componente",
+                value=r["componente"],
+                key="mod_componente"
+            )
+            
+            part_number = st.text_input(
+                "Part Number",
+                value=r["part_number"],
+                disabled=True,
+                key="mod_part"
+            )
+            
+            if st.button("💾 Salva modifiche", type="primary"):
+            
+                supabase.table("magazzino").update({
+            
+                    "elemento": elemento,
+                    "assieme": assieme,
+                    "componente": componente
+            
+                }).eq(
+                    "part_number",
+                    r["part_number"]
+                ).execute()
+            
+                st.success("✅ Componente aggiornato")
+            
+                st.cache_data.clear()
+            
+                st.rerun()
 
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
