@@ -1329,6 +1329,10 @@ elif menu == "⚙️ CERCA COMPONENTE":
                 value=r["part_number"],
                 key="mod_part"
             )
+
+            col1, col2 = st.colums(2)
+
+            with col1:
             
             if st.button("💾 Salva modifiche", type="primary"):
             
@@ -1347,6 +1351,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
 
             st.markdown("---")
 
+            with col2:
             if st.button("🗑️ Elimina componente", type="secondary"):
             
                 supabase.table("magazzino")\
