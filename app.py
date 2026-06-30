@@ -1343,8 +1343,21 @@ elif menu == "⚙️ CERCA COMPONENTE":
                     "id",
                     int(r["id"])
                 ).execute()
-            
                 st.success("✅ Componente aggiornato")
+
+            st.markdown("---")
+
+            if st.button("🗑️ Elimina componente", type="secondary"):
+            
+                supabase.table("magazzino")\
+                    .delete()\
+                    .eq("id", int(r["id"]))\
+                    .execute()
+            
+                st.success("🗑️ Componente eliminato")
+
+            
+                
             
                 st.cache_data.clear()
                 st.session_state.magazzino = carica_magazzino()
