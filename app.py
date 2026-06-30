@@ -1277,7 +1277,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
             st.cache_data.clear()
             st.session_state.magazzino = carica_magazzino()
 
-            st.rerun())
+            st.rerun()
         
     # =========================
     # 📄 TABELLA
