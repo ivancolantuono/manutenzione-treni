@@ -1266,11 +1266,11 @@ elif menu == "⚙️ CERCA COMPONENTE":
     
         if st.button("💾 Salva componente"):
             supabase.table("magazzino").insert({
-                "elemento": elemento,
-                "assieme": assieme,
-                "componente": componente,
-                "part_number": part_number,        
-            }).execute()
+            "ELEMENTO": elemento,
+            "ASSIEME": assieme,
+            "COMPONENTE": componente,
+            "Part_Number": part_number,
+        }).execute()
             st.success("✅ Componente inserito")
             st.session_state.nuovo = False
             st.cache_data.clear()
@@ -1337,8 +1337,8 @@ elif menu == "⚙️ CERCA COMPONENTE":
                     "COMPONENTE": componente
             
                 }).eq(
-                    "Part_Number",
-                    r["Part_Number"]
+                    "id",
+                    int(r["id"])
                 ).execute()
             
                 st.success("✅ Componente aggiornato")
