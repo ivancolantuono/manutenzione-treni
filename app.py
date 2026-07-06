@@ -1926,10 +1926,42 @@ elif menu == "📚 SCADENZE TEMPORALI":
 
             st.error(e)
             
-elif menu == "🤖 ASSISTENTE SOFTWARE":
+elif menu == "🤖 ASSISTENTE":
 
-    st.title("🤖 Assistente Software")
+    st.title("🤖 ASSISTENTE")
 
     db = carica_sw()
 
-    st.success(f"Fogli caricati: {list(db.keys())}")
+    domanda = st.chat_input("Scrivi una domanda...")
+
+    if domanda:
+
+        st.chat_message("user").write(domanda)
+
+        trovato = False
+
+        for nome_foglio, df in db.items():
+
+            df = df.fillna("").astype(str)
+
+            mask = df.apply(
+                lambda r: domanda.lower() in " ".join(r).lower(),
+                axis=1
+            )
+
+            risultati = df[mask]
+
+            if not risultati.empty:
+
+                trovato = True
+
+                st.chat_message("assistant").write(
+                    f"📄 Foglio: {nome_foglio}"
+                )
+
+                st.dataframe(risultati, use_container_width=True)
+
+        if not trovato:
+            st.chat_message("assistant").write(
+                "❌ Nessun risultato trovato."
+            )
