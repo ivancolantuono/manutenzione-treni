@@ -399,7 +399,8 @@ if modalita == "CAPOSQUADRA":
             "📊 STORICO",
             "⚙️ CERCA COMPONENTE",
             "🏖️ FERIE E PERMESSI",
-            "📚 SCADENZE TEMPORALI"
+            "📚 SCADENZE TEMPORALI",
+            "🤖 ASSISTENTE"
         ],
         default="📌 OPEN ITEM"
     )
@@ -425,7 +426,8 @@ else:
             "🚄 MANUTENZIONE",
             "⚙️ CERCA COMPONENTE",
             "📚 SCADENZE TEMPORALI",
-            "🏖️ FERIE E PERMESSI"
+            "🏖️ FERIE E PERMESSI",
+            "🤖 ASSISTENTE"
         ],
         default="📌 OPEN ITEM"
     )
@@ -440,6 +442,16 @@ def get_database_manutenzione():
 
 def load_database():
     return get_database_manutenzione()
+
+# =========================
+# 🤖 CARICA DATABASE SOFTWARE
+# =========================
+
+@st.cache_data(ttl=300)
+def carica_sw():
+
+    url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/Panoramico%20PIS.xlsx"
+    return pd.read_excel(url, sheet_name=None)
 
 def load_operatori():
     return get_operatori()
@@ -1913,3 +1925,11 @@ elif menu == "📚 SCADENZE TEMPORALI":
         except Exception as e:
 
             st.error(e)
+            
+elif menu == "🤖 ASSISTENTE SOFTWARE":
+
+    st.title("🤖 Assistente Software")
+
+    db = carica_sw()
+
+    st.success(f"Fogli caricati: {list(db.keys())}")
