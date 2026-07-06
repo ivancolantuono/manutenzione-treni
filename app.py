@@ -1955,11 +1955,14 @@ elif menu == "🤖 ASSISTENTE":
 
         domanda = domanda.lower()
 
+        df = df.fillna("").astype(str)
+        
         risultati = df[
-            df.astype(str)
-              .apply(lambda r: domanda in " ".join(r).lower(), axis=1)
+            df.apply(
+                lambda r: domanda in " ".join(r).lower(),
+                axis=1
+            )
         ]
-
         if risultati.empty:
 
             st.chat_message("assistant").write(
