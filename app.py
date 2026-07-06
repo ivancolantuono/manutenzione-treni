@@ -451,7 +451,22 @@ def load_database():
 def carica_sw():
 
     url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/Panoramico%20PIS.xlsx"
-    return pd.read_excel(url, sheet_name=None)
+
+    xls = pd.ExcelFile(url)
+
+    tutti = []
+
+    for foglio in xls.sheet_names:
+
+        df = pd.read_excel(xls, sheet_name=foglio)
+
+        df = df.fillna("")
+
+        df["FOGLIO"] = foglio
+
+        tutti.append(df)
+
+    return pd.concat(tutti, ignore_index=True)
 
 def load_operatori():
     return get_operatori()
@@ -1930,7 +1945,7 @@ elif menu == "🤖 ASSISTENTE":
 
     st.title("🤖 ASSISTENTE")
 
-    db = carica_sw()
+    df = carica_sw()
 
     domanda = st.chat_input("Scrivi una domanda...")
 
@@ -1938,30 +1953,33 @@ elif menu == "🤖 ASSISTENTE":
 
         st.chat_message("user").write(domanda)
 
-        trovato = False
+        domanda = domanda.lower()
 
-        for nome_foglio, df in db.items():
+        risultati = df[
+            df.astype(str)
+              .apply(lambda r: domanda in " ".join(r).lower(), axis=1)
+        ]
 
-            df = df.fillna("").astype(str)
+        if risultati.empty:
 
-            mask = df.apply(
-                lambda r: domanda.lower() in " ".join(r).lower(),
-                axis=1
-            )
-
-            risultati = df[mask]
-
-            if not risultati.empty:
-
-                trovato = True
-
-                st.chat_message("assistant").write(
-                    f"📄 Foglio: {nome_foglio}"
-                )
-
-                st.dataframe(risultati, use_container_width=True)
-
-        if not trovato:
             st.chat_message("assistant").write(
-                "❌ Nessun risultato trovato."
+                "❌ Non ho trovato nulla."
             )
+
+        else:
+
+            risposta = ""
+
+            for _, r in risultati.iterrows():
+
+                risposta += f"📄 Foglio: {r['FOGLIO']}\n\n"
+
+                for c in risultati.columns:
+
+                    if str(r[c]).strip():
+
+                        risposta += f"**{c}**: {r[c]}\n\n"
+
+                risposta += "---\n"
+
+            st.chat_message("assistant").markdown(risposta)
