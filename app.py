@@ -2009,7 +2009,7 @@ elif menu == "💻 VERSIONI SOFTWARE":
         ]
 
     evento = st.dataframe(
-        risultati,
+        risultati.drop(columns=["procedura"]),
         use_container_width=True,
         hide_index=True,
         height=700,
