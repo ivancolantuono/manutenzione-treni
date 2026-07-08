@@ -1992,26 +1992,9 @@ elif menu == "💻 VERSIONI SOFTWARE":
               )
         ]
 
-    gb = GridOptionsBuilder.from_dataframe(df)
-
-    for col in df.columns[3:]:
-        gb.configure_column(
-            col,
-            cellRenderer=cell_renderer
-        )
-
-    gb.configure_default_column(
-        resizable=True,
-        sortable=True,
-        filter=True
-    )
-    
-    gridOptions = gb.build()
-    
-    AgGrid(
+    st.dataframe(
         df,
-        gridOptions=gridOptions,
-        fit_columns_on_grid_load=False,
+        use_container_width=True,
         height=700,
-        allow_unsafe_jscode=True
+        hide_index=True
     )
