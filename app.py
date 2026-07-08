@@ -125,6 +125,35 @@ label {
 </style>
 """, unsafe_allow_html=True)
 
+cell_renderer = JsCode("""
+class UrlCellRenderer {
+    init(params) {
+
+        if (params.value == null || params.value == "") {
+            this.eGui = document.createElement('span');
+            this.eGui.innerText = "";
+            return;
+        }
+
+        this.eGui = document.createElement('a');
+
+        this.eGui.innerText = params.value;
+
+        this.eGui.href = params.data.link;
+
+        this.eGui.target = "_blank";
+
+        this.eGui.style.color = "#0066cc";
+        this.eGui.style.fontWeight = "bold";
+        this.eGui.style.textDecoration = "none";
+    }
+
+    getGui() {
+        return this.eGui;
+    }
+}
+""")
+
 @st.cache_data(ttl=5)
 def get_interventi():
     res = supabase.table("interventi").select("*").execute()
@@ -1964,6 +1993,12 @@ elif menu == "💻 VERSIONI SOFTWARE":
         ]
 
     gb = GridOptionsBuilder.from_dataframe(df)
+
+    for col in df.columns[3:]:
+        gb.configure_column(
+            col,
+            cellRenderer=cell_renderer
+        )
 
     gb.configure_default_column(
         resizable=True,
