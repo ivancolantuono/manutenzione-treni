@@ -5,3 +5,4 @@ supabase
 streamlit-autorefresh
 plotly
 streamlit-pdf-viewer
+streamlit-aggrid
