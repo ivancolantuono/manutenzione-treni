@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from streamlit_pdf_viewer import pdf_viewer
 import os
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 from zoneinfo import ZoneInfo
 from permessi import pagina_permessi
 from datetime import date, datetime
@@ -1962,9 +1963,20 @@ elif menu == "💻 VERSIONI SOFTWARE":
               )
         ]
 
-    st.dataframe(
+    gb = GridOptionsBuilder.from_dataframe(df)
+
+    gb.configure_default_column(
+        resizable=True,
+        sortable=True,
+        filter=True
+    )
+    
+    gridOptions = gb.build()
+    
+    AgGrid(
         df,
-        use_container_width=True,
+        gridOptions=gridOptions,
+        fit_columns_on_grid_load=False,
         height=700,
-        hide_index=True
+        allow_unsafe_jscode=True
     )
