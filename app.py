@@ -1977,6 +1977,13 @@ elif menu == "💻 VERSIONI SOFTWARE":
 
     st.title("💻 Versioni Software Flotta")
 
+    @st.cache_data(ttl=300)
+    def carica_sw():
+
+        url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/srReport.xlsx"
+
+        return pd.read_excel(url)
+
     df = carica_sw()
 
     # Normalizza i nomi delle colonne
