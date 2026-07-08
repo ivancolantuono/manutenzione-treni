@@ -1973,28 +1973,64 @@ elif menu == "📚 SCADENZE TEMPORALI":
             
 elif menu == "💻 VERSIONI SOFTWARE":
 
+    import pandas as pd
+
     st.title("💻 Versioni Software Flotta")
 
-    df = carica_versioni_sw()
+    df = carica_sw()
 
+    # Normalizza i nomi delle colonne
+    df.columns = df.columns.str.strip().str.lower()
+
+    # Ricerca
     ricerca = st.text_input(
-        "🔍 Cerca software, sistema o tipo"
+        "🔍 Cerca software, sistema o versione"
     )
+
+    risultati = df.copy()
 
     if ricerca:
-        filtro = ricerca.lower()
 
-        df = df[
-            df.astype(str)
-              .apply(
-                  lambda r: filtro in " ".join(r).lower(),
-                  axis=1
-              )
+        ricerca = ricerca.lower()
+
+        risultati = risultati[
+            risultati.astype(str)
+            .apply(
+                lambda r: ricerca in " ".join(r).lower(),
+                axis=1
+            )
         ]
 
-    st.dataframe(
-        df,
+    evento = st.dataframe(
+        risultati,
         use_container_width=True,
+        hide_index=True,
         height=700,
-        hide_index=True
+        on_select="rerun",
+        selection_mode="single-row"
     )
+
+    righe = evento.selection.rows
+
+    if righe:
+
+        r = risultati.iloc[righe[0]]
+
+        st.divider()
+
+        st.subheader("📄 Procedura")
+
+        if (
+            "procedura" in risultati.columns
+            and str(r["procedura"]).strip() != ""
+            and str(r["procedura"]).lower() != "nan"
+        ):
+
+            st.link_button(
+                "📄 Apri procedura",
+                r["procedura"]
+            )
+
+        else:
+
+            st.info("Nessuna procedura disponibile.")
