@@ -400,7 +400,7 @@ if modalita == "CAPOSQUADRA":
             "⚙️ CERCA COMPONENTE",
             "🏖️ FERIE E PERMESSI",
             "📚 SCADENZE TEMPORALI",
-            "🤖 ASSISTENTE"
+            "💻 VERSIONI SOFTWARE"
         ],
         default="📌 OPEN ITEM"
     )
@@ -427,7 +427,7 @@ else:
             "⚙️ CERCA COMPONENTE",
             "📚 SCADENZE TEMPORALI",
             "🏖️ FERIE E PERMESSI",
-            "🤖 ASSISTENTE"
+            "💻 VERSIONI SOFTWARE"
         ],
         default="📌 OPEN ITEM"
     )
@@ -448,7 +448,7 @@ def load_database():
 # =========================
 
 @st.cache_data(ttl=300)
-def carica_sw():
+def carica_versioni_sw():
 
     url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/srReport.xlsx"
 
@@ -1941,48 +1941,30 @@ elif menu == "📚 SCADENZE TEMPORALI":
 
             st.error(e)
             
-elif menu == "🤖 ASSISTENTE":
+elif menu == "💻 VERSIONI SOFTWARE":
 
-    st.title("🤖 ASSISTENTE")
+    st.title("💻 Versioni Software Flotta")
 
-    df = carica_sw()
+    df = carica_versioni_sw()
 
-    domanda = st.chat_input("Scrivi una domanda...")
+    ricerca = st.text_input(
+        "🔍 Cerca software, sistema o tipo"
+    )
 
-    if domanda:
+    if ricerca:
+        filtro = ricerca.lower()
 
-        st.chat_message("user").write(domanda)
-
-        domanda = domanda.lower()
-
-        df = df.fillna("").astype(str)
-        
-        risultati = df[
-            df.apply(
-                lambda r: domanda in " ".join(r).lower(),
-                axis=1
-            )
+        df = df[
+            df.astype(str)
+              .apply(
+                  lambda r: filtro in " ".join(r).lower(),
+                  axis=1
+              )
         ]
-        if risultati.empty:
 
-            st.chat_message("assistant").write(
-                "❌ Non ho trovato nulla."
-            )
-
-        else:
-
-            risposta = ""
-
-            for _, r in risultati.iterrows():
-
-                risposta += f"📄 Foglio: {r['FOGLIO']}\n\n"
-
-                for c in risultati.columns:
-
-                    if str(r[c]).strip():
-
-                        risposta += f"**{c}**: {r[c]}\n\n"
-
-                risposta += "---\n"
-
-            st.chat_message("assistant").markdown(risposta)
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=700,
+        hide_index=True
+    )
