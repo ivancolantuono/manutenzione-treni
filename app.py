@@ -450,7 +450,7 @@ def load_database():
 @st.cache_data(ttl=300)
 def carica_sw():
 
-    url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/Panoramico%20PIS.xlsx"
+    url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/srReport.xlsx"
 
     xls = pd.ExcelFile(url)
 
