@@ -383,51 +383,66 @@ with st.sidebar:
 
     st.markdown("---")
 
+    # =========================
+    # MENU
+    # =========================
+    
     if modalita == "CAPOSQUADRA":
-
+    
+        st.markdown("### 🔧 MANUTENZIONE")
+    
         menu = st.radio(
-            "Navigazione",
+            "",
             [
                 "📌 OPEN ITEM",
                 "📇 SCHEDE SR",
                 "📇 SCHEDE SR VZI6",
                 "🚄 MANUTENZIONE",
+                "⚙️ CERCA COMPONENTE",
+            ],
+            key="menu_manutenzione"
+        )
+    
+        st.markdown("### 👥 PERSONALE")
+    
+        menu2 = st.radio(
+            "",
+            [
                 "🗓️ PLANNING",
+                "🏖️ FERIE E PERMESSI",
+                "📚 SCADENZE TEMPORALI",
+            ],
+            key="menu_personale"
+        )
+    
+        st.markdown("### 📊 ANALISI")
+    
+        menu3 = st.radio(
+            "",
+            [
                 "📊 DASHBOARD",
                 "📊 STORICO",
-                "⚙️ CERCA COMPONENTE",
-                "🏖️ FERIE E PERMESSI",
-                "📚 SCADENZE TEMPORALI",
-                "💻 VERSIONI SOFTWARE"
-            ]
+            ],
+            key="menu_analisi"
         )
-
-    elif modalita == "SUPERVISORE":
-
-        menu = st.radio(
-            "Navigazione",
+    
+        st.markdown("### 💻 SOFTWARE")
+    
+        menu4 = st.radio(
+            "",
             [
-                "📊 CONTROLLO PERMESSI"
-            ]
+                "💻 VERSIONI SOFTWARE",
+            ],
+            key="menu_software"
         )
-
-    else:
-
-        menu = st.radio(
-            "Navigazione",
-            [
-                "📌 OPEN ITEM",
-                "📇 SCHEDE SR",
-                "📇 SCHEDE SR VZI6",
-                "🚄 MANUTENZIONE",
-                "⚙️ CERCA COMPONENTE",
-                "📚 SCADENZE TEMPORALI",
-                "🏖️ FERIE E PERMESSI",
-                "💻 VERSIONI SOFTWARE"
-            ]
+    
+        # determina quale menu è stato selezionato
+        menu = (
+            st.session_state.get("menu_manutenzione")
+            or st.session_state.get("menu_personale")
+            or st.session_state.get("menu_analisi")
+            or st.session_state.get("menu_software")
         )
-
-    st.markdown("---")
 
     if st.button("🔓 Logout", use_container_width=True):
         st.session_state.clear()
