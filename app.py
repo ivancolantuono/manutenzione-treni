@@ -19,7 +19,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+st.set_page_config(
+    page_title="Manager ETR1000",
+    page_icon="🚄",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
