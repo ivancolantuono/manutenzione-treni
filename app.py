@@ -388,64 +388,65 @@ with st.sidebar:
     # MENU
     # =========================
 
+    menu = st.session_state.get("menu", "📌 OPEN ITEM")
+
+    def voce(nome):
+        if st.button(nome, use_container_width=True):
+            st.session_state["menu"] = nome
+
     if modalita == "CAPOSQUADRA":
 
-        menu = st.radio(
-            "Navigazione",
-            [
-                "──────── 🔧 MANUTENZIONE ────────",
-                "📌 OPEN ITEM",
-                "📇 SCHEDE SR",
-                "📇 SCHEDE SR VZI6",
-                "🚄 MANUTENZIONE",
-                "⚙️ CERCA COMPONENTE",
+        st.markdown("### 🔧 MANUTENZIONE")
+        voce("📌 OPEN ITEM")
+        voce("📇 SCHEDE SR")
+        voce("📇 SCHEDE SR VZI6")
+        voce("🚄 MANUTENZIONE")
+        voce("⚙️ CERCA COMPONENTE")
 
-                "──────── 👥 PERSONALE ─────────",
-                "🗓️ PLANNING",
-                "🏖️ FERIE E PERMESSI",
-                "📚 SCADENZE TEMPORALI",
+        st.markdown("---")
 
-                "──────── 📊 ANALISI ───────────",
-                "📊 DASHBOARD",
-                "📊 STORICO",
+        st.markdown("### 👥 PERSONALE")
+        voce("🗓️ PLANNING")
+        voce("🏖️ FERIE E PERMESSI")
+        voce("📚 SCADENZE TEMPORALI")
 
-                "──────── 💻 SOFTWARE ─────────",
-                "💻 VERSIONI SOFTWARE",
-            ],
-            label_visibility="collapsed"
-        )
+        st.markdown("---")
+
+        st.markdown("### 📊 ANALISI")
+        voce("📊 DASHBOARD")
+        voce("📊 STORICO")
+
+        st.markdown("---")
+
+        st.markdown("### 💻 SOFTWARE")
+        voce("💻 VERSIONI SOFTWARE")
 
     elif modalita == "SUPERVISORE":
 
-        menu = st.radio(
-            "Navigazione",
-            [
-                "📊 CONTROLLO PERMESSI"
-            ],
-            label_visibility="collapsed"
-        )
+        st.markdown("### 👥 PERSONALE")
+        voce("📊 CONTROLLO PERMESSI")
 
     else:
 
-        menu = st.radio(
-            "Navigazione",
-            [
-                "──────── 🔧 MANUTENZIONE ────────",
-                "📌 OPEN ITEM",
-                "📇 SCHEDE SR",
-                "📇 SCHEDE SR VZI6",
-                "🚄 MANUTENZIONE",
-                "⚙️ CERCA COMPONENTE",
+        st.markdown("### 🔧 MANUTENZIONE")
+        voce("📌 OPEN ITEM")
+        voce("📇 SCHEDE SR")
+        voce("📇 SCHEDE SR VZI6")
+        voce("🚄 MANUTENZIONE")
+        voce("⚙️ CERCA COMPONENTE")
 
-                "──────── 👥 PERSONALE ─────────",
-                "🏖️ FERIE E PERMESSI",
-                "📚 SCADENZE TEMPORALI",
+        st.markdown("---")
 
-                "──────── 💻 SOFTWARE ─────────",
-                "💻 VERSIONI SOFTWARE",
-            ],
-            label_visibility="collapsed"
-        )
+        st.markdown("### 👥 PERSONALE")
+        voce("🏖️ FERIE E PERMESSI")
+        voce("📚 SCADENZE TEMPORALI")
+
+        st.markdown("---")
+
+        st.markdown("### 💻 SOFTWARE")
+        voce("💻 VERSIONI SOFTWARE")
+
+    menu = st.session_state.get("menu", "📌 OPEN ITEM")
 
     st.divider()
 
