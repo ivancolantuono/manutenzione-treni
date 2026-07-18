@@ -30,11 +30,11 @@ footer {visibility: hidden;}
 st.markdown("""
 <style>
 
-/* Nasconde toolbar */
+/* Nasconde toolbar 
 [data-testid="stToolbar"] {
     display:none;
 }
-
+*/
 /* Nasconde decorazione rossa */
 [data-testid="stDecoration"] {
     display:none;
