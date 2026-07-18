@@ -542,7 +542,7 @@ operatori = [
 if "mostra" not in st.session_state:
     st.session_state["mostra"] = False
 
-if menu == "📊 STORICO":
+if menu == "Storico":
 
     st.title("📊 Storico Attività")
 
@@ -629,7 +629,7 @@ if menu == "📊 STORICO":
 # =========================
 # 🚄 MANUTENZIONE
 # =========================
-elif menu == "🚄 MANUTENZIONE":
+elif menu == "Manutenzione":
     
     st_autorefresh(interval=15000, key="refresh_manutenzione")
 
@@ -1073,7 +1073,7 @@ elif menu == "🚄 MANUTENZIONE":
                     st.success("Attività chiusa")
                     st.rerun()
     
-elif menu == "📊 DASHBOARD":
+elif menu == "Dashboard":
 
     import ast
 
@@ -1185,7 +1185,7 @@ elif menu == "📊 DASHBOARD":
 # =========================
 # 📦 CATALOGO COMPONENTI (SUPABASE + FAST SEARCH)
 # =========================
-elif menu == "⚙️ CERCA COMPONENTE":
+elif menu == "Cerca Componente":
 
     import pandas as pd
     import re
@@ -1442,7 +1442,7 @@ elif menu == "⚙️ CERCA COMPONENTE":
 # =========================
 # 📚 SCHEDE SR (SUPABASE)
 # =========================
-elif menu == "📇 SCHEDE SR":
+elif menu == "Schede SR":
 
     import pandas as pd
     import re
@@ -1637,7 +1637,7 @@ elif menu == "Open Item":
 # =========================
 # 📚 SCHEDE SR VZI6 (SUPABASE)
 # =========================
-elif menu == "📇 SCHEDE SR VZI6":
+elif menu == "Schede SR VZI6":
 
     import pandas as pd
     import re
@@ -1825,10 +1825,10 @@ elif menu == "📇 SCHEDE SR VZI6":
             st.caption(f"📂 {sottogruppo}")
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
 
-elif menu == "PLANNING":
+elif menu == "Planning":
     planning_page()
 
-elif menu == "FERIE E PERMESSI":
+elif menu == "Ferie e Permessi":
 
     pagina_permessi(
         supabase,
@@ -1930,7 +1930,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-elif menu == "SCADENZE TEMPORALI":
+elif menu == "Scadenze Temporali":
 
     st.title("📚 SCADENZE")
 
@@ -1985,7 +1985,7 @@ elif menu == "SCADENZE TEMPORALI":
 
             st.error(e)
             
-elif menu == "VERSIONI SOFTWARE":
+elif menu == "Versioni Software":
 
     import pandas as pd
 
