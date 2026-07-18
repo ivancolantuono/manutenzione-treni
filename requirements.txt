@@ -6,3 +6,4 @@ streamlit-autorefresh
 plotly
 streamlit-pdf-viewer
 streamlit-aggrid
+streamlit-option-menu
