@@ -376,7 +376,7 @@ with st.sidebar:
     st.markdown("## 🚄 MANAGER ETR1000")
     st.divider()
 
-    st.markdown("BENVENUTO")
+    st.markdown("### BENVENUTO")
     st.markdown(f"### 👤 {utente}")
     
 
