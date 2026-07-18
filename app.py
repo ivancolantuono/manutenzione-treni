@@ -43,31 +43,6 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<style>
-
-/* Nasconde il menu principale */
-#MainMenu {
-    visibility: hidden;
-}
-
-/* Nasconde footer */
-footer {
-    visibility: hidden;
-}
-
-/* Nasconde la decorazione rossa */
-[data-testid="stDecoration"] {
-    display: none;
-}
-
-/* Nasconde il pulsante Deploy/Fork */
-[data-testid="stAppDeployButton"] {
-    display: none !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
 # =========================
 # STILE
 # =========================
