@@ -284,24 +284,21 @@ def planning_page():
                 # =========================
                 if col5.button("🗑️", key=f"delete_{r['id']}"):
                 
-                    st.write(f"ID da eliminare: {r['id']} ({type(r['id'])})")
-                
                     try:
-                        response = (
-                            supabase.table("planning")
-                            .delete()
-                            .eq("id", int(r["id"]))
+                        supabase.table("planning")\
+                            .delete()\
+                            .eq("id", r["id"])\
                             .execute()
-                        )
-                
-                        st.success("DELETE eseguita")
-                        st.write(response)
                 
                         get_planning.clear()
+                
+                        st.success("✅ Attività eliminata")
+                
                         st.rerun()
                 
                     except Exception as e:
-                        st.error(f"ERRORE: {e}")
+                        st.error(f"Errore eliminazione: {e}")
+                        
     # =========================
     # ✏️ MODIFICA ATTIVITÀ
     # =========================
