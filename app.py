@@ -373,7 +373,7 @@ modalita = st.session_state.get("modalita", ruolo)
 
 with st.sidebar:
 
-    st.markdown("## 🚄 MANAGER ETR1000")
+    st.markdown("#### 🚄 MANAGER ETR1000")
     st.divider()
 
     st.markdown("### BENVENUTO")
