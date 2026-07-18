@@ -1825,10 +1825,10 @@ elif menu == "📇 SCHEDE SR VZI6":
             st.caption(f"📂 {sottogruppo}")
             st.caption(f"📄 Pagine: {', '.join(map(str, pagine))}")
 
-elif menu == "🗓️ PLANNING":
+elif menu == "PLANNING":
     planning_page()
 
-elif menu == "🏖️ FERIE E PERMESSI":
+elif menu == "FERIE E PERMESSI":
 
     pagina_permessi(
         supabase,
@@ -1930,7 +1930,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-elif menu == "📚 SCADENZE TEMPORALI":
+elif menu == "SCADENZE TEMPORALI":
 
     st.title("📚 SCADENZE")
 
@@ -1985,7 +1985,7 @@ elif menu == "📚 SCADENZE TEMPORALI":
 
             st.error(e)
             
-elif menu == "💻 VERSIONI SOFTWARE":
+elif menu == "VERSIONI SOFTWARE":
 
     import pandas as pd
 
