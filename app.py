@@ -1260,8 +1260,7 @@ elif menu == "Cerca Componente":
         return df
 
     if "magazzino" not in st.session_state:
-        with st.spinner("🔄 LOADING"):
-            st.session_state.magazzino = carica_magazzino()
+        st.session_state.magazzino = carica_magazzino()
 
     df_mag = st.session_state.magazzino
     
