@@ -377,111 +377,77 @@ with st.sidebar:
 
     st.markdown("## 🚄 MANAGER ETR1000")
 
-    st.markdown("---")
+    st.divider()
 
     st.markdown(f"### 👤 {utente}")
     st.caption(f"Ruolo: {modalita}")
 
-    st.markdown("---")
-
-    menu = None
+    st.divider()
 
     # =========================
-    # CAPOSQUADRA
+    # MENU
     # =========================
+
     if modalita == "CAPOSQUADRA":
 
-        with st.expander("🔧 MANUTENZIONE", expanded=True):
+        menu = st.radio(
+            "Navigazione",
+            [
+                "──────── 🔧 MANUTENZIONE ────────",
+                "📌 OPEN ITEM",
+                "📇 SCHEDE SR",
+                "📇 SCHEDE SR VZI6",
+                "🚄 MANUTENZIONE",
+                "⚙️ CERCA COMPONENTE",
 
-            if st.button("📌 Open Item", use_container_width=True):
-                menu = "📌 OPEN ITEM"
+                "──────── 👥 PERSONALE ─────────",
+                "🗓️ PLANNING",
+                "🏖️ FERIE E PERMESSI",
+                "📚 SCADENZE TEMPORALI",
 
-            if st.button("📇 Schede SR", use_container_width=True):
-                menu = "📇 SCHEDE SR"
+                "──────── 📊 ANALISI ───────────",
+                "📊 DASHBOARD",
+                "📊 STORICO",
 
-            if st.button("📇 Schede SR VZI6", use_container_width=True):
-                menu = "📇 SCHEDE SR VZI6"
+                "──────── 💻 SOFTWARE ─────────",
+                "💻 VERSIONI SOFTWARE",
+            ],
+            label_visibility="collapsed"
+        )
 
-            if st.button("🚄 Manutenzione", use_container_width=True):
-                menu = "🚄 MANUTENZIONE"
-
-            if st.button("⚙️ Cerca Componente", use_container_width=True):
-                menu = "⚙️ CERCA COMPONENTE"
-
-        with st.expander("👥 PERSONALE", expanded=True):
-
-            if st.button("🗓️ Planning", use_container_width=True):
-                menu = "🗓️ PLANNING"
-
-            if st.button("🏖️ Ferie e Permessi", use_container_width=True):
-                menu = "🏖️ FERIE E PERMESSI"
-
-            if st.button("📚 Scadenze Temporali", use_container_width=True):
-                menu = "📚 SCADENZE TEMPORALI"
-
-        with st.expander("📊 ANALISI", expanded=True):
-
-            if st.button("📊 Dashboard", use_container_width=True):
-                menu = "📊 DASHBOARD"
-
-            if st.button("📈 Storico", use_container_width=True):
-                menu = "📊 STORICO"
-
-        with st.expander("💻 SOFTWARE", expanded=True):
-
-            if st.button("💻 Versioni Software", use_container_width=True):
-                menu = "💻 VERSIONI SOFTWARE"
-
-    # =========================
-    # SUPERVISORE
-    # =========================
     elif modalita == "SUPERVISORE":
 
-        if st.button("📊 Controllo Permessi", use_container_width=True):
-            menu = "📊 CONTROLLO PERMESSI"
+        menu = st.radio(
+            "Navigazione",
+            [
+                "📊 CONTROLLO PERMESSI"
+            ],
+            label_visibility="collapsed"
+        )
 
-    # =========================
-    # OPERATORE
-    # =========================
     else:
 
-        with st.expander("🔧 MANUTENZIONE", expanded=True):
+        menu = st.radio(
+            "Navigazione",
+            [
+                "──────── 🔧 MANUTENZIONE ────────",
+                "📌 OPEN ITEM",
+                "📇 SCHEDE SR",
+                "📇 SCHEDE SR VZI6",
+                "🚄 MANUTENZIONE",
+                "⚙️ CERCA COMPONENTE",
 
-            if st.button("📌 Open Item", use_container_width=True):
-                menu = "📌 OPEN ITEM"
+                "──────── 👥 PERSONALE ─────────",
+                "🏖️ FERIE E PERMESSI",
+                "📚 SCADENZE TEMPORALI",
 
-            if st.button("📇 Schede SR", use_container_width=True):
-                menu = "📇 SCHEDE SR"
+                "──────── 💻 SOFTWARE ─────────",
+                "💻 VERSIONI SOFTWARE",
+            ],
+            label_visibility="collapsed"
+        )
 
-            if st.button("📇 Schede SR VZI6", use_container_width=True):
-                menu = "📇 SCHEDE SR VZI6"
-
-            if st.button("🚄 Manutenzione", use_container_width=True):
-                menu = "🚄 MANUTENZIONE"
-
-            if st.button("⚙️ Cerca Componente", use_container_width=True):
-                menu = "⚙️ CERCA COMPONENTE"
-
-        with st.expander("👥 PERSONALE", expanded=True):
-
-            if st.button("🏖️ Ferie e Permessi", use_container_width=True):
-                menu = "🏖️ FERIE E PERMESSI"
-
-            if st.button("📚 Scadenze Temporali", use_container_width=True):
-                menu = "📚 SCADENZE TEMPORALI"
-
-        with st.expander("💻 SOFTWARE", expanded=True):
-
-            if st.button("💻 Versioni Software", use_container_width=True):
-                menu = "💻 VERSIONI SOFTWARE"
-
-    # Memorizza la pagina selezionata
-    if menu:
-        st.session_state["menu"] = menu
-
-    menu = st.session_state.get("menu", "📌 OPEN ITEM")
-
-    st.markdown("---")
+    st.divider()
 
     if st.button("🔓 Logout", use_container_width=True):
         st.session_state.clear()
