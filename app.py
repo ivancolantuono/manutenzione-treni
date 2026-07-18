@@ -16,10 +16,6 @@ from streamlit_autorefresh import st_autorefresh
 import urllib.parse
 
 st.set_page_config(
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-st.set_page_config(
     page_title="Manager ETR1000",
     page_icon="🚄",
     layout="wide",
@@ -31,33 +27,26 @@ st.markdown("""
 footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
-
 st.markdown("""
 <style>
 
-/* Nasconde menu hamburger + GitHub + toolbar */
+/* Nasconde toolbar */
 [data-testid="stToolbar"] {
-    display: none;
+    display:none;
 }
 
-/* Nasconde menu in alto a destra */
+/* Nasconde decorazione rossa */
 [data-testid="stDecoration"] {
-    display: none;
+    display:none;
 }
 
-/* Nasconde header */
-header {
-    visibility: hidden;
-}
-
-/* Sidebar completamente nascosta */
-section[data-testid="stSidebar"] {
-    display: none;
+/* Nasconde footer */
+footer {
+    visibility:hidden;
 }
 
 </style>
 """, unsafe_allow_html=True)
-
 # =========================
 # STILE
 # =========================
