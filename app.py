@@ -13,6 +13,7 @@ from open import openitem_page
 from db import get_utenti
 from db import get_operatori
 from streamlit_autorefresh import st_autorefresh
+from streamlit_option_menu import option_menu
 import urllib.parse
 
 st.set_page_config(
@@ -370,13 +371,9 @@ utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
 modalita = st.session_state.get("modalita", ruolo)
 
-# =========================
-# SIDEBAR
-# =========================
 with st.sidebar:
 
     st.markdown("## 🚄 MANAGER ETR1000")
-
     st.divider()
 
     st.markdown(f"### 👤 {utente}")
@@ -384,76 +381,101 @@ with st.sidebar:
 
     st.divider()
 
-    # =========================
-    # MENU
-    # =========================
-
-    menu = st.session_state.get("menu", "📌 OPEN ITEM")
-
-    def voce(nome):
-        if st.button(nome, use_container_width=True):
-            st.session_state["menu"] = nome
-
     if modalita == "CAPOSQUADRA":
 
-        st.markdown("### 🔧 MANUTENZIONE")
-        voce("📌 OPEN ITEM")
-        voce("📇 SCHEDE SR")
-        voce("📇 SCHEDE SR VZI6")
-        voce("🚄 MANUTENZIONE")
-        voce("⚙️ CERCA COMPONENTE")
-
-        st.markdown("---")
-
-        st.markdown("### 👥 PERSONALE")
-        voce("🗓️ PLANNING")
-        voce("🏖️ FERIE E PERMESSI")
-        voce("📚 SCADENZE TEMPORALI")
-
-        st.markdown("---")
-
-        st.markdown("### 📊 ANALISI")
-        voce("📊 DASHBOARD")
-        voce("📊 STORICO")
-
-        st.markdown("---")
-
-        st.markdown("### 💻 SOFTWARE")
-        voce("💻 VERSIONI SOFTWARE")
+        menu = option_menu(
+            None,
+            [
+                "Open Item",
+                "Schede SR",
+                "Schede SR VZI6",
+                "Manutenzione",
+                "Planning",
+                "Dashboard",
+                "Storico",
+                "Cerca Componente",
+                "Ferie e Permessi",
+                "Scadenze Temporali",
+                "Versioni Software"
+            ],
+            icons=[
+                "pin-angle-fill",
+                "journal-text",
+                "journal-code",
+                "train-front",
+                "calendar-week",
+                "bar-chart",
+                "clock-history",
+                "search",
+                "calendar-heart",
+                "alarm",
+                "cpu"
+            ],
+            menu_icon="list",
+            default_index=0,
+            styles={
+                "container": {
+                    "padding": "0!important",
+                    "background-color": "#fafafa"
+                },
+                "icon": {
+                    "color": "#d40000",
+                    "font-size": "18px"
+                },
+                "nav-link": {
+                    "font-size": "15px",
+                    "text-align": "left",
+                    "margin": "2px",
+                    "--hover-color": "#f3f3f3",
+                },
+                "nav-link-selected": {
+                    "background-color": "#d40000",
+                    "color": "white",
+                },
+            },
+        )
 
     elif modalita == "SUPERVISORE":
 
-        st.markdown("### 👥 PERSONALE")
-        voce("📊 CONTROLLO PERMESSI")
+        menu = option_menu(
+            None,
+            ["Controllo Permessi"],
+            icons=["clipboard-check"],
+            default_index=0,
+        )
 
     else:
 
-        st.markdown("### 🔧 MANUTENZIONE")
-        voce("📌 OPEN ITEM")
-        voce("📇 SCHEDE SR")
-        voce("📇 SCHEDE SR VZI6")
-        voce("🚄 MANUTENZIONE")
-        voce("⚙️ CERCA COMPONENTE")
-
-        st.markdown("---")
-
-        st.markdown("### 👥 PERSONALE")
-        voce("🏖️ FERIE E PERMESSI")
-        voce("📚 SCADENZE TEMPORALI")
-
-        st.markdown("---")
-
-        st.markdown("### 💻 SOFTWARE")
-        voce("💻 VERSIONI SOFTWARE")
-
-    menu = st.session_state.get("menu", "📌 OPEN ITEM")
+        menu = option_menu(
+            None,
+            [
+                "Open Item",
+                "Schede SR",
+                "Schede SR VZI6",
+                "Manutenzione",
+                "Cerca Componente",
+                "Ferie e Permessi",
+                "Scadenze Temporali",
+                "Versioni Software"
+            ],
+            icons=[
+                "pin-angle-fill",
+                "journal-text",
+                "journal-code",
+                "train-front",
+                "search",
+                "calendar-heart",
+                "alarm",
+                "cpu",
+            ],
+            default_index=0,
+        )
 
     st.divider()
 
     if st.button("🔓 Logout", use_container_width=True):
         st.session_state.clear()
         st.rerun()
-
 # =========================
 # 📥 CARICA DATABASE (SUPABASE)
 # =========================
