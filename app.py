@@ -380,87 +380,67 @@ utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
 
 # =========================
-# HEADER
+# SIDEBAR
 # =========================
-colA, colB = st.columns([6,2])
+with st.sidebar:
 
-# =========================
-# DATI UTENTE
-# =========================
-# 🔥 SEMPRE QUI (globale)
-modalita = st.session_state.get("modalita", ruolo)
+    st.markdown("## 🚄 MANAGER ETR1000")
+    st.markdown("---")
 
-# =========================
-# HEADER
-# =========================
-with colA:
-    st.markdown(f"""
-    <div style='margin-top:20px; font-size:24px; font-weight:bold;'>
-    👤 Benvenuto {utente} 
-    </div>
-    """, unsafe_allow_html=True)
-    
- 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown(f"### 👤 {utente}")
+    st.caption(f"Ruolo: {modalita}")
 
-    if st.button("🔓 LOGOUT"):
+    st.markdown("---")
+
+    if modalita == "CAPOSQUADRA":
+
+        menu = st.radio(
+            "Navigazione",
+            [
+                "📌 OPEN ITEM",
+                "📇 SCHEDE SR",
+                "📇 SCHEDE SR VZI6",
+                "🚄 MANUTENZIONE",
+                "🗓️ PLANNING",
+                "📊 DASHBOARD",
+                "📊 STORICO",
+                "⚙️ CERCA COMPONENTE",
+                "🏖️ FERIE E PERMESSI",
+                "📚 SCADENZE TEMPORALI",
+                "💻 VERSIONI SOFTWARE"
+            ]
+        )
+
+    elif modalita == "SUPERVISORE":
+
+        menu = st.radio(
+            "Navigazione",
+            [
+                "📊 CONTROLLO PERMESSI"
+            ]
+        )
+
+    else:
+
+        menu = st.radio(
+            "Navigazione",
+            [
+                "📌 OPEN ITEM",
+                "📇 SCHEDE SR",
+                "📇 SCHEDE SR VZI6",
+                "🚄 MANUTENZIONE",
+                "⚙️ CERCA COMPONENTE",
+                "📚 SCADENZE TEMPORALI",
+                "🏖️ FERIE E PERMESSI",
+                "💻 VERSIONI SOFTWARE"
+            ]
+        )
+
+    st.markdown("---")
+
+    if st.button("🔓 Logout", use_container_width=True):
         st.session_state.clear()
         st.rerun()
-
-
-st.divider()
-
-# =========================
-# MENU ORIZZONTALE
-# =========================
-
-
-if modalita == "CAPOSQUADRA":
-
-    menu = st.segmented_control(
-        "",
-        [
-            "📌 OPEN ITEM",
-            "📇 SCHEDE SR",
-            "📇 SCHEDE SR VZI6",
-            "🚄 MANUTENZIONE",
-            "🗓️ PLANNING",
-            "📊 DASHBOARD",
-            "📊 STORICO",
-            "⚙️ CERCA COMPONENTE",
-            "🏖️ FERIE E PERMESSI",
-            "📚 SCADENZE TEMPORALI",
-            "💻 VERSIONI SOFTWARE"
-        ],
-        default="📌 OPEN ITEM"
-    )
-
-elif modalita == "SUPERVISORE":
-
-    menu = st.segmented_control(
-        "",
-        [
-            "📊 CONTROLLO PERMESSI"
-        ],
-        default="📊 CONTROLLO PERMESSI"
-    )
-
-else:
-
-    menu = st.segmented_control(
-        "",
-        [
-            "📌 OPEN ITEM",
-            "📇 SCHEDE SR",
-            "📇 SCHEDE SR VZI6",
-            "🚄 MANUTENZIONE",
-            "⚙️ CERCA COMPONENTE",
-            "📚 SCADENZE TEMPORALI",
-            "🏖️ FERIE E PERMESSI",
-            "💻 VERSIONI SOFTWARE"
-        ],
-        default="📌 OPEN ITEM"
-    )
 
 # =========================
 # 📥 CARICA DATABASE (SUPABASE)
