@@ -420,7 +420,7 @@ with st.sidebar:
                     "background-color": "#fafafa"
                 },
                 "icon": {
-                    "color": "#d40000",
+                    "color": "#000000",
                     "font-size": "18px"
                 },
                 "nav-link": {
