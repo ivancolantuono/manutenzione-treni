@@ -145,6 +145,13 @@ class UrlCellRenderer {
 }
 """)
 
+
+URL_PIS = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/Versioni%20PIS.xlsx"
+
+@st.cache_data(ttl=300)
+def carica_pis():
+    return pd.read_excel(URL_PIS)
+
 @st.cache_data(ttl=5)
 def get_interventi():
     res = supabase.table("interventi").select("*").execute()
@@ -397,7 +404,7 @@ with st.sidebar:
                 "Cerca Componente",
                 "Ferie e Permessi",
                 "Scadenze Temporali",
-                "Versioni Software"
+                "Software PIS"
             ],
             icons=[
                 "pin-angle-fill",
@@ -2055,3 +2062,42 @@ elif menu == "Versioni Software":
         else:
 
             st.info("Nessuna procedura disponibile.")
+
+def pagina_pis():
+
+    st.title("📺 Software PIS")
+
+    df = carica_pis()
+
+    treno = st.selectbox(
+        "🚄 Seleziona il treno",
+        sorted(df["Treno"].unique())
+    )
+
+    dati = df[df["Treno"] == treno].iloc[0]
+
+    software = [
+        ("DOVE 6", dati["Versione DOVE 6"], dati["link DOVE 6"]),
+        ("ONM100", dati["Versione ONM 100"], dati["link ONM 100"]),
+        ("DVR", dati["Versione DVR"], dati["link DVR"]),
+        ("PC PANEL", dati["Versione PC Panel"], dati["link PC Panel"]),
+        ("CAB RADIO", dati["Versione CAB RADIO"], None),
+    ]
+
+    for nome, versione, link in software:
+
+        with st.container(border=True):
+
+            col1, col2 = st.columns([4,1])
+
+            with col1:
+                st.markdown(f"### {nome}")
+                st.write(f"**Versione:** {versione}")
+
+            with col2:
+                if link and pd.notna(link):
+                    st.link_button(
+                        "📄 Procedura",
+                        link,
+                        use_container_width=True
+                    )
