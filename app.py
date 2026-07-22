@@ -1994,8 +1994,8 @@ elif menu == "Software":
         ("🎥 DVR", dati["Versione DVR"], dati["link DVR"]),
         ("💻 PC PANEL", dati["Versione PC Panel"], dati["link PC Panel"]),
         ("📡 CAB RADIO", dati["Versione CAB RADIO"], None),
-        ("🪭 HVAC", dati["Versione HVAC"], dati["link HVAC"]),
-        ("🪭 BCU", dati["Versione BCU"], dati["link BCU"]),
+        ("❄️ HVAC", dati["Versione HVAC"], dati["link HVAC"]),
+        ("⏹️ BCU", dati["Versione BCU"], dati["link BCU"]),
     ]
 
     st.divider()
