@@ -2065,7 +2065,7 @@ elif menu == "Versioni Software":
 
 def pagina_pis():
 
-    st.title("📺 Software PIS")
+    st.title("Software PIS")
 
     df = carica_pis()
 
