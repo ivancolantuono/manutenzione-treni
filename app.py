@@ -150,7 +150,13 @@ URL_PIS = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/sof
 
 @st.cache_data(ttl=300)
 def carica_pis():
-    return pd.read_excel(URL_PIS)
+
+    df = pd.read_excel(URL_PIS)
+
+    # Elimina eventuali spazi nelle intestazioni
+    df.columns = df.columns.astype(str).str.strip()
+
+    return df
 
 @st.cache_data(ttl=5)
 def get_interventi():
@@ -2068,6 +2074,10 @@ elif menu == "Software PIS":
     st.title("📺 Software PIS")
 
     df = carica_pis()
+
+    st.write(df.columns.tolist())
+    st.write(df.head())
+    st.stop()
 
     treno = st.selectbox(
         "🚄 Seleziona il treno",
