@@ -2092,7 +2092,7 @@ elif menu == "Software PIS":
         ("🎥 DVR", dati["Versione DVR"], dati["link DVR"]),
         ("💻 PC PANEL", dati["Versione PC Panel"], dati["link PC Panel"]),
         ("📡 CAB RADIO", dati["Versione CAB RADIO"], None),
-        ("HVAC", dati["Versione HVAC"], dati["link HVAC"]),
+        ("🪭 HVAC", dati["Versione HVAC"], dati["link HVAC"]),
     ]
 
     st.divider()
