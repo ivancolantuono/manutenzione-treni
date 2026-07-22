@@ -2064,7 +2064,6 @@ elif menu == "Versioni Software":
             st.info("Nessuna procedura disponibile.")
 
 elif menu == "Software PIS":
-    pagina_pis()
 
     st.title("📺 Software PIS")
 
