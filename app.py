@@ -498,30 +498,6 @@ def get_database_manutenzione():
 def load_database():
     return get_database_manutenzione()
 
-# =========================
-# 🤖 CARICA DATABASE SOFTWARE
-# =========================
-
-@st.cache_data(ttl=300)
-def carica_versioni_sw():
-
-    url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/srReport.xlsx"
-
-    xls = pd.ExcelFile(url)
-
-    tutti = []
-
-    for foglio in xls.sheet_names:
-
-        df = pd.read_excel(xls, sheet_name=foglio)
-
-        df = df.fillna("")
-
-        df["FOGLIO"] = foglio
-
-        tutti.append(df)
-
-    return pd.concat(tutti, ignore_index=True)
 
 def load_operatori():
     return get_operatori()
@@ -1995,77 +1971,6 @@ elif menu == "Scadenze Temporali":
 
             st.error(e)
             
-elif menu == "Versioni Software":
-
-    import pandas as pd
-
-    st.title("💻 Versioni Software Flotta")
-
-    @st.cache_data(ttl=300)
-    def carica_sw():
-
-        url = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/srReport.xlsx"
-
-        return pd.read_excel(url)
-
-    df = carica_sw()
-
-    # Normalizza i nomi delle colonne
-    df.columns = df.columns.str.strip().str.lower()
-
-    # Ricerca
-    ricerca = st.text_input(
-        "🔍 Cerca software, sistema o versione"
-    )
-
-    risultati = df.copy()
-
-    if ricerca:
-
-        ricerca = ricerca.lower()
-
-        risultati = risultati[
-            risultati.astype(str)
-            .apply(
-                lambda r: ricerca in " ".join(r).lower(),
-                axis=1
-            )
-        ]
-
-    evento = st.dataframe(
-        risultati.drop(columns=["procedura"]),
-        use_container_width=True,
-        hide_index=True,
-        height=700,
-        on_select="rerun",
-        selection_mode="single-row"
-    )
-
-    righe = evento.selection.rows
-
-    if righe:
-
-        r = risultati.iloc[righe[0]]
-
-        st.divider()
-
-        st.subheader("📄 Procedura")
-
-        if (
-            "procedura" in risultati.columns
-            and str(r["procedura"]).strip() != ""
-            and str(r["procedura"]).lower() != "nan"
-        ):
-
-            st.link_button(
-                "📄 Apri procedura",
-                r["procedura"]
-            )
-
-        else:
-
-            st.info("Nessuna procedura disponibile.")
-
 elif menu == "Software":
 
     st.title("📺 Software")
