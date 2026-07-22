@@ -150,12 +150,7 @@ URL_PIS = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/sof
 
 @st.cache_data(ttl=300)
 def carica_pis():
-    try:
-        df = pd.read_excel(URL_PIS)
-        return df
-    except Exception as e:
-        st.error(e)
-        return pd.DataFrame()
+    return pd.read_excel(URL_PIS)
 
 @st.cache_data(ttl=5)
 def get_interventi():
@@ -2068,7 +2063,7 @@ elif menu == "Versioni Software":
 
             st.info("Nessuna procedura disponibile.")
 
-elif menu = "Software PIS"
+elif menu == "Software PIS"
     pagina_pis()
 
     st.title("📺 Software PIS")
