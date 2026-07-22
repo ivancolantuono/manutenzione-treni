@@ -150,7 +150,12 @@ URL_PIS = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/sof
 
 @st.cache_data(ttl=300)
 def carica_pis():
-    return pd.read_excel(URL_PIS)
+    try:
+        df = pd.read_excel(URL_PIS)
+        return df
+    except Exception as e:
+        st.error(e)
+        return pd.DataFrame()
 
 @st.cache_data(ttl=5)
 def get_interventi():
