@@ -148,7 +148,7 @@ class UrlCellRenderer {
 
 URL_PIS = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/Versioni%20PIS.xlsx"
 
-@st.cache_data(ttl=300)
+
 def carica_pis():
 
     df = pd.read_excel(URL_PIS)
