@@ -2070,10 +2070,18 @@ elif menu == "Versioni Software":
 
 def pagina_pis():
 
-    st.title("Software PIS")
+    st.title("TEST PIS")
 
-    df = carica_pis()
+    st.write("Sono entrato nella pagina")
 
-    st.write("Numero righe:", len(df))
-    st.write(df.head())
-    st.write(df.columns.tolist())
+    try:
+        df = carica_pis()
+
+        st.success("Excel letto correttamente")
+
+        st.write(df.head())
+
+        st.write(df.columns.tolist())
+
+    except Exception as e:
+        st.exception(e)
