@@ -407,7 +407,7 @@ with st.sidebar:
                 "Cerca Componente",
                 "Ferie e Permessi",
                 "Scadenze Temporali",
-                "Software PIS"
+                "Software"
             ],
             icons=[
                 "pin-angle-fill",
@@ -2066,9 +2066,9 @@ elif menu == "Versioni Software":
 
             st.info("Nessuna procedura disponibile.")
 
-elif menu == "Software PIS":
+elif menu == "Software":
 
-    st.title("📺 Software PIS")
+    st.title("📺 Software")
 
     df = carica_pis()
 
