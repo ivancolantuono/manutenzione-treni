@@ -2013,7 +2013,7 @@ elif menu == "Software":
             with col2:
                 if pd.notna(link) and str(link).strip() != "":
                     st.link_button(
-                        "📄 Procedura",
+                        "**📄 Procedura**",
                         link,
                         use_container_width=True
                     )
