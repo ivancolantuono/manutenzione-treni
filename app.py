@@ -2075,9 +2075,9 @@ elif menu == "Software PIS":
 
     df = carica_pis()
 
-    st.write(df.columns.tolist())
-    st.write(df.head())
-    st.stop()
+    if df.empty:
+        st.warning("Nessun dato trovato.")
+        st.stop()
 
     treno = st.selectbox(
         "🚄 Seleziona il treno",
@@ -2087,27 +2087,31 @@ elif menu == "Software PIS":
     dati = df[df["Treno"] == treno].iloc[0]
 
     software = [
-        ("DOVE 6", dati["Versione DOVE 6"], dati["link DOVE 6"]),
-        ("ONM100", dati["Versione ONM 100"], dati["link ONM 100"]),
-        ("DVR", dati["Versione DVR"], dati["link DVR"]),
-        ("PC PANEL", dati["Versione PC Panel"], dati["link PC Panel"]),
-        ("CAB RADIO", dati["Versione CAB RADIO"], None),
+        ("📺 DOVE 6", dati["Versione DOVE 6"], dati["link dove 6"]),
+        ("🖥️ ONM100", dati["Versione ONM 100"], dati["link onm 100"]),
+        ("🎥 DVR", dati["Versione DVR"], dati["link DVR"]),
+        ("💻 PC PANEL", dati["Versione PC Panel"], dati["link PC Panel"]),
+        ("📡 CAB RADIO", dati["Versione CAB RADIO"], None),
     ]
+
+    st.divider()
 
     for nome, versione, link in software:
 
         with st.container(border=True):
 
-            col1, col2 = st.columns([4,1])
+            col1, col2 = st.columns([4, 1])
 
             with col1:
                 st.markdown(f"### {nome}")
                 st.write(f"**Versione:** {versione}")
 
             with col2:
-                if link and pd.notna(link):
+                if pd.notna(link) and str(link).strip() != "":
                     st.link_button(
                         "📄 Procedura",
                         link,
                         use_container_width=True
                     )
+                else:
+                    st.info("Nessuna procedura")
