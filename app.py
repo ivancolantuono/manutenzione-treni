@@ -208,7 +208,7 @@ if not st.session_state.logged_in:
 
     with col2:
 
-        st.image("frecciarossa.jpg", width=1000)
+        st.image("frecciarossa.jpg", width=2000)
 
         pagina = st.segmented_control(
             "",
