@@ -205,6 +205,14 @@ def openitem_page():
     
     
     dati = [d for d in dati if applica_filtri(d)]
+    
+    def numero_treno(item):
+        try:
+            return int(str(item.get("treno", "")).strip())
+        except:
+            return 999999
+    
+    dati = sorted(dati, key=numero_treno)
 
     aperti = [d for d in dati if d["stato"] == "APERTO"]
     valutazione = [d for d in dati if d["stato"] == "VALUTAZIONE"]
