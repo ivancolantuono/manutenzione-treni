@@ -227,7 +227,7 @@ if not st.session_state.logged_in:
             matricola = norm(st.text_input("Matricola"))
             password = st.text_input("Password", type="password")
 
-            if st.button("Accedi"):
+            if st.button("*Accedi*"):
 
                 res = supabase.table("login").select("*").execute()
                 utenti = res.data or []
