@@ -1989,7 +1989,7 @@ elif menu == "Software":
     dati = df[df["Treno"] == treno].iloc[0]
 
     software = [
-        ("📺 DOVE 6", dati["Versione DOVE 6"], dati["Posizione"], dati["link dove 6"]),
+        ("📺 DOVE 6", dati["Versione DOVE 6"], dati["link dove 6"]),
         ("🖥️ ONM100", dati["Versione ONM 100"], dati["link onm 100"]),
         ("🎥 DVR", dati["Versione DVR"], dati["link DVR"]),
         ("💻 PC PANEL", dati["Versione PC Panel"], dati["link PC Panel"]),
@@ -2004,17 +2004,14 @@ elif menu == "Software":
 
         with st.container(border=True):
 
-            col1, col2, col3 = st.columns([4, 4, 1])
+            col1, col2 = st.columns([4, 1])
 
             with col1:
                 st.markdown(f"### {nome}")
                 st.write(f"**Versione:** {versione}")
 
-            with col2:
-                
-                st.write(f"**Posizione:** {posizione}")
 
-            with col3:
+            with col2:
                 if pd.notna(link) and str(link).strip() != "":
                     st.link_button(
                         "**📄 Procedura**",
