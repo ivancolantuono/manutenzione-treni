@@ -1989,7 +1989,7 @@ elif menu == "Software":
     dati = df[df["Treno"] == treno].iloc[0]
 
     software = [
-        ("📺 DOVE 6", dati["Versione DOVE 6"], dati["Versione DOVE 6"], dati["link dove 6"]),
+        ("📺 DOVE 6", dati["Versione DOVE 6"], dati["Posizione"], dati["link dove 6"]),
         ("🖥️ ONM100", dati["Versione ONM 100"], dati["link onm 100"]),
         ("🎥 DVR", dati["Versione DVR"], dati["link DVR"]),
         ("💻 PC PANEL", dati["Versione PC Panel"], dati["link PC Panel"]),
