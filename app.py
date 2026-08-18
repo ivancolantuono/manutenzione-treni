@@ -2000,7 +2000,7 @@ elif menu == "Software":
 
     st.divider()
 
-    for nome, versione, link in software:
+    for nome, versione, posizione, link in software:
 
         with st.container(border=True):
 
