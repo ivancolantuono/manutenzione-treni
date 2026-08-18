@@ -2011,7 +2011,7 @@ elif menu == "Software":
                 st.write(f"**Versione:** {versione}")
 
             with col2:
-                st.write(f"**Posizione:** {posizione}")
+                st.write(f"**Posizione:** {Posizione}")
 
             with col3:
                 if pd.notna(link) and str(link).strip() != "":
