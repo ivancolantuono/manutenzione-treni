@@ -16,7 +16,7 @@ from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
 import urllib.parse
 
-def passaggio_consegne_page():
+def Passaggio_consegne_page():
 
     st.title("🔄 Passaggio Consegne")
 
