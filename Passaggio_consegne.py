@@ -16,87 +16,53 @@ from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
 import urllib.parse
 
-def Passaggio_consegne_page():
-
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
-
-    # ==========================================
-    # FUNZIONI
-    # ==========================================
-
-    def ora_italia():
-        return datetime.now(
-            ZoneInfo("Europe/Rome")
-        ).isoformat()
-
-    @st.cache_data(ttl=5)
-    def carica_consegne():
-
-        res = (
-            supabase
-            .table("passaggi_consegne")
-            .select("*")
-            .order("treno")
-            .execute()
-        )
-
-        return res.data or []
-
-    def salva_consegna(
-        tipo,
-        treno,
-        manutenzione,
-        servizio,
-        binario,
-        disp,
-        out,
-        lavorazioni,
-        odl
-    ):
-
-        supabase.table("passaggi_consegne").insert({
-
-            "tipo": tipo,
-            "treno": treno,
-            "manutenzione": manutenzione,
-            "servizio": servizio,
-            "binario": binario,
-            "disp": disp,
-            "out": out,
-            "lavorazioni": lavorazioni,
-            "odl_padre": odl,
-            "utente": st.session_state.get(
-                "utente",
-                "Sconosciuto"
-            ),
-            "data_creazione": ora_italia()
-
-        }).execute()
-
-        carica_consegne.clear()
-
-    # ==========================================
-    # TITOLO
-    # ==========================================
+def passaggio_consegne_page():
 
     st.title("🔄 Passaggio Consegne")
 
-    st.caption(
-        f"📅 {datetime.now(ZoneInfo('Europe/Rome')).strftime('%d/%m/%Y %H:%M')}"
-    )
+    # ============================================================
+    # DATA / TURNO
+    # ============================================================
 
-    # ==========================================
-    # NUOVO PASSAGGIO
-    # ==========================================
+    col1, col2, col3 = st.columns(3)
 
-    with st.expander("➕ Aggiungi treno", expanded=False):
+    with col1:
+        data_consegna = st.date_input(
+            "📅 Data",
+            value=datetime.now().date()
+        )
+
+    with col2:
+        turno = st.selectbox(
+            "🕐 Turno",
+            ["Mattina", "Pomeriggio", "Notte"]
+        )
+
+    with col3:
+        responsabile = st.session_state.get(
+            "utente",
+            "Sconosciuto"
+        )
+
+        st.text_input(
+            "👤 Responsabile",
+            value=responsabile,
+            disabled=True
+        )
+
+    st.divider()
+
+    # ============================================================
+    # AGGIUNGI TRENO
+    # ============================================================
+
+    with st.expander("➕ Aggiungi treno", expanded=True):
 
         tipo = st.radio(
             "Tipo",
             [
-                "TRENO IN USCITA",
-                "MANUTENZIONE / LAVORAZIONE APERTA"
+                "🚆 TRENO IN USCITA",
+                "🔧 MANUTENZIONE / LAVORAZIONE APERTA"
             ],
             horizontal=True
         )
@@ -107,47 +73,45 @@ def Passaggio_consegne_page():
 
             treno = st.text_input(
                 "🚆 Treno",
-                placeholder="es. 1000/27"
-            )
-
-            manutenzione = st.text_input(
-                "🔧 Manutenzione",
-                placeholder="es. MC"
+                placeholder="Es. 1000/27"
             )
 
         with col2:
 
-            if tipo == "TRENO IN USCITA":
-
-                servizio = st.text_input(
-                    "🚉 Servizio",
-                    placeholder="es. 89705"
-                )
-
-            else:
-
-                servizio = ""
-
-            binario = st.text_input(
-                "🛤️ Binario",
-                placeholder="es. MAV 9"
+            manutenzione = st.text_input(
+                "🔧 Manutenzione",
+                placeholder="Es. MC"
             )
 
         with col3:
 
-            disp = st.checkbox(
-                "DISP"
+            binario = st.text_input(
+                "🛤️ Binario",
+                placeholder="Es. MAV 9"
             )
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+
+            disp = st.checkbox(
+                "🟢 DISP"
+            )
+
+        with col2:
 
             out = st.checkbox(
-                "OUT"
+                "🔴 OUT"
             )
+
+        with col3:
 
             odl = st.text_input(
-                "🔢 N° ODL PADRE"
+                "📄 N° ODL PADRE",
+                placeholder="Es. 100014925813"
             )
 
-        lavorazioni = st.text_area(
+        note = st.text_area(
             "📝 Lavorazioni aperte / Note",
             placeholder=(
                 "Inserire lavorazioni, anomalie, "
@@ -156,7 +120,7 @@ def Passaggio_consegne_page():
         )
 
         if st.button(
-            "💾 Inserisci",
+            "➕ Inserisci",
             type="primary",
             use_container_width=True
         ):
@@ -164,52 +128,234 @@ def Passaggio_consegne_page():
             if not treno:
 
                 st.error(
-                    "Inserire il numero del treno."
+                    "Inserisci il numero del treno."
                 )
 
-            else:
+                st.stop()
 
-                salva_consegna(
-                    "USCITA"
-                    if tipo == "TRENO IN USCITA"
-                    else "MANUTENZIONE",
-                    treno,
-                    manutenzione,
-                    servizio,
-                    binario,
-                    disp,
-                    out,
-                    lavorazioni,
-                    odl
+            if "passaggio_consegne" not in st.session_state:
+
+                st.session_state.passaggio_consegne = []
+
+            st.session_state.passaggio_consegne.append({
+
+                "tipo": tipo,
+
+                "treno": treno,
+
+                "manutenzione": manutenzione,
+
+                "binario": binario,
+
+                "disp": disp,
+
+                "out": out,
+
+                "odl": odl,
+
+                "note": note
+
+            })
+
+            st.success(
+                "✅ Treno inserito"
+            )
+
+            st.rerun()
+
+    # ============================================================
+    # INIZIALIZZAZIONE
+    # ============================================================
+
+    if "passaggio_consegne" not in st.session_state:
+
+        st.session_state.passaggio_consegne = []
+
+    dati = st.session_state.passaggio_consegne
+
+    treni_uscita = [
+        x for x in dati
+        if x["tipo"] == "🚆 TRENO IN USCITA"
+    ]
+
+    manutenzioni = [
+        x for x in dati
+        if x["tipo"] == "🔧 MANUTENZIONE / LAVORAZIONE APERTA"
+    ]
+
+    # ============================================================
+    # FUNZIONE PALLINO DISP
+    # ============================================================
+
+    def pallino_disp(disponibile):
+
+        if disponibile:
+
+            return """
+            <div style="
+                text-align:center;
+                color:#20a446;
+                font-size:24px;
+                line-height:20px;
+            ">●</div>
+            """
+
+        else:
+
+            return """
+            <div style="
+                text-align:center;
+                color:#d9534f;
+                font-size:24px;
+                line-height:20px;
+            ">●</div>
+            """
+
+    # ============================================================
+    # FUNZIONE PALLINO OUT
+    # ============================================================
+
+    def pallino_out(is_out):
+
+        if is_out:
+
+            return """
+            <div style="
+                text-align:center;
+                color:#d9534f;
+                font-size:24px;
+                line-height:20px;
+            ">●</div>
+            """
+
+        return ""
+
+    # ============================================================
+    # INTESTAZIONE TRENI IN USCITA
+    # ============================================================
+
+    def mostra_intestazione_uscita():
+
+        cols = st.columns(
+            [
+                1.2,
+                1.6,
+                1.2,
+                1.2,
+                0.7,
+                0.7,
+                3.2,
+                1.6
+            ]
+        )
+
+        intestazioni = [
+
+            "🚆 TRENO",
+
+            "🔧 MANUTENZIONE",
+
+            "📡 SERVIZIO",
+
+            "🛤️ BINARIO",
+
+            "DISP",
+
+            "OUT",
+
+            "📝 LAVORAZIONI APERTE / NOTE",
+
+            "📄 N° ODL PADRE"
+
+        ]
+
+        for col, titolo in zip(
+            cols,
+            intestazioni
+        ):
+
+            with col:
+
+                st.markdown(
+                    f"""
+                    <div style="
+                        text-align:center;
+                        font-weight:700;
+                        font-size:13px;
+                    ">
+                    {titolo}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
 
-                st.success(
-                    "✅ Passaggio inserito"
+    # ============================================================
+    # INTESTAZIONE MANUTENZIONE
+    # ============================================================
+
+    def mostra_intestazione_manutenzione():
+
+        cols = st.columns(
+            [
+                1.2,
+                1.8,
+                1.3,
+                0.8,
+                3.8,
+                1.6
+            ]
+        )
+
+        intestazioni = [
+
+            "🚆 TRENO",
+
+            "🔧 MANUTENZIONE",
+
+            "🛤️ BINARIO",
+
+            "DISP",
+
+            "📝 LAVORAZIONI APERTE / NOTE",
+
+            "📄 N° ODL PADRE"
+
+        ]
+
+        for col, titolo in zip(
+            cols,
+            intestazioni
+        ):
+
+            with col:
+
+                st.markdown(
+                    f"""
+                    <div style="
+                        text-align:center;
+                        font-weight:700;
+                        font-size:13px;
+                    ">
+                    {titolo}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
 
-                st.rerun()
-
-    st.divider()
-
-    # ==========================================
-    # CARICAMENTO DATI
-    # ==========================================
-
-    dati = carica_consegne()
-
-    # ==========================================
-    # TRENI IN USCITA
-    # ==========================================
+    # ============================================================
+    # 🚆 TRENI IN USCITA
+    # ============================================================
 
     st.markdown(
         """
         <div style="
-            background:#b7d3ec;
+            background:#b7d7f0;
             padding:10px;
+            border-radius:5px;
             text-align:center;
-            font-size:20px;
-            font-weight:bold;
-            border-radius:6px;
+            font-weight:700;
+            font-size:18px;
+            margin-top:15px;
         ">
         🚆 TRENI IN USCITA
         </div>
@@ -217,56 +363,105 @@ def Passaggio_consegne_page():
         unsafe_allow_html=True
     )
 
-    uscita = [
-        x for x in dati
-        if x.get("tipo") == "USCITA"
-    ]
+    if treni_uscita:
 
-    if uscita:
+        # --------------------------------------------
+        # INTESTAZIONE COLONNE
+        # --------------------------------------------
 
-        uscita = sorted(
-            uscita,
-            key=lambda x: (
-                str(x.get("treno", ""))
-            )
-        )
+        with st.container(border=True):
 
-        for item in uscita:
+            mostra_intestazione_uscita()
 
-            col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(
-                [1.1, 1.5, 1.2, 1.2, 0.6, 0.6, 3.5, 1.5]
-            )
+        # --------------------------------------------
+        # RIGHE
+        # --------------------------------------------
 
-            col1.write(f"**{item.get('treno','')}**")
-            col2.write(item.get("manutenzione", ""))
-            col3.write(item.get("servizio", ""))
-            col4.write(item.get("binario", ""))
+        for i, item in enumerate(
+            treni_uscita
+        ):
 
-            col5.write(
-                "❌" if item.get("disp") else ""
-            )
-
-            col6.write(
-                "❌" if item.get("out") else ""
+            cols = st.columns(
+                [
+                    1.2,
+                    1.6,
+                    1.2,
+                    1.2,
+                    0.7,
+                    0.7,
+                    3.2,
+                    1.6
+                ]
             )
 
-            col7.write(
-                item.get("lavorazioni", "")
+            # TRENO
+
+            cols[0].write(
+                f"**{item['treno']}**"
             )
 
-            odl = item.get("odl_padre", "")
+            # MANUTENZIONE
 
-            if odl:
+            cols[1].write(
+                item["manutenzione"]
+                if item["manutenzione"]
+                else "-"
+            )
 
-                col8.markdown(
-                    f"**{odl}**"
+            # SERVIZIO
+
+            cols[2].write(
+                item.get(
+                    "servizio",
+                    "-"
+                )
+            )
+
+            # BINARIO
+
+            cols[3].write(
+                item["binario"]
+                if item["binario"]
+                else "-"
+            )
+
+            # DISP
+
+            cols[4].markdown(
+                pallino_disp(
+                    item["disp"]
+                ),
+                unsafe_allow_html=True
+            )
+
+            # OUT
+
+            cols[5].markdown(
+                pallino_out(
+                    item["out"]
+                ),
+                unsafe_allow_html=True
+            )
+
+            # NOTE
+
+            cols[6].write(
+                item["note"]
+                if item["note"]
+                else "-"
+            )
+
+            # ODL
+
+            if item["odl"]:
+
+                cols[7].markdown(
+                    f"[🔗 {item['odl']}](#)"
                 )
 
             else:
 
-                col8.write("")
-
-            st.divider()
+                cols[7].write("-")
 
     else:
 
@@ -274,83 +469,136 @@ def Passaggio_consegne_page():
             "Nessun treno in uscita."
         )
 
-    # ==========================================
-    # MANUTENZIONE
-    # ==========================================
+    # ============================================================
+    # 🔧 MANUTENZIONE / LAVORAZIONI APERTE
+    # ============================================================
 
     st.markdown(
         """
         <div style="
-            background:#b7d3ec;
+            background:#b7d7f0;
             padding:10px;
+            border-radius:5px;
             text-align:center;
-            font-size:20px;
-            font-weight:bold;
-            border-radius:6px;
+            font-weight:700;
+            font-size:18px;
             margin-top:20px;
         ">
-        🛠️ MANUTENZIONE / LAVORAZIONI APERTE
+        🔧 MANUTENZIONE / LAVORAZIONI APERTE
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    manutenzione = [
-        x for x in dati
-        if x.get("tipo") == "MANUTENZIONE"
-    ]
+    if manutenzioni:
 
-    if manutenzione:
+        # --------------------------------------------
+        # INTESTAZIONE COLONNE
+        # --------------------------------------------
 
-        manutenzione = sorted(
-            manutenzione,
-            key=lambda x: str(
-                x.get("treno", "")
-            )
-        )
+        with st.container(border=True):
 
-        for item in manutenzione:
+            mostra_intestazione_manutenzione()
 
-            col1, col2, col3, col4, col5, col6 = st.columns(
-                [1.1, 1.5, 1.2, 0.6, 4, 1.5]
-            )
+        # --------------------------------------------
+        # RIGHE
+        # --------------------------------------------
 
-            col1.write(
-                f"**{item.get('treno','')}**"
-            )
+        for i, item in enumerate(
+            manutenzioni
+        ):
 
-            col2.write(
-                item.get("manutenzione", "")
-            )
-
-            col3.write(
-                item.get("binario", "")
+            cols = st.columns(
+                [
+                    1.2,
+                    1.8,
+                    1.3,
+                    0.8,
+                    3.8,
+                    1.6
+                ]
             )
 
-            col4.write(
-                "❌" if item.get("disp") else ""
+            # TRENO
+
+            cols[0].write(
+                f"**{item['treno']}**"
             )
 
-            col5.write(
-                item.get("lavorazioni", "")
+            # MANUTENZIONE
+
+            cols[1].write(
+                item["manutenzione"]
+                if item["manutenzione"]
+                else "-"
             )
 
-            odl = item.get("odl_padre", "")
+            # BINARIO
 
-            if odl:
+            cols[2].write(
+                item["binario"]
+                if item["binario"]
+                else "-"
+            )
 
-                col6.markdown(
-                    f"**{odl}**"
+            # DISP
+
+            cols[3].markdown(
+                pallino_disp(
+                    item["disp"]
+                ),
+                unsafe_allow_html=True
+            )
+
+            # NOTE
+
+            cols[4].write(
+                item["note"]
+                if item["note"]
+                else "-"
+            )
+
+            # ODL
+
+            if item["odl"]:
+
+                cols[5].markdown(
+                    f"[🔗 {item['odl']}](#)"
                 )
 
             else:
 
-                col6.write("")
-
-            st.divider()
+                cols[5].write("-")
 
     else:
 
         st.info(
-            "Nessuna lavorazione aperta."
+            "Nessuna manutenzione o lavorazione aperta."
+        )
+
+    # ============================================================
+    # RIEPILOGO
+    # ============================================================
+
+    st.divider()
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.write(
+            f"📅 **Data consegna:** "
+            f"{data_consegna.strftime('%d/%m/%Y')}"
+        )
+
+    with col2:
+
+        st.write(
+            f"🕐 **Turno:** {turno}"
+        )
+
+    with col3:
+
+        st.write(
+            f"👤 **Responsabile:** {responsabile}"
         )
