@@ -10,6 +10,7 @@ from datetime import date, datetime
 from db import supabase
 from planning import planning_page
 from open import openitem_page
+from Passaggio_consegne import Passaggio_consegne_page
 from db import get_utenti
 from db import get_operatori
 from streamlit_autorefresh import st_autorefresh
