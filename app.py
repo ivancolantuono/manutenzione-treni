@@ -373,6 +373,12 @@ if not st.session_state.logged_in:
 
     st.stop()
 
+def passaggio_consegne_page():
+
+    st.title("🔄 Passaggio Consegne")
+
+    st.success("Pagina Passaggio Consegne caricata correttamente")
+
 # =========================
 # DOPO LOGIN
 # =========================
