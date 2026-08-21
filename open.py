@@ -117,7 +117,7 @@ def openitem_page():
         impianto = col3.selectbox(
             "⚙️ Impianto",
             ["","Porte Interne","Freno","Antincendio","Pis","Arredo","Trazione","Carrello",
-             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Pantografo","Alta Tensione"],
+             "Climatizzazione","Tcms","Porte Esterne","Toilette","Bar-Bistrot","Accoppiatore","Pantografo","Alta Tensione"],
             key=f"oi_impianto_{form_id}"
         )
     
