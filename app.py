@@ -407,6 +407,7 @@ with st.sidebar:
                 "Cerca Componente",
                 "Ferie e Permessi",
                 "Scadenze Temporali",
+                "Passaggio Consegne",
                 "Software"
             ],
             icons=[
