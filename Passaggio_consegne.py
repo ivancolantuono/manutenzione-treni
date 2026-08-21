@@ -1,3 +1,21 @@
+import streamlit as st
+import pandas as pd
+import requests
+from streamlit_pdf_viewer import pdf_viewer
+import os
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+from zoneinfo import ZoneInfo
+from permessi import pagina_permessi
+from datetime import date, datetime
+from db import supabase
+from planning import planning_page
+from open import openitem_page
+from db import get_utenti
+from db import get_operatori
+from streamlit_autorefresh import st_autorefresh
+from streamlit_option_menu import option_menu
+import urllib.parse
+
 def passaggio_consegne_page():
 
     from datetime import datetime
