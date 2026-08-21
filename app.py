@@ -2020,3 +2020,7 @@ elif menu == "Software":
                     )
                 else:
                     st.info("Nessuna procedura")
+
+
+elif menu == "Passaggio Consegne":
+    passaggio_consegne_page()
