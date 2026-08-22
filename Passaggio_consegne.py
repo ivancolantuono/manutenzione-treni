@@ -185,225 +185,233 @@ def Passaggio_consegne_page():
     # AGGIUNGI TRENO
     # ==========================================================
 
+    # ==========================================================
+    # AGGIUNGI TRENO
+    # ==========================================================
+    
     with st.expander(
         "➕ Aggiungi treno",
         expanded=True
     ):
-
+    
         st.markdown("### Tipo")
-
-        tipo = st.radio(
-            "",
-            [
-                "🚆 TRENO IN USCITA",
-                "🛠️ MANUTENZIONE / LAVORAZIONE APERTA"
-            ],
-            horizontal=True
-        )
-
-        col1, col2, col3 = st.columns(3)
-
-        # ------------------------------------------------------
-        # COLONNA 1
-        # ------------------------------------------------------
-
-        with col1:
-
-            treno = st.text_input(
-                "🚆 Treno",
-                placeholder="Es. 1000/27",
-                key="pc_treno"
-            )
-
-            manutenzione = st.text_input(
-                "🔧 Manutenzione",
-                placeholder="Es. MC",
-                key="pc_manutenzione"
-            )
-
-        # ------------------------------------------------------
-        # COLONNA 2
-        # ------------------------------------------------------
-
-        with col2:
-
-            servizio = st.text_input(
-                "🚉 Servizio",
-                placeholder="Es. 89705",
-                key="pc_servizio"
-            )
-
-            binario = st.text_input(
-                "🛤️ Binario",
-                placeholder="Es. MAV 9",
-                key="pc_binario"
-            )
-
-        # ------------------------------------------------------
-        # COLONNA 3
-        # ------------------------------------------------------
-
-        with col3:
-
-            odl = st.text_input(
-                "📋 N° ODL PADRE",
-                placeholder="Es. 100014925813",
-                key="pc_odl"
-            )
-        
-            st.write("")
-        
-            stato = st.radio(
-                "Stato treno",
+    
+        with st.form("form_passaggio_consegne", clear_on_submit=True):
+    
+            tipo = st.radio(
+                "",
                 [
-                    "🟢 DISP",
-                    "🔴 OUT"
+                    "🚆 TRENO IN USCITA",
+                    "🛠️ MANUTENZIONE / LAVORAZIONE APERTA"
                 ],
                 horizontal=True
             )
-        
-            disp = stato == "🟢 DISP"
-            out = stato == "🔴 OUT"
-
-        # ------------------------------------------------------
-        # LAVORAZIONI
-        # ------------------------------------------------------
-
-        lavorazioni = st.text_area(
-            "📝 Lavorazioni aperte / Note",
-            placeholder=(
-                "Inserire lavorazioni, anomalie, "
-                "attività da monitorare...",
-        key="pc_lavorazioni"    
+    
+            col1, col2, col3 = st.columns(3)
+    
+            # --------------------------------------------------
+            # COLONNA 1
+            # --------------------------------------------------
+    
+            with col1:
+    
+                treno = st.text_input(
+                    "🚆 Treno",
+                    placeholder="Es. 1000/27"
+                )
+    
+                manutenzione = st.text_input(
+                    "🔧 Manutenzione",
+                    placeholder="Es. MC"
+                )
+    
+            # --------------------------------------------------
+            # COLONNA 2
+            # --------------------------------------------------
+    
+            with col2:
+    
+                servizio = st.text_input(
+                    "🚉 Servizio",
+                    placeholder="Es. 89705"
+                )
+    
+                binario = st.text_input(
+                    "🛤️ Binario",
+                    placeholder="Es. MAV 9"
+                )
+    
+            # --------------------------------------------------
+            # COLONNA 3
+            # --------------------------------------------------
+    
+            with col3:
+    
+                odl = st.text_input(
+                    "📋 N° ODL PADRE",
+                    placeholder="Es. 100014925813"
+                )
+    
+                stato = st.radio(
+                    "Stato treno",
+                    [
+                        "🟢 DISP",
+                        "🔴 OUT"
+                    ],
+                    horizontal=True,
+                    index=0
+                )
+    
+            # --------------------------------------------------
+            # LAVORAZIONI
+            # --------------------------------------------------
+    
+            lavorazioni = st.text_area(
+                "📝 Lavorazioni aperte / Note",
+                placeholder=(
+                    "Inserire lavorazioni, anomalie, "
+                    "attività da monitorare..."
+                )
             )
-        )
-
+    
+            # --------------------------------------------------
+            # INSERIMENTO
+            # --------------------------------------------------
+    
+            inserisci = st.form_submit_button(
+                "➕ Inserisci",
+                use_container_width=True
+            )
+    
         # ======================================================
-        # INSERIMENTO
+        # ELABORAZIONE INSERIMENTO
         # ======================================================
-
-        if st.button(
-            "➕ Inserisci",
-            type="primary",
-            use_container_width=True
-        ):
-
+    
+        if inserisci:
+    
+            # ----------------------------------------------
+            # CONTROLLI
+            # ----------------------------------------------
+    
             if not treno.strip():
-
+    
                 st.error(
                     "⚠️ Inserisci il numero del treno."
                 )
-
+    
                 st.stop()
-
+    
             if (
                 tipo.startswith("🚆")
                 and not servizio.strip()
             ):
-
+    
                 st.error(
                     "⚠️ Per un treno in uscita "
                     "inserisci il servizio."
                 )
-
+    
                 st.stop()
-
-            # --------------------------------------------------
+    
+            # ----------------------------------------------
+            # STATO
+            # ----------------------------------------------
+    
+            disp = stato == "🟢 DISP"
+            out = stato == "🔴 OUT"
+    
+            # ----------------------------------------------
             # TIPO DATABASE
-            # --------------------------------------------------
-
+            # ----------------------------------------------
+    
             if tipo.startswith("🚆"):
-
+    
                 tipo_db = "TRENO IN USCITA"
-
+    
             else:
-
+    
                 tipo_db = (
                     "MANUTENZIONE / "
                     "LAVORAZIONE APERTA"
                 )
-
-            # --------------------------------------------------
+    
+            # ----------------------------------------------
             # NUOVO RECORD
-            # --------------------------------------------------
-
+            # ----------------------------------------------
+    
             nuovo = {
-
+    
                 "data_consegna":
                     data_selezionata,
-
+    
                 "turno":
                     turno,
-
+    
                 "responsabile":
                     responsabile.strip(),
-
+    
                 "tipo":
                     tipo_db,
-
+    
                 "treno":
                     treno.strip(),
-
+    
                 "manutenzione":
                     manutenzione.strip(),
-
+    
                 "servizio":
                     servizio.strip(),
-
+    
                 "binario":
                     binario.strip(),
-
+    
                 "disp":
                     disp,
-
+    
                 "out":
                     out,
-
+    
                 "lavorazioni":
                     lavorazioni.strip(),
-
+    
                 "odl":
                     odl.strip(),
-
+    
                 "created_at":
                     ora_italia()
             }
-
+    
+            # ----------------------------------------------
+            # SALVATAGGIO SUPABASE
+            # ----------------------------------------------
+    
             try:
-
+    
                 (
                     supabase
                     .table("passaggio_consegne")
                     .insert(nuovo)
                     .execute()
                 )
-                st.session_state["pc_treno"] = ""
-                st.session_state["pc_manutenzione"] = ""
-                st.session_state["pc_servizio"] = ""
-                st.session_state["pc_binario"] = ""
-                st.session_state["pc_odl"] = ""
-                st.session_state["pc_lavorazioni"] = ""
-                st.session_state["pc_disp"] = False
-                st.session_state["pc_out"] = False
-                
-                # Svuota cache
+    
+                # Svuota la cache
                 carica_consegne.clear()
-
+    
                 st.success(
                     "✅ Treno aggiunto al passaggio consegne."
                 )
-
+    
+                # Ricarica la pagina
                 st.rerun()
-
+    
             except Exception as e:
-
+    
                 st.error(
                     "❌ Errore durante l'inserimento."
                 )
-
+    
                 st.code(str(e))
-
-    st.divider()
+        st.divider()
 
     # ==========================================================
     # NESSUN DATO
