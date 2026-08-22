@@ -245,21 +245,20 @@ def Passaggio_consegne_page():
                 "📋 N° ODL PADRE",
                 placeholder="Es. 100014925813"
             )
-
-            st.markdown("### Stato treno")
-            
+        
+            st.write("")
+        
             stato = st.radio(
-                "Seleziona stato",
+                "Stato treno",
                 [
                     "🟢 DISP",
                     "🔴 OUT"
                 ],
                 horizontal=True
             )
-            
+        
             disp = stato == "🟢 DISP"
             out = stato == "🔴 OUT"
-                        )
 
         # ------------------------------------------------------
         # LAVORAZIONI
