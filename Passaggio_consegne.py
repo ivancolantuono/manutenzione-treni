@@ -1,25 +1,10 @@
 import streamlit as st
-import pandas as pd
-import requests
-from streamlit_pdf_viewer import pdf_viewer
-import os
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
-from zoneinfo import ZoneInfo
-from permessi import pagina_permessi
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
 from db import supabase
-from planning import planning_page
-from open import openitem_page
-from db import get_utenti
-from db import get_operatori
-from streamlit_autorefresh import st_autorefresh
-from streamlit_option_menu import option_menu
-import urllib.parse
+
 
 def Passaggio_consegne_page():
-
-    from datetime import date
-    from zoneinfo import ZoneInfo
 
     # ==========================================================
     # FUNZIONI
@@ -32,24 +17,67 @@ def Passaggio_consegne_page():
 
     @st.cache_data(ttl=5)
     def carica_consegne():
-    
+
         try:
-    
+
             res = (
                 supabase
                 .table("passaggio_consegne")
                 .select("*")
                 .execute()
             )
-    
+
             return res.data or []
-    
+
         except Exception as e:
-    
+
             st.error("❌ Errore lettura tabella passaggio_consegne")
             st.code(str(e))
-    
+
             return []
+
+    def normalizza_data(valore):
+
+        if not valore:
+            return ""
+
+        if isinstance(valore, date):
+            return str(valore)
+
+        return str(valore)[:10]
+
+    def chiave_treno(item):
+
+        """
+        Ordinamento numerico dei treni.
+
+        Esempi:
+        1
+        2
+        3
+        10
+        11
+        27
+
+        Gestisce anche valori tipo:
+        1000/04
+        1000/27
+        """
+
+        valore = str(item.get("treno", "")).strip()
+
+        parti = valore.replace("-", "/").split("/")
+
+        numeri = []
+
+        for parte in parti:
+
+            try:
+                numeri.append(int(parte))
+            except:
+                numeri.append(999999)
+
+        return tuple(numeri)
 
     # ==========================================================
     # TITOLO
@@ -64,12 +92,14 @@ def Passaggio_consegne_page():
     col1, col2, col3 = st.columns(3)
 
     with col1:
+
         data_consegna = st.date_input(
             "📅 Data",
             value=date.today()
         )
 
     with col2:
+
         turno = st.selectbox(
             "🕐 Turno",
             [
@@ -80,6 +110,7 @@ def Passaggio_consegne_page():
         )
 
     with col3:
+
         responsabile = st.text_input(
             "👤 Responsabile",
             value=st.session_state.get(
@@ -88,13 +119,76 @@ def Passaggio_consegne_page():
             )
         )
 
+    # ==========================================================
+    # CARICA DATI
+    # ==========================================================
+
+    dati = carica_consegne()
+
+    data_selezionata = str(data_consegna)
+
+    # ==========================================================
+    # DATI DELLA CONSEGNA SELEZIONATA
+    # ==========================================================
+
+    dati_consegna = [
+
+        d for d in dati
+
+        if normalizza_data(
+            d.get("data_consegna")
+        ) == data_selezionata
+
+        and d.get("turno") == turno
+    ]
+
+    # ==========================================================
+    # INFORMAZIONI CONSEGNA
+    # ==========================================================
+
     st.divider()
+
+    col_info1, col_info2, col_info3 = st.columns(3)
+
+    with col_info1:
+
+        st.markdown(
+            f"📅 **Data:** {data_consegna.strftime('%d/%m/%Y')}"
+        )
+
+    with col_info2:
+
+        st.markdown(
+            f"🕐 **Turno:** {turno}"
+        )
+
+    with col_info3:
+
+        if dati_consegna:
+
+            responsabile_salvato = (
+                dati_consegna[0].get("responsabile")
+                or "-"
+            )
+
+            st.markdown(
+                f"👤 **Responsabile:** {responsabile_salvato}"
+            )
+
+        else:
+
+            st.markdown(
+                f"👤 **Responsabile:** {responsabile or '-'}"
+            )
 
     # ==========================================================
     # AGGIUNGI TRENO
     # ==========================================================
 
-    with st.expander("➕ Aggiungi treno", expanded=True):
+    with st.expander(
+        "➕ Aggiungi treno",
+        expanded=True
+    ):
 
         st.markdown("### Tipo")
 
@@ -109,6 +203,10 @@ def Passaggio_consegne_page():
 
         col1, col2, col3 = st.columns(3)
 
+        # ------------------------------------------------------
+        # COLONNA 1
+        # ------------------------------------------------------
+
         with col1:
 
             treno = st.text_input(
@@ -121,6 +219,10 @@ def Passaggio_consegne_page():
                 placeholder="Es. MC"
             )
 
+        # ------------------------------------------------------
+        # COLONNA 2
+        # ------------------------------------------------------
+
         with col2:
 
             servizio = st.text_input(
@@ -132,6 +234,10 @@ def Passaggio_consegne_page():
                 "🛤️ Binario",
                 placeholder="Es. MAV 9"
             )
+
+        # ------------------------------------------------------
+        # COLONNA 3
+        # ------------------------------------------------------
 
         with col3:
 
@@ -149,6 +255,10 @@ def Passaggio_consegne_page():
             out = st.checkbox(
                 "🔴 OUT"
             )
+
+        # ------------------------------------------------------
+        # LAVORAZIONI
+        # ------------------------------------------------------
 
         lavorazioni = st.text_area(
             "📝 Lavorazioni aperte / Note",
@@ -174,66 +284,91 @@ def Passaggio_consegne_page():
                     "⚠️ Inserisci il numero del treno."
                 )
 
-            elif tipo.startswith("🚆") and not servizio.strip():
+                st.stop()
+
+            if (
+                tipo.startswith("🚆")
+                and not servizio.strip()
+            ):
 
                 st.error(
-                    "⚠️ Per un treno in uscita inserisci il servizio."
+                    "⚠️ Per un treno in uscita "
+                    "inserisci il servizio."
                 )
+
+                st.stop()
+
+            # --------------------------------------------------
+            # TIPO DATABASE
+            # --------------------------------------------------
+
+            if tipo.startswith("🚆"):
+
+                tipo_db = "TRENO IN USCITA"
 
             else:
 
-                if tipo.startswith("🚆"):
-                    tipo_db = "TRENO IN USCITA"
-                else:
-                    tipo_db = "MANUTENZIONE / LAVORAZIONE APERTA"
+                tipo_db = (
+                    "MANUTENZIONE / "
+                    "LAVORAZIONE APERTA"
+                )
 
-                nuovo = {
+            # --------------------------------------------------
+            # NUOVO RECORD
+            # --------------------------------------------------
 
-                    "data_consegna":
-                        str(data_consegna),
+            nuovo = {
 
-                    "turno":
-                        turno,
+                "data_consegna":
+                    data_selezionata,
 
-                    "responsabile":
-                        responsabile,
+                "turno":
+                    turno,
 
-                    "tipo":
-                        tipo_db,
+                "responsabile":
+                    responsabile.strip(),
 
-                    "treno":
-                        treno.strip(),
+                "tipo":
+                    tipo_db,
 
-                    "manutenzione":
-                        manutenzione.strip(),
+                "treno":
+                    treno.strip(),
 
-                    "servizio":
-                        servizio.strip(),
+                "manutenzione":
+                    manutenzione.strip(),
 
-                    "binario":
-                        binario.strip(),
+                "servizio":
+                    servizio.strip(),
 
-                    "disp":
-                        disp,
+                "binario":
+                    binario.strip(),
 
-                    "out":
-                        out,
+                "disp":
+                    disp,
 
-                    "lavorazioni":
-                        lavorazioni.strip(),
+                "out":
+                    out,
 
-                    "odl":
-                        odl.strip(),
+                "lavorazioni":
+                    lavorazioni.strip(),
 
-                    "created_at":
-                        ora_italia()
-                }
+                "odl":
+                    odl.strip(),
 
-                supabase \
-                    .table("passaggio_consegne") \
-                    .insert(nuovo) \
+                "created_at":
+                    ora_italia()
+            }
+
+            try:
+
+                (
+                    supabase
+                    .table("passaggio_consegne")
+                    .insert(nuovo)
                     .execute()
+                )
 
+                # Svuota cache
                 carica_consegne.clear()
 
                 st.success(
@@ -242,82 +377,46 @@ def Passaggio_consegne_page():
 
                 st.rerun()
 
+            except Exception as e:
+
+                st.error(
+                    "❌ Errore durante l'inserimento."
+                )
+
+                st.code(str(e))
+
     st.divider()
 
     # ==========================================================
-    # SELEZIONE STORICO
+    # NESSUN DATO
     # ==========================================================
 
-    st.subheader("📚 Storico Passaggi Consegne")
-
-    dati = carica_consegne()
-
-    if not dati:
+    if not dati_consegna:
 
         st.info(
-            "Nessun passaggio di consegne presente."
+            f"📭 Nessuna consegna presente per "
+            f"{data_consegna.strftime('%d/%m/%Y')} "
+            f"— turno {turno}."
         )
 
         return
-
-    # date disponibili
-    date_disponibili = sorted(
-        list(
-            set(
-                d["data_consegna"]
-                for d in dati
-                if d.get("data_consegna")
-            )
-        ),
-        reverse=True
-    )
-
-    # ==========================================================
-    # SELETTORE DATA
-    # ==========================================================
-
-    data_storico = st.selectbox(
-        "📅 Visualizza data",
-        date_disponibili,
-        index=0
-    )
-
-    # ==========================================================
-    # FILTRA DATA
-    # ==========================================================
-
-    dati_giorno = [
-        d for d in dati
-        if d.get("data_consegna") == data_storico
-    ]
-
-    if not dati_giorno:
-
-        st.info(
-            "Nessun dato per questa giornata."
-        )
-
-        return
-
-    # ==========================================================
-    # INFORMAZIONI CONSEGNA
-    # ==========================================================
-
-    primo = dati_giorno[0]
-
-    st.caption(
-        f"📅 {data_storico}   |   "
-        f"👤 Responsabile: {primo.get('responsabile', '-')}"
-    )
 
     # ==========================================================
     # TRENI IN USCITA
     # ==========================================================
 
     treni_uscita = [
-        d for d in dati_giorno
+
+        d for d in dati_consegna
+
         if d.get("tipo") == "TRENO IN USCITA"
     ]
+
+    # Ordinamento numerico
+    treni_uscita = sorted(
+        treni_uscita,
+        key=chiave_treno
+    )
 
     st.markdown(
         """
@@ -337,11 +436,16 @@ def Passaggio_consegne_page():
 
     if not treni_uscita:
 
-        st.info("Nessun treno in uscita.")
+        st.info(
+            "Nessun treno in uscita."
+        )
 
     else:
 
-        # intestazione
+        # ======================================================
+        # INTESTAZIONE
+        # ======================================================
+
         h1, h2, h3, h4, h5, h6, h7, h8 = st.columns(
             [1.2, 1.5, 1.3, 1.3, 0.8, 0.8, 3, 1.5]
         )
@@ -356,6 +460,10 @@ def Passaggio_consegne_page():
         h8.markdown("**N° ODL PADRE**")
 
         st.divider()
+
+        # ======================================================
+        # RIGHE
+        # ======================================================
 
         for item in treni_uscita:
 
@@ -379,14 +487,22 @@ def Passaggio_consegne_page():
                 item.get("binario") or "-"
             )
 
+            # DISP
             if item.get("disp"):
+
                 c5.markdown("🟢")
+
             else:
+
                 c5.markdown("⚪")
 
+            # OUT
             if item.get("out"):
+
                 c6.markdown("🔴")
+
             else:
+
                 c6.markdown("⚪")
 
             c7.write(
@@ -395,23 +511,32 @@ def Passaggio_consegne_page():
 
             if item.get("odl"):
 
-                c8.markdown(
-                    f"[{item['odl']}]"
+                c8.write(
+                    item.get("odl")
                 )
 
             else:
 
                 c8.write("-")
 
+            st.divider()
+
     # ==========================================================
     # MANUTENZIONI / LAVORAZIONI APERTE
     # ==========================================================
 
     manutenzioni = [
-        d for d in dati_giorno
+
+        d for d in dati_consegna
+
         if d.get("tipo")
         == "MANUTENZIONE / LAVORAZIONE APERTA"
     ]
+
+    manutenzioni = sorted(
+        manutenzioni,
+        key=chiave_treno
+    )
 
     st.markdown(
         """
@@ -437,9 +562,9 @@ def Passaggio_consegne_page():
 
     else:
 
-        # ==================================================
+        # ======================================================
         # INTESTAZIONE
-        # ==================================================
+        # ======================================================
 
         h1, h2, h3, h4, h5, h6, h7 = st.columns(
             [1.2, 1.8, 1.5, 0.8, 0.8, 4, 1.5]
@@ -455,9 +580,9 @@ def Passaggio_consegne_page():
 
         st.divider()
 
-        # ==================================================
+        # ======================================================
         # RIGHE
-        # ==================================================
+        # ======================================================
 
         for item in manutenzioni:
 
@@ -480,28 +605,20 @@ def Passaggio_consegne_page():
             # DISP
             if item.get("disp"):
 
-                c4.markdown(
-                    "🟢"
-                )
+                c4.markdown("🟢")
 
             else:
 
-                c4.markdown(
-                    "⚪"
-                )
+                c4.markdown("⚪")
 
             # OUT
             if item.get("out"):
 
-                c5.markdown(
-                    "🔴"
-                )
+                c5.markdown("🔴")
 
             else:
 
-                c5.markdown(
-                    "⚪"
-                )
+                c5.markdown("⚪")
 
             c6.write(
                 item.get("lavorazioni") or "-"
@@ -509,8 +626,8 @@ def Passaggio_consegne_page():
 
             if item.get("odl"):
 
-                c7.markdown(
-                    f"[{item['odl']}]"
+                c7.write(
+                    item.get("odl")
                 )
 
             else:
@@ -520,18 +637,18 @@ def Passaggio_consegne_page():
             st.divider()
 
     # ==========================================================
-    # TURNO
+    # RIEPILOGO
     # ==========================================================
 
-    turni = sorted(
-        set(
-            d.get("turno")
-            for d in dati_giorno
-            if d.get("turno")
-        )
-    )
+    st.divider()
 
     st.caption(
-        "🕐 Turni presenti: "
-        + ", ".join(turni)
+        f"📅 Consegna del "
+        f"{data_consegna.strftime('%d/%m/%Y')}"
+        f"  |  "
+        f"🕐 Turno: {turno}"
+        f"  |  "
+        f"🚆 Treni in uscita: {len(treni_uscita)}"
+        f"  |  "
+        f"🛠️ Lavorazioni aperte: {len(manutenzioni)}"
     )
