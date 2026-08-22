@@ -274,7 +274,7 @@ def Passaggio_consegne_page():
             placeholder=(
                 "Inserire lavorazioni, anomalie, "
                 "attività da monitorare...",
-            key="pc_lavorazioni"    
+                 key="pc_lavorazioni"    
             )
         )
 
