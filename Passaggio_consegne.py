@@ -211,12 +211,14 @@ def Passaggio_consegne_page():
 
             treno = st.text_input(
                 "🚆 Treno",
-                placeholder="Es. 1000/27"
+                placeholder="Es. 1000/27",
+                key="pc_treno"
             )
 
             manutenzione = st.text_input(
                 "🔧 Manutenzione",
-                placeholder="Es. MC"
+                placeholder="Es. MC",
+                key="pc_manutenzione"
             )
 
         # ------------------------------------------------------
@@ -227,12 +229,14 @@ def Passaggio_consegne_page():
 
             servizio = st.text_input(
                 "🚉 Servizio",
-                placeholder="Es. 89705"
+                placeholder="Es. 89705",
+                key="pc_servizio"
             )
 
             binario = st.text_input(
                 "🛤️ Binario",
-                placeholder="Es. MAV 9"
+                placeholder="Es. MAV 9",
+                key="pc_binario"
             )
 
         # ------------------------------------------------------
@@ -243,7 +247,8 @@ def Passaggio_consegne_page():
 
             odl = st.text_input(
                 "📋 N° ODL PADRE",
-                placeholder="Es. 100014925813"
+                placeholder="Es. 100014925813",
+                key="pc_odl"
             )
         
             st.write("")
@@ -268,7 +273,8 @@ def Passaggio_consegne_page():
             "📝 Lavorazioni aperte / Note",
             placeholder=(
                 "Inserire lavorazioni, anomalie, "
-                "attività da monitorare..."
+                "attività da monitorare...",
+            key="pc_lavorazioni"    
             )
         )
 
@@ -371,7 +377,15 @@ def Passaggio_consegne_page():
                     .insert(nuovo)
                     .execute()
                 )
-
+                st.session_state["pc_treno"] = ""
+                st.session_state["pc_manutenzione"] = ""
+                st.session_state["pc_servizio"] = ""
+                st.session_state["pc_binario"] = ""
+                st.session_state["pc_odl"] = ""
+                st.session_state["pc_lavorazioni"] = ""
+                st.session_state["pc_disp"] = False
+                st.session_state["pc_out"] = False
+                
                 # Svuota cache
                 carica_consegne.clear()
 
