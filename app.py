@@ -19,7 +19,7 @@ import urllib.parse
 
 st.set_page_config(
     page_title="Manager ETR1000",
-    page_icon="🚄",
+    page_icon="🚅",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -423,6 +423,7 @@ with st.sidebar:
                 "search",
                 "calendar-heart",
                 "alarm",
+                "reload",
                 "cpu"
             ],
             menu_icon="list",
