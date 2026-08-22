@@ -32,17 +32,24 @@ def Passaggio_consegne_page():
 
     @st.cache_data(ttl=5)
     def carica_consegne():
-
-        res = (
-            supabase
-            .table("passaggio_consegne")
-            .select("*")
-            .order("data_consegna", desc=True)
-            .order("created_at", desc=False)
-            .execute()
-        )
-
-        return res.data or []
+    
+        try:
+    
+            res = (
+                supabase
+                .table("passaggio_consegne")
+                .select("*")
+                .execute()
+            )
+    
+            return res.data or []
+    
+        except Exception as e:
+    
+            st.error("❌ Errore lettura tabella passaggio_consegne")
+            st.code(str(e))
+    
+            return []
 
     # ==========================================================
     # TITOLO
