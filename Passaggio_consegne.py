@@ -246,15 +246,20 @@ def Passaggio_consegne_page():
                 placeholder="Es. 100014925813"
             )
 
-            st.write("")
-
-            disp = st.checkbox(
-                "🟢 DISP"
+            st.markdown("### Stato treno")
+            
+            stato = st.radio(
+                "Seleziona stato",
+                [
+                    "🟢 DISP",
+                    "🔴 OUT"
+                ],
+                horizontal=True
             )
-
-            out = st.checkbox(
-                "🔴 OUT"
-            )
+            
+            disp = stato == "🟢 DISP"
+            out = stato == "🔴 OUT"
+                        )
 
         # ------------------------------------------------------
         # LAVORAZIONI
