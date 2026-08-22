@@ -423,7 +423,7 @@ with st.sidebar:
                 "search",
                 "calendar-heart",
                 "alarm",
-                "reload",
+                "play",
                 "cpu"
             ],
             menu_icon="list",
