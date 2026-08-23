@@ -79,32 +79,12 @@ def Passaggio_consegne_page():
         for parte in parti:
 
             try:
-                numeri.append(
-                    int(parte)
-                )
+                numeri.append(int(parte))
 
             except:
-
-                numeri.append(
-                    999999
-                )
+                numeri.append(999999)
 
         return tuple(numeri)
-
-    # ----------------------------------------------------------
-    # TIPO DATABASE
-    # ----------------------------------------------------------
-
-    def tipo_database(tipo):
-
-        if tipo.startswith("🚆"):
-
-            return "TRENO IN USCITA"
-
-        return (
-            "MANUTENZIONE / "
-            "LAVORAZIONE APERTA"
-        )
 
     # ==========================================================
     # TITOLO
@@ -159,7 +139,7 @@ def Passaggio_consegne_page():
         )
 
     # ==========================================================
-    # CARICAMENTO DATI
+    # CARICA DATI
     # ==========================================================
 
     dati = carica_consegne()
@@ -186,7 +166,7 @@ def Passaggio_consegne_page():
     ]
 
     # ==========================================================
-    # INFORMAZIONI PASSAGGIO
+    # INFORMAZIONI CONSEGNA
     # ==========================================================
 
     st.divider()
@@ -238,12 +218,13 @@ def Passaggio_consegne_page():
         expanded=False
     ):
 
-        # ======================================================
-        # FORM INSERIMENTO
-        # ======================================================
+        # ------------------------------------------------------
+        # FORM
+        # clear_on_submit = svuota automaticamente i campi
+        # ------------------------------------------------------
 
         with st.form(
-            "passaggio_consegne_form",
+            "form_aggiungi_passaggio",
             clear_on_submit=True
         ):
 
@@ -350,7 +331,7 @@ def Passaggio_consegne_page():
             )
 
         # ======================================================
-        # ELABORAZIONE INSERIMENTO
+        # INSERIMENTO
         # ======================================================
 
         if inserisci:
@@ -381,9 +362,20 @@ def Passaggio_consegne_page():
 
             else:
 
-                tipo_db = tipo_database(
-                    tipo
-                )
+                if tipo.startswith("🚆"):
+
+                    tipo_db = "TRENO IN USCITA"
+
+                else:
+
+                    tipo_db = (
+                        "MANUTENZIONE / "
+                        "LAVORAZIONE APERTA"
+                    )
+
+                # --------------------------------------------------
+                # NUOVO RECORD
+                # --------------------------------------------------
 
                 nuovo = {
 
@@ -427,9 +419,9 @@ def Passaggio_consegne_page():
                         ora_italia()
                 }
 
-                # ----------------------------------------------
-                # INSERT SUPABASE
-                # ----------------------------------------------
+                # --------------------------------------------------
+                # INSERT
+                # --------------------------------------------------
 
                 try:
 
@@ -512,7 +504,6 @@ def Passaggio_consegne_page():
             font-weight:bold;
             border-radius:5px;
             margin-top:15px;
-            margin-bottom:10px;
         ">
         🚆 TRENI IN USCITA
         </div>
@@ -536,16 +527,17 @@ def Passaggio_consegne_page():
         # INTESTAZIONE
         # ------------------------------------------------------
 
-        h1, h2, h3, h4, h5, h6, h7, h8 = st.columns(
+        h1, h2, h3, h4, h5, h6, h7, h8, h9 = st.columns(
             [
+                1.1,
+                1.4,
                 1.2,
-                1.5,
-                1.3,
-                1.3,
-                0.8,
-                0.8,
+                1.2,
+                0.6,
+                0.6,
                 3,
-                1.5
+                1.4,
+                1.3
             ]
         )
 
@@ -557,6 +549,7 @@ def Passaggio_consegne_page():
         h6.markdown("**OUT**")
         h7.markdown("**LAVORAZIONI / NOTE**")
         h8.markdown("**N° ODL PADRE**")
+        h9.markdown("**AZIONI**")
 
         st.divider()
 
@@ -566,16 +559,19 @@ def Passaggio_consegne_page():
 
         for item in treni_uscita:
 
-            c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(
+            item_id = item.get("id")
+
+            c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
                 [
+                    1.1,
+                    1.4,
                     1.2,
-                    1.5,
-                    1.3,
-                    1.3,
-                    0.8,
-                    0.8,
+                    1.2,
+                    0.6,
+                    0.6,
                     3,
-                    1.5
+                    1.4,
+                    1.3
                 ]
             )
 
@@ -620,16 +616,62 @@ def Passaggio_consegne_page():
             )
 
             # --------------------------------------------------
-            # MODIFICA / CANCELLA
+            # AZIONI
             # --------------------------------------------------
 
-            with st.expander(
-                f"✏️ Modifica / 🗑️ "
-                f"{item.get('treno', '-')}"
+            modifica = c9.button(
+                "✏️",
+                key=f"modifica_u_{item_id}",
+                help="Modifica"
+            )
+
+            cancella = c9.button(
+                "🗑️",
+                key=f"cancella_u_{item_id}",
+                help="Cancella"
+            )
+
+            # --------------------------------------------------
+            # ATTIVA MODIFICA
+            # --------------------------------------------------
+
+            if modifica:
+
+                st.session_state[
+                    "modifica_id"
+                ] = item_id
+
+                st.rerun()
+
+            # --------------------------------------------------
+            # CANCELLA
+            # --------------------------------------------------
+
+            if cancella:
+
+                st.session_state[
+                    "cancella_id"
+                ] = item_id
+
+                st.rerun()
+
+            # ==================================================
+            # FORM MODIFICA
+            # ==================================================
+
+            if (
+                st.session_state.get(
+                    "modifica_id"
+                )
+                == item_id
             ):
 
+                st.markdown(
+                    "#### ✏️ Modifica treno"
+                )
+
                 with st.form(
-                    f"modifica_treno_{item.get('id')}"
+                    f"form_modifica_u_{item_id}"
                 ):
 
                     col_a, col_b, col_c = st.columns(3)
@@ -696,27 +738,47 @@ def Passaggio_consegne_page():
                         ) or ""
                     )
 
-                    col_save, col_cancel = st.columns(2)
+                    col_save, col_annulla = st.columns(2)
 
                     with col_save:
 
-                        salva_modifica = st.form_submit_button(
+                        salva = st.form_submit_button(
                             "💾 Salva modifica",
                             type="primary",
                             use_container_width=True
                         )
 
-                    with col_cancel:
+                    with col_annulla:
 
-                        pass
+                        annulla = st.form_submit_button(
+                            "↩️ Annulla",
+                            use_container_width=True
+                        )
 
-                if salva_modifica:
+                if annulla:
+
+                    st.session_state.pop(
+                        "modifica_id",
+                        None
+                    )
+
+                    st.rerun()
+
+                if salva:
 
                     if not nuovo_treno.strip():
 
                         st.error(
                             "⚠️ Il numero del treno "
                             "non può essere vuoto."
+                        )
+
+                    elif (
+                        not nuovo_servizio.strip()
+                    ):
+
+                        st.error(
+                            "⚠️ Inserisci il servizio."
                         )
 
                     else:
@@ -770,9 +832,14 @@ def Passaggio_consegne_page():
                                 )
                                 .eq(
                                     "id",
-                                    item.get("id")
+                                    item_id
                                 )
                                 .execute()
+                            )
+
+                            st.session_state.pop(
+                                "modifica_id",
+                                None
                             )
 
                             carica_consegne.clear()
@@ -792,24 +859,51 @@ def Passaggio_consegne_page():
 
                             st.code(str(e))
 
-                # --------------------------------------------------
-                # CANCELLAZIONE
-                # --------------------------------------------------
+            # ==================================================
+            # CONFERMA CANCELLAZIONE
+            # ==================================================
 
-                st.divider()
+            if (
+                st.session_state.get(
+                    "cancella_id"
+                )
+                == item_id
+            ):
 
-                conferma = st.checkbox(
-                    "Confermo di voler cancellare questo record.",
-                    key=f"conferma_delete_{item.get('id')}"
+                st.warning(
+                    f"⚠️ Vuoi cancellare "
+                    f"il treno {item.get('treno')}?"
                 )
 
-                if st.button(
-                    "🗑️ Cancella record",
-                    key=f"delete_{item.get('id')}",
-                    type="secondary",
-                    disabled=not conferma,
-                    use_container_width=True
-                ):
+                col_conferma, col_annulla = st.columns(2)
+
+                with col_conferma:
+
+                    conferma_delete = st.button(
+                        "🗑️ Sì, cancella",
+                        key=f"conferma_u_{item_id}",
+                        type="primary",
+                        use_container_width=True
+                    )
+
+                with col_annulla:
+
+                    annulla_delete = st.button(
+                        "↩️ Annulla",
+                        key=f"annulla_u_{item_id}",
+                        use_container_width=True
+                    )
+
+                if annulla_delete:
+
+                    st.session_state.pop(
+                        "cancella_id",
+                        None
+                    )
+
+                    st.rerun()
+
+                if conferma_delete:
 
                     try:
 
@@ -821,9 +915,14 @@ def Passaggio_consegne_page():
                             .delete()
                             .eq(
                                 "id",
-                                item.get("id")
+                                item_id
                             )
                             .execute()
+                        )
+
+                        st.session_state.pop(
+                            "cancella_id",
+                            None
                         )
 
                         carica_consegne.clear()
@@ -877,7 +976,6 @@ def Passaggio_consegne_page():
             font-weight:bold;
             border-radius:5px;
             margin-top:25px;
-            margin-bottom:10px;
         ">
         🛠️ MANUTENZIONE / LAVORAZIONI APERTE
         </div>
@@ -902,15 +1000,16 @@ def Passaggio_consegne_page():
         # INTESTAZIONE
         # ------------------------------------------------------
 
-        h1, h2, h3, h4, h5, h6, h7 = st.columns(
+        h1, h2, h3, h4, h5, h6, h7, h8 = st.columns(
             [
-                1.2,
-                1.8,
-                1.5,
-                0.8,
-                0.8,
+                1.1,
+                1.6,
+                1.4,
+                0.6,
+                0.6,
                 4,
-                1.5
+                1.4,
+                1.3
             ]
         )
 
@@ -921,6 +1020,7 @@ def Passaggio_consegne_page():
         h5.markdown("**OUT**")
         h6.markdown("**LAVORAZIONI APERTE / NOTE**")
         h7.markdown("**N° ODL PADRE**")
+        h8.markdown("**AZIONI**")
 
         st.divider()
 
@@ -930,15 +1030,18 @@ def Passaggio_consegne_page():
 
         for item in manutenzioni:
 
-            c1, c2, c3, c4, c5, c6, c7 = st.columns(
+            item_id = item.get("id")
+
+            c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(
                 [
-                    1.2,
-                    1.8,
-                    1.5,
-                    0.8,
-                    0.8,
+                    1.1,
+                    1.6,
+                    1.4,
+                    0.6,
+                    0.6,
                     4,
-                    1.5
+                    1.4,
+                    1.3
                 ]
             )
 
@@ -979,16 +1082,62 @@ def Passaggio_consegne_page():
             )
 
             # --------------------------------------------------
-            # MODIFICA
+            # AZIONI
             # --------------------------------------------------
 
-            with st.expander(
-                f"✏️ Modifica / 🗑️ "
-                f"{item.get('treno', '-')}"
+            modifica = c8.button(
+                "✏️",
+                key=f"modifica_m_{item_id}",
+                help="Modifica"
+            )
+
+            cancella = c8.button(
+                "🗑️",
+                key=f"cancella_m_{item_id}",
+                help="Cancella"
+            )
+
+            # --------------------------------------------------
+            # ATTIVA MODIFICA
+            # --------------------------------------------------
+
+            if modifica:
+
+                st.session_state[
+                    "modifica_id"
+                ] = item_id
+
+                st.rerun()
+
+            # --------------------------------------------------
+            # ATTIVA CANCELLA
+            # --------------------------------------------------
+
+            if cancella:
+
+                st.session_state[
+                    "cancella_id"
+                ] = item_id
+
+                st.rerun()
+
+            # ==================================================
+            # FORM MODIFICA
+            # ==================================================
+
+            if (
+                st.session_state.get(
+                    "modifica_id"
+                )
+                == item_id
             ):
 
+                st.markdown(
+                    "#### ✏️ Modifica manutenzione"
+                )
+
                 with st.form(
-                    f"modifica_manutenzione_{item.get('id')}"
+                    f"form_modifica_m_{item_id}"
                 ):
 
                     col_a, col_b, col_c = st.columns(3)
@@ -1048,13 +1197,33 @@ def Passaggio_consegne_page():
                         ) or ""
                     )
 
-                    salva_modifica = st.form_submit_button(
-                        "💾 Salva modifica",
-                        type="primary",
-                        use_container_width=True
+                    col_save, col_annulla = st.columns(2)
+
+                    with col_save:
+
+                        salva = st.form_submit_button(
+                            "💾 Salva modifica",
+                            type="primary",
+                            use_container_width=True
+                        )
+
+                    with col_annulla:
+
+                        annulla = st.form_submit_button(
+                            "↩️ Annulla",
+                            use_container_width=True
+                        )
+
+                if annulla:
+
+                    st.session_state.pop(
+                        "modifica_id",
+                        None
                     )
 
-                if salva_modifica:
+                    st.rerun()
+
+                if salva:
 
                     if not nuovo_treno.strip():
 
@@ -1111,9 +1280,14 @@ def Passaggio_consegne_page():
                                 )
                                 .eq(
                                     "id",
-                                    item.get("id")
+                                    item_id
                                 )
                                 .execute()
+                            )
+
+                            st.session_state.pop(
+                                "modifica_id",
+                                None
                             )
 
                             carica_consegne.clear()
@@ -1133,24 +1307,51 @@ def Passaggio_consegne_page():
 
                             st.code(str(e))
 
-                # --------------------------------------------------
-                # CANCELLAZIONE
-                # --------------------------------------------------
+            # ==================================================
+            # CANCELLAZIONE
+            # ==================================================
 
-                st.divider()
+            if (
+                st.session_state.get(
+                    "cancella_id"
+                )
+                == item_id
+            ):
 
-                conferma = st.checkbox(
-                    "Confermo di voler cancellare questo record.",
-                    key=f"conferma_delete_m_{item.get('id')}"
+                st.warning(
+                    f"⚠️ Vuoi cancellare "
+                    f"il treno {item.get('treno')}?"
                 )
 
-                if st.button(
-                    "🗑️ Cancella record",
-                    key=f"delete_m_{item.get('id')}",
-                    type="secondary",
-                    disabled=not conferma,
-                    use_container_width=True
-                ):
+                col_conferma, col_annulla = st.columns(2)
+
+                with col_conferma:
+
+                    conferma_delete = st.button(
+                        "🗑️ Sì, cancella",
+                        key=f"conferma_m_{item_id}",
+                        type="primary",
+                        use_container_width=True
+                    )
+
+                with col_annulla:
+
+                    annulla_delete = st.button(
+                        "↩️ Annulla",
+                        key=f"annulla_m_{item_id}",
+                        use_container_width=True
+                    )
+
+                if annulla_delete:
+
+                    st.session_state.pop(
+                        "cancella_id",
+                        None
+                    )
+
+                    st.rerun()
+
+                if conferma_delete:
 
                     try:
 
@@ -1162,9 +1363,14 @@ def Passaggio_consegne_page():
                             .delete()
                             .eq(
                                 "id",
-                                item.get("id")
+                                item_id
                             )
                             .execute()
+                        )
+
+                        st.session_state.pop(
+                            "cancella_id",
+                            None
                         )
 
                         carica_consegne.clear()
