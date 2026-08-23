@@ -606,7 +606,7 @@ def Passaggio_consegne_page():
 
     with st.expander(
         "➕ Aggiungi treno",
-        expanded=False
+        expanded=True
     ):
 
         st.markdown(
