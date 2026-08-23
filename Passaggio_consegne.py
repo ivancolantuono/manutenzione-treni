@@ -6,106 +6,168 @@ from db import supabase
 
 def Passaggio_consegne_page():
 
-    st.markdown(
+    # ==========================================================
+# STILE PASSAGGIO CONSEGNE
+# ==========================================================
+
+st.markdown(
     """
     <style>
 
-    /* =====================================================
-       BLOCCO AGGIUNGI TRENO
-       ===================================================== */
+    /* ======================================================
+       CONTORNO GENERALE DEL FORM
+       ====================================================== */
 
     div[data-testid="stExpander"] {
-        border: 2px solid #777 !important;
-        border-radius: 12px !important;
-        background: #f8f9fa !important;
+        border: 2px solid #707070 !important;
+        border-radius: 10px !important;
+        background-color: #fafafa !important;
+        padding: 4px !important;
     }
 
-    div[data-testid="stExpander"] details {
-        border-radius: 12px !important;
-    }
 
-    /* =====================================================
-       TITOLI / LABEL
-       ===================================================== */
+    /* ======================================================
+       LABEL CAMPI
+       ====================================================== */
 
     div[data-testid="stTextInput"] label,
     div[data-testid="stTextArea"] label {
-        font-size: 17px !important;
-        font-weight: 800 !important;
-        color: #222 !important;
-        margin-bottom: 5px !important;
+
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #222222 !important;
+
     }
 
-    /* =====================================================
-       INPUT
-       ===================================================== */
+
+    /* ======================================================
+       INPUT - CONTORNO BEN VISIBILE
+       ====================================================== */
 
     div[data-testid="stTextInput"] div[data-baseweb="input"] {
-        border: 2px solid #777 !important;
-        border-radius: 8px !important;
-        background-color: white !important;
-        min-height: 48px !important;
+
+        border: 2px solid #777777 !important;
+
+        border-radius: 7px !important;
+
+        background-color: #ffffff !important;
+
+        min-height: 45px !important;
+
+        box-shadow: inset 0 0 0 1px #eeeeee !important;
+
     }
 
-    div[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within {
-        border: 3px solid #e30613 !important;
-        box-shadow: 0 0 0 2px rgba(227,6,19,0.15) !important;
+
+    /* ======================================================
+       INPUT QUANDO SELEZIONATO
+       ====================================================== */
+
+    div[data-testid="stTextInput"]
+    div[data-baseweb="input"]:focus-within {
+
+        border: 2px solid #555555 !important;
+
+        box-shadow:
+            0 0 0 2px rgba(80,80,80,0.12) !important;
+
     }
+
+
+    /* ======================================================
+       TESTO INPUT
+       ====================================================== */
 
     div[data-testid="stTextInput"] input {
-        font-size: 17px !important;
-        font-weight: 600 !important;
-        color: #111 !important;
-        padding: 10px 12px !important;
+
+        font-size: 16px !important;
+
+        font-weight: 500 !important;
+
+        color: #222222 !important;
+
+        padding: 8px 10px !important;
+
     }
 
-    /* =====================================================
-       TEXTAREA
-       ===================================================== */
+
+    /* ======================================================
+       TEXTAREA - CONTORNO
+       ====================================================== */
 
     div[data-testid="stTextArea"] div[data-baseweb="textarea"] {
-        border: 2px solid #777 !important;
-        border-radius: 8px !important;
-        background-color: white !important;
+
+        border: 2px solid #777777 !important;
+
+        border-radius: 7px !important;
+
+        background-color: #ffffff !important;
+
+        box-shadow: inset 0 0 0 1px #eeeeee !important;
+
     }
 
-    div[data-testid="stTextArea"] div[data-baseweb="textarea"]:focus-within {
-        border: 3px solid #e30613 !important;
-        box-shadow: 0 0 0 2px rgba(227,6,19,0.15) !important;
+
+    div[data-testid="stTextArea"]
+    div[data-baseweb="textarea"]:focus-within {
+
+        border: 2px solid #555555 !important;
+
+        box-shadow:
+            0 0 0 2px rgba(80,80,80,0.12) !important;
+
     }
+
 
     div[data-testid="stTextArea"] textarea {
+
         font-size: 16px !important;
-        color: #111 !important;
+
+        color: #222222 !important;
+
     }
 
-    /* =====================================================
-       RADIO TIPO
-       ===================================================== */
+
+    /* ======================================================
+       RADIO
+       ====================================================== */
+
+    div[data-testid="stRadio"] {
+
+        border: 2px solid #777777 !important;
+
+        border-radius: 7px !important;
+
+        padding: 8px 12px !important;
+
+        background-color: #ffffff !important;
+
+    }
+
 
     div[data-testid="stRadio"] label {
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        color: #222 !important;
+
+        font-weight: 600 !important;
+
+        color: #222222 !important;
+
     }
 
-    /* =====================================================
-       STATO TRENO
-       ===================================================== */
 
-    div[data-testid="stRadio"] div[role="radiogroup"] {
-        gap: 18px !important;
-    }
-
-    /* =====================================================
+    /* ======================================================
        PULSANTE INSERISCI
-       ===================================================== */
+       ====================================================== */
 
-    div[data-testid="stButton"] button[kind="primary"] {
-        min-height: 50px !important;
-        font-size: 18px !important;
-        font-weight: 800 !important;
-        border-radius: 8px !important;
+    div[data-testid="stButton"] button {
+
+        min-height: 48px !important;
+
+        font-size: 17px !important;
+
+        font-weight: 700 !important;
+
+        border-radius: 7px !important;
+
     }
 
     </style>
