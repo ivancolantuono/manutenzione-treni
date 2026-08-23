@@ -400,9 +400,9 @@ def Passaggio_consegne_page():
 
             treno = st.selectbox(
                 "🚆 Treno",
-                [
-                    "Seleziona treno"
-                ] + TRIENI_DISPONIBILI,
+                options=TRIENI_DISPONIBILI,
+                index=None,
+                placeholder="Seleziona il treno",
                 key="pc_treno"
             )
 
