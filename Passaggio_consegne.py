@@ -7,173 +7,173 @@ from db import supabase
 def Passaggio_consegne_page():
 
     # ==========================================================
-# STILE PASSAGGIO CONSEGNE
-# ==========================================================
-
-st.markdown(
-    """
-    <style>
-
-    /* ======================================================
-       CONTORNO GENERALE DEL FORM
-       ====================================================== */
-
-    div[data-testid="stExpander"] {
-        border: 2px solid #707070 !important;
-        border-radius: 10px !important;
-        background-color: #fafafa !important;
-        padding: 4px !important;
-    }
-
-
-    /* ======================================================
-       LABEL CAMPI
-       ====================================================== */
-
-    div[data-testid="stTextInput"] label,
-    div[data-testid="stTextArea"] label {
-
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        color: #222222 !important;
-
-    }
-
-
-    /* ======================================================
-       INPUT - CONTORNO BEN VISIBILE
-       ====================================================== */
-
-    div[data-testid="stTextInput"] div[data-baseweb="input"] {
-
-        border: 2px solid #777777 !important;
-
-        border-radius: 7px !important;
-
-        background-color: #ffffff !important;
-
-        min-height: 45px !important;
-
-        box-shadow: inset 0 0 0 1px #eeeeee !important;
-
-    }
-
-
-    /* ======================================================
-       INPUT QUANDO SELEZIONATO
-       ====================================================== */
-
-    div[data-testid="stTextInput"]
-    div[data-baseweb="input"]:focus-within {
-
-        border: 2px solid #555555 !important;
-
-        box-shadow:
-            0 0 0 2px rgba(80,80,80,0.12) !important;
-
-    }
-
-
-    /* ======================================================
-       TESTO INPUT
-       ====================================================== */
-
-    div[data-testid="stTextInput"] input {
-
-        font-size: 16px !important;
-
-        font-weight: 500 !important;
-
-        color: #222222 !important;
-
-        padding: 8px 10px !important;
-
-    }
-
-
-    /* ======================================================
-       TEXTAREA - CONTORNO
-       ====================================================== */
-
-    div[data-testid="stTextArea"] div[data-baseweb="textarea"] {
-
-        border: 2px solid #777777 !important;
-
-        border-radius: 7px !important;
-
-        background-color: #ffffff !important;
-
-        box-shadow: inset 0 0 0 1px #eeeeee !important;
-
-    }
-
-
-    div[data-testid="stTextArea"]
-    div[data-baseweb="textarea"]:focus-within {
-
-        border: 2px solid #555555 !important;
-
-        box-shadow:
-            0 0 0 2px rgba(80,80,80,0.12) !important;
-
-    }
-
-
-    div[data-testid="stTextArea"] textarea {
-
-        font-size: 16px !important;
-
-        color: #222222 !important;
-
-    }
-
-
-    /* ======================================================
-       RADIO
-       ====================================================== */
-
-    div[data-testid="stRadio"] {
-
-        border: 2px solid #777777 !important;
-
-        border-radius: 7px !important;
-
-        padding: 8px 12px !important;
-
-        background-color: #ffffff !important;
-
-    }
-
-
-    div[data-testid="stRadio"] label {
-
-        font-weight: 600 !important;
-
-        color: #222222 !important;
-
-    }
-
-
-    /* ======================================================
-       PULSANTE INSERISCI
-       ====================================================== */
-
-    div[data-testid="stButton"] button {
-
-        min-height: 48px !important;
-
-        font-size: 17px !important;
-
-        font-weight: 700 !important;
-
-        border-radius: 7px !important;
-
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+    # STILE PASSAGGIO CONSEGNE
+    # ==========================================================
+    
+    st.markdown(
+        """
+        <style>
+    
+        /* ======================================================
+           CONTORNO GENERALE DEL FORM
+           ====================================================== */
+    
+        div[data-testid="stExpander"] {
+            border: 2px solid #707070 !important;
+            border-radius: 10px !important;
+            background-color: #fafafa !important;
+            padding: 4px !important;
+        }
+    
+    
+        /* ======================================================
+           LABEL CAMPI
+           ====================================================== */
+    
+        div[data-testid="stTextInput"] label,
+        div[data-testid="stTextArea"] label {
+    
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #222222 !important;
+    
+        }
+    
+    
+        /* ======================================================
+           INPUT - CONTORNO BEN VISIBILE
+           ====================================================== */
+    
+        div[data-testid="stTextInput"] div[data-baseweb="input"] {
+    
+            border: 2px solid #777777 !important;
+    
+            border-radius: 7px !important;
+    
+            background-color: #ffffff !important;
+    
+            min-height: 45px !important;
+    
+            box-shadow: inset 0 0 0 1px #eeeeee !important;
+    
+        }
+    
+    
+        /* ======================================================
+           INPUT QUANDO SELEZIONATO
+           ====================================================== */
+    
+        div[data-testid="stTextInput"]
+        div[data-baseweb="input"]:focus-within {
+    
+            border: 2px solid #555555 !important;
+    
+            box-shadow:
+                0 0 0 2px rgba(80,80,80,0.12) !important;
+    
+        }
+    
+    
+        /* ======================================================
+           TESTO INPUT
+           ====================================================== */
+    
+        div[data-testid="stTextInput"] input {
+    
+            font-size: 16px !important;
+    
+            font-weight: 500 !important;
+    
+            color: #222222 !important;
+    
+            padding: 8px 10px !important;
+    
+        }
+    
+    
+        /* ======================================================
+           TEXTAREA - CONTORNO
+           ====================================================== */
+    
+        div[data-testid="stTextArea"] div[data-baseweb="textarea"] {
+    
+            border: 2px solid #777777 !important;
+    
+            border-radius: 7px !important;
+    
+            background-color: #ffffff !important;
+    
+            box-shadow: inset 0 0 0 1px #eeeeee !important;
+    
+        }
+    
+    
+        div[data-testid="stTextArea"]
+        div[data-baseweb="textarea"]:focus-within {
+    
+            border: 2px solid #555555 !important;
+    
+            box-shadow:
+                0 0 0 2px rgba(80,80,80,0.12) !important;
+    
+        }
+    
+    
+        div[data-testid="stTextArea"] textarea {
+    
+            font-size: 16px !important;
+    
+            color: #222222 !important;
+    
+        }
+    
+    
+        /* ======================================================
+           RADIO
+           ====================================================== */
+    
+        div[data-testid="stRadio"] {
+    
+            border: 2px solid #777777 !important;
+    
+            border-radius: 7px !important;
+    
+            padding: 8px 12px !important;
+    
+            background-color: #ffffff !important;
+    
+        }
+    
+    
+        div[data-testid="stRadio"] label {
+    
+            font-weight: 600 !important;
+    
+            color: #222222 !important;
+    
+        }
+    
+    
+        /* ======================================================
+           PULSANTE INSERISCI
+           ====================================================== */
+    
+        div[data-testid="stButton"] button {
+    
+            min-height: 48px !important;
+    
+            font-size: 17px !important;
+    
+            font-weight: 700 !important;
+    
+            border-radius: 7px !important;
+    
+        }
+    
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
     # ==========================================================
     # FUNZIONI
