@@ -1,14 +1,8 @@
 import streamlit as st
-
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
-
 from db import supabase
 
-
-# ==============================================================
-# PAGINA PASSAGGIO CONSEGNE
-# ==============================================================
 
 def Passaggio_consegne_page():
 
@@ -17,7 +11,6 @@ def Passaggio_consegne_page():
     # ==========================================================
 
     def ora_italia():
-
         return datetime.now(
             ZoneInfo("Europe/Rome")
         ).isoformat()
@@ -43,7 +36,8 @@ def Passaggio_consegne_page():
         except Exception as e:
 
             st.error(
-                "❌ Errore lettura tabella passaggio_consegne"
+                "❌ Errore lettura tabella "
+                "passaggio_consegne"
             )
 
             st.code(str(e))
@@ -65,7 +59,7 @@ def Passaggio_consegne_page():
         return str(valore)[:10]
 
     # ----------------------------------------------------------
-    # ORDINAMENTO TRENI
+    # ORDINAMENTO TRENO
     # ----------------------------------------------------------
 
     def chiave_treno(item):
@@ -85,7 +79,6 @@ def Passaggio_consegne_page():
         for parte in parti:
 
             try:
-
                 numeri.append(
                     int(parte)
                 )
@@ -97,6 +90,21 @@ def Passaggio_consegne_page():
                 )
 
         return tuple(numeri)
+
+    # ----------------------------------------------------------
+    # TIPO DATABASE
+    # ----------------------------------------------------------
+
+    def tipo_database(tipo):
+
+        if tipo.startswith("🚆"):
+
+            return "TRENO IN USCITA"
+
+        return (
+            "MANUTENZIONE / "
+            "LAVORAZIONE APERTA"
+        )
 
     # ==========================================================
     # TITOLO
@@ -110,13 +118,20 @@ def Passaggio_consegne_page():
 
     col1, col2, col3 = st.columns(3)
 
+    # ----------------------------------------------------------
+    # DATA
+    # ----------------------------------------------------------
+
     with col1:
 
         data_consegna = st.date_input(
             "📅 Data",
-            value=date.today(),
-            key="pc_data"
+            value=date.today()
         )
+
+    # ----------------------------------------------------------
+    # TURNO
+    # ----------------------------------------------------------
 
     with col2:
 
@@ -126,9 +141,12 @@ def Passaggio_consegne_page():
                 "Mattina",
                 "Pomeriggio",
                 "Notte"
-            ],
-            key="pc_turno"
+            ]
         )
+
+    # ----------------------------------------------------------
+    # RESPONSABILE
+    # ----------------------------------------------------------
 
     with col3:
 
@@ -137,12 +155,11 @@ def Passaggio_consegne_page():
             value=st.session_state.get(
                 "utente",
                 ""
-            ),
-            key="pc_responsabile"
+            )
         )
 
     # ==========================================================
-    # CARICA DATI
+    # CARICAMENTO DATI
     # ==========================================================
 
     dati = carica_consegne()
@@ -152,7 +169,7 @@ def Passaggio_consegne_page():
     )
 
     # ==========================================================
-    # DATI DEL GIORNO / TURNO
+    # FILTRO DATA + TURNO
     # ==========================================================
 
     dati_consegna = [
@@ -169,7 +186,7 @@ def Passaggio_consegne_page():
     ]
 
     # ==========================================================
-    # INFORMAZIONI CONSEGNA
+    # INFORMAZIONI PASSAGGIO
     # ==========================================================
 
     st.divider()
@@ -194,8 +211,9 @@ def Passaggio_consegne_page():
         if dati_consegna:
 
             responsabile_salvato = (
-                dati_consegna[0]
-                .get("responsabile")
+                dati_consegna[0].get(
+                    "responsabile"
+                )
                 or "-"
             )
 
@@ -212,514 +230,130 @@ def Passaggio_consegne_page():
             )
 
     # ==========================================================
-    # MODIFICA RECORD
-    # ==========================================================
-
-    modifica_id = st.session_state.get(
-        "modifica_id"
-    )
-
-    if modifica_id is not None:
-
-        record_modifica = next(
-            (
-                d for d in dati
-                if str(d.get("id"))
-                == str(modifica_id)
-            ),
-            None
-        )
-
-        if record_modifica:
-
-            st.divider()
-
-            st.markdown(
-                "### ✏️ Modifica consegna"
-            )
-
-            # --------------------------------------------------
-            # TIPO
-            # --------------------------------------------------
-
-            tipo_attuale = record_modifica.get(
-                "tipo",
-                "TRENO IN USCITA"
-            )
-
-            if tipo_attuale == "TRENO IN USCITA":
-
-                indice_tipo = 0
-
-            else:
-
-                indice_tipo = 1
-
-            tipo_modifica = st.radio(
-                "Tipo",
-                [
-                    "🚆 TRENO IN USCITA",
-                    "🛠️ MANUTENZIONE / LAVORAZIONE APERTA"
-                ],
-                index=indice_tipo,
-                horizontal=True,
-                key="edit_tipo"
-            )
-
-            # --------------------------------------------------
-            # CAMPI
-            # --------------------------------------------------
-
-            e1, e2, e3 = st.columns(3)
-
-            with e1:
-
-                edit_treno = st.text_input(
-                    "🚆 Treno",
-                    value=record_modifica.get(
-                        "treno"
-                    ) or "",
-                    key="edit_treno"
-                )
-
-                edit_manutenzione = st.text_input(
-                    "🔧 Manutenzione",
-                    value=record_modifica.get(
-                        "manutenzione"
-                    ) or "",
-                    key="edit_manutenzione"
-                )
-
-            with e2:
-
-                edit_servizio = st.text_input(
-                    "🚉 Servizio",
-                    value=record_modifica.get(
-                        "servizio"
-                    ) or "",
-                    key="edit_servizio"
-                )
-
-                edit_binario = st.text_input(
-                    "🛤️ Binario",
-                    value=record_modifica.get(
-                        "binario"
-                    ) or "",
-                    key="edit_binario"
-                )
-
-            with e3:
-
-                edit_odl = st.text_input(
-                    "📋 N° ODL PADRE",
-                    value=record_modifica.get(
-                        "odl"
-                    ) or "",
-                    key="edit_odl"
-                )
-
-                # ----------------------------------------------
-                # STATO
-                # ----------------------------------------------
-
-                if record_modifica.get("disp"):
-
-                    stato_default = 0
-
-                elif record_modifica.get("out"):
-
-                    stato_default = 1
-
-                else:
-
-                    stato_default = 0
-
-                edit_stato = st.radio(
-                    "Stato",
-                    [
-                        "🟢 DISP",
-                        "🔴 OUT"
-                    ],
-                    index=stato_default,
-                    horizontal=True,
-                    key="edit_stato"
-                )
-
-            edit_lavorazioni = st.text_area(
-                "📝 Lavorazioni aperte / Note",
-                value=record_modifica.get(
-                    "lavorazioni"
-                ) or "",
-                key="edit_lavorazioni"
-            )
-
-            # --------------------------------------------------
-            # PULSANTI
-            # --------------------------------------------------
-
-            b1, b2 = st.columns(2)
-
-            with b1:
-
-                salva_modifica = st.button(
-                    "💾 Salva modifica",
-                    type="primary",
-                    use_container_width=True,
-                    key="salva_modifica"
-                )
-
-            with b2:
-
-                annulla_modifica = st.button(
-                    "❌ Annulla",
-                    use_container_width=True,
-                    key="annulla_modifica"
-                )
-
-            # --------------------------------------------------
-            # ANNULLA
-            # --------------------------------------------------
-
-            if annulla_modifica:
-
-                st.session_state.pop(
-                    "modifica_id",
-                    None
-                )
-
-                st.rerun()
-
-            # --------------------------------------------------
-            # SALVA
-            # --------------------------------------------------
-
-            if salva_modifica:
-
-                if not edit_treno.strip():
-
-                    st.error(
-                        "⚠️ Inserisci il numero del treno."
-                    )
-
-                    st.stop()
-
-                if (
-                    tipo_modifica.startswith("🚆")
-                    and not edit_servizio.strip()
-                ):
-
-                    st.error(
-                        "⚠️ Per un treno in uscita "
-                        "inserisci il servizio."
-                    )
-
-                    st.stop()
-
-                if tipo_modifica.startswith("🚆"):
-
-                    tipo_db_modifica = (
-                        "TRENO IN USCITA"
-                    )
-
-                else:
-
-                    tipo_db_modifica = (
-                        "MANUTENZIONE / "
-                        "LAVORAZIONE APERTA"
-                    )
-
-                edit_disp = (
-                    edit_stato
-                    == "🟢 DISP"
-                )
-
-                edit_out = (
-                    edit_stato
-                    == "🔴 OUT"
-                )
-
-                dati_modificati = {
-
-                    "tipo":
-                        tipo_db_modifica,
-
-                    "treno":
-                        edit_treno.strip(),
-
-                    "manutenzione":
-                        edit_manutenzione.strip(),
-
-                    "servizio":
-                        edit_servizio.strip(),
-
-                    "binario":
-                        edit_binario.strip(),
-
-                    "disp":
-                        edit_disp,
-
-                    "out":
-                        edit_out,
-
-                    "lavorazioni":
-                        edit_lavorazioni.strip(),
-
-                    "odl":
-                        edit_odl.strip()
-                }
-
-                try:
-
-                    (
-                        supabase
-                        .table(
-                            "passaggio_consegne"
-                        )
-                        .update(
-                            dati_modificati
-                        )
-                        .eq(
-                            "id",
-                            modifica_id
-                        )
-                        .execute()
-                    )
-
-                    carica_consegne.clear()
-
-                    st.session_state.pop(
-                        "modifica_id",
-                        None
-                    )
-
-                    st.success(
-                        "✅ Consegna modificata."
-                    )
-
-                    st.rerun()
-
-                except Exception as e:
-
-                    st.error(
-                        "❌ Errore durante la modifica."
-                    )
-
-                    st.code(str(e))
-
-            st.divider()
-
-    # ==========================================================
-    # CONFERMA ELIMINAZIONE
-    # ==========================================================
-
-    elimina_id = st.session_state.get(
-        "elimina_id"
-    )
-
-    if elimina_id is not None:
-
-        record_elimina = next(
-            (
-                d for d in dati
-                if str(d.get("id"))
-                == str(elimina_id)
-            ),
-            None
-        )
-
-        if record_elimina:
-
-            st.warning(
-                "⚠️ Sei sicuro di voler eliminare "
-                f"il treno **{record_elimina.get('treno', '-') }**?"
-            )
-
-            e1, e2 = st.columns(2)
-
-            with e1:
-
-                conferma_elimina = st.button(
-                    "🗑️ Sì, elimina",
-                    type="primary",
-                    use_container_width=True,
-                    key="conferma_elimina"
-                )
-
-            with e2:
-
-                annulla_elimina = st.button(
-                    "❌ Annulla",
-                    use_container_width=True,
-                    key="annulla_elimina"
-                )
-
-            if annulla_elimina:
-
-                st.session_state.pop(
-                    "elimina_id",
-                    None
-                )
-
-                st.rerun()
-
-            if conferma_elimina:
-
-                try:
-
-                    (
-                        supabase
-                        .table(
-                            "passaggio_consegne"
-                        )
-                        .delete()
-                        .eq(
-                            "id",
-                            elimina_id
-                        )
-                        .execute()
-                    )
-
-                    carica_consegne.clear()
-
-                    st.session_state.pop(
-                        "elimina_id",
-                        None
-                    )
-
-                    st.success(
-                        "🗑️ Consegna eliminata."
-                    )
-
-                    st.rerun()
-
-                except Exception as e:
-
-                    st.error(
-                        "❌ Errore durante l'eliminazione."
-                    )
-
-                    st.code(str(e))
-
-    # ==========================================================
     # AGGIUNGI TRENO
     # ==========================================================
 
     with st.expander(
         "➕ Aggiungi treno",
-        expanded=True
+        expanded=False
     ):
 
-        st.markdown(
-            "### Tipo"
-        )
-
-        tipo = st.radio(
-            "",
-            [
-                "🚆 TRENO IN USCITA",
-                "🛠️ MANUTENZIONE / LAVORAZIONE APERTA"
-            ],
-            horizontal=True,
-            key="pc_tipo"
-        )
-
-        c1, c2, c3 = st.columns(3)
-
-        # ------------------------------------------------------
-        # COLONNA 1
-        # ------------------------------------------------------
-
-        with c1:
-
-            treno = st.text_input(
-                "🚆 Treno",
-                placeholder="Es. 1000/27",
-                key="pc_treno"
-            )
-
-            manutenzione = st.text_input(
-                "🔧 Manutenzione",
-                placeholder="Es. MC",
-                key="pc_manutenzione"
-            )
-
-        # ------------------------------------------------------
-        # COLONNA 2
-        # ------------------------------------------------------
-
-        with c2:
-
-            servizio = st.text_input(
-                "🚉 Servizio",
-                placeholder="Es. 89705",
-                key="pc_servizio"
-            )
-
-            binario = st.text_input(
-                "🛤️ Binario",
-                placeholder="Es. MAV 9",
-                key="pc_binario"
-            )
-
-        # ------------------------------------------------------
-        # COLONNA 3
-        # ------------------------------------------------------
-
-        with c3:
-
-            odl = st.text_input(
-                "📋 N° ODL PADRE",
-                placeholder="Es. 100014925813",
-                key="pc_odl"
-            )
-
-            stato = st.radio(
-                "Stato treno",
-                [
-                    "🟢 DISP",
-                    "🔴 OUT"
-                ],
-                horizontal=True,
-                key="pc_stato"
-            )
-
-        # ------------------------------------------------------
-        # STATO
-        # ------------------------------------------------------
-
-        disp = (
-            stato
-            == "🟢 DISP"
-        )
-
-        out = (
-            stato
-            == "🔴 OUT"
-        )
-
-        # ------------------------------------------------------
-        # LAVORAZIONI
-        # ------------------------------------------------------
-
-        lavorazioni = st.text_area(
-            "📝 Lavorazioni aperte / Note",
-            placeholder=(
-                "Inserire lavorazioni, anomalie, "
-                "attività da monitorare..."
-            ),
-            key="pc_lavorazioni"
-        )
-
         # ======================================================
-        # INSERIMENTO
+        # FORM INSERIMENTO
         # ======================================================
 
-        if st.button(
-            "➕ Inserisci",
-            type="primary",
-            use_container_width=True,
-            key="pc_inserisci"
+        with st.form(
+            "passaggio_consegne_form",
+            clear_on_submit=True
         ):
+
+            st.markdown("### Tipo")
+
+            tipo = st.radio(
+                "Tipo",
+                [
+                    "🚆 TRENO IN USCITA",
+                    "🛠️ MANUTENZIONE / "
+                    "LAVORAZIONE APERTA"
+                ],
+                horizontal=True
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            # --------------------------------------------------
+            # COLONNA 1
+            # --------------------------------------------------
+
+            with col1:
+
+                treno = st.text_input(
+                    "🚆 Treno",
+                    placeholder="Es. 1000/27"
+                )
+
+                manutenzione = st.text_input(
+                    "🔧 Manutenzione",
+                    placeholder="Es. MC"
+                )
+
+            # --------------------------------------------------
+            # COLONNA 2
+            # --------------------------------------------------
+
+            with col2:
+
+                servizio = st.text_input(
+                    "🚉 Servizio",
+                    placeholder="Es. 89705"
+                )
+
+                binario = st.text_input(
+                    "🛤️ Binario",
+                    placeholder="Es. MAV 9"
+                )
+
+            # --------------------------------------------------
+            # COLONNA 3
+            # --------------------------------------------------
+
+            with col3:
+
+                odl = st.text_input(
+                    "📋 N° ODL PADRE",
+                    placeholder="Es. 100014925813"
+                )
+
+                st.write("")
+
+                stato = st.radio(
+                    "Stato treno",
+                    [
+                        "🟢 DISP",
+                        "🔴 OUT"
+                    ],
+                    horizontal=True
+                )
+
+            # --------------------------------------------------
+            # STATO
+            # --------------------------------------------------
+
+            disp = (
+                stato == "🟢 DISP"
+            )
+
+            out = (
+                stato == "🔴 OUT"
+            )
+
+            # --------------------------------------------------
+            # LAVORAZIONI
+            # --------------------------------------------------
+
+            lavorazioni = st.text_area(
+                "📝 Lavorazioni aperte / Note",
+                placeholder=(
+                    "Inserire lavorazioni, "
+                    "anomalie, attività da monitorare..."
+                )
+            )
+
+            # --------------------------------------------------
+            # PULSANTE
+            # --------------------------------------------------
+
+            inserisci = st.form_submit_button(
+                "➕ Inserisci",
+                type="primary",
+                use_container_width=True
+            )
+
+        # ======================================================
+        # ELABORAZIONE INSERIMENTO
+        # ======================================================
+
+        if inserisci:
 
             # --------------------------------------------------
             # CONTROLLO TRENO
@@ -731,13 +365,11 @@ def Passaggio_consegne_page():
                     "⚠️ Inserisci il numero del treno."
                 )
 
-                st.stop()
-
             # --------------------------------------------------
             # CONTROLLO SERVIZIO
             # --------------------------------------------------
 
-            if (
+            elif (
                 tipo.startswith("🚆")
                 and not servizio.strip()
             ):
@@ -747,145 +379,106 @@ def Passaggio_consegne_page():
                     "inserisci il servizio."
                 )
 
-                st.stop()
-
-            # --------------------------------------------------
-            # TIPO DATABASE
-            # --------------------------------------------------
-
-            if tipo.startswith("🚆"):
-
-                tipo_db = (
-                    "TRENO IN USCITA"
-                )
-
             else:
 
-                tipo_db = (
-                    "MANUTENZIONE / "
-                    "LAVORAZIONE APERTA"
+                tipo_db = tipo_database(
+                    tipo
                 )
 
-            # --------------------------------------------------
-            # NUOVO RECORD
-            # --------------------------------------------------
+                nuovo = {
 
-            nuovo = {
+                    "data_consegna":
+                        data_selezionata,
 
-                "data_consegna":
-                    data_selezionata,
+                    "turno":
+                        turno,
 
-                "turno":
-                    turno,
+                    "responsabile":
+                        responsabile.strip(),
 
-                "responsabile":
-                    responsabile.strip(),
+                    "tipo":
+                        tipo_db,
 
-                "tipo":
-                    tipo_db,
+                    "treno":
+                        treno.strip(),
 
-                "treno":
-                    treno.strip(),
+                    "manutenzione":
+                        manutenzione.strip(),
 
-                "manutenzione":
-                    manutenzione.strip(),
+                    "servizio":
+                        servizio.strip(),
 
-                "servizio":
-                    servizio.strip(),
+                    "binario":
+                        binario.strip(),
 
-                "binario":
-                    binario.strip(),
+                    "disp":
+                        disp,
 
-                "disp":
-                    disp,
+                    "out":
+                        out,
 
-                "out":
-                    out,
+                    "lavorazioni":
+                        lavorazioni.strip(),
 
-                "lavorazioni":
-                    lavorazioni.strip(),
+                    "odl":
+                        odl.strip(),
 
-                "odl":
-                    odl.strip(),
+                    "created_at":
+                        ora_italia()
+                }
 
-                "created_at":
-                    ora_italia()
-            }
+                # ----------------------------------------------
+                # INSERT SUPABASE
+                # ----------------------------------------------
 
-            # --------------------------------------------------
-            # INSERT SUPABASE
-            # --------------------------------------------------
+                try:
 
-            try:
-
-                (
-                    supabase
-                    .table(
-                        "passaggio_consegne"
+                    (
+                        supabase
+                        .table(
+                            "passaggio_consegne"
+                        )
+                        .insert(nuovo)
+                        .execute()
                     )
-                    .insert(nuovo)
-                    .execute()
-                )
 
-                # --------------------------------------------------
-                # SVUOTA CAMPI
-                # --------------------------------------------------
+                    carica_consegne.clear()
 
-                st.session_state[
-                    "pc_treno"
-                ] = ""
+                    st.success(
+                        "✅ Treno aggiunto "
+                        "al passaggio consegne."
+                    )
 
-                st.session_state[
-                    "pc_manutenzione"
-                ] = ""
+                    st.rerun()
 
-                st.session_state[
-                    "pc_servizio"
-                ] = ""
+                except Exception as e:
 
-                st.session_state[
-                    "pc_binario"
-                ] = ""
+                    st.error(
+                        "❌ Errore durante "
+                        "l'inserimento."
+                    )
 
-                st.session_state[
-                    "pc_odl"
-                ] = ""
-
-                st.session_state[
-                    "pc_lavorazioni"
-                ] = ""
-
-                st.session_state[
-                    "pc_stato"
-                ] = "🟢 DISP"
-
-                # --------------------------------------------------
-                # CACHE
-                # --------------------------------------------------
-
-                carica_consegne.clear()
-
-                st.success(
-                    "✅ Treno aggiunto al passaggio consegne."
-                )
-
-                st.rerun()
-
-            except Exception as e:
-
-                st.error(
-                    "❌ Errore durante l'inserimento."
-                )
-
-                st.code(
-                    str(e)
-                )
+                    st.code(str(e))
 
     # ==========================================================
-    # DIVISORE
+    # SEPARATORE
     # ==========================================================
 
     st.divider()
+
+    # ==========================================================
+    # NESSUN DATO
+    # ==========================================================
+
+    if not dati_consegna:
+
+        st.info(
+            f"📭 Nessuna consegna presente per "
+            f"{data_consegna.strftime('%d/%m/%Y')} "
+            f"— turno {turno}."
+        )
+
+        return
 
     # ==========================================================
     # TRENI IN USCITA
@@ -907,7 +500,7 @@ def Passaggio_consegne_page():
     )
 
     # ==========================================================
-    # TITOLO TRENI IN USCITA
+    # TITOLO TRENI
     # ==========================================================
 
     st.markdown(
@@ -919,12 +512,17 @@ def Passaggio_consegne_page():
             font-weight:bold;
             border-radius:5px;
             margin-top:15px;
+            margin-bottom:10px;
         ">
-            🚆 TRENI IN USCITA
+        🚆 TRENI IN USCITA
         </div>
         """,
         unsafe_allow_html=True
     )
+
+    # ==========================================================
+    # TRENI
+    # ==========================================================
 
     if not treni_uscita:
 
@@ -934,11 +532,11 @@ def Passaggio_consegne_page():
 
     else:
 
-        # ======================================================
+        # ------------------------------------------------------
         # INTESTAZIONE
-        # ======================================================
+        # ------------------------------------------------------
 
-        h1, h2, h3, h4, h5, h6, h7, h8, h9 = st.columns(
+        h1, h2, h3, h4, h5, h6, h7, h8 = st.columns(
             [
                 1.2,
                 1.5,
@@ -947,8 +545,7 @@ def Passaggio_consegne_page():
                 0.8,
                 0.8,
                 3,
-                1.5,
-                0.7
+                1.5
             ]
         )
 
@@ -960,17 +557,16 @@ def Passaggio_consegne_page():
         h6.markdown("**OUT**")
         h7.markdown("**LAVORAZIONI / NOTE**")
         h8.markdown("**N° ODL PADRE**")
-        h9.markdown("")
 
         st.divider()
 
-        # ======================================================
+        # ------------------------------------------------------
         # RIGHE
-        # ======================================================
+        # ------------------------------------------------------
 
         for item in treni_uscita:
 
-            c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
+            c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(
                 [
                     1.2,
                     1.5,
@@ -979,8 +575,7 @@ def Passaggio_consegne_page():
                     0.8,
                     0.8,
                     3,
-                    1.5,
-                    0.7
+                    1.5
                 ]
             )
 
@@ -1000,92 +595,253 @@ def Passaggio_consegne_page():
                 item.get("binario") or "-"
             )
 
-            # --------------------------------------------------
-            # STATO
-            # --------------------------------------------------
-
-            if (
-                item.get("disp")
-                and not item.get("out")
-            ):
+            if item.get("disp"):
 
                 c5.markdown("🟢")
-
-                c6.markdown("⚪")
-
-            elif (
-                item.get("out")
-                and not item.get("disp")
-            ):
-
-                c5.markdown("⚪")
-
-                c6.markdown("🔴")
-
-            elif (
-                item.get("disp")
-                and item.get("out")
-            ):
-
-                c5.markdown("⚠️")
-                c6.markdown("⚠️")
 
             else:
 
                 c5.markdown("⚪")
+
+            if item.get("out"):
+
+                c6.markdown("🔴")
+
+            else:
+
                 c6.markdown("⚪")
 
             c7.write(
-                item.get(
-                    "lavorazioni"
-                ) or "-"
+                item.get("lavorazioni") or "-"
             )
 
             c8.write(
-                item.get(
-                    "odl"
-                ) or "-"
+                item.get("odl") or "-"
             )
 
             # --------------------------------------------------
-            # MENU AZIONI
+            # MODIFICA / CANCELLA
             # --------------------------------------------------
 
-            with c9:
+            with st.expander(
+                f"✏️ Modifica / 🗑️ "
+                f"{item.get('treno', '-')}"
+            ):
 
-                with st.popover(
-                    "⋮"
+                with st.form(
+                    f"modifica_treno_{item.get('id')}"
                 ):
 
-                    if st.button(
-                        "✏️ Modifica",
-                        key=(
-                            f"mod_uscita_"
-                            f"{item['id']}"
-                        ),
-                        use_container_width=True
-                    ):
+                    col_a, col_b, col_c = st.columns(3)
 
-                        st.session_state[
-                            "modifica_id"
-                        ] = item["id"]
+                    with col_a:
+
+                        nuovo_treno = st.text_input(
+                            "🚆 Treno",
+                            value=item.get(
+                                "treno"
+                            ) or ""
+                        )
+
+                        nuova_manutenzione = st.text_input(
+                            "🔧 Manutenzione",
+                            value=item.get(
+                                "manutenzione"
+                            ) or ""
+                        )
+
+                    with col_b:
+
+                        nuovo_servizio = st.text_input(
+                            "🚉 Servizio",
+                            value=item.get(
+                                "servizio"
+                            ) or ""
+                        )
+
+                        nuovo_binario = st.text_input(
+                            "🛤️ Binario",
+                            value=item.get(
+                                "binario"
+                            ) or ""
+                        )
+
+                    with col_c:
+
+                        nuovo_odl = st.text_input(
+                            "📋 N° ODL PADRE",
+                            value=item.get(
+                                "odl"
+                            ) or ""
+                        )
+
+                        stato_modifica = st.radio(
+                            "Stato",
+                            [
+                                "🟢 DISP",
+                                "🔴 OUT"
+                            ],
+                            index=(
+                                0
+                                if item.get("disp")
+                                else 1
+                            ),
+                            horizontal=True
+                        )
+
+                    nuova_lavorazione = st.text_area(
+                        "📝 Lavorazioni / Note",
+                        value=item.get(
+                            "lavorazioni"
+                        ) or ""
+                    )
+
+                    col_save, col_cancel = st.columns(2)
+
+                    with col_save:
+
+                        salva_modifica = st.form_submit_button(
+                            "💾 Salva modifica",
+                            type="primary",
+                            use_container_width=True
+                        )
+
+                    with col_cancel:
+
+                        pass
+
+                if salva_modifica:
+
+                    if not nuovo_treno.strip():
+
+                        st.error(
+                            "⚠️ Il numero del treno "
+                            "non può essere vuoto."
+                        )
+
+                    else:
+
+                        nuovo_disp = (
+                            stato_modifica
+                            == "🟢 DISP"
+                        )
+
+                        nuovo_out = (
+                            stato_modifica
+                            == "🔴 OUT"
+                        )
+
+                        aggiornamento = {
+
+                            "treno":
+                                nuovo_treno.strip(),
+
+                            "manutenzione":
+                                nuova_manutenzione.strip(),
+
+                            "servizio":
+                                nuovo_servizio.strip(),
+
+                            "binario":
+                                nuovo_binario.strip(),
+
+                            "disp":
+                                nuovo_disp,
+
+                            "out":
+                                nuovo_out,
+
+                            "lavorazioni":
+                                nuova_lavorazione.strip(),
+
+                            "odl":
+                                nuovo_odl.strip()
+                        }
+
+                        try:
+
+                            (
+                                supabase
+                                .table(
+                                    "passaggio_consegne"
+                                )
+                                .update(
+                                    aggiornamento
+                                )
+                                .eq(
+                                    "id",
+                                    item.get("id")
+                                )
+                                .execute()
+                            )
+
+                            carica_consegne.clear()
+
+                            st.success(
+                                "✅ Modifica salvata."
+                            )
+
+                            st.rerun()
+
+                        except Exception as e:
+
+                            st.error(
+                                "❌ Errore durante "
+                                "la modifica."
+                            )
+
+                            st.code(str(e))
+
+                # --------------------------------------------------
+                # CANCELLAZIONE
+                # --------------------------------------------------
+
+                st.divider()
+
+                conferma = st.checkbox(
+                    "Confermo di voler cancellare questo record.",
+                    key=f"conferma_delete_{item.get('id')}"
+                )
+
+                if st.button(
+                    "🗑️ Cancella record",
+                    key=f"delete_{item.get('id')}",
+                    type="secondary",
+                    disabled=not conferma,
+                    use_container_width=True
+                ):
+
+                    try:
+
+                        (
+                            supabase
+                            .table(
+                                "passaggio_consegne"
+                            )
+                            .delete()
+                            .eq(
+                                "id",
+                                item.get("id")
+                            )
+                            .execute()
+                        )
+
+                        carica_consegne.clear()
+
+                        st.success(
+                            "🗑️ Record cancellato."
+                        )
 
                         st.rerun()
 
-                    if st.button(
-                        "🗑️ Elimina",
-                        key=(
-                            f"del_uscita_"
-                            f"{item['id']}"
-                        ),
-                        use_container_width=True
-                    ):
+                    except Exception as e:
 
-                        st.session_state[
-                            "elimina_id"
-                        ] = item["id"]
+                        st.error(
+                            "❌ Errore durante "
+                            "la cancellazione."
+                        )
 
-                        st.rerun()
+                        st.code(str(e))
 
             st.divider()
 
@@ -1109,7 +865,7 @@ def Passaggio_consegne_page():
     )
 
     # ==========================================================
-    # TITOLO
+    # TITOLO MANUTENZIONI
     # ==========================================================
 
     st.markdown(
@@ -1121,26 +877,32 @@ def Passaggio_consegne_page():
             font-weight:bold;
             border-radius:5px;
             margin-top:25px;
+            margin-bottom:10px;
         ">
-            🛠️ MANUTENZIONE / LAVORAZIONI APERTE
+        🛠️ MANUTENZIONE / LAVORAZIONI APERTE
         </div>
         """,
         unsafe_allow_html=True
     )
 
+    # ==========================================================
+    # MANUTENZIONI
+    # ==========================================================
+
     if not manutenzioni:
 
         st.info(
-            "Nessuna manutenzione o lavorazione aperta."
+            "Nessuna manutenzione o "
+            "lavorazione aperta."
         )
 
     else:
 
-        # ======================================================
+        # ------------------------------------------------------
         # INTESTAZIONE
-        # ======================================================
+        # ------------------------------------------------------
 
-        h1, h2, h3, h4, h5, h6, h7, h8 = st.columns(
+        h1, h2, h3, h4, h5, h6, h7 = st.columns(
             [
                 1.2,
                 1.8,
@@ -1148,8 +910,7 @@ def Passaggio_consegne_page():
                 0.8,
                 0.8,
                 4,
-                1.5,
-                0.7
+                1.5
             ]
         )
 
@@ -1160,17 +921,16 @@ def Passaggio_consegne_page():
         h5.markdown("**OUT**")
         h6.markdown("**LAVORAZIONI APERTE / NOTE**")
         h7.markdown("**N° ODL PADRE**")
-        h8.markdown("")
 
         st.divider()
 
-        # ======================================================
+        # ------------------------------------------------------
         # RIGHE
-        # ======================================================
+        # ------------------------------------------------------
 
         for item in manutenzioni:
 
-            c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(
+            c1, c2, c3, c4, c5, c6, c7 = st.columns(
                 [
                     1.2,
                     1.8,
@@ -1178,8 +938,7 @@ def Passaggio_consegne_page():
                     0.8,
                     0.8,
                     4,
-                    1.5,
-                    0.7
+                    1.5
                 ]
             )
 
@@ -1188,104 +947,242 @@ def Passaggio_consegne_page():
             )
 
             c2.write(
-                item.get(
-                    "manutenzione"
-                ) or "-"
+                item.get("manutenzione") or "-"
             )
 
             c3.write(
-                item.get(
-                    "binario"
-                ) or "-"
+                item.get("binario") or "-"
             )
 
-            # --------------------------------------------------
-            # STATO
-            # --------------------------------------------------
-
-            if (
-                item.get("disp")
-                and not item.get("out")
-            ):
+            if item.get("disp"):
 
                 c4.markdown("🟢")
-
-                c5.markdown("⚪")
-
-            elif (
-                item.get("out")
-                and not item.get("disp")
-            ):
-
-                c4.markdown("⚪")
-
-                c5.markdown("🔴")
-
-            elif (
-                item.get("disp")
-                and item.get("out")
-            ):
-
-                c4.markdown("⚠️")
-
-                c5.markdown("⚠️")
 
             else:
 
                 c4.markdown("⚪")
+
+            if item.get("out"):
+
+                c5.markdown("🔴")
+
+            else:
+
                 c5.markdown("⚪")
 
             c6.write(
-                item.get(
-                    "lavorazioni"
-                ) or "-"
+                item.get("lavorazioni") or "-"
             )
 
             c7.write(
-                item.get(
-                    "odl"
-                ) or "-"
+                item.get("odl") or "-"
             )
 
             # --------------------------------------------------
-            # MENU AZIONI
+            # MODIFICA
             # --------------------------------------------------
 
-            with c8:
+            with st.expander(
+                f"✏️ Modifica / 🗑️ "
+                f"{item.get('treno', '-')}"
+            ):
 
-                with st.popover(
-                    "⋮"
+                with st.form(
+                    f"modifica_manutenzione_{item.get('id')}"
                 ):
 
-                    if st.button(
-                        "✏️ Modifica",
-                        key=(
-                            f"mod_manutenzione_"
-                            f"{item['id']}"
-                        ),
-                        use_container_width=True
-                    ):
+                    col_a, col_b, col_c = st.columns(3)
 
-                        st.session_state[
-                            "modifica_id"
-                        ] = item["id"]
+                    with col_a:
+
+                        nuovo_treno = st.text_input(
+                            "🚆 Treno",
+                            value=item.get(
+                                "treno"
+                            ) or ""
+                        )
+
+                        nuova_manutenzione = st.text_input(
+                            "🔧 Manutenzione",
+                            value=item.get(
+                                "manutenzione"
+                            ) or ""
+                        )
+
+                    with col_b:
+
+                        nuovo_binario = st.text_input(
+                            "🛤️ Binario",
+                            value=item.get(
+                                "binario"
+                            ) or ""
+                        )
+
+                        nuovo_odl = st.text_input(
+                            "📋 N° ODL PADRE",
+                            value=item.get(
+                                "odl"
+                            ) or ""
+                        )
+
+                    with col_c:
+
+                        stato_modifica = st.radio(
+                            "Stato",
+                            [
+                                "🟢 DISP",
+                                "🔴 OUT"
+                            ],
+                            index=(
+                                0
+                                if item.get("disp")
+                                else 1
+                            ),
+                            horizontal=True
+                        )
+
+                    nuova_lavorazione = st.text_area(
+                        "📝 Lavorazioni / Note",
+                        value=item.get(
+                            "lavorazioni"
+                        ) or ""
+                    )
+
+                    salva_modifica = st.form_submit_button(
+                        "💾 Salva modifica",
+                        type="primary",
+                        use_container_width=True
+                    )
+
+                if salva_modifica:
+
+                    if not nuovo_treno.strip():
+
+                        st.error(
+                            "⚠️ Il numero del treno "
+                            "non può essere vuoto."
+                        )
+
+                    else:
+
+                        nuovo_disp = (
+                            stato_modifica
+                            == "🟢 DISP"
+                        )
+
+                        nuovo_out = (
+                            stato_modifica
+                            == "🔴 OUT"
+                        )
+
+                        aggiornamento = {
+
+                            "treno":
+                                nuovo_treno.strip(),
+
+                            "manutenzione":
+                                nuova_manutenzione.strip(),
+
+                            "binario":
+                                nuovo_binario.strip(),
+
+                            "disp":
+                                nuovo_disp,
+
+                            "out":
+                                nuovo_out,
+
+                            "lavorazioni":
+                                nuova_lavorazione.strip(),
+
+                            "odl":
+                                nuovo_odl.strip()
+                        }
+
+                        try:
+
+                            (
+                                supabase
+                                .table(
+                                    "passaggio_consegne"
+                                )
+                                .update(
+                                    aggiornamento
+                                )
+                                .eq(
+                                    "id",
+                                    item.get("id")
+                                )
+                                .execute()
+                            )
+
+                            carica_consegne.clear()
+
+                            st.success(
+                                "✅ Modifica salvata."
+                            )
+
+                            st.rerun()
+
+                        except Exception as e:
+
+                            st.error(
+                                "❌ Errore durante "
+                                "la modifica."
+                            )
+
+                            st.code(str(e))
+
+                # --------------------------------------------------
+                # CANCELLAZIONE
+                # --------------------------------------------------
+
+                st.divider()
+
+                conferma = st.checkbox(
+                    "Confermo di voler cancellare questo record.",
+                    key=f"conferma_delete_m_{item.get('id')}"
+                )
+
+                if st.button(
+                    "🗑️ Cancella record",
+                    key=f"delete_m_{item.get('id')}",
+                    type="secondary",
+                    disabled=not conferma,
+                    use_container_width=True
+                ):
+
+                    try:
+
+                        (
+                            supabase
+                            .table(
+                                "passaggio_consegne"
+                            )
+                            .delete()
+                            .eq(
+                                "id",
+                                item.get("id")
+                            )
+                            .execute()
+                        )
+
+                        carica_consegne.clear()
+
+                        st.success(
+                            "🗑️ Record cancellato."
+                        )
 
                         st.rerun()
 
-                    if st.button(
-                        "🗑️ Elimina",
-                        key=(
-                            f"del_manutenzione_"
-                            f"{item['id']}"
-                        ),
-                        use_container_width=True
-                    ):
+                    except Exception as e:
 
-                        st.session_state[
-                            "elimina_id"
-                        ] = item["id"]
+                        st.error(
+                            "❌ Errore durante "
+                            "la cancellazione."
+                        )
 
-                        st.rerun()
+                        st.code(str(e))
 
             st.divider()
 
