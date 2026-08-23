@@ -1271,7 +1271,7 @@ def Passaggio_consegne_page():
 
             with c8:
 
-                with st.popover("⋮ Azioni"):
+                with st.popover("⋮"):
             
                     if st.button(
                         "✏️ Modifica",
