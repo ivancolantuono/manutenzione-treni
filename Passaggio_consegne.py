@@ -7,6 +7,88 @@ from db import supabase
 def Passaggio_consegne_page():
 
     # ==========================================================
+    # STILE CAMPI FORM
+    # ==========================================================
+
+    st.markdown(
+        """
+        <style>
+
+        /* ================================================
+           CAMPI INPUT
+        ================================================ */
+
+        div[data-baseweb="input"] {
+            border: 2px solid #8a8a8a !important;
+            border-radius: 7px !important;
+            background-color: #fafafa !important;
+        }
+
+        div[data-baseweb="input"]:focus-within {
+            border: 2px solid #e30613 !important;
+            box-shadow: 0 0 0 1px #e30613 !important;
+        }
+
+        div[data-baseweb="input"] input {
+            font-size: 17px !important;
+            font-weight: 500 !important;
+            color: #222222 !important;
+        }
+
+        /* ================================================
+           TEXTAREA
+        ================================================ */
+
+        div[data-baseweb="textarea"] {
+            border: 2px solid #8a8a8a !important;
+            border-radius: 7px !important;
+            background-color: #fafafa !important;
+        }
+
+        div[data-baseweb="textarea"]:focus-within {
+            border: 2px solid #e30613 !important;
+            box-shadow: 0 0 0 1px #e30613 !important;
+        }
+
+        div[data-baseweb="textarea"] textarea {
+            font-size: 16px !important;
+            color: #222222 !important;
+        }
+
+        /* ================================================
+           LABEL DEI CAMPI
+        ================================================ */
+
+        div[data-testid="stTextInput"] label,
+        div[data-testid="stTextArea"] label {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #222222 !important;
+        }
+
+        /* ================================================
+           RADIO
+        ================================================ */
+
+        div[data-testid="stRadio"] label {
+            font-weight: 600 !important;
+        }
+
+        /* ================================================
+           EXPANDER
+        ================================================ */
+
+        div[data-testid="stExpander"] {
+            border: 2px solid #b5b5b5 !important;
+            border-radius: 10px !important;
+        }
+
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # ==========================================================
     # FUNZIONI
     # ==========================================================
 
