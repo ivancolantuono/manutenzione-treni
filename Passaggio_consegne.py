@@ -1271,27 +1271,24 @@ def Passaggio_consegne_page():
 
             with c8:
 
-                if st.button(
-                    "✏️ Modifica",
-                    key=f"edit_m_{item.get('id')}"
-                ):
-
-                    modifica_record(
-                        item
-                    )
-
-                    st.rerun()
-
-                if st.button(
-                    "🗑️ Cancella",
-                    key=f"delete_m_{item.get('id')}"
-                ):
-
-                    cancella_record(
-                        item.get("id")
-                    )
-
-            st.divider()
+                with st.popover("⋮ Azioni"):
+            
+                    if st.button(
+                        "✏️ Modifica",
+                        key=f"edit_m_{item.get('id')}",
+                        use_container_width=True
+                    ):
+            
+                        modifica_record(item)
+                        st.rerun()
+            
+                    if st.button(
+                        "🗑️ Cancella",
+                        key=f"delete_m_{item.get('id')}",
+                        use_container_width=True
+                    ):
+            
+                        cancella_record(item.get("id"))
 
     # ==========================================================
     # RIEPILOGO
