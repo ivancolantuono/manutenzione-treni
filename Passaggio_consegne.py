@@ -10,7 +10,7 @@ def Passaggio_consegne_page():
     # CONFIGURAZIONE
     # ==========================================================
 
-    TRIENI_DISPONIBILI = [
+    TRENI_DISPONIBILI = [
         f"1000/{i:02d}"
         for i in range(1, 111)
     ]
@@ -23,21 +23,23 @@ def Passaggio_consegne_page():
         "MAV2/2",
         "MAV2/3",
         "MAV2/4",
-        "ESTERNO",
-        "TRACCIA",
-        "FG1",
-        "FG2",
-        "FG3",
-        "FG4",
-        "FG5",
-        "PLATEA-1",
-        "PLATEA-2",
-        "PLATEA-3",
-        "PLATEA-4",
-        "TETTOIA-1",
-        "TETTOIA-2",
-        "TETTOIA-3",
     ]
+
+    TURNI = [
+        "Mattina",
+        "Pomeriggio",
+        "Notte"
+    ]
+
+    # ==========================================================
+    # VERSIONE FORM
+    # Serve per svuotare correttamente i campi dopo inserimento
+    # ==========================================================
+
+    if "pc_form_version" not in st.session_state:
+        st.session_state.pc_form_version = 0
+
+    form_version = st.session_state.pc_form_version
 
     # ==========================================================
     # STILE
@@ -55,7 +57,7 @@ def Passaggio_consegne_page():
             border: 2px solid #707070 !important;
             border-radius: 10px !important;
             background-color: #fafafa !important;
-            padding: 4px !important;
+            padding: 5px !important;
         }
 
         /* ==================================================
@@ -64,7 +66,8 @@ def Passaggio_consegne_page():
 
         div[data-testid="stTextInput"] label,
         div[data-testid="stTextArea"] label,
-        div[data-testid="stSelectbox"] label {
+        div[data-testid="stSelectbox"] label,
+        div[data-testid="stRadio"] label {
 
             font-size: 15px !important;
             font-weight: 800 !important;
@@ -187,9 +190,9 @@ def Passaggio_consegne_page():
             ZoneInfo("Europe/Rome")
         ).isoformat()
 
-    # ----------------------------------------------------------
+    # ==========================================================
     # CARICA CONSEGNE
-    # ----------------------------------------------------------
+    # ==========================================================
 
     @st.cache_data(ttl=5)
     def carica_consegne():
@@ -215,25 +218,23 @@ def Passaggio_consegne_page():
 
             return []
 
-    # ----------------------------------------------------------
+    # ==========================================================
     # NORMALIZZA DATA
-    # ----------------------------------------------------------
+    # ==========================================================
 
     def normalizza_data(valore):
 
         if not valore:
-
             return ""
 
         if isinstance(valore, date):
-
             return str(valore)
 
         return str(valore)[:10]
 
-    # ----------------------------------------------------------
+    # ==========================================================
     # ORDINAMENTO TRENI
-    # ----------------------------------------------------------
+    # ==========================================================
 
     def chiave_treno(item):
 
@@ -289,11 +290,7 @@ def Passaggio_consegne_page():
 
         turno = st.selectbox(
             "🕐 Turno",
-            [
-                "Mattina",
-                "Pomeriggio",
-                "Notte"
-            ]
+            TURNI
         )
 
     with col3:
@@ -307,7 +304,7 @@ def Passaggio_consegne_page():
         )
 
     # ==========================================================
-    # CARICAMENTO DATI
+    # CARICA DATI
     # ==========================================================
 
     dati = carica_consegne()
@@ -317,7 +314,7 @@ def Passaggio_consegne_page():
     )
 
     # ==========================================================
-    # DATI DELLA CONSEGNA
+    # DATI DELLA CONSEGNA SELEZIONATA
     # ==========================================================
 
     dati_consegna = [
@@ -384,9 +381,7 @@ def Passaggio_consegne_page():
         expanded=False
     ):
 
-        st.markdown(
-            "### Tipo"
-        )
+        st.markdown("### Tipo")
 
         tipo = st.radio(
             "Tipo",
@@ -395,7 +390,7 @@ def Passaggio_consegne_page():
                 "🛠️ MANUTENZIONE / LAVORAZIONE APERTA"
             ],
             horizontal=True,
-            key="pc_tipo"
+            key=f"pc_tipo_{form_version}"
         )
 
         # ======================================================
@@ -414,10 +409,10 @@ def Passaggio_consegne_page():
 
             treno = st.selectbox(
                 "🚆 Treno",
-                options=TRIENI_DISPONIBILI,
+                options=TRENI_DISPONIBILI,
                 index=None,
                 placeholder="Seleziona il treno",
-                key="pc_treno"
+                key=f"pc_treno_{form_version}"
             )
 
         # ------------------------------------------------------
@@ -429,7 +424,7 @@ def Passaggio_consegne_page():
             servizio = st.text_input(
                 "🚉 Servizio",
                 placeholder="Es. 89705",
-                key="pc_servizio"
+                key=f"pc_servizio_{form_version}"
             )
 
         # ------------------------------------------------------
@@ -441,7 +436,7 @@ def Passaggio_consegne_page():
             odl = st.text_input(
                 "📋 N° ODL PADRE",
                 placeholder="Es. 100014925813",
-                key="pc_odl"
+                key=f"pc_odl_{form_version}"
             )
 
         # ======================================================
@@ -461,7 +456,7 @@ def Passaggio_consegne_page():
             manutenzione = st.text_input(
                 "🔧 Manutenzione",
                 placeholder="Es. MC",
-                key="pc_manutenzione"
+                key=f"pc_manutenzione_{form_version}"
             )
 
         # ------------------------------------------------------
@@ -472,10 +467,10 @@ def Passaggio_consegne_page():
 
             binario = st.selectbox(
                 "🛤️ Binario",
-                [
-                    "Seleziona binario"
-                ] + BINARI_DISPONIBILI,
-                key="pc_binario"
+                options=BINARI_DISPONIBILI,
+                index=None,
+                placeholder="Seleziona il binario",
+                key=f"pc_binario_{form_version}"
             )
 
         # ------------------------------------------------------
@@ -491,7 +486,7 @@ def Passaggio_consegne_page():
                     "🔴 OUT"
                 ],
                 horizontal=True,
-                key="pc_stato"
+                key=f"pc_stato_{form_version}"
             )
 
             disp = (
@@ -512,7 +507,7 @@ def Passaggio_consegne_page():
                 "Inserire lavorazioni, anomalie, "
                 "attività da monitorare..."
             ),
-            key="pc_lavorazioni"
+            key=f"pc_lavorazioni_{form_version}"
         )
 
         # ======================================================
@@ -523,14 +518,14 @@ def Passaggio_consegne_page():
             "➕ Inserisci",
             type="primary",
             use_container_width=True,
-            key="pc_inserisci"
+            key=f"pc_inserisci_{form_version}"
         ):
 
             # --------------------------------------------------
             # CONTROLLO TRENO
             # --------------------------------------------------
 
-            if treno == "Seleziona treno":
+            if treno is None:
 
                 st.error(
                     "⚠️ Seleziona il numero del treno."
@@ -540,6 +535,7 @@ def Passaggio_consegne_page():
 
             # --------------------------------------------------
             # CONTROLLO SERVIZIO
+            # SOLO TRENO IN USCITA
             # --------------------------------------------------
 
             if (
@@ -549,19 +545,24 @@ def Passaggio_consegne_page():
 
                 st.error(
                     "⚠️ Per un treno in uscita "
-                    "inserisci il servizio."
+                    "il servizio è obbligatorio."
                 )
 
                 st.stop()
 
             # --------------------------------------------------
             # CONTROLLO BINARIO
+            # SOLO MANUTENZIONE
             # --------------------------------------------------
 
-            if binario == "Seleziona binario":
+            if (
+                tipo.startswith("🛠️")
+                and binario is None
+            ):
 
                 st.error(
-                    "⚠️ Seleziona il binario."
+                    "⚠️ Per una manutenzione/lavorazione "
+                    "aperta devi selezionare il binario."
                 )
 
                 st.stop()
@@ -572,9 +573,7 @@ def Passaggio_consegne_page():
 
             if tipo.startswith("🚆"):
 
-                tipo_db = (
-                    "TRENO IN USCITA"
-                )
+                tipo_db = "TRENO IN USCITA"
 
             else:
 
@@ -602,7 +601,7 @@ def Passaggio_consegne_page():
                     tipo_db,
 
                 "treno":
-                    treno.strip(),
+                    treno,
 
                 "manutenzione":
                     manutenzione.strip(),
@@ -611,7 +610,7 @@ def Passaggio_consegne_page():
                     servizio.strip(),
 
                 "binario":
-                    binario.strip(),
+                    binario or "",
 
                 "disp":
                     disp,
@@ -637,30 +636,20 @@ def Passaggio_consegne_page():
 
                 (
                     supabase
-                    .table(
-                        "passaggio_consegne"
-                    )
+                    .table("passaggio_consegne")
                     .insert(nuovo)
                     .execute()
                 )
 
-                # ------------------------------------------------
-                # IMPORTANTE:
-                # NON MODIFICHIAMO st.session_state DEI WIDGET.
-                #
-                # Cambiamo la versione del form.
-                # Al prossimo run i widget avranno nuove chiavi
-                # e quindi partiranno vuoti.
-                # ------------------------------------------------
+                # ==================================================
+                # SVUOTA FORM
+                # Creiamo una nuova versione delle chiavi
+                # dei widget.
+                # ==================================================
 
-                st.session_state[
-                    "pc_form_version"
-                ] = (
-                    st.session_state.get(
-                        "pc_form_version",
-                        0
-                    ) + 1
-                )
+                st.session_state.pc_form_version += 1
+
+                # Svuota cache
 
                 carica_consegne.clear()
 
@@ -715,9 +704,7 @@ def Passaggio_consegne_page():
 
             (
                 supabase
-                .table(
-                    "passaggio_consegne"
-                )
+                .table("passaggio_consegne")
                 .delete()
                 .eq(
                     "id",
@@ -774,24 +761,29 @@ def Passaggio_consegne_page():
 
                 col1, col2, col3 = st.columns(3)
 
+                # ------------------------------------------------
+                # TRENO
+                # ------------------------------------------------
+
                 with col1:
 
                     treno_mod = st.selectbox(
                         "🚆 Treno",
-                        TRIENI_DISPONIBILI,
+                        TRENI_DISPONIBILI,
                         index=(
-                            TRIENI_DISPONIBILI.index(
-                                record_modifica.get(
-                                    "treno"
-                                )
+                            TRENI_DISPONIBILI.index(
+                                record_modifica.get("treno")
                             )
-                            if record_modifica.get(
-                                "treno"
-                            ) in TRIENI_DISPONIBILI
+                            if record_modifica.get("treno")
+                            in TRENI_DISPONIBILI
                             else 0
                         ),
                         key=f"mod_treno_{modifica_id}"
                     )
+
+                # ------------------------------------------------
+                # SERVIZIO
+                # ------------------------------------------------
 
                 with col2:
 
@@ -805,6 +797,10 @@ def Passaggio_consegne_page():
                         ),
                         key=f"mod_servizio_{modifica_id}"
                     )
+
+                # ------------------------------------------------
+                # ODL
+                # ------------------------------------------------
 
                 with col3:
 
@@ -821,6 +817,10 @@ def Passaggio_consegne_page():
 
                 col1, col2, col3 = st.columns(3)
 
+                # ------------------------------------------------
+                # MANUTENZIONE
+                # ------------------------------------------------
+
                 with col1:
 
                     manutenzione_mod = st.text_input(
@@ -834,6 +834,10 @@ def Passaggio_consegne_page():
                         key=f"mod_manutenzione_{modifica_id}"
                     )
 
+                # ------------------------------------------------
+                # BINARIO
+                # ------------------------------------------------
+
                 with col2:
 
                     binario_mod = st.selectbox(
@@ -841,17 +845,18 @@ def Passaggio_consegne_page():
                         BINARI_DISPONIBILI,
                         index=(
                             BINARI_DISPONIBILI.index(
-                                record_modifica.get(
-                                    "binario"
-                                )
+                                record_modifica.get("binario")
                             )
-                            if record_modifica.get(
-                                "binario"
-                            ) in BINARI_DISPONIBILI
+                            if record_modifica.get("binario")
+                            in BINARI_DISPONIBILI
                             else 0
                         ),
                         key=f"mod_binario_{modifica_id}"
                     )
+
+                # ------------------------------------------------
+                # STATO
+                # ------------------------------------------------
 
                 with col3:
 
@@ -864,13 +869,15 @@ def Passaggio_consegne_page():
                         horizontal=True,
                         index=(
                             0
-                            if record_modifica.get(
-                                "disp"
-                            )
+                            if record_modifica.get("disp")
                             else 1
                         ),
                         key=f"mod_stato_{modifica_id}"
                     )
+
+                # ------------------------------------------------
+                # LAVORAZIONI
+                # ------------------------------------------------
 
                 lavorazioni_mod = st.text_area(
                     "📝 Lavorazioni aperte / Note",
@@ -882,6 +889,10 @@ def Passaggio_consegne_page():
                     ),
                     key=f"mod_lavorazioni_{modifica_id}"
                 )
+
+                # ==================================================
+                # PULSANTI MODIFICA
+                # ==================================================
 
                 col_salva, col_annulla = st.columns(2)
 
@@ -1002,7 +1013,7 @@ def Passaggio_consegne_page():
     )
 
     # ==========================================================
-    # TITOLO TRENI
+    # TITOLO TRENI IN USCITA
     # ==========================================================
 
     st.markdown(
@@ -1095,6 +1106,10 @@ def Passaggio_consegne_page():
                 item.get("binario") or "-"
             )
 
+            # --------------------------------------------------
+            # DISP
+            # --------------------------------------------------
+
             if item.get("disp"):
 
                 c5.markdown("🟢")
@@ -1102,6 +1117,10 @@ def Passaggio_consegne_page():
             else:
 
                 c5.markdown("⚪")
+
+            # --------------------------------------------------
+            # OUT
+            # --------------------------------------------------
 
             if item.get("out"):
 
@@ -1129,24 +1148,29 @@ def Passaggio_consegne_page():
 
             with c9:
 
-                with st.popover("**⋮**"):
-            
+                with st.popover("⋮ Azioni"):
+
                     if st.button(
                         "✏️ Modifica",
                         key=f"edit_{item.get('id')}",
                         use_container_width=True
                     ):
-            
+
                         modifica_record(item)
                         st.rerun()
-            
+
                     if st.button(
                         "🗑️ Cancella",
                         key=f"delete_{item.get('id')}",
                         use_container_width=True
                     ):
-            
-                        cancella_record(item.get("id"))
+
+                        cancella_record(
+                            item.get("id")
+                        )
+
+            st.divider()
+
     # ==========================================================
     # MANUTENZIONI / LAVORAZIONI APERTE
     # ==========================================================
@@ -1251,6 +1275,10 @@ def Passaggio_consegne_page():
                 item.get("binario") or "-"
             )
 
+            # --------------------------------------------------
+            # DISP
+            # --------------------------------------------------
+
             if item.get("disp"):
 
                 c4.markdown("🟢")
@@ -1258,6 +1286,10 @@ def Passaggio_consegne_page():
             else:
 
                 c4.markdown("⚪")
+
+            # --------------------------------------------------
+            # OUT
+            # --------------------------------------------------
 
             if item.get("out"):
 
@@ -1285,24 +1317,28 @@ def Passaggio_consegne_page():
 
             with c8:
 
-                with st.popover("⋮"):
-            
+                with st.popover("⋮ Azioni"):
+
                     if st.button(
                         "✏️ Modifica",
                         key=f"edit_m_{item.get('id')}",
                         use_container_width=True
                     ):
-            
+
                         modifica_record(item)
                         st.rerun()
-            
+
                     if st.button(
                         "🗑️ Cancella",
                         key=f"delete_m_{item.get('id')}",
                         use_container_width=True
                     ):
-            
-                        cancella_record(item.get("id"))
+
+                        cancella_record(
+                            item.get("id")
+                        )
+
+            st.divider()
 
     # ==========================================================
     # RIEPILOGO
