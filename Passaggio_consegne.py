@@ -6,87 +6,112 @@ from db import supabase
 
 def Passaggio_consegne_page():
 
-    # ==========================================================
-    # STILE CAMPI FORM
-    # ==========================================================
-
     st.markdown(
-        """
-        <style>
+    """
+    <style>
 
-        /* ================================================
-           CAMPI INPUT
-        ================================================ */
+    /* =====================================================
+       BLOCCO AGGIUNGI TRENO
+       ===================================================== */
 
-        div[data-baseweb="input"] {
-            border: 2px solid #8a8a8a !important;
-            border-radius: 7px !important;
-            background-color: #fafafa !important;
-        }
+    div[data-testid="stExpander"] {
+        border: 2px solid #777 !important;
+        border-radius: 12px !important;
+        background: #f8f9fa !important;
+    }
 
-        div[data-baseweb="input"]:focus-within {
-            border: 2px solid #e30613 !important;
-            box-shadow: 0 0 0 1px #e30613 !important;
-        }
+    div[data-testid="stExpander"] details {
+        border-radius: 12px !important;
+    }
 
-        div[data-baseweb="input"] input {
-            font-size: 17px !important;
-            font-weight: 500 !important;
-            color: #222222 !important;
-        }
+    /* =====================================================
+       TITOLI / LABEL
+       ===================================================== */
 
-        /* ================================================
-           TEXTAREA
-        ================================================ */
+    div[data-testid="stTextInput"] label,
+    div[data-testid="stTextArea"] label {
+        font-size: 17px !important;
+        font-weight: 800 !important;
+        color: #222 !important;
+        margin-bottom: 5px !important;
+    }
 
-        div[data-baseweb="textarea"] {
-            border: 2px solid #8a8a8a !important;
-            border-radius: 7px !important;
-            background-color: #fafafa !important;
-        }
+    /* =====================================================
+       INPUT
+       ===================================================== */
 
-        div[data-baseweb="textarea"]:focus-within {
-            border: 2px solid #e30613 !important;
-            box-shadow: 0 0 0 1px #e30613 !important;
-        }
+    div[data-testid="stTextInput"] div[data-baseweb="input"] {
+        border: 2px solid #777 !important;
+        border-radius: 8px !important;
+        background-color: white !important;
+        min-height: 48px !important;
+    }
 
-        div[data-baseweb="textarea"] textarea {
-            font-size: 16px !important;
-            color: #222222 !important;
-        }
+    div[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within {
+        border: 3px solid #e30613 !important;
+        box-shadow: 0 0 0 2px rgba(227,6,19,0.15) !important;
+    }
 
-        /* ================================================
-           LABEL DEI CAMPI
-        ================================================ */
+    div[data-testid="stTextInput"] input {
+        font-size: 17px !important;
+        font-weight: 600 !important;
+        color: #111 !important;
+        padding: 10px 12px !important;
+    }
 
-        div[data-testid="stTextInput"] label,
-        div[data-testid="stTextArea"] label {
-            font-size: 15px !important;
-            font-weight: 700 !important;
-            color: #222222 !important;
-        }
+    /* =====================================================
+       TEXTAREA
+       ===================================================== */
 
-        /* ================================================
-           RADIO
-        ================================================ */
+    div[data-testid="stTextArea"] div[data-baseweb="textarea"] {
+        border: 2px solid #777 !important;
+        border-radius: 8px !important;
+        background-color: white !important;
+    }
 
-        div[data-testid="stRadio"] label {
-            font-weight: 600 !important;
-        }
+    div[data-testid="stTextArea"] div[data-baseweb="textarea"]:focus-within {
+        border: 3px solid #e30613 !important;
+        box-shadow: 0 0 0 2px rgba(227,6,19,0.15) !important;
+    }
 
-        /* ================================================
-           EXPANDER
-        ================================================ */
+    div[data-testid="stTextArea"] textarea {
+        font-size: 16px !important;
+        color: #111 !important;
+    }
 
-        div[data-testid="stExpander"] {
-            border: 2px solid #b5b5b5 !important;
-            border-radius: 10px !important;
-        }
+    /* =====================================================
+       RADIO TIPO
+       ===================================================== */
 
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    div[data-testid="stRadio"] label {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #222 !important;
+    }
+
+    /* =====================================================
+       STATO TRENO
+       ===================================================== */
+
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        gap: 18px !important;
+    }
+
+    /* =====================================================
+       PULSANTE INSERISCI
+       ===================================================== */
+
+    div[data-testid="stButton"] button[kind="primary"] {
+        min-height: 50px !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        border-radius: 8px !important;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
     # ==========================================================
     # FUNZIONI
