@@ -23,6 +23,20 @@ def Passaggio_consegne_page():
         "MAV2/2",
         "MAV2/3",
         "MAV2/4",
+        "ESTERNO",
+        "TRACCIA",
+        "FG1",
+        "FG2",
+        "FG3",
+        "FG4",
+        "FG5",
+        "PLATEA-1",
+        "PLATEA-2",
+        "PLATEA-3",
+        "PLATEA-4",
+        "TETTOIA-1",
+        "TETTOIA-2",
+        "TETTOIA-3",
     ]
 
     # ==========================================================
