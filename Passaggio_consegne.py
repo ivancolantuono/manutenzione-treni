@@ -1183,7 +1183,7 @@ def Passaggio_consegne_page():
                             item.get("id")
                         )
 
-            st.divider()
+        
 
     # ==========================================================
     # MANUTENZIONI / LAVORAZIONI APERTE
@@ -1351,8 +1351,6 @@ def Passaggio_consegne_page():
                         cancella_record(
                             item.get("id")
                         )
-
-            st.divider()
 
     # ==========================================================
     # RIEPILOGO
