@@ -229,183 +229,195 @@ def planning_page():
     st.subheader("📊 Pianificazione")
 
     with st.expander("Mostra pianificazione", expanded=True):
-    
+
         if df.empty:
             st.info("Nessuna attività pianificata")
-    
+
         else:
-            # mapping
+
+            # =========================
+            # MAPPA MATRICOLA → NOME
+            # =========================
             mappa_nome = {
-                str(o.get("Matricola")).strip().lower(): o.get("Nominativo")
+                str(o.get("Matricola", "")).strip().lower():
+                o.get("Nominativo", "")
                 for o in operatori_db
             }
-    
+
             df["operatore_nome"] = df["operatore"].apply(
-                lambda x: mappa_nome.get(str(x).strip().lower(), x)
+                lambda x: mappa_nome.get(
+                    str(x).strip().lower(),
+                    x
+                )
             )
-    
+
             df["inizio"] = pd.to_datetime(df["inizio"])
             df["fine"] = pd.to_datetime(df["fine"])
-    
-            df_display = df.copy()
-    
-            df_display["Operatore"] = df_display["operatore_nome"]
-            df_display["Attività"] = df_display["attivita"]
-            df_display["Inizio"] = df_display["inizio"].dt.strftime("%H:%M")
-            df_display["Fine"] = df_display["fine"].dt.strftime("%H:%M")
-    
-            st.dataframe(
-                df_display[["Operatore", "Attività", "Inizio", "Fine"]],
-                use_container_width=True,
-                hide_index=True
+
+            # =========================
+            # INTESTAZIONE
+            # =========================
+            col1, col2, col3, col4, col5 = st.columns(
+                [2, 3, 1.5, 1.5, 1]
             )
-        
-        # =========================
-        # LOOP RIGHE
-        # =========================
-        for i, r in df.iterrows():
-        
-            with st.container():
-        
+
+            col1.markdown("**Operatore**")
+            col2.markdown("**Attività**")
+            col3.markdown("**Inizio**")
+            col4.markdown("**Fine**")
+            col5.markdown("**Azioni**")
+
+            st.divider()
+
+            # =========================
+            # RIGHE
+            # =========================
+            for i, r in df.iterrows():
+
                 col1, col2, col3, col4, col5 = st.columns(
-                    [2, 2, 1, 1, 0.7]
+                    [2, 3, 1.5, 1.5, 1]
                 )
-        
+
                 col1.write(r["operatore_nome"])
                 col2.write(r["attivita"])
                 col3.write(r["inizio"].strftime("%H:%M"))
                 col4.write(r["fine"].strftime("%H:%M"))
-        
+
                 # =========================
-                # ⚙️ PULSANTE AZIONI
+                # ⋮ MENU AZIONI
                 # =========================
                 with col5:
-        
-                    chiave_azioni = f"azioni_{r['id']}"
-        
-                    if st.button(
-                        "⚙️",
-                        key=f"btn_azioni_{r['id']}",
-                        help="Azioni",
-                        type="secondary"
-                    ):
-                        st.session_state[chiave_azioni] = not st.session_state.get(
-                            chiave_azioni,
-                            False
-                        )
-        
-                # =========================
-                # MENU AZIONI
-                # =========================
-                if st.session_state.get(chiave_azioni, False):
-        
-                    with st.container(border=True):
-        
-                        st.markdown("**Azioni**")
-        
-                        az1, az2 = st.columns(2)
-        
+                
+                    with st.popover("⋮⌄", use_container_width=True):
+                
                         # =========================
                         # ✏️ MODIFICA
                         # =========================
-                        with az1:
-        
-                            if st.button(
-                                "✏️ Modifica",
-                                key=f"edit_{r['id']}",
-                                use_container_width=True,
-                                type="secondary"
-                            ):
-        
-                                st.session_state["edit_id"] = r["id"]
-        
-                                st.session_state[chiave_azioni] = False
-        
-                                st.rerun()
-        
+                        if st.button(
+                            "✏️ Modifica",
+                            key=f"edit_{r['id']}",
+                            use_container_width=True
+                        ):
+                            st.session_state["edit_id"] = r["id"]
+                            st.rerun()
+                
                         # =========================
                         # 🗑️ CANCELLA
                         # =========================
-                        with az2:
-        
-                            if st.button(
-                                "🗑️ Cancella",
-                                key=f"delete_{r['id']}",
-                                use_container_width=True,
-                                type="secondary"
-                            ):
-        
-                                try:
-        
-                                    supabase.table(
-                                        "planning"
-                                    ).delete().eq(
-                                        "id",
-                                        r["id"]
-                                    ).execute()
-        
-                                    get_planning.clear()
-        
-                                    st.success(
-                                        "✅ Attività eliminata"
-                                    )
-        
-                                    st.rerun()
-        
-                                except Exception as e:
-        
-                                    st.error(
-                                        f"Errore eliminazione: {e}"
-                                    )
-        
-            st.divider()
+                        if st.button(
+                            "🗑️ Cancella",
+                            key=f"delete_{r['id']}",
+                            use_container_width=True
+                        ):
+                
+                            try:
+                
+                                supabase.table("planning") \
+                                    .delete() \
+                                    .eq("id", r["id"]) \
+                                    .execute()
+                
+                                get_planning.clear()
+                
+                                st.success("✅ Attività eliminata")
+                                st.rerun()
+                
+                            except Exception as e:
+                
+                                st.error(
+                                    f"Errore eliminazione: {e}"
+                                )
+
     # =========================
     # ✏️ MODIFICA ATTIVITÀ
     # =========================
     if "edit_id" in st.session_state:
-    
+
         st.subheader("✏️ Modifica attività")
-    
+
         record = next(
-            (x for x in df.to_dict("records") if x["id"] == st.session_state["edit_id"]),
+            (
+                x for x in df.to_dict("records")
+                if x["id"] == st.session_state["edit_id"]
+            ),
             None
         )
-    
+
         if record:
-    
-            nuova_attivita = st.text_input("Attività", value=record["attivita"])
-    
+
+            nuova_attivita = st.text_input(
+                "Attività",
+                value=record["attivita"]
+            )
+
             nuovo_inizio = st.datetime_input(
                 "Inizio",
                 value=record["inizio"]
             )
-    
+
             nuova_fine = st.datetime_input(
                 "Fine",
                 value=record["fine"]
             )
-    
-            if st.button("💾 Salva modifica"):
-    
-                try:
-                    supabase.table("planning").update({
-                        "attivita": nuova_attivita,
-                        "inizio": nuovo_inizio.isoformat(),
-                        "fine": nuova_fine.isoformat()
-                    }).eq("id", record["id"]).execute()
-    
-                    get_planning.clear()
+
+            col1, col2 = st.columns(2)
+
+            # =========================
+            # 💾 SALVA
+            # =========================
+            with col1:
+
+                if st.button(
+                    "💾 Salva modifica",
+                    use_container_width=True
+                ):
+
+                    try:
+
+                        supabase.table("planning").update({
+
+                            "attivita": nuova_attivita,
+
+                            "inizio":
+                                nuovo_inizio.isoformat(),
+
+                            "fine":
+                                nuova_fine.isoformat()
+
+                        }).eq(
+                            "id",
+                            record["id"]
+                        ).execute()
+
+                        get_planning.clear()
+
+                        del st.session_state["edit_id"]
+
+                        st.success(
+                            "✅ Attività modificata"
+                        )
+
+                        st.rerun()
+
+                    except Exception as e:
+
+                        st.error(
+                            f"Errore modifica: {e}"
+                        )
+
+            # =========================
+            # ❌ ANNULLA
+            # =========================
+            with col2:
+
+                if st.button(
+                    "❌ Annulla",
+                    use_container_width=True
+                ):
+
                     del st.session_state["edit_id"]
-    
-                    st.success("Modificato!")
+
                     st.rerun()
-    
-                except Exception as e:
-                    st.error(e)
-    
-            if st.button("❌ Annulla"):
-                del st.session_state["edit_id"]
-                st.rerun()
 
     
     st.subheader("📊 Timeline Operatori")
