@@ -321,46 +321,29 @@ def planning_page():
                 # ⋮ MENU AZIONI
                 # =========================
                 with col5:
-                
-                    with st.popover("⋮", use_container_width=True):
-                
-                        # =========================
-                        # ✏️ MODIFICA
-                        # =========================
-                        if st.button(
-                            "✏️ Modifica",
-                            key=f"edit_{r['id']}",
-                            use_container_width=True
-                        ):
-                            st.session_state["edit_id"] = r["id"]
-                            st.rerun()
-                
-                        # =========================
-                        # 🗑️ CANCELLA
-                        # =========================
-                        if st.button(
-                            "🗑️ Cancella",
-                            key=f"delete_{r['id']}",
-                            use_container_width=True
-                        ):
-                
-                            try:
-                
-                                supabase.table("planning") \
-                                    .delete() \
-                                    .eq("id", r["id"]) \
-                                    .execute()
-                
-                                get_planning.clear()
-                
-                                st.success("✅ Attività eliminata")
-                                st.rerun()
-                
-                            except Exception as e:
-                
-                                st.error(
-                                    f"Errore eliminazione: {e}"
-                                )
+
+                   with st.popover("⋮⌄"):
+               
+                       if st.button(
+                           "✏️ Modifica",
+                           key=f"edit_{r['id']}",
+                           use_container_width=True
+                       ):
+                           st.session_state["edit_id"] = r["id"]
+                           st.rerun()
+               
+                       if st.button(
+                           "🗑️ Cancella",
+                           key=f"delete_{r['id']}",
+                           use_container_width=True
+                       ):
+                           supabase.table("planning") \
+                               .delete() \
+                               .eq("id", r["id"]) \
+                               .execute()
+               
+                           get_planning.clear()
+                           st.rerun()
 
     # =========================
     # ✏️ MODIFICA ATTIVITÀ
