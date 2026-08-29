@@ -406,6 +406,9 @@ with st.sidebar:
                 "Planning",
                 "Dashboard",
                 "Storico",
+
+                st.divider()
+                
                 "Cerca Componente",
                 "Ferie e Permessi",
                 "Scadenze Temporali",
