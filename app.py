@@ -688,7 +688,7 @@ if not st.session_state.logged_in:
                     )
 
                     st.session_state.redirect_login = True
-st.rerun()
+
                     st.rerun()
 
                 except Exception as e:
