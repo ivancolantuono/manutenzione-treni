@@ -322,7 +322,7 @@ def planning_page():
                 # =========================
                 with col5:
 
-                   with st.popover("⋮⌄"):
+                   with st.popover("⋮"):
                
                        if st.button(
                            "✏️ Modifica",
