@@ -328,6 +328,13 @@ if not st.session_state.logged_in:
             "frecciarossa.jpg",
             width=2000
         )
+        # ==========================================================
+        # 🔄 REDIRECT DOPO OPERAZIONE
+        # ==========================================================
+        
+        if st.session_state.get("redirect_login", False):
+            st.session_state.pagina_login = "🔐Login"
+            st.session_state.redirect_login = False
 
         pagina = st.segmented_control(
             "",
@@ -680,8 +687,8 @@ if not st.session_state.logged_in:
                         "✅ Registrazione completata!"
                     )
 
-                    st.session_state.pagina_login = "🔐Login"
-
+                    st.session_state.redirect_login = True
+st.rerun()
                     st.rerun()
 
                 except Exception as e:
@@ -788,8 +795,8 @@ if not st.session_state.logged_in:
 
                     st.session_state.logged_in = False
 
-                    st.session_state.pagina_login = "🔐Login"
-
+                    st.session_state.redirect_login = True
+                    
                     st.rerun()
 
                 except Exception as e:
