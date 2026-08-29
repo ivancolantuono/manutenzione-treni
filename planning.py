@@ -6,6 +6,40 @@ import plotly.express as px
 from db import supabase, get_operatori
 from streamlit_autorefresh import st_autorefresh
 
+st.markdown("""
+<style>
+
+/* =========================
+   POPover AZIONI PLANNING
+   ========================= */
+
+/* Riduce il pulsante del popover */
+div[data-testid="stPopover"] > button {
+    width: 55px !important;
+    min-width: 55px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    border-radius: 6px !important;
+}
+
+/* Riduce il contenitore del popover */
+div[data-testid="stPopoverBody"] {
+    width: 150px !important;
+    min-width: 150px !important;
+    padding: 8px !important;
+}
+
+/* Bottoni Modifica / Cancella */
+div[data-testid="stPopoverBody"] .stButton > button {
+    width: 100% !important;
+    min-height: 38px !important;
+    margin-bottom: 6px !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # =========================
 # 🔄 GET PLANNING
 # =========================
