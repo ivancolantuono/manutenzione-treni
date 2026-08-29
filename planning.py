@@ -228,7 +228,7 @@ def planning_page():
 
     st.subheader("📊 Pianificazione")
 
-    with st.expander("Mostra pianificazione", expanded=False):
+    with st.expander("Mostra pianificazione", expanded=True):
     
         if df.empty:
             st.info("Nessuna attività pianificata")
@@ -261,14 +261,14 @@ def planning_page():
             )
         
         # =========================
-        # LOOP RIGHE (PRO)
+        # LOOP RIGHE
         # =========================
         for i, r in df.iterrows():
         
             with st.container():
         
                 col1, col2, col3, col4, col5 = st.columns(
-                    [2, 2, 2, 2, 1.2]
+                    [2, 2, 1, 1, 0.7]
                 )
         
                 col1.write(r["operatore_nome"])
@@ -276,88 +276,73 @@ def planning_page():
                 col3.write(r["inizio"].strftime("%H:%M"))
                 col4.write(r["fine"].strftime("%H:%M"))
         
-                # =====================================================
-                # ⚙️ AZIONI
-                # =====================================================
-        
+                # =========================
+                # ⚙️ PULSANTE AZIONI
+                # =========================
                 with col5:
         
+                    chiave_azioni = f"azioni_{r['id']}"
+        
                     if st.button(
-                        "⋮",
-                        key=f"azioni_{r['id']}",
-                        use_container_width=True
+                        "⚙️",
+                        key=f"btn_azioni_{r['id']}",
+                        help="Azioni",
+                        type="secondary"
                     ):
-        
-                        chiave = f"azioni_aperta_{r['id']}"
-        
-                        st.session_state[chiave] = not st.session_state.get(
-                            chiave,
+                        st.session_state[chiave_azioni] = not st.session_state.get(
+                            chiave_azioni,
                             False
                         )
         
-                # =====================================================
+                # =========================
                 # MENU AZIONI
-                # =====================================================
-        
-                if st.session_state.get(
-                    f"azioni_aperta_{r['id']}",
-                    False
-                ):
+                # =========================
+                if st.session_state.get(chiave_azioni, False):
         
                     with st.container(border=True):
         
-                        st.markdown(
-                            f"**Azioni per:** "
-                            f"{r['operatore_nome']} — "
-                            f"{r['attivita']}"
-                        )
+                        st.markdown("**Azioni**")
         
                         az1, az2 = st.columns(2)
         
-                        # -------------------------------------------------
+                        # =========================
                         # ✏️ MODIFICA
-                        # -------------------------------------------------
-        
+                        # =========================
                         with az1:
         
                             if st.button(
                                 "✏️ Modifica",
                                 key=f"edit_{r['id']}",
-                                use_container_width=True
+                                use_container_width=True,
+                                type="secondary"
                             ):
         
                                 st.session_state["edit_id"] = r["id"]
         
-                                # chiude il menu
-                                st.session_state[
-                                    f"azioni_aperta_{r['id']}"
-                                ] = False
+                                st.session_state[chiave_azioni] = False
         
                                 st.rerun()
         
-                        # -------------------------------------------------
+                        # =========================
                         # 🗑️ CANCELLA
-                        # -------------------------------------------------
-        
+                        # =========================
                         with az2:
         
                             if st.button(
                                 "🗑️ Cancella",
                                 key=f"delete_{r['id']}",
-                                use_container_width=True
+                                use_container_width=True,
+                                type="secondary"
                             ):
         
                                 try:
         
                                     supabase.table(
                                         "planning"
-                                    )\
-                                    .delete()\
-                                    .eq(
+                                    ).delete().eq(
                                         "id",
                                         r["id"]
-                                    )\
-                                    .execute()
+                                    ).execute()
         
                                     get_planning.clear()
         
@@ -374,7 +359,6 @@ def planning_page():
                                     )
         
             st.divider()
-                        
     # =========================
     # ✏️ MODIFICA ATTIVITÀ
     # =========================
