@@ -283,7 +283,7 @@ def planning_page():
                 with col5:
         
                     if st.button(
-                        "⚙️ Azioni",
+                        ":",
                         key=f"azioni_{r['id']}",
                         use_container_width=True
                     ):
