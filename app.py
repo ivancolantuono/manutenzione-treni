@@ -828,7 +828,7 @@ with st.sidebar:
                 "Passaggio Consegne",
                 "Schede SR",
                 "Schede SR VZI6",
-
+                "Carrelli",
                 "Planning",
                 "Dashboard",
                 "Storico",             
@@ -2481,3 +2481,7 @@ elif menu == "Software":
 
 elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
+
+
+elif menu == "Carrelli":
+    carrelli_page()
