@@ -1,10 +1,7 @@
 import streamlit as st
-import pandas as pd
 from pathlib import Path
-import zipfile
-import shutil
+import tempfile
 import os
-
 
 # ==========================================================
 # CONFIGURAZIONE
@@ -14,11 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent
 
 FILE_EXCEL = BASE_DIR / "ATTIVITA' CARRELLO.xlsm"
 
-CARTELLA_IMMAGINI = BASE_DIR / "immagini_carrelli"
-
 
 # ==========================================================
-# PAGINA CARRELLI
+# PAGINA
 # ==========================================================
 
 def carrelli_page():
@@ -41,19 +36,12 @@ def carrelli_page():
             margin-bottom: 20px;
         }
 
-        .box-carrelli {
+        .sezione-carrelli {
             border: 2px solid #777;
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 10px;
             background-color: #fafafa;
             margin-bottom: 15px;
-        }
-
-        .immagine-box {
-            border: 1px solid #aaa;
-            border-radius: 8px;
-            padding: 8px;
-            background-color: white;
         }
 
         </style>
@@ -69,7 +57,7 @@ def carrelli_page():
     st.markdown(
         """
         <div class="titolo-carrelli">
-            🚆 DIAGNOSTICA CARRELLI ETR1000
+            🚆 CARRELLI ETR1000
         </div>
         """,
         unsafe_allow_html=True
@@ -83,282 +71,188 @@ def carrelli_page():
     if not FILE_EXCEL.exists():
 
         st.error(
-            f"❌ File Excel non trovato:\n\n"
-            f"{FILE_EXCEL}"
+            "❌ File Excel non trovato."
         )
 
         st.info(
-            "Metti ATTIVITA' CARRELLO.xlsm "
-            "nella stessa cartella di Carrelli.py."
+            "Il file deve chiamarsi:\n\n"
+            "ATTIVITA' CARRELLO.xlsm\n\n"
+            "e deve essere nella stessa cartella "
+            "di Carrelli.py."
         )
 
         return
 
 
     # ======================================================
-    # ESTRAZIONE IMMAGINI
+    # IMPORT OPENPYXL
     # ======================================================
 
-    def estrai_immagini():
+    try:
 
-        CARTELLA_IMMAGINI.mkdir(
-            parents=True,
-            exist_ok=True
+        import openpyxl
+
+    except ImportError:
+
+        st.error(
+            "❌ Manca il modulo openpyxl."
         )
 
-        immagini_esistenti = list(
-            CARTELLA_IMMAGINI.glob("*")
+        st.code(
+            "pip install openpyxl"
         )
 
-        if immagini_esistenti:
-            return immagini_esistenti
-
-
-        immagini = []
-
-        try:
-
-            with zipfile.ZipFile(
-                FILE_EXCEL,
-                "r"
-            ) as archivio:
-
-                files_media = [
-                    nome
-                    for nome in archivio.namelist()
-                    if nome.startswith("xl/media/")
-                    and not nome.endswith("/")
-                ]
-
-
-                for indice, nome in enumerate(
-                    files_media,
-                    start=1
-                ):
-
-                    estensione = (
-                        Path(nome)
-                        .suffix
-                        .lower()
-                    )
-
-                    if not estensione:
-                        estensione = ".bin"
-
-
-                    nome_file = (
-                        f"immagine_{indice:03d}"
-                        f"{estensione}"
-                    )
-
-                    destinazione = (
-                        CARTELLA_IMMAGINI /
-                        nome_file
-                    )
-
-
-                    with archivio.open(nome) as sorgente:
-
-                        with open(
-                            destinazione,
-                            "wb"
-                        ) as destinazione_file:
-
-                            shutil.copyfileobj(
-                                sorgente,
-                                destinazione_file
-                            )
-
-
-                    immagini.append(
-                        destinazione
-                    )
-
-
-        except Exception as e:
-
-            st.error(
-                "❌ Errore durante "
-                "l'estrazione delle immagini."
-            )
-
-            st.code(str(e))
-
-            return []
-
-
-        return immagini
-
-
-    immagini = estrai_immagini()
+        return
 
 
     # ======================================================
-    # LETTURA FOGLI EXCEL
+    # IMPORT LIBREOFFICE
+    # ======================================================
+
+    # LibreOffice serve per trasformare il foglio Excel
+    # in PDF mantenendo la parte grafica.
+    #
+    # Cerchiamo automaticamente il programma.
+
+    possibili_libreoffice = [
+
+        r"C:\Program Files\LibreOffice\program\soffice.exe",
+
+        r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+
+        "soffice",
+
+    ]
+
+    soffice = None
+
+    for programma in possibili_libreoffice:
+
+        if programma == "soffice":
+
+            soffice = programma
+            break
+
+        if Path(programma).exists():
+
+            soffice = programma
+            break
+
+
+    # ======================================================
+    # CARICA FOGLI
     # ======================================================
 
     @st.cache_data
-    def carica_fogli():
+    def carica_fogli(percorso):
 
-        try:
-
-            excel = pd.ExcelFile(
-                FILE_EXCEL,
-                engine="openpyxl"
-            )
-
-            return excel.sheet_names
-
-        except Exception as e:
-
-            return []
-
-
-    fogli = carica_fogli()
-
-
-    # ======================================================
-    # INFORMAZIONI
-    # ======================================================
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-
-        st.metric(
-            "📚 Fogli Excel",
-            len(fogli)
+        wb = openpyxl.load_workbook(
+            percorso,
+            read_only=True,
+            keep_vba=True,
+            data_only=False
         )
 
-    with col2:
+        return wb.sheetnames
 
-        st.metric(
-            "🖼️ Immagini",
-            len(immagini)
+
+    try:
+
+        fogli = carica_fogli(
+            str(FILE_EXCEL)
         )
 
-    with col3:
-
-        st.metric(
-            "📁 File",
-            "ATTIVITA' CARRELLO"
-        )
-
-
-    st.divider()
-
-
-    # ======================================================
-    # SELEZIONE FOGLIO
-    # ======================================================
-
-    if not fogli:
+    except Exception as e:
 
         st.error(
-            "❌ Nessun foglio trovato nel file Excel."
+            "❌ Impossibile leggere il file Excel."
         )
+
+        st.code(str(e))
 
         return
 
 
     # ======================================================
-    # CATEGORIE PRINCIPALI
+    # SEZIONI
     # ======================================================
 
-    categorie = {
+    sezioni = {
 
-        "🛞 SENSORI SPM":
-            [
-                "SENSORI SPM"
-            ],
+        "🛞 CARRELLI": [
+            "DM1-CARR.1",
+            "DM1-CARR.2",
+            "M3-CARR.1",
+            "M3-CARR.2",
+            "M6-CARR.1",
+            "M6-CARR.2",
+            "DM8-CARR.1",
+            "DM8-CARR.2",
+        ],
 
-        "🚆 CARRELLI":
-            [
-                "DM1-CARR.1",
-                "DM1-CARR.2",
-                "M3-CARR.1",
-                "M3-CARR.2",
-                "M6-CARR.1",
-                "M6-CARR.2",
-                "DM8-CARR.1",
-                "DM8-CARR.2"
-            ],
+        "📡 SENSORI": [
+            "SENSORI SPM",
+            "PT100 RIDUTTORI",
+        ],
 
-        "🌡️ PT100":
-            [
-                "PT100 RIDUTTORI"
-            ],
+        "🔌 FUSE LOOP": [
+            "FUSE LOOP CASSA MOTOR",
+            "FUSE LOOP TRENO COMPLETO",
+        ],
 
-        "🔌 FUSE LOOP":
-            [
-                "FUSE LOOP CASSA MOTOR",
-                "FUSE LOOP TRENO COMPLETO"
-            ],
+        "🔄 DNRA": [
+            "LOOP DNRA",
+            "OVERVIEW DNRA",
+        ],
 
-        "🔄 DNRA":
-            [
-                "LOOP DNRA",
-                "OVERVIEW DNRA"
-            ],
+        "🚆 STATO TRENO": [
+            "STATO TRENO",
+        ],
 
-        "🚄 STATO TRENO":
-            [
-                "STATO TRENO"
-            ],
-
-        "📋 DATI":
-            [
-                "DATA1",
-                "DATA",
-                "Italian"
-            ]
     }
 
 
     # ======================================================
-    # COSTRUZIONE LISTA
+    # SEZIONE
     # ======================================================
 
-    categorie_presenti = {}
-
-    for categoria, lista in categorie.items():
-
-        presenti = [
-            foglio
-            for foglio in lista
-            if foglio in fogli
-        ]
-
-        if presenti:
-
-            categorie_presenti[
-                categoria
-            ] = presenti
-
-
-    # ======================================================
-    # SELEZIONE CATEGORIA
-    # ======================================================
-
-    categoria = st.selectbox(
-        "🔧 Seleziona sezione",
-        list(categorie_presenti.keys()),
-        key="carrelli_categoria"
+    sezione = st.selectbox(
+        "📂 Seleziona sezione",
+        list(sezioni.keys()),
+        key="carrelli_sezione"
     )
 
 
     # ======================================================
-    # SELEZIONE FOGLIO
+    # FOGLI PRESENTI
     # ======================================================
 
-    fogli_categoria = categorie_presenti[
-        categoria
+    fogli_disponibili = [
+
+        f
+        for f in sezioni[sezione]
+        if f in fogli
+
     ]
 
 
+    if not fogli_disponibili:
+
+        st.warning(
+            "Nessun foglio disponibile "
+            "per questa sezione."
+        )
+
+        return
+
+
+    # ======================================================
+    # FOGLIO
+    # ======================================================
+
     foglio = st.selectbox(
-        "📄 Seleziona elemento",
-        fogli_categoria,
+        "🚆 Seleziona",
+        fogli_disponibili,
         key="carrelli_foglio"
     )
 
@@ -367,13 +261,17 @@ def carrelli_page():
 
 
     # ======================================================
-    # MOSTRA FOGLIO
+    # TITOLO FOGLIO
     # ======================================================
 
     st.markdown(
         f"""
-        <div class="box-carrelli">
-            <h3>📄 {foglio}</h3>
+        <div class="sezione-carrelli">
+
+        <h3 style="margin:0;">
+        📄 {foglio}
+        </h3>
+
         </div>
         """,
         unsafe_allow_html=True
@@ -381,210 +279,172 @@ def carrelli_page():
 
 
     # ======================================================
-    # LETTURA DATI DEL FOGLIO
+    # RENDER EXCEL
+    # ======================================================
+
+    if soffice is None:
+
+        st.warning(
+            "⚠️ LibreOffice non è installato."
+        )
+
+        st.info(
+            "Per visualizzare il foglio esattamente "
+            "come Excel, installa LibreOffice sul PC."
+        )
+
+        st.markdown(
+            """
+            In alternativa posso preparare una
+            versione che usa direttamente Excel
+            tramite Windows.
+            """
+        )
+
+        return
+
+
+    # ======================================================
+    # FUNZIONE CONVERSIONE
+    # ======================================================
+
+    def excel_to_pdf():
+
+        cartella_temp = Path(
+            tempfile.mkdtemp(
+                prefix="carrelli_"
+            )
+        )
+
+        # Copia Excel nella cartella temporanea
+        copia_excel = (
+            cartella_temp /
+            FILE_EXCEL.name
+        )
+
+        copia_excel.write_bytes(
+            FILE_EXCEL.read_bytes()
+        )
+
+
+        # --------------------------------------------------
+        # COMANDO LIBREOFFICE
+        # --------------------------------------------------
+
+        import subprocess
+
+        comando = [
+
+            soffice,
+
+            "--headless",
+
+            "--convert-to",
+            "pdf",
+
+            "--outdir",
+            str(cartella_temp),
+
+            str(copia_excel)
+
+        ]
+
+
+        risultato = subprocess.run(
+            comando,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+
+
+        pdf = (
+            cartella_temp /
+            f"{FILE_EXCEL.stem}.pdf"
+        )
+
+
+        if not pdf.exists():
+
+            raise Exception(
+                "LibreOffice non ha generato il PDF.\n\n"
+                + risultato.stdout
+                + "\n"
+                + risultato.stderr
+            )
+
+
+        return pdf
+
+
+    # ======================================================
+    # CONVERSIONE
     # ======================================================
 
     try:
 
-        df = pd.read_excel(
-            FILE_EXCEL,
-            sheet_name=foglio,
-            engine="openpyxl",
-            header=None
-        )
+        with st.spinner(
+            "🔄 Preparazione visualizzazione Excel..."
+        ):
 
-        df = df.dropna(
-            axis=0,
-            how="all"
-        )
-
-        df = df.dropna(
-            axis=1,
-            how="all"
-        )
+            pdf_file = excel_to_pdf()
 
 
     except Exception as e:
 
         st.error(
-            "❌ Errore lettura foglio."
+            "❌ Errore nella conversione Excel → PDF."
         )
 
         st.code(str(e))
 
-        df = pd.DataFrame()
+        return
 
 
     # ======================================================
-    # RICERCA
+    # PDF VIEWER
     # ======================================================
 
-    if not df.empty:
+    try:
 
-        ricerca = st.text_input(
-            "🔎 Cerca nel foglio",
-            placeholder=(
-                "Inserisci codice, sensore, "
-                "descrizione..."
-            ),
-            key=f"ricerca_{foglio}"
+        from streamlit_pdf_viewer import pdf_viewer
+
+        # --------------------------------------------------
+        # Visualizza il PDF
+        # --------------------------------------------------
+
+        pdf_bytes = pdf_file.read_bytes()
+
+        pdf_viewer(
+            pdf_bytes,
+            width="100%"
         )
 
+    except ImportError:
 
-        if ricerca:
-
-            testo = (
-                df
-                .astype(str)
-                .apply(
-                    lambda col:
-                    col.str.contains(
-                        ricerca,
-                        case=False,
-                        na=False
-                    )
-                )
-                .any(axis=1)
-            )
-
-            df_visualizza = df[
-                testo
-            ]
-
-        else:
-
-            df_visualizza = df
-
-
-        st.markdown(
-            f"**Righe trovate: {len(df_visualizza)}**"
+        st.error(
+            "❌ Manca streamlit-pdf-viewer."
         )
 
-
-        # ==================================================
-        # TABELLA
-        # ==================================================
-
-        st.dataframe(
-            df_visualizza,
-            use_container_width=True,
-            hide_index=True,
-            height=400
+        st.code(
+            "pip install streamlit-pdf-viewer"
         )
 
+    except Exception as e:
 
-    else:
-
-        st.info(
-            "Questo foglio non contiene dati "
-            "tabellari visualizzabili."
+        st.error(
+            "❌ Errore visualizzazione PDF."
         )
+
+        st.code(str(e))
 
 
     # ======================================================
-    # IMMAGINI
+    # INFORMAZIONE
     # ======================================================
 
-    if immagini:
-
-        st.divider()
-
-        st.subheader(
-            "🖼️ Immagini presenti nel file Excel"
-        )
-
-        st.caption(
-            "Le immagini vengono mostrate "
-            "direttamente dagli elementi incorporati "
-            "nel file ATTIVITA' CARRELLO.xlsm."
-        )
-
-
-        # ==================================================
-        # FILTRA IMMAGINI VISUALIZZABILI
-        # ==================================================
-
-        immagini_visualizzabili = [
-
-            img
-
-            for img in immagini
-
-            if img.suffix.lower()
-            in [
-                ".png",
-                ".jpg",
-                ".jpeg",
-                ".gif",
-                ".bmp",
-                ".webp"
-            ]
-        ]
-
-
-        if immagini_visualizzabili:
-
-            # ==============================================
-            # GRIGLIA
-            # ==============================================
-
-            colonne = st.columns(3)
-
-
-            for indice, immagine in enumerate(
-                immagini_visualizzabili
-            ):
-
-                colonna = colonne[
-                    indice % 3
-                ]
-
-
-                with colonna:
-
-                    with st.container(
-                        border=True
-                    ):
-
-                        st.caption(
-                            immagine.name
-                        )
-
-                        st.image(
-                            str(immagine),
-                            use_container_width=True
-                        )
-
-
-        else:
-
-            st.warning(
-                "Le immagini presenti sono in "
-                "formato non direttamente visualizzabile "
-                "da Streamlit."
-            )
-
-            st.write(
-                [
-                    img.name
-                    for img in immagini
-                ]
-            )
-
-
-    # ======================================================
-    # DEBUG FOGLI
-    # ======================================================
-
-    with st.expander(
-        "🔍 Visualizza tutti i fogli del file"
-    ):
-
-        for i, nome in enumerate(
-            fogli,
-            start=1
-        ):
-
-            st.write(
-                f"{i}. {nome}"
-            )
+    st.caption(
+        "Visualizzazione renderizzata del foglio Excel "
+        "originale, comprensiva della formattazione "
+        "grafica e delle immagini incorporate."
+    )
