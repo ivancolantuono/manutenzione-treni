@@ -179,9 +179,9 @@ import extra_streamlit_components as stx
 # COOKIE
 # ==========================================================
 
-cookie_manager = stx.CookieManager()
-
-COOKIE_LOGIN = "manager_etr1000_login"
+cookie_manager = stx.CookieManager(
+    key="manager_etr1000_cookie_manager"
+)
 
 # ==========================================================
 # UTILS
@@ -229,24 +229,16 @@ if not st.session_state.logged_in:
 
     try:
 
-        cookie_login = cookie_manager.get(
-            COOKIE_LOGIN
-        )
+        cookie_login = cookie_manager.get(COOKIE_LOGIN)
 
         if cookie_login:
-
-            # ----------------------------------------------
-            # CERCA UTENTE
-            # ----------------------------------------------
 
             res = (
                 supabase
                 .table("login")
                 .select("*")
-                .eq(
-                    "session_token",
-                    cookie_login
-                )
+                .eq("session_token", cookie_login)
+                .limit(1)
                 .execute()
             )
 
@@ -257,7 +249,7 @@ if not st.session_state.logged_in:
                 user = utenti[0]
 
                 matricola = norm(
-                    user.get("matricola")
+                    user.get("matricola", "")
                 )
 
                 # ------------------------------------------
@@ -268,47 +260,38 @@ if not st.session_state.logged_in:
                     supabase
                     .table("operatori")
                     .select("*")
-                    .eq(
-                        "Matricola",
-                        matricola
-                    )
+                    .eq("Matricola", matricola)
+                    .limit(1)
                     .execute()
                 )
 
                 if op.data:
-
-                    nome = op.data[0].get(
-                        "Nominativo"
-                    )
-
+                    nome = op.data[0].get("Nominativo", "")
                 else:
-
-                    nome = user.get(
-                        "nome",
-                        ""
-                    )
+                    nome = user.get("nome", "")
 
                 # ------------------------------------------
                 # RIPRISTINA SESSIONE
                 # ------------------------------------------
 
                 st.session_state.logged_in = True
-
                 st.session_state.matricola = matricola
-
                 st.session_state.utente = nome
-
                 st.session_state.ruolo = user.get(
                     "ruolo",
                     "OPERATORE"
                 )
-
                 st.session_state.squadra = user.get(
                     "squadra",
                     ""
                 )
 
-    except Exception:
+                st.rerun()
+
+    except Exception as e:
+
+        # Se il cookie non è ancora disponibile
+        # lasciamo comparire normalmente il Login.
         pass
 
 
