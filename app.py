@@ -182,7 +182,7 @@ import extra_streamlit_components as stx
 cookie_manager = stx.CookieManager(
     key="manager_etr1000_cookie_manager"
 )
-
+COOKIE_LOGIN = "manager_etr1000_login"
 # ==========================================================
 # UTILS
 # ==========================================================
