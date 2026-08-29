@@ -266,38 +266,114 @@ def planning_page():
         for i, r in df.iterrows():
         
             with st.container():
-                col1, col2, col3, col4, col5 = st.columns([2,2,2,2,2])
+        
+                col1, col2, col3, col4, col5 = st.columns(
+                    [2, 2, 2, 2, 1.2]
+                )
         
                 col1.write(r["operatore_nome"])
                 col2.write(r["attivita"])
                 col3.write(r["inizio"].strftime("%H:%M"))
                 col4.write(r["fine"].strftime("%H:%M"))
         
-                # =========================
-                # ✏️ MODIFICA
-                # =========================
-                if col5.button("✏️", key=f"edit_{r['id']}"):
-                    st.session_state["edit_id"] = r["id"]
+                # =====================================================
+                # ⚙️ AZIONI
+                # =====================================================
         
-                # =========================
-                # 🗑️ CANCELLA
-                # =========================
-                if col5.button("🗑️", key=f"delete_{r['id']}"):
-                
-                    try:
-                        supabase.table("planning")\
-                            .delete()\
-                            .eq("id", r["id"])\
-                            .execute()
-                
-                        get_planning.clear()
-                
-                        st.success("✅ Attività eliminata")
-                
-                        st.rerun()
-                
-                    except Exception as e:
-                        st.error(f"Errore eliminazione: {e}")
+                with col5:
+        
+                    if st.button(
+                        "⚙️ Azioni",
+                        key=f"azioni_{r['id']}",
+                        use_container_width=True
+                    ):
+        
+                        chiave = f"azioni_aperta_{r['id']}"
+        
+                        st.session_state[chiave] = not st.session_state.get(
+                            chiave,
+                            False
+                        )
+        
+                # =====================================================
+                # MENU AZIONI
+                # =====================================================
+        
+                if st.session_state.get(
+                    f"azioni_aperta_{r['id']}",
+                    False
+                ):
+        
+                    with st.container(border=True):
+        
+                        st.markdown(
+                            f"**Azioni per:** "
+                            f"{r['operatore_nome']} — "
+                            f"{r['attivita']}"
+                        )
+        
+                        az1, az2 = st.columns(2)
+        
+                        # -------------------------------------------------
+                        # ✏️ MODIFICA
+                        # -------------------------------------------------
+        
+                        with az1:
+        
+                            if st.button(
+                                "✏️ Modifica",
+                                key=f"edit_{r['id']}",
+                                use_container_width=True
+                            ):
+        
+                                st.session_state["edit_id"] = r["id"]
+        
+                                # chiude il menu
+                                st.session_state[
+                                    f"azioni_aperta_{r['id']}"
+                                ] = False
+        
+                                st.rerun()
+        
+                        # -------------------------------------------------
+                        # 🗑️ CANCELLA
+                        # -------------------------------------------------
+        
+                        with az2:
+        
+                            if st.button(
+                                "🗑️ Cancella",
+                                key=f"delete_{r['id']}",
+                                use_container_width=True
+                            ):
+        
+                                try:
+        
+                                    supabase.table(
+                                        "planning"
+                                    )\
+                                    .delete()\
+                                    .eq(
+                                        "id",
+                                        r["id"]
+                                    )\
+                                    .execute()
+        
+                                    get_planning.clear()
+        
+                                    st.success(
+                                        "✅ Attività eliminata"
+                                    )
+        
+                                    st.rerun()
+        
+                                except Exception as e:
+        
+                                    st.error(
+                                        f"Errore eliminazione: {e}"
+                                    )
+        
+            st.divider()
                         
     # =========================
     # ✏️ MODIFICA ATTIVITÀ
