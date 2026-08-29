@@ -288,7 +288,7 @@ def planning_page():
                 # =========================
                 with col5:
                 
-                    with st.popover("⋮⌄", use_container_width=True):
+                    with st.popover("⋮", use_container_width=True):
                 
                         # =========================
                         # ✏️ MODIFICA
