@@ -15,6 +15,7 @@ from db import get_utenti
 from db import get_operatori
 from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
+from Carrelli import carrelli_page
 import urllib.parse
 
 st.set_page_config(
