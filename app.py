@@ -407,7 +407,7 @@ with st.sidebar:
                 "Dashboard",
                 "Storico",
 
-                st.divider()
+                st.divider(),
                 
                 "Cerca Componente",
                 "Ferie e Permessi",
