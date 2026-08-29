@@ -400,19 +400,17 @@ with st.sidebar:
             None,
             [
                 "Open Item",
+                "Cerca Componente",
+                "Manutenzione",
+                "Passaggio Consegne",
                 "Schede SR",
                 "Schede SR VZI6",
-                "Manutenzione",
+
                 "Planning",
                 "Dashboard",
-                "Storico",
-
-                "------------------------------",
-                
-                "Cerca Componente",
+                "Storico",             
                 "Ferie e Permessi",
-                "Scadenze Temporali",
-                "Passaggio Consegne",
+                "Scadenze Temporali",     
                 "Software"
             ],
             icons=[
