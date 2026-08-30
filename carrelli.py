@@ -434,7 +434,8 @@ def carrelli_page():
 
     sezione = st.selectbox(
         "Sezione",
-        list(SEZIONI.keys())
+        list(SEZIONI.keys()),
+        label_visibility="collapsed"
     )
 
 
@@ -449,7 +450,8 @@ def carrelli_page():
 
     foglio = st.selectbox(
         "Foglio",
-        SEZIONI[sezione]
+        SEZIONI[sezione],
+        label_visibility="collapsed"
     )
 
 
