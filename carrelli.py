@@ -204,7 +204,7 @@ def trova_immagini(nome_foglio):
 # MOSTRA IMMAGINE
 # ==========================================================
 
-def mostra_foglio(nome_foglio):
+def mostra_immagine(nome_foglio):
 
     st.markdown(
         f"""
