@@ -432,7 +432,6 @@ def carrelli_page():
 
 
     foglio = st.selectbox(
-        "Foglio",
         SEZIONI[sezione]
     )
 
