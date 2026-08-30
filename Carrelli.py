@@ -64,7 +64,7 @@ st.markdown("""
     vertical-align: middle;
     color: black;
     overflow: hidden;
-    box-sizing: border-box;
+    border: none;
 }
 
 /* Immagini */
