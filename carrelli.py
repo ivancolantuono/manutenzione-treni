@@ -124,6 +124,17 @@ SEZIONI = {
     "IMS": [
 
         "LOOP IMS"
+    ],
+
+    "DNRA": [
+
+        "DRNA"
+    ],
+
+    "FRENO PARCHEGGIO": [
+
+        "PARCHEGGIO FRENATO",
+        "PARCHEGGIO SFRENATO"
     ]
 }
 
