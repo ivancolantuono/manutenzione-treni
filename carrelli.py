@@ -218,7 +218,7 @@ def mostra_immagine(foglio):
     if immagine is not None:
 
         st.markdown(
-            f"###  {CASSA E CARRELLO}"
+            f"###  {foglio}"
         )
 
 
@@ -392,7 +392,7 @@ def carrelli_page():
     # ------------------------------------------------------
 
     st.markdown(
-        "### 📄 Foglio"
+        "### CASSA E CARRELLO"
     )
 
 
