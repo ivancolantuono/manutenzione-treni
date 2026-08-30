@@ -128,7 +128,7 @@ SEZIONI = {
 
     "DNRA": [
 
-        "DRNA"
+        "DNRA"
     ],
 
     "FRENO PARCHEGGIO": [
