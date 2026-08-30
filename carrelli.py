@@ -98,17 +98,17 @@ SEZIONI = {
 
     "SENSORI SPM": [
 
-        "DM1-CARR.1",
-        "DM1-CARR.2",
+        "DM1-CARR.1.",
+        "DM1-CARR.2.",
 
-        "M3-CARR.1",
-        "M3-CARR.2",
+        "M3-CARR.1.",
+        "M3-CARR.2.",
 
-        "M6-CARR.1",
-        "M6-CARR.2",
+        "M6-CARR.1.",
+        "M6-CARR.2.",
 
-        "DM8-CARR.1",
-        "DM8-CARR.2"
+        "DM8-CARR.1.",
+        "DM8-CARR.2."
     ],
 
     "PT100 RIDUTTORI": [
