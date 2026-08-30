@@ -4,14 +4,7 @@ import tempfile
 import os
 import time
 
-# ==========================================================
-# IMPORT EXCEL WINDOWS
-# ==========================================================
 
-try:
-    import win32com.client
-except ImportError:
-    win32com = None
 
 
 # ==========================================================
