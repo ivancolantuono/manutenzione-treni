@@ -376,7 +376,7 @@ def carrelli_page():
     # ------------------------------------------------------
 
     st.markdown(
-        "### 📂 Sezione"
+        "### 🛠️ ATTIVITA' CARRELLO"
     )
 
 
