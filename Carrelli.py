@@ -721,21 +721,7 @@ def carrelli_page():
         return
 
 
-    # ======================================================
-    # CONTROLLO PYWIN32
-    # ======================================================
-
-    if win32com is None:
-
-        st.error(
-            "❌ pywin32 non è installato."
-        )
-
-        st.code(
-            "pip install pywin32"
-        )
-
-        return
+   
 
 
     # ======================================================
