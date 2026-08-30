@@ -123,12 +123,6 @@ SEZIONI = {
     ],
 
 
-    "DNRA": [
-
-        "LOOP DNRA"
-    
-    ],
-
     "IMS": [
 
         "LOOP IMS"
