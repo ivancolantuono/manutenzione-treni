@@ -1,71 +1,91 @@
 import streamlit as st
 from pathlib import Path
-import re
 
 
 # ==========================================================
 # CONFIGURAZIONE
 # ==========================================================
 
-st.set_page_config(
-    page_title="Carrelli ETR1000",
-    page_icon="🚆",
-    layout="wide"
-)
-
-
-# ==========================================================
-# CARTELLA IMMAGINI
-# ==========================================================
-
 BASE_DIR = Path(__file__).resolve().parent
-
-CARTELLA_IMMAGINI = BASE_DIR / "carrelli_img"
+IMG_DIR = BASE_DIR / "carrelli_img"
 
 
 # ==========================================================
-# STILE
+# CONFIGURAZIONE PAGINA
 # ==========================================================
 
-st.markdown(
-    """
-    <style>
+def configura_pagina():
 
-    /* Titolo */
-    .carrelli-titolo {
-        background: #e30613;
-        color: white;
-        padding: 16px 20px;
-        border-radius: 10px;
-        text-align: center;
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 25px;
-    }
+    st.markdown(
+        """
+        <style>
 
-    /* Titolo foglio */
-    .titolo-foglio {
-        background: #f1f3f5;
-        padding: 12px 18px;
-        border-radius: 8px;
-        font-size: 22px;
-        font-weight: 600;
-        margin-top: 20px;
-        margin-bottom: 15px;
-    }
+        /* ================================================
+           TITOLO
+           ================================================ */
 
-    /* Contenitore immagine */
-    .immagine-container {
-        background: white;
-        border-radius: 10px;
-        padding: 10px;
-        margin-top: 10px;
-    }
+        .carrelli-titolo {
+            background: #e30613;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
 
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+
+        /* ================================================
+           BOX INFORMAZIONI
+           ================================================ */
+
+        .carrelli-info {
+            background: #f4f5f7;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+
+        /* ================================================
+           IMMAGINE
+           ================================================ */
+
+        .immagine-carrello {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+
+
+        /* ================================================
+           NASCONDE IL TESTO DEL FILE UPLOADER ECC.
+           ================================================ */
+
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ==========================================================
+# TITOLO
+# ==========================================================
+
+def mostra_titolo():
+
+    st.markdown(
+        """
+        <div class="carrelli-titolo">
+            🚆 CARRELLI ETR1000
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # ==========================================================
@@ -74,7 +94,7 @@ st.markdown(
 
 SEZIONI = {
 
-    "🛞 CARRELLI": [
+    "SENSORI SPM": [
 
         "DM1-CARR.1",
         "DM1-CARR.2",
@@ -89,91 +109,95 @@ SEZIONI = {
         "DM8-CARR.2"
     ],
 
-    "📡 SENSORI": [
 
-        "SENSORI SPM",
+    "PT100 RIDUTTORI": [
+
         "PT100 RIDUTTORI"
     ],
 
-    "🔌 FUSE LOOP": [
 
-        "FUSE LOOP CASSA MOTOR",
-        "FUSE LOOP TRENO COMPLETO"
+    "TERMOFUSIBILI": [
+
+        "TERMOFUSIBILI CASSA MOTOR"
+       
     ],
 
-    "🔄 DNRA": [
 
-        "LOOP DNRA",
-        "OVERVIEW DNRA"
+    "DNRA": [
+
+        "LOOP DNRA"
+    
     ],
 
-    "🚆 STATO TRENO": [
+    "IMS": [
 
-        "STATO TRENO"
+        "LOOP IMS"
+    
     ]
+
 }
-
-
-# ==========================================================
-# NORMALIZZAZIONE NOMI
-# ==========================================================
-
-def normalizza_nome(nome):
-
-    nome = str(nome).lower()
-
-    # togli estensione
-    nome = re.sub(
-        r"\.(png|jpg|jpeg|webp)$",
-        "",
-        nome
-    )
-
-    # uniforma separatori
-    nome = nome.replace("_", " ")
-    nome = nome.replace("-", " ")
-
-    # elimina spazi multipli
-    nome = re.sub(
-        r"\s+",
-        " ",
-        nome
-    )
-
-    return nome.strip()
 
 
 # ==========================================================
 # CERCA IMMAGINE
 # ==========================================================
 
-def trova_immagine(nome_foglio):
+def trova_immagine(nome):
 
-    if not CARTELLA_IMMAGINI.exists():
+    if not IMG_DIR.exists():
         return None
 
-    nome_cercato = normalizza_nome(
-        nome_foglio
-    )
+
+    # ------------------------------------------------------
+    # Prima prova con il nome esatto
+    # ------------------------------------------------------
 
     estensioni = [
-        "*.png",
-        "*.jpg",
-        "*.jpeg",
-        "*.webp"
+
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp"
     ]
+
 
     for estensione in estensioni:
 
-        for file in CARTELLA_IMMAGINI.glob(estensione):
+        percorso = IMG_DIR / f"{nome}{estensione}"
 
-            nome_file = normalizza_nome(
-                file.name
-            )
+        if percorso.exists():
 
-            if nome_file == nome_cercato:
+            return percorso
+
+
+    # ------------------------------------------------------
+    # Seconda ricerca:
+    # confronto senza distinzione tra maiuscole/minuscole
+    # ------------------------------------------------------
+
+    nome_lower = nome.lower().strip()
+
+
+    try:
+
+        for file in IMG_DIR.iterdir():
+
+            if not file.is_file():
+                continue
+
+            if file.suffix.lower() not in estensioni:
+                continue
+
+            nome_file = file.stem.lower().strip()
+
+            if nome_file == nome_lower:
 
                 return file
+
+    except Exception:
+
+        return None
+
 
     return None
 
@@ -182,50 +206,149 @@ def trova_immagine(nome_foglio):
 # MOSTRA IMMAGINE
 # ==========================================================
 
-def mostra_foglio(nome_foglio):
+def mostra_immagine(foglio):
 
-    st.markdown(
-        f"""
-        <div class="titolo-foglio">
-            📄 {nome_foglio}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    immagine = trova_immagine(foglio)
 
-    immagine = trova_immagine(
-        nome_foglio
-    )
-
-    # ------------------------------------------------------
-    # IMMAGINE NON TROVATA
-    # ------------------------------------------------------
-
-    if immagine is None:
-
-        st.error(
-            f"❌ Immagine non trovata per: {nome_foglio}"
-        )
-
-        st.info(
-            "Carica nella cartella "
-            "`carrelli_img` un'immagine chiamata:"
-        )
-
-        st.code(
-            f"{nome_foglio}.png"
-        )
-
-        return
 
     # ------------------------------------------------------
     # IMMAGINE TROVATA
     # ------------------------------------------------------
 
-    st.image(
-        str(immagine),
-        use_container_width=True
+    if immagine is not None:
+
+        st.markdown(
+            f"### 📄 {foglio}"
+        )
+
+
+        st.markdown(
+            '<div class="immagine-carrello">',
+            unsafe_allow_html=True
+        )
+
+
+        st.image(
+            str(immagine),
+            use_container_width=True
+        )
+
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+
+        return
+
+
+    # ------------------------------------------------------
+    # IMMAGINE NON TROVATA
+    # ------------------------------------------------------
+
+    st.warning(
+        f"⚠️ Immagine non disponibile per: {foglio}"
     )
+
+
+    st.info(
+        "Carica l'immagine nella cartella "
+        "`carrelli_img` del repository GitHub."
+    )
+
+
+    st.code(
+        f"{foglio}.jpeg"
+    )
+
+
+# ==========================================================
+# CONTROLLO CARTELLA
+# ==========================================================
+
+def controllo_cartella():
+
+    with st.expander("🔧 Controllo immagini"):
+
+        st.write(
+            "Cartella utilizzata:"
+        )
+
+        st.code(
+            str(IMG_DIR)
+        )
+
+
+        # --------------------------------------------------
+        # CARTELLA NON ESISTE
+        # --------------------------------------------------
+
+        if not IMG_DIR.exists():
+
+            st.error(
+                "❌ La cartella carrelli_img non esiste."
+            )
+
+            return
+
+
+        # --------------------------------------------------
+        # LEGGI FILE
+        # --------------------------------------------------
+
+        try:
+
+            files = [
+
+                file
+
+                for file in IMG_DIR.iterdir()
+
+                if file.is_file()
+
+            ]
+
+        except Exception as e:
+
+            st.error(
+                "Errore nella lettura della cartella."
+            )
+
+            st.code(
+                str(e)
+            )
+
+            return
+
+
+        # --------------------------------------------------
+        # CARTELLA VUOTA
+        # --------------------------------------------------
+
+        if not files:
+
+            st.warning(
+                "⚠️ La cartella carrelli_img è vuota."
+            )
+
+            return
+
+
+        # --------------------------------------------------
+        # FILE PRESENTI
+        # --------------------------------------------------
+
+        st.write(
+            f"Immagini/file presenti: {len(files)}"
+        )
+
+
+        for file in sorted(files):
+
+            st.write(
+                f"• {file.name}"
+            )
 
 
 # ==========================================================
@@ -234,90 +357,98 @@ def mostra_foglio(nome_foglio):
 
 def carrelli_page():
 
-    # ======================================================
+    # ------------------------------------------------------
+    # STILE
+    # ------------------------------------------------------
+
+    configura_pagina()
+
+
+    # ------------------------------------------------------
     # TITOLO
-    # ======================================================
+    # ------------------------------------------------------
+
+    mostra_titolo()
+
+
+    # ------------------------------------------------------
+    # SEZIONE
+    # ------------------------------------------------------
 
     st.markdown(
-        """
-        <div class="carrelli-titolo">
-            🚆 CARRELLI ETR1000
+        "### 📂 Sezione"
+    )
+
+
+    sezione = st.selectbox(
+        "Sezione",
+        list(SEZIONI.keys()),
+        label_visibility="collapsed"
+    )
+
+
+    # ------------------------------------------------------
+    # FOGLIO
+    # ------------------------------------------------------
+
+    st.markdown(
+        "### 📄 Foglio"
+    )
+
+
+    foglio = st.selectbox(
+        "Foglio",
+        SEZIONI[sezione],
+        label_visibility="collapsed"
+    )
+
+
+    # ------------------------------------------------------
+    # SEPARATORE
+    # ------------------------------------------------------
+
+    st.divider()
+
+
+    # ------------------------------------------------------
+    # INFORMAZIONI
+    # ------------------------------------------------------
+
+    st.markdown(
+        f"""
+        <div class="carrelli-info">
+            📂 <b>Sezione:</b> {sezione}<br>
+            📄 <b>Foglio:</b> {foglio}
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    # ======================================================
-    # CONTROLLO CARTELLA
-    # ======================================================
 
-    if not CARTELLA_IMMAGINI.exists():
+    # ------------------------------------------------------
+    # MOSTRA IMMAGINE
+    # ------------------------------------------------------
 
-        st.error(
-            "❌ Cartella `carrelli_img` non trovata."
-        )
+    mostra_immagine(foglio)
 
-        st.info(
-            "Crea la cartella `carrelli_img` "
-            "nella stessa posizione di `carrelli.py` "
-            "e inserisci le immagini."
-        )
 
-        return
+    # ------------------------------------------------------
+    # DEBUG
+    # ------------------------------------------------------
 
-    # ======================================================
-    # SEZIONE
-    # ======================================================
-
-    sezione = st.selectbox(
-        "📂 Sezione",
-        list(SEZIONI.keys()),
-        key="carrelli_sezione"
-    )
-
-    # ======================================================
-    # FOGLI DELLA SEZIONE
-    # ======================================================
-
-    fogli = SEZIONI[sezione]
-
-    # ======================================================
-    # SELEZIONE FOGLIO
-    # ======================================================
-
-    foglio = st.selectbox(
-        "📄 Foglio",
-        fogli,
-        key="carrelli_foglio"
-    )
-
-    st.divider()
-
-    # ======================================================
-    # INFORMAZIONI
-    # ======================================================
-
-    st.caption(
-        f"📂 Sezione: {sezione}"
-    )
-
-    st.caption(
-        f"📄 Foglio: {foglio}"
-    )
-
-    # ======================================================
-    # VISUALIZZAZIONE
-    # ======================================================
-
-    mostra_foglio(
-        foglio
-    )
+    controllo_cartella()
 
 
 # ==========================================================
-# AVVIO
+# AVVIO DIRETTO
 # ==========================================================
 
 if __name__ == "__main__":
+
+    st.set_page_config(
+        page_title="Carrelli ETR1000",
+        page_icon="🚆",
+        layout="wide"
+    )
 
     carrelli_page()
