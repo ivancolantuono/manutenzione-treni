@@ -218,7 +218,7 @@ def mostra_immagine(foglio):
     if immagine is not None:
 
         st.markdown(
-            f"### 📄 {foglio}"
+            f"###  {CASSA E CARRELLO}"
         )
 
 
