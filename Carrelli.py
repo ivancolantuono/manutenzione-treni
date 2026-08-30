@@ -3,7 +3,7 @@ from pathlib import Path
 import openpyxl
 import base64
 import html
-import io
+
 
 # ==========================================================
 # CONFIGURAZIONE
@@ -37,29 +37,37 @@ st.markdown("""
     margin-bottom: 20px;
 }
 
+/* Contenitore */
 .excel-container {
     width: 100%;
     overflow: auto;
-    border: 1px solid #aaa;
     background: white;
     padding: 10px;
     border-radius: 8px;
 }
 
+/* Tabella */
 .excel-table {
     border-collapse: collapse;
     table-layout: fixed;
     background: white;
 }
 
+/*
+   IMPORTANTE:
+   NON mettiamo border qui.
+   I bordi vengono presi direttamente
+   dalle celle Excel.
+*/
 .excel-table td {
-    border: 1px solid #999;
     padding: 3px;
     vertical-align: middle;
     color: black;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
+/* Immagini */
 .excel-table img {
     max-width: 100%;
     height: auto;
@@ -72,13 +80,10 @@ st.markdown("""
 
 
 # ==========================================================
-# FUNZIONI
+# COLORI EXCEL
 # ==========================================================
 
 def colore_excel(colore):
-    """
-    Converte i colori Excel in CSS.
-    """
 
     if colore is None:
         return None
@@ -98,16 +103,17 @@ def colore_excel(colore):
             if len(rgb) == 6:
                 return "#" + rgb
 
-    except:
+    except Exception:
         pass
 
     return None
 
 
+# ==========================================================
+# BORDI EXCEL
+# ==========================================================
+
 def bordo_css(border):
-    """
-    Converte i bordi Excel in CSS.
-    """
 
     css = []
 
@@ -122,75 +128,117 @@ def bordo_css(border):
 
         if lato and lato.style:
 
-            colore = colore_excel(lato.color)
+            # Ignora linee tipiche della griglia
+            if lato.style in [
+                "hair",
+                "dotted"
+            ]:
+                continue
+
+            colore = colore_excel(
+                lato.color
+            )
 
             if not colore:
                 colore = "#777"
 
             css.append(
-                f"border-{nome}: 1px solid {colore};"
+                f"border-{nome}:1px solid {colore};"
             )
 
     return "".join(css)
 
 
+# ==========================================================
+# ALLINEAMENTO
+# ==========================================================
+
 def allineamento_css(alignment):
-    """
-    Converte l'allineamento Excel.
-    """
 
     css = ""
 
     if alignment:
 
         if alignment.horizontal:
-            css += f"text-align:{alignment.horizontal};"
+
+            css += (
+                f"text-align:"
+                f"{alignment.horizontal};"
+            )
 
         if alignment.vertical:
-            css += f"vertical-align:{alignment.vertical};"
+
+            css += (
+                f"vertical-align:"
+                f"{alignment.vertical};"
+            )
 
         if alignment.wrap_text:
-            css += "white-space:normal;"
+
+            css += (
+                "white-space:normal;"
+                "word-break:break-word;"
+            )
 
         else:
-            css += "white-space:nowrap;"
+
+            css += (
+                "white-space:nowrap;"
+            )
 
     return css
 
 
+# ==========================================================
+# FONT
+# ==========================================================
+
 def font_css(font):
-    """
-    Converte font Excel.
-    """
 
     css = ""
 
     if font:
 
         if font.bold:
+
             css += "font-weight:bold;"
 
         if font.italic:
+
             css += "font-style:italic;"
 
         if font.sz:
-            css += f"font-size:{font.sz}pt;"
 
-        colore = colore_excel(font.color)
+            css += (
+                f"font-size:"
+                f"{font.sz}pt;"
+            )
+
+        colore = colore_excel(
+            font.color
+        )
 
         if colore:
-            css += f"color:{colore};"
+
+            css += (
+                f"color:{colore};"
+            )
 
         if font.name:
-            css += f"font-family:'{font.name}';"
+
+            css += (
+                f"font-family:"
+                f"'{font.name}';"
+            )
 
     return css
 
 
+# ==========================================================
+# RIEMPIMENTO
+# ==========================================================
+
 def fill_css(fill):
-    """
-    Converte colore riempimento Excel.
-    """
 
     if not fill:
         return ""
@@ -204,47 +252,74 @@ def fill_css(fill):
             )
 
             if colore:
-                return f"background-color:{colore};"
 
-    except:
+                return (
+                    f"background-color:"
+                    f"{colore};"
+                )
+
+    except Exception:
         pass
 
     return ""
 
 
+# ==========================================================
+# LARGHEZZA COLONNA
+# ==========================================================
+
 def larghezza_colonna(ws, col):
-    """
-    Converte la larghezza Excel in pixel.
-    """
 
-    lettera = openpyxl.utils.get_column_letter(col)
+    lettera = (
+        openpyxl
+        .utils
+        .get_column_letter(col)
+    )
 
-    dimensione = ws.column_dimensions[lettera].width
+    dimensione = (
+        ws
+        .column_dimensions[lettera]
+        .width
+    )
 
     if dimensione is None:
         dimensione = 10
 
-    # conversione approssimativa Excel -> pixel
-    pixel = int(dimensione * 7)
+    pixel = int(
+        dimensione * 7
+    )
 
-    pixel = max(pixel, 35)
+    pixel = max(
+        pixel,
+        35
+    )
 
     return pixel
 
 
-def altezza_riga(ws, row):
-    """
-    Converte altezza Excel in pixel.
-    """
+# ==========================================================
+# ALTEZZA RIGA
+# ==========================================================
 
-    altezza = ws.row_dimensions[row].height
+def altezza_riga(ws, row):
+
+    altezza = (
+        ws
+        .row_dimensions[row]
+        .height
+    )
 
     if altezza is None:
         altezza = 15
 
-    pixel = int(altezza * 1.35)
+    pixel = int(
+        altezza * 1.35
+    )
 
-    pixel = max(pixel, 22)
+    pixel = max(
+        pixel,
+        22
+    )
 
     return pixel
 
@@ -263,74 +338,107 @@ def estrai_immagini(ws):
 
             anchor = img.anchor
 
-            # immagine ancorata alla cella
+            # ----------------------------------------------
+            # POSIZIONE IMMAGINE
+            # ----------------------------------------------
+
             if hasattr(anchor, "_from"):
 
-                col = anchor._from.col + 1
-                row = anchor._from.row + 1
+                col = (
+                    anchor._from.col + 1
+                )
+
+                row = (
+                    anchor._from.row + 1
+                )
 
             else:
+
                 continue
+
+            # ----------------------------------------------
+            # DATI IMMAGINE
+            # ----------------------------------------------
 
             try:
 
                 image_bytes = img._data()
 
-            except:
+            except Exception:
 
                 continue
 
             if not image_bytes:
                 continue
 
-            # determina formato
+            # ----------------------------------------------
+            # FORMATO
+            # ----------------------------------------------
+
             estensione = "png"
 
             try:
 
-                if hasattr(img, "format"):
-                    if img.format:
-                        estensione = img.format.lower()
+                if hasattr(
+                    img,
+                    "format"
+                ):
 
-            except:
+                    if img.format:
+
+                        estensione = (
+                            img.format.lower()
+                        )
+
+            except Exception:
                 pass
+
+            # ----------------------------------------------
+            # BASE64
+            # ----------------------------------------------
 
             encoded = base64.b64encode(
                 image_bytes
             ).decode("utf-8")
 
-            immagini[(row, col)] = {
+            immagini[
+                (row, col)
+            ] = {
+
                 "data": encoded,
+
                 "format": estensione
+
             }
 
     except Exception as e:
 
         st.warning(
-            f"⚠️ Problema nella lettura delle immagini: {e}"
+            "⚠️ Problema nella lettura "
+            f"delle immagini: {e}"
         )
 
     return immagini
 
 
 # ==========================================================
-# RENDER FOGLIO
+# RENDER FOGLIO EXCEL
 # ==========================================================
 
 def render_foglio(ws):
 
     immagini = estrai_immagini(ws)
 
-    # ------------------------------------------------------
+    # ======================================================
     # DIMENSIONI
-    # ------------------------------------------------------
+    # ======================================================
 
     max_row = ws.max_row
     max_col = ws.max_column
 
-    # ------------------------------------------------------
-    # MERGE CELLS
-    # ------------------------------------------------------
+    # ======================================================
+    # CELLE UNITE
+    # ======================================================
 
     merged_map = {}
 
@@ -342,13 +450,27 @@ def render_foglio(ws):
         min_row = merged.min_row
         max_row_merge = merged.max_row
 
-        # cella principale
-        merged_map[(min_row, min_col)] = (
-            max_row_merge - min_row + 1,
-            max_col_merge - min_col + 1
+        # ----------------------------------------------
+        # CELLA PRINCIPALE
+        # ----------------------------------------------
+
+        merged_map[
+            (min_row, min_col)
+        ] = (
+
+            max_row_merge
+            - min_row
+            + 1,
+
+            max_col_merge
+            - min_col
+            + 1
         )
 
-        # celle secondarie
+        # ----------------------------------------------
+        # CELLE SECONDARIE
+        # ----------------------------------------------
+
         for r in range(
             min_row,
             max_row_merge + 1
@@ -364,11 +486,13 @@ def render_foglio(ws):
                     or c != min_col
                 ):
 
-                    merged_map[(r, c)] = "skip"
+                    merged_map[
+                        (r, c)
+                    ] = "skip"
 
-    # ------------------------------------------------------
-    # TABELLA
-    # ------------------------------------------------------
+    # ======================================================
+    # HTML
+    # ======================================================
 
     risultato = []
 
@@ -380,13 +504,18 @@ def render_foglio(ws):
         '<table class="excel-table">'
     )
 
-    # ------------------------------------------------------
+    # ======================================================
     # COLONNE
-    # ------------------------------------------------------
+    # ======================================================
 
-    risultato.append("<colgroup>")
+    risultato.append(
+        "<colgroup>"
+    )
 
-    for col in range(1, max_col + 1):
+    for col in range(
+        1,
+        max_col + 1
+    ):
 
         width = larghezza_colonna(
             ws,
@@ -397,13 +526,18 @@ def render_foglio(ws):
             f'<col style="width:{width}px;">'
         )
 
-    risultato.append("</colgroup>")
+    risultato.append(
+        "</colgroup>"
+    )
 
-    # ------------------------------------------------------
+    # ======================================================
     # RIGHE
-    # ------------------------------------------------------
+    # ======================================================
 
-    for row in range(1, max_row + 1):
+    for row in range(
+        1,
+        max_row + 1
+    ):
 
         altezza = altezza_riga(
             ws,
@@ -414,10 +548,17 @@ def render_foglio(ws):
             f'<tr style="height:{altezza}px;">'
         )
 
-        for col in range(1, max_col + 1):
+        # ==================================================
+        # COLONNE
+        # ==================================================
+
+        for col in range(
+            1,
+            max_col + 1
+        ):
 
             # ----------------------------------------------
-            # MERGE SECONDARIO
+            # CELLA SECONDARIA DI UN MERGE
             # ----------------------------------------------
 
             if merged_map.get(
@@ -426,36 +567,44 @@ def render_foglio(ws):
 
                 continue
 
+            # ----------------------------------------------
+            # CELLA
+            # ----------------------------------------------
+
             cella = ws.cell(
                 row=row,
                 column=col
             )
 
-            # ----------------------------------------------
-            # STYLE
-            # ----------------------------------------------
+            # ==================================================
+            # STILE
+            # ==================================================
 
             stile = ""
 
+            # Riempimento
             stile += fill_css(
                 cella.fill
             )
 
+            # Font
             stile += font_css(
                 cella.font
             )
 
+            # Allineamento
             stile += allineamento_css(
                 cella.alignment
             )
 
+            # BORDI REALI EXCEL
             stile += bordo_css(
                 cella.border
             )
 
-            # ----------------------------------------------
+            # ==================================================
             # MERGE
-            # ----------------------------------------------
+            # ==================================================
 
             rowspan = 1
             colspan = 1
@@ -472,9 +621,9 @@ def render_foglio(ws):
                 rowspan = merge_info[0]
                 colspan = merge_info[1]
 
-            # ----------------------------------------------
+            # ==================================================
             # CONTENUTO
-            # ----------------------------------------------
+            # ==================================================
 
             contenuto = ""
 
@@ -488,9 +637,9 @@ def render_foglio(ws):
 
                 contenuto += testo
 
-            # ----------------------------------------------
+            # ==================================================
             # IMMAGINE
-            # ----------------------------------------------
+            # ==================================================
 
             img_info = immagini.get(
                 (row, col)
@@ -498,27 +647,39 @@ def render_foglio(ws):
 
             if img_info:
 
-                formato = img_info["format"]
+                formato = img_info[
+                    "format"
+                ]
 
-                data = img_info["data"]
+                data = img_info[
+                    "data"
+                ]
 
                 contenuto += (
-                    f'<br>'
-                    f'<img '
-                    f'src="data:image/{formato};base64,{data}" '
-                    f'style="max-width:100%; max-height:250px;">'
+                    '<br>'
+                    '<img '
+                    f'src="data:image/'
+                    f'{formato};base64,'
+                    f'{data}" '
+                    'style="'
+                    'max-width:100%;'
+                    'max-height:250px;'
+                    'object-fit:contain;'
+                    '">'
                 )
 
-            # ----------------------------------------------
+            # ==================================================
             # LINK
-            # ----------------------------------------------
+            # ==================================================
 
             if (
                 isinstance(
                     valore,
                     str
                 )
-                and valore.startswith("http")
+                and valore.startswith(
+                    "http"
+                )
             ):
 
                 url = html.escape(
@@ -533,12 +694,12 @@ def render_foglio(ws):
                     f'</a>'
                 )
 
-            # ----------------------------------------------
+            # ==================================================
             # TD
-            # ----------------------------------------------
+            # ==================================================
 
             td = (
-                f'<td '
+                '<td '
                 f'style="{stile}"'
             )
 
@@ -560,14 +721,29 @@ def render_foglio(ws):
 
             td += "</td>"
 
-            risultato.append(td)
+            risultato.append(
+                td
+            )
 
-        risultato.append("</tr>")
+        risultato.append(
+            "</tr>"
+        )
 
-    risultato.append("</table>")
-    risultato.append("</div>")
+    # ======================================================
+    # CHIUSURA
+    # ======================================================
 
-    return "".join(risultato)
+    risultato.append(
+        "</table>"
+    )
+
+    risultato.append(
+        "</div>"
+    )
+
+    return "".join(
+        risultato
+    )
 
 
 # ==========================================================
@@ -575,6 +751,10 @@ def render_foglio(ws):
 # ==========================================================
 
 def carrelli_page():
+
+    # ======================================================
+    # TITOLO
+    # ======================================================
 
     st.markdown(
         """
@@ -586,7 +766,7 @@ def carrelli_page():
     )
 
     # ======================================================
-    # FILE
+    # CONTROLLO FILE
     # ======================================================
 
     if not FILE_EXCEL.exists():
@@ -606,13 +786,14 @@ def carrelli_page():
         st.info(
             "Metti il file "
             "'ATTIVITA' CARRELLO.xlsm' "
-            "nella stessa cartella di carrelli.py."
+            "nella stessa cartella "
+            "di carrelli.py."
         )
 
         return
 
     # ======================================================
-    # CARICA EXCEL
+    # APERTURA EXCEL
     # ======================================================
 
     try:
@@ -630,7 +811,9 @@ def carrelli_page():
             "❌ Errore apertura Excel."
         )
 
-        st.code(str(e))
+        st.code(
+            str(e)
+        )
 
         return
 
@@ -647,38 +830,52 @@ def carrelli_page():
     sezioni = {
 
         "🛞 CARRELLI": [
+
             "DM1-CARR.1",
             "DM1-CARR.2",
+
             "M3-CARR.1",
             "M3-CARR.2",
+
             "M6-CARR.1",
             "M6-CARR.2",
+
             "DM8-CARR.1",
             "DM8-CARR.2"
+
         ],
 
         "📡 SENSORI": [
+
             "SENSORI SPM",
             "PT100 RIDUTTORI"
+
         ],
 
         "🔌 FUSE LOOP": [
+
             "FUSE LOOP CASSA MOTOR",
             "FUSE LOOP TRENO COMPLETO"
+
         ],
 
         "🔄 DNRA": [
+
             "LOOP DNRA",
             "OVERVIEW DNRA"
+
         ],
 
         "🚆 STATO TRENO": [
+
             "STATO TRENO"
+
         ]
+
     }
 
     # ======================================================
-    # SEZIONE
+    # SELEZIONE SEZIONE
     # ======================================================
 
     sezione = st.selectbox(
@@ -693,7 +890,11 @@ def carrelli_page():
     fogli_sezione = [
 
         f
-        for f in sezioni[sezione]
+
+        for f in sezioni[
+            sezione
+        ]
+
         if f in fogli
 
     ]
@@ -729,7 +930,9 @@ def carrelli_page():
 
     try:
 
-        contenuto = render_foglio(ws)
+        contenuto = render_foglio(
+            ws
+        )
 
         st.markdown(
             contenuto,
@@ -739,10 +942,13 @@ def carrelli_page():
     except Exception as e:
 
         st.error(
-            "❌ Errore nella visualizzazione del foglio."
+            "❌ Errore nella "
+            "visualizzazione del foglio."
         )
 
-        st.code(str(e))
+        st.code(
+            str(e)
+        )
 
 
 # ==========================================================
