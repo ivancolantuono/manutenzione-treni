@@ -9,7 +9,6 @@ import re
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# Cartella immagini presente nel repository GitHub
 CARTELLA_IMMAGINI = BASE_DIR / "carrelli_img"
 
 
@@ -137,17 +136,13 @@ def normalizza_nome(nome):
 
     nome = str(nome)
 
-    # elimina estensione
     nome = Path(nome).stem
 
-    # minuscolo
     nome = nome.lower()
 
-    # sostituisce _ e - con spazio
     nome = nome.replace("_", " ")
     nome = nome.replace("-", " ")
 
-    # elimina spazi multipli
     nome = re.sub(
         r"\s+",
         " ",
@@ -158,10 +153,14 @@ def normalizza_nome(nome):
 
 
 # ==========================================================
-# TROVA TUTTE LE IMMAGINI
+# TROVA IMMAGINI
 # ==========================================================
 
 def trova_immagini(nome_foglio):
+
+    # ------------------------------------------------------
+    # Controlla cartella
+    # ------------------------------------------------------
 
     if not CARTELLA_IMMAGINI.exists():
 
@@ -170,13 +169,10 @@ def trova_immagini(nome_foglio):
 
     immagini = []
 
-    estensioni = [
-        "*.png",
-        "*.jpg",
-        "*.jpeg",
-        "*.webp"
-    ]
 
+    # ------------------------------------------------------
+    # Nome del foglio
+    # ------------------------------------------------------
 
     nome_cercato = normalizza_nome(
         nome_foglio
@@ -184,46 +180,85 @@ def trova_immagini(nome_foglio):
 
 
     # ------------------------------------------------------
-    # CERCA FILE
+    # Legge TUTTI i file della cartella
     # ------------------------------------------------------
 
-    for estensione in estensioni:
+    try:
 
-        for file in CARTELLA_IMMAGINI.glob(
-            estensione
-        ):
+        files = list(
+            CARTELLA_IMMAGINI.iterdir()
+        )
 
-            nome_file = normalizza_nome(
-                file.name
-            )
+    except Exception:
+
+        return []
 
 
-            # ==================================================
-            # CASO 1
-            # IMMAGINE SINGOLA
-            # ==================================================
+    # ------------------------------------------------------
+    # Estensioni consentite
+    # ------------------------------------------------------
 
-            if nome_file == nome_cercato:
+    estensioni = {
+
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp"
+    }
+
+
+    # ------------------------------------------------------
+    # Analizza ogni file
+    # ------------------------------------------------------
+
+    for file in files:
+
+        # deve essere un file
+        if not file.is_file():
+            continue
+
+
+        # controlla estensione
+        if file.suffix.lower() not in estensioni:
+            continue
+
+
+        nome_file = normalizza_nome(
+            file.name
+        )
+
+
+        # ==================================================
+        # IMMAGINE SINGOLA
+        # ==================================================
+
+        if nome_file == nome_cercato:
+
+            immagini.append(file)
+
+            continue
+
+
+        # ==================================================
+        # LOOP IMS
+        #
+        # Accetta:
+        #
+        # LOOP IMS 1.jpeg
+        # LOOP IMS 2.jpeg
+        # LOOP IMS 3.jpeg
+        #
+        # ma anche:
+        #
+        # LOOP IMS_1.jpeg
+        # LOOP IMS-1.jpeg
+        # ==================================================
+
+        if nome_cercato == "loop ims":
+
+            if nome_file.startswith("loop ims"):
 
                 immagini.append(file)
-
-
-            # ==================================================
-            # CASO 2
-            # PIÙ IMMAGINI LOOP IMS
-            #
-            # LOOP IMS 1.jpeg
-            # LOOP IMS 2.jpeg
-            # LOOP IMS 3.jpeg
-            # ==================================================
-
-            elif nome_cercato == "loop ims":
-
-                if nome_file.startswith(
-                    "loop ims"
-                ):
-
-                    immagini.append(file)
 
 
     # ======================================================
@@ -280,7 +315,7 @@ def mostra_immagine(nome_foglio):
 
 
     # ------------------------------------------------------
-    # CERCA IMMAGINI
+    # Cerca immagini
     # ------------------------------------------------------
 
     immagini = trova_immagini(
@@ -289,7 +324,7 @@ def mostra_immagine(nome_foglio):
 
 
     # ------------------------------------------------------
-    # NESSUNA IMMAGINE
+    # Nessuna immagine
     # ------------------------------------------------------
 
     if not immagini:
@@ -306,29 +341,29 @@ def mostra_immagine(nome_foglio):
 
 
     # ------------------------------------------------------
-    # INFORMAZIONI
+    # Numero immagini
     # ------------------------------------------------------
 
-    st.markdown(
-        f"""
-        <div class="carrelli-info">
-            🖼️ Immagini trovate: <b>{len(immagini)}</b>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    if len(immagini) > 1:
+
+        st.markdown(
+            f"""
+            <div class="carrelli-info">
+                🖼️ Immagini trovate: <b>{len(immagini)}</b>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # MOSTRA TUTTE LE IMMAGINI
-    # ------------------------------------------------------
+    # ======================================================
 
     for numero, immagine in enumerate(
         immagini,
         start=1
     ):
-
-        # titolo solo se ci sono più immagini
 
         if len(immagini) > 1:
 
@@ -336,10 +371,6 @@ def mostra_immagine(nome_foglio):
                 f"### Immagine {numero} di {len(immagini)}"
             )
 
-
-        # --------------------------------------------------
-        # IMMAGINE
-        # --------------------------------------------------
 
         st.image(
             str(immagine),
@@ -368,7 +399,7 @@ def carrelli_page():
 
 
     # ------------------------------------------------------
-    # TITOLO ATTIVITÀ
+    # ATTIVITÀ CARRELLO
     # ------------------------------------------------------
 
     st.markdown(
@@ -430,7 +461,7 @@ def carrelli_page():
 
 
     # ======================================================
-    # MOSTRA IMMAGINE
+    # MOSTRA IMMAGINI
     # ======================================================
 
     mostra_immagine(
