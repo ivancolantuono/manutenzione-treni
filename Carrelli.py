@@ -597,10 +597,18 @@ def render_foglio(ws):
                 cella.alignment
             )
 
-            # BORDI REALI EXCEL
-            stile += bordo_css(
-                cella.border
+            # ==================================================
+            # BORDI
+            # ==================================================
+            
+            # Mostra i bordi solo sulle celle realmente utilizzate
+            ha_contenuto = (
+                cella.value is not None
+                or (row, col) in immagini
             )
+            
+            if ha_contenuto:
+                stile += bordo_css(cella.border)
 
             # ==================================================
             # MERGE
