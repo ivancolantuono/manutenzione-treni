@@ -838,7 +838,7 @@ with st.sidebar:
                 "journal-text",
                 "bar-chart",
                 "clock-history",
-                "ile-earmark",
+                "file-earmark",
                 "play",
                 "cpu"
             ],
