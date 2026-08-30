@@ -1,10 +1,12 @@
 import streamlit as st
 from pathlib import Path
+import subprocess
 import tempfile
+import shutil
 import os
-import time
+import hashlib
 
-
+from streamlit_pdf_viewer import pdf_viewer
 
 
 # ==========================================================
@@ -17,70 +19,34 @@ FILE_EXCEL = BASE_DIR / "ATTIVITA' CARRELLO.xlsm"
 
 
 # ==========================================================
-# CONFIGURAZIONE PAGINA
-# ==========================================================
-
-st.set_page_config(
-    page_title="Carrelli ETR1000",
-    page_icon="🚆",
-    layout="wide"
-)
-
-
-# ==========================================================
-# CSS
+# STILE
 # ==========================================================
 
 st.markdown("""
 <style>
 
-/* =========================================
-   TITOLO
-   ========================================= */
-
-.carrelli-titolo {
-
-    background-color: #b7d7f0;
-
-    padding: 14px;
-
-    border-radius: 8px;
-
-    text-align: center;
-
-    font-size: 24px;
-
-    font-weight: bold;
-
+.carrelli-header {
+    background: linear-gradient(90deg, #d40000, #ed1c24);
+    color: white;
+    padding: 18px 25px;
+    border-radius: 12px;
     margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
 }
 
-
-/* =========================================
-   PDF
-   ========================================= */
+.sezione-box {
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
 
 .pdf-box {
-
-    width: 100%;
-
     background: white;
-
     border-radius: 10px;
-
-    overflow: hidden;
-
-}
-
-
-/* =========================================
-   BOTTONI
-   ========================================= */
-
-.stButton > button {
-
-    border-radius: 8px;
-
+    padding: 5px;
 }
 
 </style>
@@ -88,612 +54,188 @@ st.markdown("""
 
 
 # ==========================================================
-# SEZIONI
+# STRUTTURA SEZIONI
 # ==========================================================
 
 SEZIONI = {
 
     "🛞 CARRELLI": [
-
         "DM1-CARR.1",
         "DM1-CARR.2",
-
         "M3-CARR.1",
         "M3-CARR.2",
-
         "M6-CARR.1",
         "M6-CARR.2",
-
         "DM8-CARR.1",
-        "DM8-CARR.2"
-
+        "DM8-CARR.2",
     ],
 
     "📡 SENSORI": [
-
         "SENSORI SPM",
-        "PT100 RIDUTTORI"
-
+        "PT100 RIDUTTORI",
     ],
 
     "🔌 FUSE LOOP": [
-
         "FUSE LOOP CASSA MOTOR",
-        "FUSE LOOP TRENO COMPLETO"
-
+        "FUSE LOOP TRENO COMPLETO",
     ],
 
     "🔄 DNRA": [
-
         "LOOP DNRA",
-        "OVERVIEW DNRA"
-
+        "OVERVIEW DNRA",
     ],
 
     "🚆 STATO TRENO": [
-
-        "STATO TRENO"
-
-    ]
-
+        "STATO TRENO",
+    ],
 }
 
 
 # ==========================================================
-# CONTROLLO EXCEL
+# VERIFICA LIBREOFFICE
 # ==========================================================
 
-def controllo_excel():
+def trova_libreoffice():
 
-    if not FILE_EXCEL.exists():
+    possibili = [
+        "libreoffice",
+        "soffice",
+        "/usr/bin/libreoffice",
+        "/usr/bin/soffice",
+    ]
 
-        st.error(
-            "❌ File Excel non trovato."
-        )
+    for programma in possibili:
 
-        st.code(
-            str(FILE_EXCEL)
-        )
+        if shutil.which(programma):
 
-        st.info(
-            "Il file deve essere nella stessa "
-            "cartella di Carrelli.py."
-        )
+            return programma
 
-        return False
+        if Path(programma).exists():
 
-    return True
+            return programma
 
-
-# ==========================================================
-# LETTURA FOGLI
-# ==========================================================
-
-def elenco_fogli():
-
-    if win32com is None:
-
-        return []
-
-    excel = None
-    wb = None
-
-    try:
-
-        excel = win32com.client.DispatchEx(
-            "Excel.Application"
-        )
-
-        excel.Visible = False
-        excel.DisplayAlerts = False
-
-        wb = excel.Workbooks.Open(
-            str(FILE_EXCEL),
-            ReadOnly=True
-        )
-
-        fogli = []
-
-        for ws in wb.Worksheets:
-
-            fogli.append(
-                ws.Name
-            )
-
-        return fogli
-
-    except Exception:
-
-        return []
-
-    finally:
-
-        try:
-
-            if wb is not None:
-                wb.Close(
-                    SaveChanges=False
-                )
-
-        except:
-            pass
-
-        try:
-
-            if excel is not None:
-                excel.Quit()
-
-        except:
-            pass
+    return None
 
 
 # ==========================================================
-# CONVERSIONE FOGLIO EXCEL → PDF
+# CONVERSIONE EXCEL → PDF
 # ==========================================================
 
-def esporta_foglio_pdf(nome_foglio):
+@st.cache_data(show_spinner=False)
+def converti_excel_pdf(percorso_excel, file_hash):
 
-    """
-    Apre Excel tramite COM e converte
-    solamente il foglio selezionato in PDF.
+    libreoffice = trova_libreoffice()
 
-    Il rendering viene fatto direttamente
-    da Microsoft Excel.
+    if not libreoffice:
 
-    In questo modo vengono mantenuti:
-
-    - immagini
-    - forme
-    - frecce
-    - linee
-    - colori
-    - testi
-    - diagrammi
-    - celle unite
-    - grafica originale
-    """
-
-    if win32com is None:
-
-        raise Exception(
-            "Modulo pywin32 non installato."
+        raise RuntimeError(
+            "LibreOffice non è installato sul server."
         )
-
-
-    if not FILE_EXCEL.exists():
-
-        raise Exception(
-            "File Excel non trovato."
-        )
-
 
     # ------------------------------------------------------
-    # FILE TEMPORANEO
+    # CARTELLA TEMPORANEA
     # ------------------------------------------------------
 
-    temp_dir = Path(
+    cartella = Path(
         tempfile.mkdtemp(
             prefix="carrelli_"
         )
     )
 
-    pdf_path = (
-        temp_dir
-        / f"{nome_foglio}.pdf"
-    )
-
-
-    excel = None
-    wb = None
-    ws = None
-
-
     try:
 
-        # ==================================================
-        # AVVIA EXCEL
-        # ==================================================
-
-        excel = win32com.client.DispatchEx(
-            "Excel.Application"
-        )
-
-        excel.Visible = False
-
-        excel.DisplayAlerts = False
-
-        excel.ScreenUpdating = False
-
-
-        # ==================================================
-        # APERTURA FILE
-        # ==================================================
-
-        wb = excel.Workbooks.Open(
-
-            str(FILE_EXCEL),
-
-            UpdateLinks=0,
-
-            ReadOnly=True,
-
-            IgnoreReadOnlyRecommended=True
-
-        )
-
-
-        # ==================================================
-        # CERCA FOGLIO
-        # ==================================================
-
-        ws = wb.Worksheets(
-            nome_foglio
-        )
-
-
-        # ==================================================
-        # DISATTIVA GRIGLIA
-        # ==================================================
-
-        try:
-
-            ws.Activate()
-
-            excel.ActiveWindow.DisplayGridlines = False
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # PAGINA
-        # ==================================================
-
-        page = ws.PageSetup
-
+        file_excel = Path(percorso_excel)
 
         # --------------------------------------------------
-        # AREA DI STAMPA
+        # COPIA FILE
         # --------------------------------------------------
 
-        try:
+        file_locale = cartella / file_excel.name
 
-            used = ws.UsedRange
+        shutil.copy2(
+            file_excel,
+            file_locale
+        )
 
-            first_row = used.Row
+        # --------------------------------------------------
+        # CONVERSIONE
+        # --------------------------------------------------
 
-            first_col = used.Column
+        comando = [
 
-            last_row = (
-                used.Row
-                + used.Rows.Count
-                - 1
-            )
+            libreoffice,
 
-            last_col = (
-                used.Column
-                + used.Columns.Count
-                - 1
-            )
+            "--headless",
 
-            # Conversione numeri → lettere
+            "--convert-to",
+            "pdf",
 
-            def numero_colonna(n):
+            "--outdir",
+            str(cartella),
 
-                risultato = ""
+            str(file_locale)
 
-                while n > 0:
+        ]
 
-                    n, resto = divmod(
-                        n - 1,
-                        26
-                    )
+        risultato = subprocess.run(
 
-                    risultato = (
-                        chr(65 + resto)
-                        + risultato
-                    )
+            comando,
 
-                return risultato
+            stdout=subprocess.PIPE,
 
+            stderr=subprocess.PIPE,
 
-            prima_colonna = numero_colonna(
-                first_col
-            )
+            text=True,
 
-            ultima_colonna = numero_colonna(
-                last_col
-            )
-
-
-            area = (
-                f"${prima_colonna}${first_row}:"
-                f"${ultima_colonna}${last_row}"
-            )
-
-            page.PrintArea = area
-
-        except:
-
-            # Se qualcosa va storto,
-            # lascia quella già presente in Excel.
-
-            pass
-
-
-        # ==================================================
-        # ORIENTAMENTO
-        # ==================================================
-
-        try:
-
-            # 2 = Landscape
-            page.Orientation = 2
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # MARGINI
-        # ==================================================
-
-        try:
-
-            page.LeftMargin = (
-                excel.CentimetersToPoints(0.3)
-            )
-
-            page.RightMargin = (
-                excel.CentimetersToPoints(0.3)
-            )
-
-            page.TopMargin = (
-                excel.CentimetersToPoints(0.3)
-            )
-
-            page.BottomMargin = (
-                excel.CentimetersToPoints(0.3)
-            )
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # SCALATURA
-        # ==================================================
-
-        try:
-
-            page.Zoom = False
-
-            page.FitToPagesWide = 1
-
-            page.FitToPagesTall = False
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # CENTRA FOGLIO
-        # ==================================================
-
-        try:
-
-            page.CenterHorizontally = True
-
-            page.CenterVertically = False
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # QUALITÀ
-        # ==================================================
-
-        try:
-
-            page.PrintQuality = 600
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # ESPORTA PDF
-        # ==================================================
-
-        ws.ExportAsFixedFormat(
-
-            Type=0,
-
-            Filename=str(pdf_path),
-
-            Quality=0,
-
-            IncludeDocProperties=True,
-
-            IgnorePrintAreas=False,
-
-            OpenAfterPublish=False
+            timeout=180
 
         )
 
+        pdf = cartella / (
+            file_excel.stem + ".pdf"
+        )
 
-        # ==================================================
-        # ATTESA FILE
-        # ==================================================
+        # --------------------------------------------------
+        # CONTROLLO
+        # --------------------------------------------------
 
-        for _ in range(50):
+        if risultato.returncode != 0:
 
-            if pdf_path.exists():
-
-                if pdf_path.stat().st_size > 0:
-
-                    break
-
-            time.sleep(0.1)
-
-
-        if not pdf_path.exists():
-
-            raise Exception(
-                "Excel non ha creato il PDF."
+            raise RuntimeError(
+                risultato.stderr
+                or risultato.stdout
+                or "Errore sconosciuto durante la conversione."
             )
 
+        if not pdf.exists():
 
-        if pdf_path.stat().st_size == 0:
-
-            raise Exception(
-                "Il PDF generato è vuoto."
+            raise RuntimeError(
+                "LibreOffice non ha generato il PDF."
             )
 
-
-        # ==================================================
-        # LETTURA
-        # ==================================================
+        # --------------------------------------------------
+        # LEGGE PDF IN MEMORIA
+        # --------------------------------------------------
 
         with open(
-            pdf_path,
+            pdf,
             "rb"
         ) as f:
 
-            pdf_data = f.read()
+            contenuto = f.read()
 
-
-        return pdf_data
-
+        return contenuto
 
     finally:
 
-        # ==================================================
-        # CHIUSURA EXCEL
-        # ==================================================
-
-        try:
-
-            if wb is not None:
-
-                wb.Close(
-                    SaveChanges=False
-                )
-
-        except:
-
-            pass
-
-
-        try:
-
-            if excel is not None:
-
-                excel.Quit()
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # PULIZIA COM
-        # ==================================================
-
-        try:
-
-            del ws
-
-        except:
-
-            pass
-
-        try:
-
-            del wb
-
-        except:
-
-            pass
-
-        try:
-
-            del excel
-
-        except:
-
-            pass
-
-
-        # ==================================================
-        # ELIMINA TEMP
-        # ==================================================
-
-        try:
-
-            if pdf_path.exists():
-
-                pdf_path.unlink()
-
-            temp_dir.rmdir()
-
-        except:
-
-            pass
-
-
-# ==========================================================
-# VISUALIZZA PDF
-# ==========================================================
-
-def visualizza_pdf(pdf_data):
-
-    try:
-
-        from streamlit_pdf_viewer import pdf_viewer
-
-        pdf_viewer(
-
-            input=pdf_data,
-
-            width=1200
-
-        )
-
-    except ImportError:
-
-        st.error(
-            "❌ Manca streamlit-pdf-viewer."
-        )
-
-        st.info(
-            "Installa con:"
-        )
-
-        st.code(
-            "pip install streamlit-pdf-viewer"
-        )
-
-    except Exception as e:
-
-        st.error(
-            "❌ Errore visualizzazione PDF."
-        )
-
-        st.code(
-            str(e)
+        shutil.rmtree(
+            cartella,
+            ignore_errors=True
         )
 
 
 # ==========================================================
-# PAGINA CARRELLI
+# FUNZIONE PRINCIPALE
 # ==========================================================
 
 def carrelli_page():
@@ -704,7 +246,7 @@ def carrelli_page():
 
     st.markdown(
         """
-        <div class="carrelli-titolo">
+        <div class="carrelli-header">
             🚆 CARRELLI ETR1000
         </div>
         """,
@@ -713,202 +255,265 @@ def carrelli_page():
 
 
     # ======================================================
-    # CONTROLLO
+    # VERIFICA FILE
     # ======================================================
 
-    if not controllo_excel():
+    if not FILE_EXCEL.exists():
+
+        st.error(
+            "❌ File Excel non trovato."
+        )
+
+        st.write(
+            "Percorso cercato:"
+        )
+
+        st.code(
+            str(FILE_EXCEL)
+        )
+
+        st.info(
+            """
+            Il file deve essere presente nella stessa
+            cartella di Carrelli.py:
+
+            ATTIVITA' CARRELLO.xlsm
+            """
+        )
 
         return
 
 
-   
-
-
     # ======================================================
-    # VERIFICA EXCEL
+    # CARICAMENTO FOGLI CON OPENPYXL
     # ======================================================
 
     try:
 
-        fogli_reali = elenco_fogli()
+        import openpyxl
 
-    except:
+        wb = openpyxl.load_workbook(
+            FILE_EXCEL,
+            read_only=True,
+            data_only=False,
+            keep_vba=True
+        )
 
-        fogli_reali = []
+        fogli_disponibili = wb.sheetnames
+
+        wb.close()
+
+    except Exception as e:
+
+        st.error(
+            "❌ Impossibile leggere il file Excel."
+        )
+
+        st.code(
+            str(e)
+        )
+
+        return
+
+
+    # ======================================================
+    # COSTRUZIONE MENU
+    # ======================================================
+
+    sezioni_disponibili = {}
+
+    for nome_sezione, fogli in SEZIONI.items():
+
+        presenti = [
+
+            foglio
+
+            for foglio in fogli
+
+            if foglio in fogli_disponibili
+
+        ]
+
+        if presenti:
+
+            sezioni_disponibili[
+                nome_sezione
+            ] = presenti
 
 
     # ======================================================
     # SEZIONE
     # ======================================================
 
+    st.markdown(
+        "### 📂 Sezione"
+    )
+
     sezione = st.selectbox(
 
-        "📂 Sezione",
+        "Seleziona sezione",
 
         list(
-            SEZIONI.keys()
+            sezioni_disponibili.keys()
         ),
 
-        key="carrelli_sezione"
+        label_visibility="collapsed"
 
     )
 
 
     # ======================================================
-    # FOGLI DISPONIBILI
+    # FOGLI
     # ======================================================
 
-    fogli_sezione = [
-
-        foglio
-
-        for foglio in SEZIONI[sezione]
-
-        if foglio in fogli_reali
-
+    fogli = sezioni_disponibili[
+        sezione
     ]
 
-
-    if not fogli_sezione:
-
-        st.warning(
-            "⚠️ Nessun foglio disponibile "
-            "in questa sezione."
-        )
-
-        if fogli_reali:
-
-            st.caption(
-                "Fogli presenti nel file:"
-            )
-
-            st.write(
-                fogli_reali
-            )
-
-        return
-
-
-    # ======================================================
-    # SELEZIONE FOGLIO
-    # ======================================================
+    st.markdown(
+        "### 📄 Foglio"
+    )
 
     foglio = st.selectbox(
 
-        "📄 Foglio",
+        "Seleziona foglio",
 
-        fogli_sezione,
+        fogli,
 
-        key="carrelli_foglio"
+        label_visibility="collapsed"
 
     )
 
 
+    st.divider()
+
+
     # ======================================================
-    # PULSANTE VISUALIZZA
+    # INFORMAZIONI
     # ======================================================
 
-    col1, col2, col3 = st.columns(
-        [1, 1, 4]
+    st.markdown(
+        f"""
+        <div style="
+            background:#f1f1f1;
+            padding:12px;
+            border-radius:8px;
+            margin-bottom:15px;
+        ">
+
+        <b>📂 Sezione:</b> {sezione}<br>
+        <b>📄 Foglio:</b> {foglio}
+
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
-    with col1:
+    # ======================================================
+    # HASH FILE
+    # ======================================================
 
-        visualizza = st.button(
+    try:
 
-            "👁️ Visualizza",
+        with open(
+            FILE_EXCEL,
+            "rb"
+        ) as f:
 
-            use_container_width=True,
+            file_bytes = f.read()
 
-            type="primary"
+        file_hash = hashlib.md5(
+            file_bytes
+        ).hexdigest()
 
+    except Exception as e:
+
+        st.error(
+            "Errore nella lettura del file."
         )
 
+        st.code(
+            str(e)
+        )
 
-    with col2:
-
-        if st.button(
-
-            "🔄 Aggiorna",
-
-            use_container_width=True
-
-        ):
-
-            st.session_state.pop(
-                "carrelli_pdf",
-                None
-            )
-
-            st.rerun()
+        return
 
 
     # ======================================================
     # CONVERSIONE
     # ======================================================
 
-    if visualizza:
+    with st.spinner(
+        "🔄 Preparazione documento..."
+    ):
 
-        with st.spinner(
-            f"📄 Apertura di Excel e "
-            f"renderizzazione di {foglio}..."
-        ):
+        try:
 
-            try:
+            pdf_bytes = converti_excel_pdf(
 
-                pdf_data = (
-                    esporta_foglio_pdf(
-                        foglio
-                    )
-                )
+                str(FILE_EXCEL),
 
-                st.session_state[
-                    "carrelli_pdf"
-                ] = pdf_data
+                file_hash
 
-                st.session_state[
-                    "carrelli_pdf_nome"
-                ] = foglio
+            )
 
+        except Exception as e:
 
-            except Exception as e:
+            st.error(
+                "❌ Errore nella conversione Excel → PDF."
+            )
 
-                st.error(
-                    "❌ Errore durante la "
-                    "conversione Excel → PDF."
-                )
+            st.code(
+                str(e)
+            )
 
-                st.code(
-                    str(e)
-                )
+            st.info(
+                """
+                Il server Streamlit deve avere
+                LibreOffice installato.
+                """
+            )
+
+            return
 
 
     # ======================================================
     # VISUALIZZAZIONE
     # ======================================================
 
-    if (
-        "carrelli_pdf"
-        in st.session_state
-    ):
+    st.markdown(
+        f"### 📄 {foglio}"
+    )
 
-        st.divider()
+    st.markdown(
+        """
+        <div class="pdf-box">
+        """,
+        unsafe_allow_html=True
+    )
 
-        nome = st.session_state.get(
-            "carrelli_pdf_nome",
-            foglio
+    try:
+
+        pdf_viewer(
+            pdf_bytes,
+            width="100%"
         )
 
-        st.markdown(
-            f"### 📄 {nome}"
+    except Exception as e:
+
+        st.error(
+            "❌ Errore nella visualizzazione del PDF."
         )
 
-        visualizza_pdf(
-            st.session_state[
-                "carrelli_pdf"
-            ]
+        st.code(
+            str(e)
         )
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 
 # ==========================================================
