@@ -340,22 +340,7 @@ def mostra_immagine(nome_foglio):
         return
 
 
-    # ------------------------------------------------------
-    # Numero immagini
-    # ------------------------------------------------------
-
-    if len(immagini) > 1:
-
-        st.markdown(
-            f"""
-            <div class="carrelli-info">
-                🖼️ Immagini trovate: <b>{len(immagini)}</b>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-
+   
     # ======================================================
     # MOSTRA TUTTE LE IMMAGINI
     # ======================================================
