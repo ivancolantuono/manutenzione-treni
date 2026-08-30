@@ -136,125 +136,111 @@ SEZIONI = {
 # CERCA IMMAGINE
 # ==========================================================
 
-def trova_immagine(nome):
+def trova_immagini(nome_foglio):
 
-    if not IMG_DIR.exists():
-        return None
+    if not CARTELLA_IMMAGINI.exists():
+        return []
 
-
-    # ------------------------------------------------------
-    # Prima prova con il nome esatto
-    # ------------------------------------------------------
+    immagini = []
 
     estensioni = [
-
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".webp"
+        "*.png",
+        "*.jpg",
+        "*.jpeg",
+        "*.webp"
     ]
 
+    nome_cercato = normalizza_nome(nome_foglio)
 
     for estensione in estensioni:
 
-        percorso = IMG_DIR / f"{nome}{estensione}"
+        for file in CARTELLA_IMMAGINI.glob(estensione):
 
-        if percorso.exists():
+            nome_file = normalizza_nome(file.name)
 
-            return percorso
+            # ----------------------------------------------
+            # IMMAGINE SINGOLA
+            # ----------------------------------------------
 
+            if nome_file == nome_cercato:
 
-    # ------------------------------------------------------
-    # Seconda ricerca:
-    # confronto senza distinzione tra maiuscole/minuscole
-    # ------------------------------------------------------
+                immagini.append(file)
 
-    nome_lower = nome.lower().strip()
+            # ----------------------------------------------
+            # LOOP IMS CON PIÙ IMMAGINI
+            #
+            # LOOP IMS 1
+            # LOOP IMS 2
+            # LOOP IMS 3
+            # ----------------------------------------------
 
+            elif nome_cercato == "loop ims":
 
-    try:
+                if nome_file.startswith("loop ims"):
 
-        for file in IMG_DIR.iterdir():
+                    immagini.append(file)
 
-            if not file.is_file():
-                continue
+    # elimina duplicati
+    immagini = list(dict.fromkeys(immagini))
 
-            if file.suffix.lower() not in estensioni:
-                continue
+    # ordine numerico
+    def ordine(file):
 
-            nome_file = file.stem.lower().strip()
+        numeri = re.findall(
+            r"\d+",
+            file.stem
+        )
 
-            if nome_file == nome_lower:
+        if numeri:
+            return int(numeri[-1])
 
-                return file
+        return 0
 
-    except Exception:
+    immagini.sort(key=ordine)
 
-        return None
-
-
-    return None
-
+    return immagini
 
 # ==========================================================
 # MOSTRA IMMAGINE
 # ==========================================================
 
-def mostra_immagine(foglio):
+def mostra_foglio(nome_foglio):
 
-    immagine = trova_immagine(foglio)
+    st.markdown(
+        f"""
+        <div class="titolo-foglio">
+            📄 {nome_foglio}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
+    immagini = trova_immagini(nome_foglio)
 
-    # ------------------------------------------------------
-    # IMMAGINE TROVATA
-    # ------------------------------------------------------
+    if not immagini:
 
-    if immagine is not None:
-
-        st.markdown(
-            f"###  {foglio}"
+        st.error(
+            f"❌ Nessuna immagine trovata per: {nome_foglio}"
         )
 
+        return
 
-        st.markdown(
-            '<div class="immagine-carrello">',
-            unsafe_allow_html=True
-        )
+    # Mostra tutte le immagini
+    for numero, immagine in enumerate(
+        immagini,
+        start=1
+    ):
 
+        if len(immagini) > 1:
+
+            st.markdown(
+                f"### Immagine {numero} di {len(immagini)}"
+            )
 
         st.image(
             str(immagine),
             use_container_width=True
         )
-
-
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
-
-
-        return
-
-
-    # ------------------------------------------------------
-    # IMMAGINE NON TROVATA
-    # ------------------------------------------------------
-
-    st.warning(
-        f"⚠️ Immagine non disponibile per: {foglio}"
-    )
-
-
-    st.info(
-        "Carica l'immagine nella cartella "
-        "`carrelli_img` del repository GitHub."
-    )
-
-
-    st.code(
-        f"{foglio}.jpeg"
-    )
 
 
 
