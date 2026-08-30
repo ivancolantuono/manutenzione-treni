@@ -94,7 +94,7 @@ def mostra_titolo():
 
 SEZIONI = {
 
-    "🛞 SENSORI SPM": [
+    "SENSORI SPM": [
 
         "DM1-CARR.1",
         "DM1-CARR.2",
@@ -110,22 +110,28 @@ SEZIONI = {
     ],
 
 
-    "📡 PT100 RIDUTTORI": [
+    "PT100 RIDUTTORI": [
 
         "PT100 RIDUTTORI"
     ],
 
 
-    "🔌 TERMOFUSIBILI": [
+    "TERMOFUSIBILI": [
 
         "TERMOFUSIBILI CASSA MOTOR"
        
     ],
 
 
-    "🔄 DNRA": [
+    "DNRA": [
 
         "LOOP DNRA"
+    
+    ],
+
+    "IMS": [
+
+        "LOOP IMS"
     
     ]
 
