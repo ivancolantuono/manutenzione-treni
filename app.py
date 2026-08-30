@@ -819,7 +819,7 @@ with st.sidebar:
                 "Passaggio Consegne",
                 "Schede SR",
                 "Schede SR VZI6",
-                "Carrelli",
+                "Treno",
                 "Planning",
                 "Dashboard",
                 "Storico",             
@@ -865,6 +865,26 @@ with st.sidebar:
                 },
             },
         )
+        
+    elif menu == "Treno":
+
+        st.sidebar.markdown("### 🚆 Treno")
+    
+        sotto_menu = st.sidebar.radio(
+            "Sistemi",
+            [
+                "🛞 Carrelli",
+                "🔧 Altro"
+            ],
+            label_visibility="collapsed"
+        )
+    
+        if sotto_menu == "🛞 Carrelli":
+            carrelli_page()
+
+    elif sotto_menu == "🔧 Altro":
+        st.title("🚆 Treno")
+        st.info("Sezione in preparazione")
 
     elif modalita == "SUPERVISORE":
 
