@@ -866,25 +866,6 @@ with st.sidebar:
             },
         )
         
-    elif menu == "Treno":
-
-        st.sidebar.markdown("### 🚆 Treno")
-    
-        sotto_menu = st.sidebar.radio(
-            "Sistemi",
-            [
-                "🛞 Carrelli",
-                "🔧 Altro"
-            ],
-            label_visibility="collapsed"
-        )
-    
-        if sotto_menu == "🛞 Carrelli":
-            carrelli_page()
-
-    elif sotto_menu == "🔧 Altro":
-        st.title("🚆 Treno")
-        st.info("Sezione in preparazione")
 
     elif modalita == "SUPERVISORE":
 
@@ -2495,5 +2476,67 @@ elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
 
 
-elif menu == "Carrelli":
-    carrelli_page()
+elif menu == "Treno":
+
+    st.markdown("## 🚆 Treno")
+
+    sotto_menu = st.radio(
+        "Sistemi del treno",
+        [
+            "🛞 Carrelli",
+            "❄️ HVAC",
+            "🔥 Antincendio",
+            "⚡ Propulsione"
+        ],
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+
+    st.divider()
+
+    # ======================================================
+    # 🛞 CARRELLI
+    # ======================================================
+
+    if sotto_menu == "🛞 Carrelli":
+
+        carrelli_page()
+
+
+    # ======================================================
+    # ❄️ HVAC
+    # ======================================================
+
+    elif sotto_menu == "❄️ HVAC":
+
+        st.title("❄️ HVAC")
+
+        st.info(
+            "Sezione HVAC in preparazione."
+        )
+
+
+    # ======================================================
+    # 🔥 ANTINCENDIO
+    # ======================================================
+
+    elif sotto_menu == "🔥 Antincendio":
+
+        st.title("🔥 Antincendio")
+
+        st.info(
+            "Sezione Antincendio in preparazione."
+        )
+
+
+    # ======================================================
+    # ⚡ PROPULSIONE
+    # ======================================================
+
+    elif sotto_menu == "⚡ Propulsione":
+
+        st.title("⚡ Propulsione")
+
+        st.info(
+            "Sezione Propulsione in preparazione."
+        )
