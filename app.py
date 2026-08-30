@@ -836,8 +836,9 @@ with st.sidebar:
                 "folder",
                 "wrench",
                 "journal-text",
-                "calendar-heart",
+                "bar-chart",
                 "clock-history",
+                "ile-earmark",
                 "play",
                 "cpu"
             ],
