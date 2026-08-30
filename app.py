@@ -901,10 +901,10 @@ with st.sidebar:
             sistema_treno = st.radio(
                 "",
                 [
-                    "🛞 Carrelli",
-                    "❄️ HVAC",
-                    "🔥 Antincendio",
-                    "⚡ Propulsione"
+                    "Carrelli",
+                    "HVAC",
+                    "Antincendio",
+                    "Propulsione"
                 ],
                 key="sistema_treno",
                 label_visibility="collapsed"
@@ -916,7 +916,7 @@ with st.sidebar:
             # non utilizziamo il sistema precedente.
             sistema_treno = st.session_state.get(
                 "sistema_treno",
-                "🛞 Carrelli"
+                "Carrelli"
             )
 
     # =====================================================
@@ -2554,24 +2554,24 @@ elif menu == "Treno":
 
     sistema = st.session_state.get(
         "sistema_treno",
-        "🛞 Carrelli"
+        "Carrelli"
     )
 
-    if sistema == "🛞 Carrelli":
+    if sistema == "Carrelli":
 
         carrelli_page()
 
-    elif sistema == "❄️ HVAC":
+    elif sistema == "HVAC":
 
-        st.title("❄️ HVAC")
+        st.title("HVAC")
         st.info("Sezione HVAC in preparazione.")
 
-    elif sistema == "🔥 Antincendio":
+    elif sistema == "Antincendio":
 
-        st.title("🔥 Antincendio")
+        st.title("Antincendio")
         st.info("Sezione Antincendio in preparazione.")
 
-    elif sistema == "⚡ Propulsione":
+    elif sistema == "Propulsione":
 
-        st.title("⚡ Propulsione")
+        st.title("Propulsione")
         st.info("Sezione Propulsione in preparazione.")
