@@ -830,14 +830,14 @@ with st.sidebar:
             icons=[
                 "pin-angle-fill",
                 "journal-text",
-                "journal-code",
+                "tools",
                 "train-front",
                 "calendar-week",
                 "bar-chart",
-                "clock-history",
+                "wrench",
                 "search",
                 "calendar-heart",
-                "alarm",
+                "clock-history",
                 "play",
                 "cpu"
             ],
