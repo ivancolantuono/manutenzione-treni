@@ -65,7 +65,7 @@ st.markdown(
 
 SEZIONI = {
 
-    "🛞 CARRELLI": [
+    "SENSORI SPM": [
         "DM1-CARR.1",
         "DM1-CARR.2",
         "M3-CARR.1",
@@ -76,23 +76,12 @@ SEZIONI = {
         "DM8-CARR.2"
     ],
 
-    "📡 SENSORI": [
-        "SENSORI SPM",
+    "PT100 RIDUTTORI": [
         "PT100 RIDUTTORI"
     ],
 
-    "🔌 FUSE LOOP": [
-        "FUSE LOOP CASSA MOTOR",
-        "FUSE LOOP TRENO COMPLETO"
-    ],
-
-    "🔄 DNRA": [
-        "LOOP DNRA",
-        "OVERVIEW DNRA"
-    ],
-
-    "🚆 STATO TRENO": [
-        "STATO TRENO"
+    "TERMOFUSIBILI": [
+        "TERMOFUSIBILI CASSA MOTOR"      
     ],
 
     "🔧 IMS": [
@@ -200,9 +189,9 @@ def trova_immagini(nome_foglio):
             # CASO 2
             # PIÙ IMMAGINI LOOP IMS
             #
-            # LOOP IMS 1.jpeg
-            # LOOP IMS 2.jpeg
-            # LOOP IMS 3.jpeg
+            # LOOP IMS.jpeg
+            # LOOP IMS..jpeg
+            # LOOP IMS...jpeg
             # ==================================================
 
             if nome_cercato == "loop ims":
