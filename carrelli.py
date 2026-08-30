@@ -110,23 +110,23 @@ SEZIONI = {
     ],
 
 
-    "📡 SENSORI": [
+    "📡 PT100 RIDUTTORI": [
 
         "PT100 RIDUTTORI"
     ],
 
 
-    "🔌 FUSE LOOP": [
+    "🔌 TERMOFUSIBILI": [
 
-        "FUSE LOOP CASSA MOTOR",
-        "FUSE LOOP TRENO COMPLETO"
+        "TERMOFUSIBILI CASSA MOTOR"
+       
     ],
 
 
     "🔄 DNRA": [
 
-        "LOOP DNRA",
-        "OVERVIEW DNRA"
+        "LOOP DNRA"
+    
     ]
 
 }
