@@ -791,6 +791,10 @@ utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
 modalita = st.session_state.get("modalita", ruolo)
 
+# =========================
+# 📌 MENU LATERALE
+# =========================
+
 with st.sidebar:
 
     st.markdown("## 🚄 MANAGER ETR1000")
@@ -798,16 +802,19 @@ with st.sidebar:
 
     st.markdown("### BENVENUTO")
     st.markdown(f"### 👤 {utente}")
-    
 
     st.divider()
 
+    # =====================================================
+    # 👨‍✈️ CAPOSQUADRA
+    # =====================================================
+
     if modalita == "CAPOSQUADRA":
 
-        # =====================================================
+        # -------------------------------------------------
         # MENU PRINCIPALE
-        # =====================================================
-    
+        # -------------------------------------------------
+
         menu = option_menu(
             None,
             [
@@ -825,6 +832,7 @@ with st.sidebar:
                 "Software",
                 "Treno"
             ],
+
             icons=[
                 "pin-angle-fill",
                 "search",
@@ -835,43 +843,62 @@ with st.sidebar:
                 "journal-text",
                 "bar-chart",
                 "clock-history",
-                "play",
-                "file-earmark",
-                "cpu"
+                "calendar-heart",
+                "alarm",
+                "cpu",
+                "train-front"
             ],
+
             menu_icon="list",
             default_index=0,
+
             styles={
                 "container": {
                     "padding": "0!important",
                     "background-color": "#fafafa"
                 },
+
                 "icon": {
                     "color": "#000000",
                     "font-size": "18px"
                 },
+
                 "nav-link": {
                     "font-size": "15px",
                     "text-align": "left",
                     "margin": "2px",
                     "--hover-color": "#f3f3f3",
                 },
+
                 "nav-link-selected": {
                     "background-color": "#d40000",
                     "color": "white",
                 },
             },
         )
-    
-        # ==========================================================
+
+        # =================================================
         # 🚆 SOTTOMENU TRENO
-        # ==========================================================
-        
+        # =================================================
+
         if menu == "Treno":
-        
-            st.sidebar.markdown("### 🚆 Sistemi")
-        
-            sistema_treno = st.sidebar.radio(
+
+            st.markdown(
+                """
+                <div style="
+                    margin-top:5px;
+                    margin-bottom:5px;
+                    padding-left:10px;
+                    font-weight:bold;
+                    font-size:15px;
+                ">
+                    🚆 SISTEMI TRENO
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            sistema_treno = st.radio(
                 "",
                 [
                     "🛞 Carrelli",
@@ -879,68 +906,39 @@ with st.sidebar:
                     "🔥 Antincendio",
                     "⚡ Propulsione"
                 ],
-                key="sistema_treno"
-            )
-        # =====================================================
-        # 🚆 TRENO
-        # =====================================================
-    
-        with st.expander(
-            "🚆  Treno",
-            expanded=False
-        ):
-    
-            sistema_treno = st.radio(
-                "Sistemi",
-                [
-                    "🛞 Carrelli",
-                    "❄️ HVAC",
-                    "🔥 Antincendio",
-                    "⚡ Propulsione"
-                ],
+                key="sistema_treno",
                 label_visibility="collapsed"
             )
-    
-            # -----------------------------------------------
-            # SELEZIONE SISTEMA
-            # -----------------------------------------------
-    
-            if st.button(
-                "Apri",
-                key="apri_sistema_treno",
-                use_container_width=True
-            ):
-    
-                st.session_state["sistema_treno"] = (
-                    sistema_treno
-                )
-    
-                st.session_state["menu_treno"] = True
-    
-                st.rerun()
-    
-    
-        # =====================================================
-        # MENU TRENO
-        # =====================================================
-    
-        if st.session_state.get("menu_treno", False):
-    
-            menu = "Treno"
-    
-        # =====================================================
-        # LOGOUT
-        # =====================================================
-            
+
+        else:
+
+            # Se l'utente esce da Treno,
+            # non utilizziamo il sistema precedente.
+            sistema_treno = st.session_state.get(
+                "sistema_treno",
+                "🛞 Carrelli"
+            )
+
+    # =====================================================
+    # 👀 SUPERVISORE
+    # =====================================================
 
     elif modalita == "SUPERVISORE":
 
         menu = option_menu(
             None,
-            ["Controllo Permessi"],
-            icons=["clipboard-check"],
+            [
+                "Controllo Permessi"
+            ],
+            icons=[
+                "clipboard-check"
+            ],
             default_index=0,
         )
+
+    # =====================================================
+    # 👷 OPERATORE
+    # =====================================================
 
     else:
 
@@ -956,6 +954,7 @@ with st.sidebar:
                 "Scadenze Temporali",
                 "Versioni Software"
             ],
+
             icons=[
                 "pin-angle-fill",
                 "journal-text",
@@ -966,24 +965,33 @@ with st.sidebar:
                 "alarm",
                 "cpu",
             ],
+
             default_index=0,
         )
 
+    # =====================================================
+    # SEPARATORE
+    # =====================================================
+
     st.divider()
+
+    # =====================================================
+    # 🔓 LOGOUT
+    # =====================================================
 
     if st.button(
         "🔓 Logout",
         use_container_width=True
     ):
-    
+
         try:
-    
+
             matricola = st.session_state.get(
                 "matricola"
             )
-    
+
             if matricola:
-    
+
                 supabase.table(
                     "login"
                 ).update({
@@ -992,16 +1000,16 @@ with st.sidebar:
                     "matricola",
                     matricola
                 ).execute()
-    
+
             cookie_manager.delete(
                 "manager_etr1000_login"
             )
-    
+
         except:
             pass
-    
+
         st.session_state.clear()
-    
+
         st.rerun()
 # =========================
 # 📥 CARICA DATABASE (SUPABASE)
