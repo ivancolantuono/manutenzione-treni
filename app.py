@@ -863,7 +863,24 @@ with st.sidebar:
             },
         )
     
-    
+        # ==========================================================
+        # 🚆 SOTTOMENU TRENO
+        # ==========================================================
+        
+        if menu == "Treno":
+        
+            st.sidebar.markdown("### 🚆 Sistemi")
+        
+            sistema_treno = st.sidebar.radio(
+                "",
+                [
+                    "🛞 Carrelli",
+                    "❄️ HVAC",
+                    "🔥 Antincendio",
+                    "⚡ Propulsione"
+                ],
+                key="sistema_treno"
+            )
         # =====================================================
         # 🚆 TRENO
         # =====================================================
