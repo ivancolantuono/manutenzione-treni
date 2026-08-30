@@ -147,7 +147,6 @@ class UrlCellRenderer {
 }
 """)
 
-
 URL_PIS = "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/software/Versioni%20PIS.xlsx"
 
 @st.cache_data(ttl=5)
@@ -192,14 +191,11 @@ def hash_password(pwd):
         pwd.encode()
     ).hexdigest()
 
-
 def format_nome(txt):
     return str(txt or "").strip().capitalize()
 
-
 def norm(x):
     return str(x or "").strip().lower()
-
 
 # ==========================================================
 # SESSION STATE
@@ -219,7 +215,6 @@ if "ruolo" not in st.session_state:
 
 if "squadra" not in st.session_state:
     st.session_state.squadra = ""
-
 
 # ==========================================================
 # RIPRISTINO LOGIN DAL COOKIE
@@ -293,7 +288,6 @@ if not st.session_state.logged_in:
         # Se il cookie non è ancora disponibile
         # lasciamo comparire normalmente il Login.
         pass
-
 
 # ==========================================================
 # BLOCCO LOGIN
@@ -797,10 +791,6 @@ utente = st.session_state.get("utente", "")
 ruolo = str(st.session_state.get("ruolo", "")).upper()
 modalita = st.session_state.get("modalita", ruolo)
 
-# =========================
-# SIDEBAR
-# =========================
-
 with st.sidebar:
 
     st.markdown("## 🚄 MANAGER ETR1000")
@@ -808,30 +798,13 @@ with st.sidebar:
 
     st.markdown("### BENVENUTO")
     st.markdown(f"### 👤 {utente}")
+    
 
     st.divider()
 
-    # =====================================================
-    # CAPOSQUADRA
-    # =====================================================
-
     if modalita == "CAPOSQUADRA":
 
-        # -------------------------------------------------
-        # STATO MENU
-        # -------------------------------------------------
-
-        if "menu" not in st.session_state:
-            st.session_state.menu = "Open Item"
-
-        if "sistema_treno" not in st.session_state:
-            st.session_state.sistema_treno = "Carrelli"
-
-        # =================================================
-        # MENU PRINCIPALE - PARTE 1
-        # =================================================
-
-        menu_prima = option_menu(
+        menu = option_menu(
             None,
             [
                 "Open Item",
@@ -839,7 +812,14 @@ with st.sidebar:
                 "Manutenzione",
                 "Passaggio Consegne",
                 "Schede SR",
-                "Schede SR VZI6"
+                "Schede SR VZI6",
+                "Treno",
+                "Planning",
+                "Dashboard",
+                "Storico",             
+                "Ferie e Permessi",
+                "Scadenze Temporali",     
+                "Software"
             ],
             icons=[
                 "pin-angle-fill",
@@ -847,127 +827,13 @@ with st.sidebar:
                 "tools",
                 "database",
                 "folder",
-                "folder"
-            ],
-            menu_icon="list",
-            default_index=0,
-            styles={
-                "container": {
-                    "padding": "0!important",
-                    "background-color": "#fafafa"
-                },
-                "icon": {
-                    "color": "#000000",
-                    "font-size": "18px"
-                },
-                "nav-link": {
-                    "font-size": "15px",
-                    "text-align": "left",
-                    "margin": "2px",
-                    "--hover-color": "#f3f3f3",
-                },
-                "nav-link-selected": {
-                    "background-color": "#d40000",
-                    "color": "white",
-                },
-            },
-        )
-
-        # =================================================
-        # 🚆 TRENO - MENU A CASCATA
-        # =================================================
-
-        st.markdown(
-            """
-            <div style="
-                margin-top:6px;
-                margin-bottom:4px;
-                font-size:15px;
-                font-weight:600;
-            ">
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        with st.expander(
-            "🚆  Treno",
-            expanded=(
-                st.session_state.menu == "Treno"
-            )
-        ):
-
-            sistema_treno = option_menu(
-                None,
-                [
-                    "Carrelli",
-                    "HVAC",
-                    "Antincendio",
-                    "Propulsione"
-                ],
-                icons=[
-                    "train-front-fill",
-                    "snow",
-                    "fire",
-                    "lightning-charge-fill"
-                ],
-                menu_icon="train-front",
-                default_index=0,
-                styles={
-                    "container": {
-                        "padding": "0!important",
-                        "background-color": "#fafafa"
-                    },
-                    "icon": {
-                        "color": "#000000",
-                        "font-size": "17px"
-                    },
-                    "nav-link": {
-                        "font-size": "14px",
-                        "text-align": "left",
-                        "margin": "1px",
-                        "padding": "7px 10px",
-                        "--hover-color": "#f3f3f3",
-                    },
-                    "nav-link-selected": {
-                        "background-color": "#d40000",
-                        "color": "white",
-                    },
-                },
-            )
-
-            # ---------------------------------------------
-            # SALVA SISTEMA SELEZIONATO
-            # ---------------------------------------------
-
-            if sistema_treno:
-
-                st.session_state.menu = "Treno"
-
-                st.session_state.sistema_treno = (
-                    sistema_treno
-                )
-
-        # =================================================
-        # MENU PRINCIPALE - PARTE 2
-        # =================================================
-
-        menu_dopo = option_menu(
-            None,
-            [
-                "Planning",
-                "Dashboard",
-                "Storico",
-                "Ferie e Permessi",
-                "Scadenze Temporali",
-                "Software"
-            ],
-            icons=[
+                "folder",
+                "wrench",
                 "journal-text",
                 "bar-chart",
                 "clock-history",
-                "calendar-heart",
-                "alarm",
+                "play",
+                "file-earmark",
                 "cpu"
             ],
             menu_icon="list",
@@ -993,66 +859,16 @@ with st.sidebar:
                 },
             },
         )
-
-        # =================================================
-        # DETERMINA MENU PRINCIPALE
-        # =================================================
-
-        # Se l'utente ha scelto una voce della prima parte
-        if menu_prima:
-
-            st.session_state.menu = menu_prima
-
-        # Se è stato aperto Treno e scelto un sistema,
-        # manteniamo Treno come pagina attiva.
-        if st.session_state.get("menu") == "Treno":
-
-            menu = "Treno"
-
-        else:
-
-            menu = st.session_state.get(
-                "menu",
-                menu_prima
-            )
-
-        # =================================================
-        # SELEZIONE SECONDA PARTE
-        # =================================================
-
-        if menu != "Treno" and menu_dopo:
-
-            # Evita che il default di option_menu
-            # sovrascriva una voce scelta nella prima parte
-            if menu_prima == menu:
-                menu = menu_prima
-            else:
-                menu = menu_dopo
-
-            st.session_state.menu = menu
-
-
-    # =====================================================
-    # SUPERVISORE
-    # =====================================================
+        
 
     elif modalita == "SUPERVISORE":
 
         menu = option_menu(
             None,
-            [
-                "Controllo Permessi"
-            ],
-            icons=[
-                "clipboard-check"
-            ],
+            ["Controllo Permessi"],
+            icons=["clipboard-check"],
             default_index=0,
         )
-
-
-    # =====================================================
-    # OPERATORE
-    # =====================================================
 
     else:
 
@@ -1081,31 +897,21 @@ with st.sidebar:
             default_index=0,
         )
 
-
-    # =====================================================
-    # SEPARATORE
-    # =====================================================
-
     st.divider()
-
-
-    # =====================================================
-    # LOGOUT
-    # =====================================================
 
     if st.button(
         "🔓 Logout",
         use_container_width=True
     ):
-
+    
         try:
-
+    
             matricola = st.session_state.get(
                 "matricola"
             )
-
+    
             if matricola:
-
+    
                 supabase.table(
                     "login"
                 ).update({
@@ -1114,16 +920,16 @@ with st.sidebar:
                     "matricola",
                     matricola
                 ).execute()
-
+    
             cookie_manager.delete(
                 "manager_etr1000_login"
             )
-
+    
         except:
             pass
-
+    
         st.session_state.clear()
-
+    
         st.rerun()
 # =========================
 # 📥 CARICA DATABASE (SUPABASE)
@@ -1135,7 +941,6 @@ def get_database_manutenzione():
 
 def load_database():
     return get_database_manutenzione()
-
 
 def load_operatori():
     return get_operatori()
@@ -2648,7 +2453,6 @@ elif menu == "Software":
                 st.markdown(f"### {nome}")
                 st.write(f"**Versione:** {versione}")
 
-
             with col2:
                 if pd.notna(link) and str(link).strip() != "":
                     st.link_button(
@@ -2659,33 +2463,8 @@ elif menu == "Software":
                 else:
                     st.info("Nessuna procedura")
 
-
 elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
 
-
-elif menu == "Treno":
-
-    sistema = st.session_state.get(
-        "sistema_treno",
-        "Carrelli"
-    )
-
-    if sistema == "Carrelli":
-
-        carrelli_page()
-
-    elif sistema == "HVAC":
-
-        st.title("❄️ HVAC")
-        st.info("Sezione HVAC in preparazione.")
-
-    elif sistema == "Antincendio":
-
-        st.title("🔥 Antincendio")
-        st.info("Sezione Antincendio in preparazione.")
-
-    elif sistema == "Propulsione":
-
-        st.title("⚡ Propulsione")
-        st.info("Sezione Propulsione in preparazione.")
+elif menu == "Carrelli":
+    carrelli_page()
