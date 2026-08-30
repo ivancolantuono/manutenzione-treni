@@ -1,12 +1,9 @@
 import streamlit as st
 from pathlib import Path
-import subprocess
-import tempfile
-import shutil
-import os
-import hashlib
-
-from streamlit_pdf_viewer import pdf_viewer
+import openpyxl
+import base64
+import html
+import re
 
 
 # ==========================================================
@@ -19,7 +16,7 @@ FILE_EXCEL = BASE_DIR / "ATTIVITA' CARRELLO.xlsm"
 
 
 # ==========================================================
-# STILE
+# CSS
 # ==========================================================
 
 st.markdown("""
@@ -28,25 +25,136 @@ st.markdown("""
 .carrelli-header {
     background: linear-gradient(90deg, #d40000, #ed1c24);
     color: white;
-    padding: 18px 25px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    font-size: 28px;
-    font-weight: bold;
+    padding: 16px 22px;
+    border-radius: 10px;
     text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 20px;
 }
 
-.sezione-box {
-    background: #f5f5f5;
-    border-radius: 10px;
-    padding: 10px;
-    margin-bottom: 15px;
-}
 
-.pdf-box {
+/* ======================================================
+   CONTENITORE FOGLIO
+   ====================================================== */
+
+.excel-wrapper {
+    width: 100%;
+    overflow: auto;
     background: white;
-    border-radius: 10px;
-    padding: 5px;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+
+/* ======================================================
+   TABELLA
+   ====================================================== */
+
+.excel-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: white;
+}
+
+
+/*
+   IMPORTANTISSIMO:
+
+   NESSUN BORDO GENERALE.
+
+   Questo elimina il reticolato.
+*/
+
+.excel-table td {
+    border: none !important;
+    padding: 0;
+    margin: 0;
+    vertical-align: middle;
+    overflow: hidden;
+    background-clip: padding-box;
+}
+
+
+/* ======================================================
+   CONTENUTO CELLA
+   ====================================================== */
+
+.excel-cell-content {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+
+/* ======================================================
+   TESTO
+   ====================================================== */
+
+.excel-text {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* ======================================================
+   IMMAGINI
+   ====================================================== */
+
+.excel-table img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* ======================================================
+   IMMAGINI GRANDI
+   ====================================================== */
+
+.excel-image {
+    display: block;
+    max-width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+}
+
+
+/* ======================================================
+   LINK
+   ====================================================== */
+
+.excel-link {
+    color: #0066cc;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+
+/* ======================================================
+   SCROLL ORIZZONTALE
+   ====================================================== */
+
+.excel-wrapper::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+}
+
+.excel-wrapper::-webkit-scrollbar-thumb {
+    background: #aaa;
+    border-radius: 5px;
+}
+
+
+/* ======================================================
+   SELETTORI
+   ====================================================== */
+
+.carrelli-select label {
+    font-weight: bold;
 }
 
 </style>
@@ -54,7 +162,7 @@ st.markdown("""
 
 
 # ==========================================================
-# STRUTTURA SEZIONI
+# SEZIONI
 # ==========================================================
 
 SEZIONI = {
@@ -92,150 +200,803 @@ SEZIONI = {
 
 
 # ==========================================================
-# VERIFICA LIBREOFFICE
+# FUNZIONI COLORE
 # ==========================================================
 
-def trova_libreoffice():
+def colore_excel(colore):
 
-    possibili = [
-        "libreoffice",
-        "soffice",
-        "/usr/bin/libreoffice",
-        "/usr/bin/soffice",
-    ]
+    if colore is None:
+        return None
 
-    for programma in possibili:
+    try:
 
-        if shutil.which(programma):
+        rgb = colore.rgb
 
-            return programma
+        if rgb:
 
-        if Path(programma).exists():
+            rgb = str(rgb)
 
-            return programma
+            # AARRGGBB → RRGGBB
+            if len(rgb) == 8:
+                rgb = rgb[2:]
+
+            if len(rgb) == 6:
+                return "#" + rgb
+
+    except Exception:
+        pass
 
     return None
 
 
 # ==========================================================
-# CONVERSIONE EXCEL → PDF
+# FONT
 # ==========================================================
 
-@st.cache_data(show_spinner=False)
-def converti_excel_pdf(percorso_excel, file_hash):
+def font_css(font):
 
-    libreoffice = trova_libreoffice()
+    css = []
 
-    if not libreoffice:
-
-        raise RuntimeError(
-            "LibreOffice non è installato sul server."
-        )
-
-    # ------------------------------------------------------
-    # CARTELLA TEMPORANEA
-    # ------------------------------------------------------
-
-    cartella = Path(
-        tempfile.mkdtemp(
-            prefix="carrelli_"
-        )
-    )
+    if not font:
+        return ""
 
     try:
 
-        file_excel = Path(percorso_excel)
+        if font.bold:
+            css.append("font-weight:bold;")
 
-        # --------------------------------------------------
-        # COPIA FILE
-        # --------------------------------------------------
+        if font.italic:
+            css.append("font-style:italic;")
 
-        file_locale = cartella / file_excel.name
-
-        shutil.copy2(
-            file_excel,
-            file_locale
-        )
-
-        # --------------------------------------------------
-        # CONVERSIONE
-        # --------------------------------------------------
-
-        comando = [
-
-            libreoffice,
-
-            "--headless",
-
-            "--convert-to",
-            "pdf",
-
-            "--outdir",
-            str(cartella),
-
-            str(file_locale)
-
-        ]
-
-        risultato = subprocess.run(
-
-            comando,
-
-            stdout=subprocess.PIPE,
-
-            stderr=subprocess.PIPE,
-
-            text=True,
-
-            timeout=180
-
-        )
-
-        pdf = cartella / (
-            file_excel.stem + ".pdf"
-        )
-
-        # --------------------------------------------------
-        # CONTROLLO
-        # --------------------------------------------------
-
-        if risultato.returncode != 0:
-
-            raise RuntimeError(
-                risultato.stderr
-                or risultato.stdout
-                or "Errore sconosciuto durante la conversione."
+        if font.sz:
+            css.append(
+                f"font-size:{float(font.sz):.1f}pt;"
             )
 
-        if not pdf.exists():
-
-            raise RuntimeError(
-                "LibreOffice non ha generato il PDF."
+        if font.name:
+            css.append(
+                f"font-family:'{html.escape(str(font.name))}';"
             )
 
-        # --------------------------------------------------
-        # LEGGE PDF IN MEMORIA
-        # --------------------------------------------------
+        colore = colore_excel(font.color)
 
-        with open(
-            pdf,
-            "rb"
-        ) as f:
+        if colore:
+            css.append(
+                f"color:{colore};"
+            )
 
-            contenuto = f.read()
+        if font.underline:
+            css.append(
+                "text-decoration:underline;"
+            )
 
-        return contenuto
+    except Exception:
+        pass
 
-    finally:
-
-        shutil.rmtree(
-            cartella,
-            ignore_errors=True
-        )
+    return "".join(css)
 
 
 # ==========================================================
-# FUNZIONE PRINCIPALE
+# SFONDO
+# ==========================================================
+
+def fill_css(fill):
+
+    if not fill:
+        return ""
+
+    try:
+
+        if fill.fill_type:
+
+            colore = colore_excel(
+                fill.fgColor
+            )
+
+            if colore:
+                return (
+                    f"background-color:{colore};"
+                )
+
+    except Exception:
+        pass
+
+    return ""
+
+
+# ==========================================================
+# ALLINEAMENTO
+# ==========================================================
+
+def alignment_css(alignment):
+
+    css = []
+
+    if not alignment:
+        return ""
+
+    try:
+
+        if alignment.horizontal:
+
+            valore = str(
+                alignment.horizontal
+            )
+
+            if valore == "centerContinuous":
+                valore = "center"
+
+            if valore in [
+                "left",
+                "center",
+                "right",
+                "justify"
+            ]:
+
+                css.append(
+                    f"text-align:{valore};"
+                )
+
+        if alignment.vertical:
+
+            valore = str(
+                alignment.vertical
+            )
+
+            if valore in [
+                "top",
+                "center",
+                "bottom"
+            ]:
+
+                if valore == "center":
+                    valore = "middle"
+
+                css.append(
+                    f"vertical-align:{valore};"
+                )
+
+        if alignment.wrap_text:
+
+            css.append(
+                "white-space:normal;"
+            )
+
+        else:
+
+            css.append(
+                "white-space:nowrap;"
+            )
+
+    except Exception:
+        pass
+
+    return "".join(css)
+
+
+# ==========================================================
+# BORDI
+# ==========================================================
+
+def bordo_reale_css(border, mostra=False):
+
+    """
+    Di default NON mostra i bordi Excel.
+
+    Questo è ciò che elimina il reticolato.
+
+    Se mostra=True, visualizza solo i bordi
+    realmente presenti nella cella.
+    """
+
+    if not mostra:
+        return ""
+
+    css = []
+
+    lati = [
+        ("top", border.top),
+        ("bottom", border.bottom),
+        ("left", border.left),
+        ("right", border.right)
+    ]
+
+    for nome, lato in lati:
+
+        try:
+
+            if lato and lato.style:
+
+                colore = colore_excel(
+                    lato.color
+                )
+
+                if not colore:
+                    colore = "#777777"
+
+                css.append(
+                    f"border-{nome}:1px solid {colore};"
+                )
+
+        except Exception:
+            pass
+
+    return "".join(css)
+
+
+# ==========================================================
+# LARGHEZZA COLONNA
+# ==========================================================
+
+def larghezza_colonna(ws, col):
+
+    lettera = openpyxl.utils.get_column_letter(
+        col
+    )
+
+    dimensione = ws.column_dimensions[
+        lettera
+    ].width
+
+    if dimensione is None:
+        dimensione = 8.43
+
+    try:
+
+        pixel = int(
+            float(dimensione) * 7
+        )
+
+    except Exception:
+
+        pixel = 60
+
+    return max(
+        pixel,
+        25
+    )
+
+
+# ==========================================================
+# ALTEZZA RIGA
+# ==========================================================
+
+def altezza_riga(ws, row):
+
+    altezza = ws.row_dimensions[
+        row
+    ].height
+
+    if altezza is None:
+        altezza = 15
+
+    try:
+
+        pixel = int(
+            float(altezza) * 1.33
+        )
+
+    except Exception:
+
+        pixel = 20
+
+    return max(
+        pixel,
+        18
+    )
+
+
+# ==========================================================
+# IMMAGINI EXCEL
+# ==========================================================
+
+def estrai_immagini(ws):
+
+    immagini = {}
+
+    try:
+
+        for img in ws._images:
+
+            try:
+
+                anchor = img.anchor
+
+                if not hasattr(
+                    anchor,
+                    "_from"
+                ):
+                    continue
+
+                col = (
+                    anchor._from.col
+                    + 1
+                )
+
+                row = (
+                    anchor._from.row
+                    + 1
+                )
+
+                # --------------------------------------------------
+                # DATI IMMAGINE
+                # --------------------------------------------------
+
+                image_bytes = img._data()
+
+                if not image_bytes:
+                    continue
+
+                # --------------------------------------------------
+                # FORMATO
+                # --------------------------------------------------
+
+                formato = "png"
+
+                try:
+
+                    if hasattr(
+                        img,
+                        "format"
+                    ):
+
+                        if img.format:
+
+                            formato = str(
+                                img.format
+                            ).lower()
+
+                except Exception:
+                    pass
+
+                if formato == "jpg":
+                    formato = "jpeg"
+
+                # --------------------------------------------------
+                # BASE64
+                # --------------------------------------------------
+
+                encoded = base64.b64encode(
+                    image_bytes
+                ).decode(
+                    "utf-8"
+                )
+
+                # --------------------------------------------------
+                # DIMENSIONI
+                # --------------------------------------------------
+
+                larghezza = None
+                altezza = None
+
+                try:
+
+                    if hasattr(
+                        anchor,
+                        "ext"
+                    ):
+
+                        # EMU → pixel circa
+                        larghezza = int(
+                            anchor.ext.cx
+                            / 9525
+                        )
+
+                        altezza = int(
+                            anchor.ext.cy
+                            / 9525
+                        )
+
+                except Exception:
+                    pass
+
+                immagini[
+                    (row, col)
+                ] = {
+
+                    "data": encoded,
+
+                    "format": formato,
+
+                    "width": larghezza,
+
+                    "height": altezza
+
+                }
+
+            except Exception:
+                continue
+
+    except Exception as e:
+
+        st.warning(
+            "⚠️ Alcune immagini del foglio "
+            f"non sono state lette: {e}"
+        )
+
+    return immagini
+
+
+# ==========================================================
+# MAPPA CELLE UNITE
+# ==========================================================
+
+def crea_mappa_merge(ws):
+
+    merged_map = {}
+
+    for merged in ws.merged_cells.ranges:
+
+        min_col = merged.min_col
+        max_col = merged.max_col
+
+        min_row = merged.min_row
+        max_row = merged.max_row
+
+        merged_map[
+            (min_row, min_col)
+        ] = (
+
+            max_row - min_row + 1,
+
+            max_col - min_col + 1
+
+        )
+
+        for row in range(
+            min_row,
+            max_row + 1
+        ):
+
+            for col in range(
+                min_col,
+                max_col + 1
+            ):
+
+                if (
+                    row != min_row
+                    or col != min_col
+                ):
+
+                    merged_map[
+                        (row, col)
+                    ] = "skip"
+
+    return merged_map
+
+
+# ==========================================================
+# TESTO
+# ==========================================================
+
+def crea_contenuto_testo(valore):
+
+    if valore is None:
+        return ""
+
+    testo = str(valore)
+
+    if not testo.strip():
+        return ""
+
+    # ------------------------------------------------------
+    # LINK
+    # ------------------------------------------------------
+
+    if testo.startswith(
+        "http://"
+    ) or testo.startswith(
+        "https://"
+    ):
+
+        url = html.escape(
+            testo,
+            quote=True
+        )
+
+        return (
+            f'<a class="excel-link" '
+            f'href="{url}" '
+            f'target="_blank">'
+            f'📄 {html.escape(testo)}'
+            f'</a>'
+        )
+
+    # ------------------------------------------------------
+    # TESTO NORMALE
+    # ------------------------------------------------------
+
+    testo = html.escape(
+        testo
+    )
+
+    # Mantiene gli a capo
+    testo = testo.replace(
+        "\n",
+        "<br>"
+    )
+
+    return (
+        f'<div class="excel-text">'
+        f'{testo}'
+        f'</div>'
+    )
+
+
+# ==========================================================
+# RENDER FOGLIO
+# ==========================================================
+
+def render_foglio(ws):
+
+    immagini = estrai_immagini(
+        ws
+    )
+
+    merged_map = crea_mappa_merge(
+        ws
+    )
+
+    # ======================================================
+    # DIMENSIONI
+    # ======================================================
+
+    max_row = ws.max_row
+    max_col = ws.max_column
+
+    # ======================================================
+    # HTML
+    # ======================================================
+
+    html_out = []
+
+    html_out.append(
+        '<div class="excel-wrapper">'
+    )
+
+    html_out.append(
+        '<table class="excel-table">'
+    )
+
+    # ======================================================
+    # COLONNE
+    # ======================================================
+
+    html_out.append(
+        "<colgroup>"
+    )
+
+    for col in range(
+        1,
+        max_col + 1
+    ):
+
+        width = larghezza_colonna(
+            ws,
+            col
+        )
+
+        html_out.append(
+            f'<col style="width:{width}px;">'
+        )
+
+    html_out.append(
+        "</colgroup>"
+    )
+
+    # ======================================================
+    # RIGHE
+    # ======================================================
+
+    for row in range(
+        1,
+        max_row + 1
+    ):
+
+        altezza = altezza_riga(
+            ws,
+            row
+        )
+
+        html_out.append(
+            f'<tr style="height:{altezza}px;">'
+        )
+
+        for col in range(
+            1,
+            max_col + 1
+        ):
+
+            # ------------------------------------------------
+            # CELLA MERGED SECONDARIA
+            # ------------------------------------------------
+
+            if merged_map.get(
+                (row, col)
+            ) == "skip":
+
+                continue
+
+            cella = ws.cell(
+                row=row,
+                column=col
+            )
+
+            valore = cella.value
+
+            img_info = immagini.get(
+                (row, col)
+            )
+
+            # ------------------------------------------------
+            # CONTENUTO
+            # ------------------------------------------------
+
+            contenuto = ""
+
+            # TESTO
+
+            if valore is not None:
+
+                contenuto += (
+                    crea_contenuto_testo(
+                        valore
+                    )
+                )
+
+            # ------------------------------------------------
+            # IMMAGINE
+            # ------------------------------------------------
+
+            if img_info:
+
+                formato = img_info[
+                    "format"
+                ]
+
+                data = img_info[
+                    "data"
+                ]
+
+                width = img_info.get(
+                    "width"
+                )
+
+                height = img_info.get(
+                    "height"
+                )
+
+                stile_img = (
+                    "max-width:100%;"
+                    "height:auto;"
+                )
+
+                if width:
+                    stile_img += (
+                        f"width:{width}px;"
+                    )
+
+                if height:
+                    stile_img += (
+                        f"max-height:{height}px;"
+                    )
+
+                contenuto += (
+                    f'<img '
+                    f'class="excel-image" '
+                    f'src="data:image/{formato};'
+                    f'base64,{data}" '
+                    f'style="{stile_img}">'
+                )
+
+            # ------------------------------------------------
+            # STILE
+            # ------------------------------------------------
+
+            stile = ""
+
+            stile += fill_css(
+                cella.fill
+            )
+
+            stile += font_css(
+                cella.font
+            )
+
+            stile += alignment_css(
+                cella.alignment
+            )
+
+            # ------------------------------------------------
+            # BORDI
+            #
+            # IMPORTANTE:
+            #
+            # FALSE = niente reticolato
+            # ------------------------------------------------
+
+            stile += bordo_reale_css(
+                cella.border,
+                mostra=False
+            )
+
+            # ------------------------------------------------
+            # MERGE
+            # ------------------------------------------------
+
+            rowspan = 1
+            colspan = 1
+
+            merge_info = merged_map.get(
+                (row, col)
+            )
+
+            if isinstance(
+                merge_info,
+                tuple
+            ):
+
+                rowspan = merge_info[0]
+                colspan = merge_info[1]
+
+            # ------------------------------------------------
+            # TD
+            # ------------------------------------------------
+
+            html_out.append(
+                "<td "
+                f'style="{stile}"'
+            )
+
+            if rowspan > 1:
+
+                html_out.append(
+                    f' rowspan="{rowspan}"'
+                )
+
+            if colspan > 1:
+
+                html_out.append(
+                    f' colspan="{colspan}"'
+                )
+
+            html_out.append(">")
+
+            html_out.append(
+                '<div class="excel-cell-content">'
+            )
+
+            html_out.append(
+                contenuto
+            )
+
+            html_out.append(
+                "</div>"
+            )
+
+            html_out.append(
+                "</td>"
+            )
+
+        html_out.append(
+            "</tr>"
+        )
+
+    html_out.append(
+        "</table>"
+    )
+
+    html_out.append(
+        "</div>"
+    )
+
+    return "".join(
+        html_out
+    )
+
+
+# ==========================================================
+# PAGINA CARRELLI
 # ==========================================================
 
 def carrelli_page():
@@ -253,9 +1014,8 @@ def carrelli_page():
         unsafe_allow_html=True
     )
 
-
     # ======================================================
-    # VERIFICA FILE
+    # FILE
     # ======================================================
 
     if not FILE_EXCEL.exists():
@@ -264,18 +1024,14 @@ def carrelli_page():
             "❌ File Excel non trovato."
         )
 
-        st.write(
-            "Percorso cercato:"
-        )
-
         st.code(
             str(FILE_EXCEL)
         )
 
         st.info(
             """
-            Il file deve essere presente nella stessa
-            cartella di Carrelli.py:
+            Il file deve essere presente
+            nella stessa cartella di Carrelli.py:
 
             ATTIVITA' CARRELLO.xlsm
             """
@@ -283,30 +1039,23 @@ def carrelli_page():
 
         return
 
-
     # ======================================================
-    # CARICAMENTO FOGLI CON OPENPYXL
+    # APERTURA EXCEL
     # ======================================================
 
     try:
 
-        import openpyxl
-
         wb = openpyxl.load_workbook(
             FILE_EXCEL,
-            read_only=True,
+            read_only=False,
             data_only=False,
             keep_vba=True
         )
 
-        fogli_disponibili = wb.sheetnames
-
-        wb.close()
-
     except Exception as e:
 
         st.error(
-            "❌ Impossibile leggere il file Excel."
+            "❌ Errore apertura Excel."
         )
 
         st.code(
@@ -315,9 +1064,14 @@ def carrelli_page():
 
         return
 
+    # ======================================================
+    # FOGLI
+    # ======================================================
+
+    fogli_disponibili = wb.sheetnames
 
     # ======================================================
-    # COSTRUZIONE MENU
+    # SEZIONI DISPONIBILI
     # ======================================================
 
     sezioni_disponibili = {}
@@ -326,11 +1080,11 @@ def carrelli_page():
 
         presenti = [
 
-            foglio
+            f
 
-            for foglio in fogli
+            for f in fogli
 
-            if foglio in fogli_disponibili
+            if f in fogli_disponibili
 
         ]
 
@@ -340,6 +1094,24 @@ def carrelli_page():
                 nome_sezione
             ] = presenti
 
+    if not sezioni_disponibili:
+
+        st.error(
+            "❌ Nessuno dei fogli configurati "
+            "è presente nel file Excel."
+        )
+
+        st.write(
+            "Fogli trovati nel file:"
+        )
+
+        st.write(
+            fogli_disponibili
+        )
+
+        wb.close()
+
+        return
 
     # ======================================================
     # SEZIONE
@@ -350,43 +1122,49 @@ def carrelli_page():
     )
 
     sezione = st.selectbox(
-
-        "Seleziona sezione",
-
+        "Sezione",
         list(
             sezioni_disponibili.keys()
         ),
-
         label_visibility="collapsed"
-
     )
 
-
     # ======================================================
-    # FOGLI
+    # FOGLIO
     # ======================================================
-
-    fogli = sezioni_disponibili[
-        sezione
-    ]
 
     st.markdown(
         "### 📄 Foglio"
     )
 
     foglio = st.selectbox(
-
-        "Seleziona foglio",
-
-        fogli,
-
+        "Foglio",
+        sezioni_disponibili[
+            sezione
+        ],
         label_visibility="collapsed"
-
     )
-
 
     st.divider()
 
+    # ======================================================
+    # FOGLIO EXCEL
+    # ======================================================
+
+    ws = wb[
+        foglio
+    ]
+
+    # ======================================================
+    # NASCONDI GRIDLINES
+    # ======================================================
+
+    try:
+
+        ws.sheet_view.showGridLines = False
+
+    except Exception:
+        pass
 
     # ======================================================
     # INFORMAZIONI
@@ -395,129 +1173,58 @@ def carrelli_page():
     st.markdown(
         f"""
         <div style="
-            background:#f1f1f1;
-            padding:12px;
+            background:#f3f3f3;
+            padding:10px 14px;
             border-radius:8px;
             margin-bottom:15px;
         ">
-
-        <b>📂 Sezione:</b> {sezione}<br>
-        <b>📄 Foglio:</b> {foglio}
-
+            📂 <b>{html.escape(sezione)}</b>
+            &nbsp;&nbsp; | &nbsp;&nbsp;
+            📄 <b>{html.escape(foglio)}</b>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-
     # ======================================================
-    # HASH FILE
+    # RENDER
     # ======================================================
 
     try:
 
-        with open(
-            FILE_EXCEL,
-            "rb"
-        ) as f:
+        with st.spinner(
+            "🔄 Caricamento schema..."
+        ):
 
-            file_bytes = f.read()
+            contenuto = render_foglio(
+                ws
+            )
 
-        file_hash = hashlib.md5(
-            file_bytes
-        ).hexdigest()
+        st.markdown(
+            contenuto,
+            unsafe_allow_html=True
+        )
 
     except Exception as e:
 
         st.error(
-            "Errore nella lettura del file."
+            "❌ Errore nella visualizzazione."
         )
 
         st.code(
             str(e)
         )
 
-        return
-
-
-    # ======================================================
-    # CONVERSIONE
-    # ======================================================
-
-    with st.spinner(
-        "🔄 Preparazione documento..."
-    ):
+    finally:
 
         try:
-
-            pdf_bytes = converti_excel_pdf(
-
-                str(FILE_EXCEL),
-
-                file_hash
-
-            )
-
-        except Exception as e:
-
-            st.error(
-                "❌ Errore nella conversione Excel → PDF."
-            )
-
-            st.code(
-                str(e)
-            )
-
-            st.info(
-                """
-                Il server Streamlit deve avere
-                LibreOffice installato.
-                """
-            )
-
-            return
-
-
-    # ======================================================
-    # VISUALIZZAZIONE
-    # ======================================================
-
-    st.markdown(
-        f"### 📄 {foglio}"
-    )
-
-    st.markdown(
-        """
-        <div class="pdf-box">
-        """,
-        unsafe_allow_html=True
-    )
-
-    try:
-
-        pdf_viewer(
-            pdf_bytes,
-            width="100%"
-        )
-
-    except Exception as e:
-
-        st.error(
-            "❌ Errore nella visualizzazione del PDF."
-        )
-
-        st.code(
-            str(e)
-        )
-
-    st.markdown(
-        "</div>",
-        unsafe_allow_html=True
-    )
+            wb.close()
+        except Exception:
+            pass
 
 
 # ==========================================================
-# AVVIO
+# AVVIO DIRETTO
 # ==========================================================
 
 if __name__ == "__main__":
