@@ -804,6 +804,10 @@ with st.sidebar:
 
     if modalita == "CAPOSQUADRA":
 
+        # =====================================================
+        # MENU PRINCIPALE
+        # =====================================================
+    
         menu = option_menu(
             None,
             [
@@ -813,12 +817,11 @@ with st.sidebar:
                 "Passaggio Consegne",
                 "Schede SR",
                 "Schede SR VZI6",
-                "Treno",
                 "Planning",
                 "Dashboard",
-                "Storico",             
+                "Storico",
                 "Ferie e Permessi",
-                "Scadenze Temporali",     
+                "Scadenze Temporali",
                 "Software"
             ],
             icons=[
@@ -828,7 +831,6 @@ with st.sidebar:
                 "database",
                 "folder",
                 "folder",
-                "wrench",
                 "journal-text",
                 "bar-chart",
                 "clock-history",
@@ -859,7 +861,59 @@ with st.sidebar:
                 },
             },
         )
-        
+    
+    
+        # =====================================================
+        # 🚆 TRENO
+        # =====================================================
+    
+        with st.expander(
+            "🚆  Treno",
+            expanded=False
+        ):
+    
+            sistema_treno = st.radio(
+                "Sistemi",
+                [
+                    "🛞 Carrelli",
+                    "❄️ HVAC",
+                    "🔥 Antincendio",
+                    "⚡ Propulsione"
+                ],
+                label_visibility="collapsed"
+            )
+    
+            # -----------------------------------------------
+            # SELEZIONE SISTEMA
+            # -----------------------------------------------
+    
+            if st.button(
+                "Apri",
+                key="apri_sistema_treno",
+                use_container_width=True
+            ):
+    
+                st.session_state["sistema_treno"] = (
+                    sistema_treno
+                )
+    
+                st.session_state["menu_treno"] = True
+    
+                st.rerun()
+    
+    
+        # =====================================================
+        # MENU TRENO
+        # =====================================================
+    
+        if st.session_state.get("menu_treno", False):
+    
+            menu = "Treno"
+    
+        # =====================================================
+        # LOGOUT
+        # =====================================================
+            
 
     elif modalita == "SUPERVISORE":
 
@@ -2466,5 +2520,61 @@ elif menu == "Software":
 elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
 
-elif menu == "Carrelli":
-    carrelli_page()
+elif menu == "Passaggio Consegne":
+
+    Passaggio_consegne_page()
+
+
+elif menu == "Treno":
+
+    sistema = st.session_state.get(
+        "sistema_treno",
+        "🛞 Carrelli"
+    )
+
+    # =================================================
+    # 🛞 CARRELLI
+    # =================================================
+
+    if sistema == "🛞 Carrelli":
+
+        carrelli_page()
+
+
+    # =================================================
+    # ❄️ HVAC
+    # =================================================
+
+    elif sistema == "❄️ HVAC":
+
+        st.title("❄️ HVAC")
+
+        st.info(
+            "Sezione HVAC in preparazione."
+        )
+
+
+    # =================================================
+    # 🔥 ANTINCENDIO
+    # =================================================
+
+    elif sistema == "🔥 Antincendio":
+
+        st.title("🔥 Antincendio")
+
+        st.info(
+            "Sezione Antincendio in preparazione."
+        )
+
+
+    # =================================================
+    # ⚡ PROPULSIONE
+    # =================================================
+
+    elif sistema == "⚡ Propulsione":
+
+        st.title("⚡ Propulsione")
+
+        st.info(
+            "Sezione Propulsione in preparazione."
+        )
