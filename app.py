@@ -838,8 +838,8 @@ with st.sidebar:
                 "journal-text",
                 "bar-chart",
                 "clock-history",
-                "file-earmark",
                 "play",
+                "file-earmark",
                 "cpu"
             ],
             menu_icon="list",
