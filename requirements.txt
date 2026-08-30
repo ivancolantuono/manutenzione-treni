@@ -8,3 +8,4 @@ streamlit-pdf-viewer
 streamlit-aggrid
 streamlit-option-menu
 extra-streamlit-components
+libreoffice
