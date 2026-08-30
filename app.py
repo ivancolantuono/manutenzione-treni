@@ -822,7 +822,8 @@ with st.sidebar:
                 "Storico",
                 "Ferie e Permessi",
                 "Scadenze Temporali",
-                "Software"
+                "Software",
+                "Treno"
             ],
             icons=[
                 "pin-angle-fill",
@@ -2524,7 +2525,6 @@ elif menu == "Passaggio Consegne":
 
     Passaggio_consegne_page()
 
-
 elif menu == "Treno":
 
     sistema = st.session_state.get(
@@ -2532,49 +2532,21 @@ elif menu == "Treno":
         "🛞 Carrelli"
     )
 
-    # =================================================
-    # 🛞 CARRELLI
-    # =================================================
-
     if sistema == "🛞 Carrelli":
 
         carrelli_page()
 
-
-    # =================================================
-    # ❄️ HVAC
-    # =================================================
-
     elif sistema == "❄️ HVAC":
 
         st.title("❄️ HVAC")
-
-        st.info(
-            "Sezione HVAC in preparazione."
-        )
-
-
-    # =================================================
-    # 🔥 ANTINCENDIO
-    # =================================================
+        st.info("Sezione HVAC in preparazione.")
 
     elif sistema == "🔥 Antincendio":
 
         st.title("🔥 Antincendio")
-
-        st.info(
-            "Sezione Antincendio in preparazione."
-        )
-
-
-    # =================================================
-    # ⚡ PROPULSIONE
-    # =================================================
+        st.info("Sezione Antincendio in preparazione.")
 
     elif sistema == "⚡ Propulsione":
 
         st.title("⚡ Propulsione")
-
-        st.info(
-            "Sezione Propulsione in preparazione."
-        )
+        st.info("Sezione Propulsione in preparazione.")
