@@ -170,25 +170,11 @@ def trova_immagini(nome_foglio):
         ".webp"
     }
 
-    # ------------------------------------------------------
-    # Normalizzazione normale
-    # ------------------------------------------------------
+   
 
     nome_cercato = normalizza_nome(nome_foglio)
 
-    # ------------------------------------------------------
-    # Normalizzazione ancora più aggressiva
-    #
-    # DM1-CARR.1
-    # DM1_CARR.1
-    # DM1 CARR 1
-    # DM1-CARR-1
-    #
-    # diventano tutti:
-    #
-    # dm1carr1
-    # ------------------------------------------------------
-
+  
     nome_cercato_sicuro = re.sub(
         r"[^a-z0-9]",
         "",
@@ -432,6 +418,7 @@ def carrelli_page():
 
 
     foglio = st.selectbox(
+        "FOGLIO"
         SEZIONI[sezione]
     )
 
