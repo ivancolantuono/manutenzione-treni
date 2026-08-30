@@ -94,7 +94,7 @@ def mostra_titolo():
 
 SEZIONI = {
 
-    "🛞 CARRELLI": [
+    "🛞 SENSORI SPM": [
 
         "DM1-CARR.1",
         "DM1-CARR.2",
@@ -112,7 +112,6 @@ SEZIONI = {
 
     "📡 SENSORI": [
 
-        "SENSORI SPM",
         "PT100 RIDUTTORI"
     ],
 
@@ -128,13 +127,8 @@ SEZIONI = {
 
         "LOOP DNRA",
         "OVERVIEW DNRA"
-    ],
-
-
-    "🚆 STATO TRENO": [
-
-        "STATO TRENO"
     ]
+
 }
 
 
