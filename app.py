@@ -243,140 +243,132 @@ if not st.session_state.logged_in:
 
     try:
 
-        cookie_login = cookie_manager.get(COOKIE_LOGIN)
+        # ==================================================
+        # LEGGI TUTTI I COOKIE
+        # ==================================================
 
-        # --------------------------------------------------
-        # DEBUG
-        # --------------------------------------------------
+        cookies = cookie_manager.get_all(
+            key="read_all_cookies"
+        )
+
+        cookie_login = cookies.get(
+            COOKIE_LOGIN
+        )
 
         st.write(
             "DEBUG COOKIE LOGIN:",
             cookie_login
         )
 
-        # --------------------------------------------------
-        # CONTROLLO COOKIE
-        # --------------------------------------------------
+        # ==================================================
+        # COOKIE PRESENTE
+        # ==================================================
 
         if cookie_login:
 
-            # Cookie formato:
-            # matricola|token
+            # --------------------------------------------------
+            # Il cookie attuale contiene direttamente il TOKEN
+            # --------------------------------------------------
 
-            parti = str(cookie_login).split("|", 1)
+            token = str(
+                cookie_login
+            ).strip()
 
-            if len(parti) == 2:
+            # --------------------------------------------------
+            # CERCA IL TOKEN SU SUPABASE
+            # --------------------------------------------------
 
-                matricola_cookie = norm(parti[0])
-                token_cookie = parti[1]
+            res = (
+                supabase
+                .table("login")
+                .select("*")
+                .eq(
+                    "session_token",
+                    token
+                )
+                .limit(1)
+                .execute()
+            )
+
+            utenti = res.data or []
+
+            st.write(
+                "DEBUG UTENTI TROVATI:",
+                len(utenti)
+            )
+
+            # ==================================================
+            # UTENTE TROVATO
+            # ==================================================
+
+            if utenti:
+
+                user = utenti[0]
+
+                matricola = norm(
+                    user.get(
+                        "matricola",
+                        ""
+                    )
+                )
 
                 # --------------------------------------------------
-                # CERCA UTENTE
+                # RECUPERA OPERATORE
                 # --------------------------------------------------
 
-                res = (
+                op = (
                     supabase
-                    .table("login")
+                    .table("operatori")
                     .select("*")
                     .eq(
-                        "matricola",
-                        matricola_cookie
-                    )
-                    .eq(
-                        "session_token",
-                        token_cookie
+                        "Matricola",
+                        matricola
                     )
                     .limit(1)
                     .execute()
                 )
 
-                utenti = res.data or []
+                if op.data:
 
-                st.write(
-                    "DEBUG UTENTI TROVATI:",
-                    len(utenti)
-                )
-
-                # --------------------------------------------------
-                # LOGIN VALIDO
-                # --------------------------------------------------
-
-                if utenti:
-
-                    user = utenti[0]
-
-                    matricola = norm(
-                        user.get(
-                            "matricola",
-                            ""
-                        )
-                    )
-
-                    # --------------------------------------------------
-                    # RECUPERA OPERATORE
-                    # --------------------------------------------------
-
-                    op = (
-                        supabase
-                        .table("operatori")
-                        .select("*")
-                        .eq(
-                            "Matricola",
-                            matricola
-                        )
-                        .limit(1)
-                        .execute()
-                    )
-
-                    if op.data:
-
-                        nome = op.data[0].get(
-                            "Nominativo",
-                            ""
-                        )
-
-                    else:
-
-                        nome = user.get(
-                            "nome",
-                            ""
-                        )
-
-                    # --------------------------------------------------
-                    # RIPRISTINA SESSIONE
-                    # --------------------------------------------------
-
-                    st.session_state.logged_in = True
-
-                    st.session_state.matricola = matricola
-
-                    st.session_state.utente = nome
-
-                    st.session_state.ruolo = user.get(
-                        "ruolo",
-                        "OPERATORE"
-                    )
-
-                    st.session_state.squadra = user.get(
-                        "squadra",
+                    nome = op.data[0].get(
+                        "Nominativo",
                         ""
                     )
 
-                    # --------------------------------------------------
-                    # RIMUOVI DEBUG
-                    # --------------------------------------------------
+                else:
 
-                    st.session_state["login_ripristinato"] = True
+                    nome = user.get(
+                        "nome",
+                        ""
+                    )
 
-                    st.rerun()
+                # ==================================================
+                # RIPRISTINA SESSIONE
+                # ==================================================
+
+                st.session_state.logged_in = True
+
+                st.session_state.matricola = matricola
+
+                st.session_state.utente = nome
+
+                st.session_state.ruolo = user.get(
+                    "ruolo",
+                    "OPERATORE"
+                )
+
+                st.session_state.squadra = user.get(
+                    "squadra",
+                    ""
+                )
+
+                st.rerun()
 
     except Exception as e:
 
-        st.write(
-            "ERRORE RIPRISTINO LOGIN:",
-            str(e)
+        st.error(
+            f"Errore ripristino login: {e}"
         )
-
 
 # ==========================================================
 # 🔐 BLOCCO LOGIN
