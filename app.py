@@ -166,39 +166,22 @@ def get_interventi():
 # =========================
 def ora_italia():
     return datetime.now(ZoneInfo("Europe/Rome")).strftime("%H:%M")
-# ==========================================================
+# =========================
 # 🔐 LOGIN + REGISTRAZIONE
-# ==========================================================
+# =========================
 
 import hashlib
 import secrets
 import extra_streamlit_components as stx
 
-
 # ==========================================================
-# 🍪 COOKIE
+# COOKIE
 # ==========================================================
 
-
-if "cookie_manager" not in st.session_state:
-
-    st.session_state.cookie_manager = stx.CookieManager(
-        key="manager_etr1000_cookie_manager"
-    )
-
-cookie_manager = st.session_state.cookie_manager
-
-COOKIE_LOGIN = "manager_etr1000_login"
-COOKIE_LOGIN = "manager_etr1000_session"
-
-# Forziamo una lettura completa dei cookie
-cookies = cookie_manager.get_all(
-    key="read_all_cookies"
+cookie_manager = stx.CookieManager(
+    key="manager_etr1000_cookie_manager"
 )
-
-st.write("DEBUG COOKIE COMPLETI:", cookies)
-
-
+COOKIE_LOGIN = "manager_etr1000_matricola"
 # ==========================================================
 # UTILS
 # ==========================================================
@@ -208,14 +191,11 @@ def hash_password(pwd):
         pwd.encode()
     ).hexdigest()
 
-
 def format_nome(txt):
     return str(txt or "").strip().capitalize()
 
-
 def norm(x):
     return str(x or "").strip().lower()
-
 
 # ==========================================================
 # SESSION STATE
@@ -236,7 +216,6 @@ if "ruolo" not in st.session_state:
 if "squadra" not in st.session_state:
     st.session_state.squadra = ""
 
-
 # ==========================================================
 # 🔄 RIPRISTINO LOGIN DAL COOKIE
 # ==========================================================
@@ -245,44 +224,27 @@ if not st.session_state.logged_in:
 
     try:
 
-        # --------------------------------------------------
-        # Leggiamo il cookie
-        # --------------------------------------------------
-
-        cookie_login = cookie_manager.get(
+        matricola_cookie = cookie_manager.get(
             COOKIE_LOGIN
         )
 
-        # --------------------------------------------------
-        # DEBUG
-        # --------------------------------------------------
+        if matricola_cookie:
 
-        st.write(
-            "DEBUG COOKIE LOGIN:",
-            cookie_login
-        )
+            matricola = norm(
+                matricola_cookie
+            )
 
-        # --------------------------------------------------
-        # COOKIE PRESENTE
-        # --------------------------------------------------
-
-        if cookie_login:
-
-            token = str(
-                cookie_login
-            ).strip()
-
-            # --------------------------------------------------
-            # CERCA UTENTE SU SUPABASE
-            # --------------------------------------------------
+            # ==============================================
+            # CERCA UTENTE
+            # ==============================================
 
             res = (
                 supabase
                 .table("login")
                 .select("*")
                 .eq(
-                    "session_token",
-                    token
+                    "matricola",
+                    matricola
                 )
                 .limit(1)
                 .execute()
@@ -290,29 +252,13 @@ if not st.session_state.logged_in:
 
             utenti = res.data or []
 
-            st.write(
-                "DEBUG UTENTI TROVATI:",
-                len(utenti)
-            )
-
-            # --------------------------------------------------
-            # UTENTE TROVATO
-            # --------------------------------------------------
-
             if utenti:
 
                 user = utenti[0]
 
-                matricola = norm(
-                    user.get(
-                        "matricola",
-                        ""
-                    )
-                )
-
-                # --------------------------------------------------
+                # ==========================================
                 # RECUPERA OPERATORE
-                # --------------------------------------------------
+                # ==========================================
 
                 op = (
                     supabase
@@ -340,9 +286,9 @@ if not st.session_state.logged_in:
                         ""
                     )
 
-                # --------------------------------------------------
+                # ==========================================
                 # RIPRISTINA SESSIONE
-                # --------------------------------------------------
+                # ==========================================
 
                 st.session_state.logged_in = True
 
@@ -360,20 +306,25 @@ if not st.session_state.logged_in:
                     ""
                 )
 
-                # --------------------------------------------------
-                # RICARICA APP
-                # --------------------------------------------------
+            else:
 
-                st.rerun()
+                # Cookie non valido
+                try:
 
-    except Exception as e:
+                    cookie_manager.delete(
+                        COOKIE_LOGIN
+                    )
 
-        st.error(
-            f"Errore ripristino login: {e}"
-        )
+                except:
+
+                    pass
+
+    except Exception:
+
+        pass
 
 # ==========================================================
-# 🔐 BLOCCO LOGIN
+# BLOCCO LOGIN
 # ==========================================================
 
 if not st.session_state.logged_in:
@@ -388,20 +339,13 @@ if not st.session_state.logged_in:
             "frecciarossa.jpg",
             width=2000
         )
-
-        # ==================================================
+        # ==========================================================
         # 🔄 REDIRECT DOPO OPERAZIONE
-        # ==================================================
-
-        if st.session_state.get(
-            "redirect_login",
-            False
-        ):
-
+        # ==========================================================
+        
+        if st.session_state.get("redirect_login", False):
             st.session_state.pagina_login = "🔐Login"
-
             st.session_state.redirect_login = False
-
 
         pagina = st.segmented_control(
             "",
@@ -413,7 +357,6 @@ if not st.session_state.logged_in:
             default="🔐Login",
             key="pagina_login"
         )
-
 
         # ==================================================
         # 🔐 LOGIN
@@ -436,7 +379,6 @@ if not st.session_state.logged_in:
                 type="password"
             )
 
-
             if st.button(
                 "**Accedi**",
                 use_container_width=True
@@ -449,7 +391,6 @@ if not st.session_state.logged_in:
                     )
 
                     st.stop()
-
 
                 try:
 
@@ -470,16 +411,13 @@ if not st.session_state.logged_in:
 
                     utenti = res.data or []
 
-
                     user = next(
                         (
                             x
                             for x in utenti
-
                             if norm(
                                 x.get("matricola")
                             ) == matricola
-
                             and x.get("password")
                             == hash_password(
                                 password
@@ -488,7 +426,6 @@ if not st.session_state.logged_in:
                         None
                     )
 
-
                     if not user:
 
                         st.error(
@@ -496,7 +433,6 @@ if not st.session_state.logged_in:
                         )
 
                         st.stop()
-
 
                     # --------------------------------------
                     # RECUPERA OPERATORE
@@ -510,57 +446,37 @@ if not st.session_state.logged_in:
                             "Matricola",
                             matricola
                         )
-                        .limit(1)
                         .execute()
                     )
-
 
                     if op.data:
 
                         nome = op.data[0].get(
-                            "Nominativo",
-                            ""
+                            "Nominativo"
                         )
 
                     else:
 
                         nome = user.get(
-                            "nome",
-                            ""
+                            "nome"
                         )
 
-
-                    # ==========================================================
-                    # CREA SESSIONE
-                    # ==========================================================
-                    
-                    session_token = secrets.token_urlsafe(48)
-                    
-                    # Salva il token nel database
-                    supabase.table("login").update({
-                        "session_token": session_token
-                    }).eq(
-                        "matricola",
-                        matricola
-                    ).execute()
-                    
-                    # Cookie = MATRICOLA|TOKEN
-                    cookie_value = f"{matricola}|{session_token}"
+                    # ==================================================
+                    # 🍪 SALVA MATRICOLA NEL COOKIE
+                    # ==================================================
                     
                     cookie_manager.set(
                         COOKIE_LOGIN,
-                        cookie_value,
+                        matricola,
                         expires_at=datetime(
                             2099,
                             12,
                             31
                         )
                     )
-
-
-                    # ==================================================
+                    # --------------------------------------
                     # SESSION STATE
-                    # ==================================================
+                    # --------------------------------------
 
                     st.session_state.logged_in = True
 
@@ -580,13 +496,11 @@ if not st.session_state.logged_in:
                         ""
                     )
 
-
                     st.success(
                         "✅ Accesso riuscito"
                     )
 
                     st.rerun()
-
 
                 except Exception as e:
 
@@ -597,7 +511,6 @@ if not st.session_state.logged_in:
                     st.code(
                         str(e)
                     )
-
 
         # ==================================================
         # 🆕 REGISTRAZIONE
@@ -657,26 +570,18 @@ if not st.session_state.logged_in:
                 type="password"
             )
 
-
             if st.button(
                 "Registrati",
                 use_container_width=True
             ):
 
-                if (
-                    not nome
-                    or not cognome
-                    or not email
-                    or not matricola
-                    or not password
-                ):
+                if not nome or not cognome or not email or not matricola or not password:
 
                     st.error(
                         "Compila tutti i campi"
                     )
 
                     st.stop()
-
 
                 try:
 
@@ -691,7 +596,6 @@ if not st.session_state.logged_in:
                         .execute()
                     )
 
-
                     if esiste.data:
 
                         st.error(
@@ -699,11 +603,6 @@ if not st.session_state.logged_in:
                         )
 
                         st.stop()
-
-
-                    # --------------------------------------
-                    # CREA UTENTE
-                    # --------------------------------------
 
                     supabase.table(
                         "login"
@@ -737,11 +636,6 @@ if not st.session_state.logged_in:
 
                     }).execute()
 
-
-                    # --------------------------------------
-                    # CREA OPERATORE
-                    # --------------------------------------
-
                     op = (
                         supabase
                         .table("operatori")
@@ -752,7 +646,6 @@ if not st.session_state.logged_in:
                         )
                         .execute()
                     )
-
 
                     if not op.data:
 
@@ -772,26 +665,21 @@ if not st.session_state.logged_in:
 
                         }).execute()
 
-
                     get_operatori.clear()
-
 
                     st.success(
                         "✅ Registrazione completata!"
                     )
 
-
                     st.session_state.redirect_login = True
 
                     st.rerun()
-
 
                 except Exception as e:
 
                     st.error(
                         f"Errore: {e}"
                     )
-
 
         # ==================================================
         # 🔑 RESET PASSWORD
@@ -814,7 +702,6 @@ if not st.session_state.logged_in:
                 type="password"
             )
 
-
             if st.button(
                 "Reimposta Password",
                 use_container_width=True
@@ -827,7 +714,6 @@ if not st.session_state.logged_in:
                     )
 
                     st.stop()
-
 
                 try:
 
@@ -842,7 +728,6 @@ if not st.session_state.logged_in:
                         .execute()
                     )
 
-
                     if not res.data:
 
                         st.error(
@@ -851,28 +736,29 @@ if not st.session_state.logged_in:
 
                         st.stop()
 
+                    (
+                        supabase
+                        .table("login")
+                        .update({
 
-                    # --------------------------------------
-                    # RESET PASSWORD + INVALIDA SESSIONE
-                    # --------------------------------------
+                            "password":
+                                hash_password(
+                                    nuova_password
+                                ),
 
-                    supabase.table(
-                        "login"
-                    ).update({
+                            # --------------------------------
+                            # INVALIDA EVENTUALI SESSIONI
+                            # --------------------------------
+                            "session_token":
+                                None
 
-                        "password":
-                            hash_password(
-                                nuova_password
-                            ),
-
-                        "session_token":
-                            None
-
-                    }).eq(
-                        "matricola",
-                        matricola
-                    ).execute()
-
+                        })
+                        .eq(
+                            "matricola",
+                            matricola
+                        )
+                        .execute()
+                    )
 
                     # --------------------------------------
                     # ELIMINA COOKIE
@@ -885,28 +771,23 @@ if not st.session_state.logged_in:
                         )
 
                     except:
-
                         pass
-
 
                     st.success(
                         "✅ Password aggiornata!"
                     )
 
-
                     st.session_state.logged_in = False
 
                     st.session_state.redirect_login = True
-
+                    
                     st.rerun()
-
 
                 except Exception as e:
 
                     st.error(
                         f"Errore: {e}"
                     )
-
 
     st.stop()
 # =========================
