@@ -236,136 +236,146 @@ if "squadra" not in st.session_state:
 
 
 # ==========================================================
-# 🔄 RIPRISTINO LOGIN DAL COOKIE
+# RIPRISTINO LOGIN DAL COOKIE
 # ==========================================================
 
 if not st.session_state.logged_in:
 
     try:
 
+        cookie_login = cookie_manager.get(COOKIE_LOGIN)
+
         # --------------------------------------------------
-        # LEGGE TOKEN DAL COOKIE
+        # DEBUG
         # --------------------------------------------------
 
-        session_token = cookie_manager.get(
-            COOKIE_LOGIN
+        st.write(
+            "DEBUG COOKIE LOGIN:",
+            cookie_login
         )
 
         # --------------------------------------------------
-        # DEBUG TEMPORANEO
+        # CONTROLLO COOKIE
         # --------------------------------------------------
 
-        # st.write("DEBUG COOKIE:", session_token)
-        # st.write("DEBUG SESSION:", st.session_state.logged_in)
+        if cookie_login:
 
-        if session_token:
+            # Cookie formato:
+            # matricola|token
 
-            # --------------------------------------------------
-            # CERCA SESSIONE SU SUPABASE
-            # --------------------------------------------------
+            parti = str(cookie_login).split("|", 1)
 
-            res = (
-                supabase
-                .table("login")
-                .select("*")
-                .eq(
-                    "session_token",
-                    session_token
-                )
-                .limit(1)
-                .execute()
-            )
+            if len(parti) == 2:
 
-            utenti = res.data or []
-
-            # --------------------------------------------------
-            # UTENTE TROVATO
-            # --------------------------------------------------
-
-            if utenti:
-
-                user = utenti[0]
-
-                matricola = norm(
-                    user.get(
-                        "matricola",
-                        ""
-                    )
-                )
+                matricola_cookie = norm(parti[0])
+                token_cookie = parti[1]
 
                 # --------------------------------------------------
-                # RECUPERA OPERATORE
+                # CERCA UTENTE
                 # --------------------------------------------------
 
-                op = (
+                res = (
                     supabase
-                    .table("operatori")
+                    .table("login")
                     .select("*")
                     .eq(
-                        "Matricola",
-                        matricola
+                        "matricola",
+                        matricola_cookie
+                    )
+                    .eq(
+                        "session_token",
+                        token_cookie
                     )
                     .limit(1)
                     .execute()
                 )
 
-                if op.data:
+                utenti = res.data or []
 
-                    nome = op.data[0].get(
-                        "Nominativo",
+                st.write(
+                    "DEBUG UTENTI TROVATI:",
+                    len(utenti)
+                )
+
+                # --------------------------------------------------
+                # LOGIN VALIDO
+                # --------------------------------------------------
+
+                if utenti:
+
+                    user = utenti[0]
+
+                    matricola = norm(
+                        user.get(
+                            "matricola",
+                            ""
+                        )
+                    )
+
+                    # --------------------------------------------------
+                    # RECUPERA OPERATORE
+                    # --------------------------------------------------
+
+                    op = (
+                        supabase
+                        .table("operatori")
+                        .select("*")
+                        .eq(
+                            "Matricola",
+                            matricola
+                        )
+                        .limit(1)
+                        .execute()
+                    )
+
+                    if op.data:
+
+                        nome = op.data[0].get(
+                            "Nominativo",
+                            ""
+                        )
+
+                    else:
+
+                        nome = user.get(
+                            "nome",
+                            ""
+                        )
+
+                    # --------------------------------------------------
+                    # RIPRISTINA SESSIONE
+                    # --------------------------------------------------
+
+                    st.session_state.logged_in = True
+
+                    st.session_state.matricola = matricola
+
+                    st.session_state.utente = nome
+
+                    st.session_state.ruolo = user.get(
+                        "ruolo",
+                        "OPERATORE"
+                    )
+
+                    st.session_state.squadra = user.get(
+                        "squadra",
                         ""
                     )
 
-                else:
+                    # --------------------------------------------------
+                    # RIMUOVI DEBUG
+                    # --------------------------------------------------
 
-                    nome = user.get(
-                        "nome",
-                        ""
-                    )
+                    st.session_state["login_ripristinato"] = True
 
-                # --------------------------------------------------
-                # RIPRISTINA SESSIONE
-                # --------------------------------------------------
-
-                st.session_state.logged_in = True
-
-                st.session_state.matricola = matricola
-
-                st.session_state.utente = nome
-
-                st.session_state.ruolo = user.get(
-                    "ruolo",
-                    "OPERATORE"
-                )
-
-                st.session_state.squadra = user.get(
-                    "squadra",
-                    ""
-                )
-
-            else:
-
-                # --------------------------------------------------
-                # TOKEN NON VALIDO
-                # --------------------------------------------------
-
-                try:
-
-                    cookie_manager.delete(
-                        COOKIE_LOGIN
-                    )
-
-                except:
-
-                    pass
+                    st.rerun()
 
     except Exception as e:
 
-        # --------------------------------------------------
-        # NON MOSTRIAMO ERRORI NELLA FASE DI AVVIO
-        # --------------------------------------------------
-
-        pass
+        st.write(
+            "ERRORE RIPRISTINO LOGIN:",
+            str(e)
+        )
 
 
 # ==========================================================
@@ -526,42 +536,26 @@ if not st.session_state.logged_in:
                         )
 
 
-                    # ==================================================
-                    # 🔑 CREA NUOVO TOKEN DI SESSIONE
-                    # ==================================================
-
-                    session_token = secrets.token_urlsafe(
-                        48
-                    )
-
-
-                    # ==================================================
-                    # 💾 SALVA TOKEN SU SUPABASE
-                    # ==================================================
-
-                    supabase.table(
-                        "login"
-                    ).update({
-
-                        "session_token":
-                            session_token
-
+                    # ==========================================================
+                    # CREA SESSIONE
+                    # ==========================================================
+                    
+                    session_token = secrets.token_urlsafe(48)
+                    
+                    # Salva il token nel database
+                    supabase.table("login").update({
+                        "session_token": session_token
                     }).eq(
                         "matricola",
                         matricola
                     ).execute()
-
-
-                    # ==================================================
-                    # 🍪 SALVA TOKEN NEL COOKIE
-                    # ==================================================
-
+                    
+                    # Cookie = MATRICOLA|TOKEN
+                    cookie_value = f"{matricola}|{session_token}"
+                    
                     cookie_manager.set(
-
                         COOKIE_LOGIN,
-
-                        session_token,
-
+                        cookie_value,
                         expires_at=datetime(
                             2099,
                             12,
