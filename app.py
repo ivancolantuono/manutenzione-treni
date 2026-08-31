@@ -179,14 +179,16 @@ import extra_streamlit_components as stx
 # 🍪 COOKIE
 # ==========================================================
 
-# ==========================================================
-# COOKIE MANAGER
-# ==========================================================
 
-cookie_manager = stx.CookieManager(
-    key="manager_etr1000_cookie_manager"
-)
+if "cookie_manager" not in st.session_state:
 
+    st.session_state.cookie_manager = stx.CookieManager(
+        key="manager_etr1000_cookie_manager"
+    )
+
+cookie_manager = st.session_state.cookie_manager
+
+COOKIE_LOGIN = "manager_etr1000_login"
 COOKIE_LOGIN = "manager_etr1000_session"
 
 # Forziamo una lettura completa dei cookie
@@ -236,46 +238,42 @@ if "squadra" not in st.session_state:
 
 
 # ==========================================================
-# RIPRISTINO LOGIN DAL COOKIE
+# 🔄 RIPRISTINO LOGIN DAL COOKIE
 # ==========================================================
 
 if not st.session_state.logged_in:
 
     try:
 
-        # ==================================================
-        # LEGGI TUTTI I COOKIE
-        # ==================================================
+        # --------------------------------------------------
+        # Leggiamo il cookie
+        # --------------------------------------------------
 
-        cookies = cookie_manager.get_all(
-            key="read_all_cookies"
-        )
-
-        cookie_login = cookies.get(
+        cookie_login = cookie_manager.get(
             COOKIE_LOGIN
         )
+
+        # --------------------------------------------------
+        # DEBUG
+        # --------------------------------------------------
 
         st.write(
             "DEBUG COOKIE LOGIN:",
             cookie_login
         )
 
-        # ==================================================
+        # --------------------------------------------------
         # COOKIE PRESENTE
-        # ==================================================
+        # --------------------------------------------------
 
         if cookie_login:
-
-            # --------------------------------------------------
-            # Il cookie attuale contiene direttamente il TOKEN
-            # --------------------------------------------------
 
             token = str(
                 cookie_login
             ).strip()
 
             # --------------------------------------------------
-            # CERCA IL TOKEN SU SUPABASE
+            # CERCA UTENTE SU SUPABASE
             # --------------------------------------------------
 
             res = (
@@ -297,9 +295,9 @@ if not st.session_state.logged_in:
                 len(utenti)
             )
 
-            # ==================================================
+            # --------------------------------------------------
             # UTENTE TROVATO
-            # ==================================================
+            # --------------------------------------------------
 
             if utenti:
 
@@ -342,9 +340,9 @@ if not st.session_state.logged_in:
                         ""
                     )
 
-                # ==================================================
+                # --------------------------------------------------
                 # RIPRISTINA SESSIONE
-                # ==================================================
+                # --------------------------------------------------
 
                 st.session_state.logged_in = True
 
@@ -361,6 +359,10 @@ if not st.session_state.logged_in:
                     "squadra",
                     ""
                 )
+
+                # --------------------------------------------------
+                # RICARICA APP
+                # --------------------------------------------------
 
                 st.rerun()
 
