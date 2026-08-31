@@ -217,7 +217,7 @@ if "squadra" not in st.session_state:
     st.session_state.squadra = ""
 
 # ==========================================================
-# RIPRISTINO LOGIN DAL COOKIE
+# 🔄 RIPRISTINO LOGIN DAL COOKIE
 # ==========================================================
 
 if not st.session_state.logged_in:
@@ -226,67 +226,111 @@ if not st.session_state.logged_in:
 
         cookie_login = cookie_manager.get(COOKIE_LOGIN)
 
+        # --------------------------------------------------
+        # SE ESISTE IL COOKIE
+        # --------------------------------------------------
+
         if cookie_login:
 
             res = (
                 supabase
                 .table("login")
                 .select("*")
-                .eq("session_token", cookie_login)
+                .eq(
+                    "session_token",
+                    cookie_login
+                )
                 .limit(1)
                 .execute()
             )
 
             utenti = res.data or []
 
+            # --------------------------------------------------
+            # SESSIONE VALIDA
+            # --------------------------------------------------
+
             if utenti:
 
                 user = utenti[0]
 
                 matricola = norm(
-                    user.get("matricola", "")
+                    user.get(
+                        "matricola",
+                        ""
+                    )
                 )
 
-                # ------------------------------------------
+                # ----------------------------------------------
                 # RECUPERA OPERATORE
-                # ------------------------------------------
+                # ----------------------------------------------
 
                 op = (
                     supabase
                     .table("operatori")
                     .select("*")
-                    .eq("Matricola", matricola)
+                    .eq(
+                        "Matricola",
+                        matricola
+                    )
                     .limit(1)
                     .execute()
                 )
 
                 if op.data:
-                    nome = op.data[0].get("Nominativo", "")
-                else:
-                    nome = user.get("nome", "")
 
-                # ------------------------------------------
+                    nome = op.data[0].get(
+                        "Nominativo",
+                        ""
+                    )
+
+                else:
+
+                    nome = user.get(
+                        "nome",
+                        ""
+                    )
+
+                # ----------------------------------------------
                 # RIPRISTINA SESSIONE
-                # ------------------------------------------
+                # ----------------------------------------------
 
                 st.session_state.logged_in = True
+
                 st.session_state.matricola = matricola
+
                 st.session_state.utente = nome
+
                 st.session_state.ruolo = user.get(
                     "ruolo",
                     "OPERATORE"
                 )
+
                 st.session_state.squadra = user.get(
                     "squadra",
                     ""
                 )
 
-                st.rerun()
+                # ----------------------------------------------
+                # INDICA CHE IL LOGIN È STATO RIPRISTINATO
+                # ----------------------------------------------
 
-    except Exception as e:
+                st.session_state.login_ripristinato = True
 
-        # Se il cookie non è ancora disponibile
-        # lasciamo comparire normalmente il Login.
+            # --------------------------------------------------
+            # COOKIE NON PIÙ VALIDO
+            # --------------------------------------------------
+
+            else:
+
+                try:
+                    cookie_manager.delete(
+                        COOKIE_LOGIN
+                    )
+                except:
+                    pass
+
+    except Exception:
         pass
 
 # ==========================================================
