@@ -133,7 +133,7 @@ SEZIONI = {
 
     "FRENO PARCHEGGIO": [
 
-        "PARCHEGGIO FRENATO-SFRENATO"
+        "PARCHEGGIO FRENATO SFRENATO"
         
     ]
 }
