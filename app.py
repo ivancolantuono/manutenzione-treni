@@ -179,11 +179,22 @@ import extra_streamlit_components as stx
 # 🍪 COOKIE
 # ==========================================================
 
+# ==========================================================
+# COOKIE MANAGER
+# ==========================================================
+
 cookie_manager = stx.CookieManager(
     key="manager_etr1000_cookie_manager"
 )
 
 COOKIE_LOGIN = "manager_etr1000_session"
+
+# Forziamo una lettura completa dei cookie
+cookies = cookie_manager.get_all(
+    key="read_all_cookies"
+)
+
+st.write("DEBUG COOKIE COMPLETI:", cookies)
 
 
 # ==========================================================
