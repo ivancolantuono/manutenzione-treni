@@ -224,113 +224,138 @@ if not st.session_state.logged_in:
 
     try:
 
-        cookie_login = cookie_manager.get(COOKIE_LOGIN)
+        # ----------------------------------------------
+        # LEGGE IL COOKIE
+        # ----------------------------------------------
 
-        # --------------------------------------------------
-        # SE ESISTE IL COOKIE
-        # --------------------------------------------------
+        cookie_login = cookie_manager.get(
+            COOKIE_LOGIN
+        )
 
-        if cookie_login:
+        # ----------------------------------------------
+        # SE IL COOKIE NON È ANCORA DISPONIBILE
+        # ASPETTIAMO UN RERUN
+        # ----------------------------------------------
 
-            res = (
+        if not cookie_login:
+
+            if not st.session_state.get(
+                "cookie_checked",
+                False
+            ):
+
+                st.session_state.cookie_checked = True
+
+                st.stop()
+
+        # ----------------------------------------------
+        # CERCA IL TOKEN SU SUPABASE
+        # ----------------------------------------------
+
+        res = (
+            supabase
+            .table("login")
+            .select("*")
+            .eq(
+                "session_token",
+                cookie_login
+            )
+            .limit(1)
+            .execute()
+        )
+
+        utenti = res.data or []
+
+        # ----------------------------------------------
+        # TOKEN VALIDO
+        # ----------------------------------------------
+
+        if utenti:
+
+            user = utenti[0]
+
+            matricola = norm(
+                user.get(
+                    "matricola",
+                    ""
+                )
+            )
+
+            # ------------------------------------------
+            # RECUPERA OPERATORE
+            # ------------------------------------------
+
+            op = (
                 supabase
-                .table("login")
+                .table("operatori")
                 .select("*")
                 .eq(
-                    "session_token",
-                    cookie_login
+                    "Matricola",
+                    matricola
                 )
                 .limit(1)
                 .execute()
             )
 
-            utenti = res.data or []
+            if op.data:
 
-            # --------------------------------------------------
-            # SESSIONE VALIDA
-            # --------------------------------------------------
-
-            if utenti:
-
-                user = utenti[0]
-
-                matricola = norm(
-                    user.get(
-                        "matricola",
-                        ""
-                    )
-                )
-
-                # ----------------------------------------------
-                # RECUPERA OPERATORE
-                # ----------------------------------------------
-
-                op = (
-                    supabase
-                    .table("operatori")
-                    .select("*")
-                    .eq(
-                        "Matricola",
-                        matricola
-                    )
-                    .limit(1)
-                    .execute()
-                )
-
-                if op.data:
-
-                    nome = op.data[0].get(
-                        "Nominativo",
-                        ""
-                    )
-
-                else:
-
-                    nome = user.get(
-                        "nome",
-                        ""
-                    )
-
-                # ----------------------------------------------
-                # RIPRISTINA SESSIONE
-                # ----------------------------------------------
-
-                st.session_state.logged_in = True
-
-                st.session_state.matricola = matricola
-
-                st.session_state.utente = nome
-
-                st.session_state.ruolo = user.get(
-                    "ruolo",
-                    "OPERATORE"
-                )
-
-                st.session_state.squadra = user.get(
-                    "squadra",
+                nome = op.data[0].get(
+                    "Nominativo",
                     ""
                 )
 
-                # ----------------------------------------------
-                # INDICA CHE IL LOGIN È STATO RIPRISTINATO
-                # ----------------------------------------------
-
-                st.session_state.login_ripristinato = True
-
-            # --------------------------------------------------
-            # COOKIE NON PIÙ VALIDO
-            # --------------------------------------------------
-
             else:
 
-                try:
-                    cookie_manager.delete(
-                        COOKIE_LOGIN
-                    )
-                except:
-                    pass
+                nome = user.get(
+                    "nome",
+                    ""
+                )
+
+            # ------------------------------------------
+            # RIPRISTINA SESSIONE
+            # ------------------------------------------
+
+            st.session_state.logged_in = True
+
+            st.session_state.matricola = matricola
+
+            st.session_state.utente = nome
+
+            st.session_state.ruolo = user.get(
+                "ruolo",
+                "OPERATORE"
+            )
+
+            st.session_state.squadra = user.get(
+                "squadra",
+                ""
+            )
+
+            # ------------------------------------------
+            # RESET CONTROLLO COOKIE
+            # ------------------------------------------
+
+            st.session_state.cookie_checked = False
+
+        else:
+
+            # ------------------------------------------
+            # TOKEN NON VALIDO
+            # ------------------------------------------
+
+            try:
+
+                cookie_manager.delete(
+                    COOKIE_LOGIN
+                )
+
+            except:
+                pass
+
+            st.session_state.cookie_checked = False
 
     except Exception:
+
         pass
 
 # ==========================================================
@@ -510,6 +535,9 @@ if not st.session_state.logged_in:
                             31
                         )
                     )
+                    
+                    # Reset controllo cookie
+                    st.session_state.cookie_checked = False
 
                     # --------------------------------------
                     # SESSION STATE
