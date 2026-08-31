@@ -480,10 +480,10 @@ if not st.session_state.logged_in:
                         .execute()
                     )
 
-                    # --------------------------------------
-                    # COOKIE
-                    # --------------------------------------
-
+                    # ==================================================
+                    # 🍪 SALVA COOKIE LOGIN
+                    # ==================================================
+                    
                     cookie_manager.set(
                         COOKIE_LOGIN,
                         session_token,
@@ -493,6 +493,9 @@ if not st.session_state.logged_in:
                             31
                         )
                     )
+                    
+                    # IMPORTANTE:
+                    # non fare subito rerun dopo il set del cookie
 
                     # --------------------------------------
                     # SESSION STATE
