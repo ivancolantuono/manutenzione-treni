@@ -491,9 +491,6 @@ if not st.session_state.logged_in:
                             31
                         )
                     )
-                    
-                    # Reset controllo cookie
-                    st.session_state.cookie_checked = False
 
                     # --------------------------------------
                     # SESSION STATE
