@@ -224,138 +224,94 @@ if not st.session_state.logged_in:
 
     try:
 
-        # ----------------------------------------------
-        # LEGGE IL COOKIE
-        # ----------------------------------------------
-
         cookie_login = cookie_manager.get(
             COOKIE_LOGIN
         )
 
-        # ----------------------------------------------
-        # SE IL COOKIE NON È ANCORA DISPONIBILE
-        # ASPETTIAMO UN RERUN
-        # ----------------------------------------------
+        if cookie_login:
 
-        if not cookie_login:
-
-            if not st.session_state.get(
-                "cookie_checked",
-                False
-            ):
-
-                st.session_state.cookie_checked = True
-
-                st.stop()
-
-        # ----------------------------------------------
-        # CERCA IL TOKEN SU SUPABASE
-        # ----------------------------------------------
-
-        res = (
-            supabase
-            .table("login")
-            .select("*")
-            .eq(
-                "session_token",
-                cookie_login
-            )
-            .limit(1)
-            .execute()
-        )
-
-        utenti = res.data or []
-
-        # ----------------------------------------------
-        # TOKEN VALIDO
-        # ----------------------------------------------
-
-        if utenti:
-
-            user = utenti[0]
-
-            matricola = norm(
-                user.get(
-                    "matricola",
-                    ""
-                )
-            )
-
-            # ------------------------------------------
-            # RECUPERA OPERATORE
-            # ------------------------------------------
-
-            op = (
+            res = (
                 supabase
-                .table("operatori")
+                .table("login")
                 .select("*")
                 .eq(
-                    "Matricola",
-                    matricola
+                    "session_token",
+                    cookie_login
                 )
                 .limit(1)
                 .execute()
             )
 
-            if op.data:
+            utenti = res.data or []
 
-                nome = op.data[0].get(
-                    "Nominativo",
+            if utenti:
+
+                user = utenti[0]
+
+                matricola = norm(
+                    user.get(
+                        "matricola",
+                        ""
+                    )
+                )
+
+                # ------------------------------------------
+                # RECUPERA OPERATORE
+                # ------------------------------------------
+
+                op = (
+                    supabase
+                    .table("operatori")
+                    .select("*")
+                    .eq(
+                        "Matricola",
+                        matricola
+                    )
+                    .limit(1)
+                    .execute()
+                )
+
+                if op.data:
+
+                    nome = op.data[0].get(
+                        "Nominativo",
+                        ""
+                    )
+
+                else:
+
+                    nome = user.get(
+                        "nome",
+                        ""
+                    )
+
+                # ------------------------------------------
+                # RIPRISTINA SESSIONE
+                # ------------------------------------------
+
+                st.session_state.logged_in = True
+
+                st.session_state.matricola = matricola
+
+                st.session_state.utente = nome
+
+                st.session_state.ruolo = user.get(
+                    "ruolo",
+                    "OPERATORE"
+                )
+
+                st.session_state.squadra = user.get(
+                    "squadra",
                     ""
                 )
 
-            else:
-
-                nome = user.get(
-                    "nome",
-                    ""
-                )
-
-            # ------------------------------------------
-            # RIPRISTINA SESSIONE
-            # ------------------------------------------
-
-            st.session_state.logged_in = True
-
-            st.session_state.matricola = matricola
-
-            st.session_state.utente = nome
-
-            st.session_state.ruolo = user.get(
-                "ruolo",
-                "OPERATORE"
-            )
-
-            st.session_state.squadra = user.get(
-                "squadra",
-                ""
-            )
-
-            # ------------------------------------------
-            # RESET CONTROLLO COOKIE
-            # ------------------------------------------
-
-            st.session_state.cookie_checked = False
-
-        else:
-
-            # ------------------------------------------
-            # TOKEN NON VALIDO
-            # ------------------------------------------
-
-            try:
-
-                cookie_manager.delete(
-                    COOKIE_LOGIN
-                )
-
-            except:
-                pass
-
-            st.session_state.cookie_checked = False
+                # NON fare st.rerun()
+                # Streamlit continuerà normalmente
 
     except Exception:
 
+        # Se il cookie non è disponibile,
+        # mostra normalmente il login.
         pass
 
 # ==========================================================
