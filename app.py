@@ -181,7 +181,7 @@ import extra_streamlit_components as stx
 cookie_manager = stx.CookieManager(
     key="manager_etr1000_cookie_manager"
 )
-COOKIE_LOGIN = "manager_etr1000_login"
+COOKIE_LOGIN = "manager_etr1000_matricola"
 # ==========================================================
 # UTILS
 # ==========================================================
@@ -224,44 +224,41 @@ if not st.session_state.logged_in:
 
     try:
 
-        cookie_login = cookie_manager.get(COOKIE_LOGIN)
+        matricola_cookie = cookie_manager.get(
+            COOKIE_LOGIN
+        )
 
-        st.sidebar.write("DEBUG COOKIE:", cookie_login)
-        st.sidebar.write("DEBUG SESSION:", st.session_state.get("logged_in"))
-        
+        if matricola_cookie:
 
-        if cookie_login:
-            st.sidebar.write("TOKEN LETTO:", cookie_login)
+            matricola = norm(
+                matricola_cookie
+            )
+
+            # ==============================================
+            # CERCA UTENTE
+            # ==============================================
 
             res = (
                 supabase
                 .table("login")
                 .select("*")
                 .eq(
-                    "session_token",
-                    cookie_login
+                    "matricola",
+                    matricola
                 )
                 .limit(1)
                 .execute()
             )
 
             utenti = res.data or []
-            st.sidebar.write("UTENTI TROVATI:", len(utenti))
 
             if utenti:
 
                 user = utenti[0]
 
-                matricola = norm(
-                    user.get(
-                        "matricola",
-                        ""
-                    )
-                )
-
-                # ------------------------------------------
+                # ==========================================
                 # RECUPERA OPERATORE
-                # ------------------------------------------
+                # ==========================================
 
                 op = (
                     supabase
@@ -289,9 +286,9 @@ if not st.session_state.logged_in:
                         ""
                     )
 
-                # ------------------------------------------
+                # ==========================================
                 # RIPRISTINA SESSIONE
-                # ------------------------------------------
+                # ==========================================
 
                 st.session_state.logged_in = True
 
@@ -309,13 +306,21 @@ if not st.session_state.logged_in:
                     ""
                 )
 
-                # NON fare st.rerun()
-                # Streamlit continuerà normalmente
+            else:
+
+                # Cookie non valido
+                try:
+
+                    cookie_manager.delete(
+                        COOKIE_LOGIN
+                    )
+
+                except:
+
+                    pass
 
     except Exception:
 
-        # Se il cookie non è disponibile,
-        # mostra normalmente il login.
         pass
 
 # ==========================================================
@@ -456,49 +461,19 @@ if not st.session_state.logged_in:
                             "nome"
                         )
 
-                    # --------------------------------------
-                    # CREA TOKEN
-                    # --------------------------------------
-
-                    session_token = secrets.token_urlsafe(
-                        48
-                    )
-
-                    # --------------------------------------
-                    # SALVA TOKEN SU SUPABASE
-                    # --------------------------------------
-
-                    (
-                        supabase
-                        .table("login")
-                        .update({
-                            "session_token":
-                                session_token
-                        })
-                        .eq(
-                            "matricola",
-                            matricola
-                        )
-                        .execute()
-                    )
-
                     # ==================================================
-                    # 🍪 SALVA COOKIE LOGIN
+                    # 🍪 SALVA MATRICOLA NEL COOKIE
                     # ==================================================
                     
                     cookie_manager.set(
                         COOKIE_LOGIN,
-                        session_token,
+                        matricola,
                         expires_at=datetime(
                             2099,
                             12,
                             31
                         )
                     )
-                    
-                    # IMPORTANTE:
-                    # non fare subito rerun dopo il set del cookie
-
                     # --------------------------------------
                     # SESSION STATE
                     # --------------------------------------
