@@ -959,7 +959,8 @@ with st.sidebar:
                 "Cerca Componente",
                 "Ferie e Permessi",
                 "Scadenze Temporali",
-                "Versioni Software"
+                "Versioni Software",
+                "Treno"
             ],
 
             icons=[
@@ -971,6 +972,7 @@ with st.sidebar:
                 "calendar-heart",
                 "alarm",
                 "cpu",
+                "train-front"
             ],
 
             default_index=0,
