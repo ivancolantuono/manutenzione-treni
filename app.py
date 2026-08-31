@@ -231,6 +231,7 @@ if not st.session_state.logged_in:
         
 
         if cookie_login:
+            st.sidebar.write("TOKEN LETTO:", cookie_login)
 
             res = (
                 supabase
@@ -245,6 +246,7 @@ if not st.session_state.logged_in:
             )
 
             utenti = res.data or []
+            st.sidebar.write("UTENTI TROVATI:", len(utenti))
 
             if utenti:
 
