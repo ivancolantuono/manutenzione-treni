@@ -224,8 +224,10 @@ if not st.session_state.logged_in:
 
     try:
 
-        cookie_login = cookie_manager.get(
-            COOKIE_LOGIN
+        cookie_login = cookie_manager.get(COOKIE_LOGIN)
+
+        st.sidebar.write("DEBUG COOKIE:", cookie_login)
+        st.sidebar.write("DEBUG SESSION:", st.session_state.get("logged_in"))
         )
 
         if cookie_login:
