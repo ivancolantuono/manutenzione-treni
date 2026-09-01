@@ -1033,71 +1033,71 @@ with st.sidebar:
     st.divider()
 
     # =====================================================
-# 🔓 LOGOUT
-# =====================================================
-
-if st.button(
-    "🔓 Logout",
-    use_container_width=True
-):
-
-    matricola = st.session_state.get(
-        "matricola",
-        ""
-    )
-
-    # ---------------------------------------------
-    # INVALIDA SESSIONE
-    # ---------------------------------------------
-
-    try:
-
-        if matricola:
-
-            supabase.table(
-                "login"
-            ).update({
-                "session_token": None
-            }).eq(
-                "matricola",
-                matricola
-            ).execute()
-
-    except Exception:
-
-        pass
-
-    # ---------------------------------------------
-    # CANCELLA COOKIE
-    # ---------------------------------------------
-
-    try:
-
-        cookie_manager.delete(
-            COOKIE_LOGIN
+    # 🔓 LOGOUT
+    # =====================================================
+    
+    if st.button(
+        "🔓 Logout",
+        use_container_width=True
+    ):
+    
+        matricola = st.session_state.get(
+            "matricola",
+            ""
         )
-
-    except Exception:
-
-        pass
-
-    # ---------------------------------------------
-    # BLOCCA IL RIPRISTINO AUTOMATICO
-    # ---------------------------------------------
-
-    st.session_state["logout_effettuato"] = True
-
-    st.session_state.logged_in = False
-    st.session_state.matricola = ""
-    st.session_state.utente = ""
-    st.session_state.ruolo = ""
-    st.session_state.squadra = ""
-
-    # ---------------------------------------------
-    # RITORNA AL LOGIN
-    # ---------------------------------------------
-
-    st.rerun()
+    
+        # ---------------------------------------------
+        # INVALIDA SESSIONE
+        # ---------------------------------------------
+    
+        try:
+    
+            if matricola:
+    
+                supabase.table(
+                    "login"
+                ).update({
+                    "session_token": None
+                }).eq(
+                    "matricola",
+                    matricola
+                ).execute()
+    
+        except Exception:
+    
+            pass
+    
+        # ---------------------------------------------
+        # CANCELLA COOKIE
+        # ---------------------------------------------
+    
+        try:
+    
+            cookie_manager.delete(
+                COOKIE_LOGIN
+            )
+    
+        except Exception:
+    
+            pass
+    
+        # ---------------------------------------------
+        # BLOCCA IL RIPRISTINO AUTOMATICO
+        # ---------------------------------------------
+    
+        st.session_state["logout_effettuato"] = True
+    
+        st.session_state.logged_in = False
+        st.session_state.matricola = ""
+        st.session_state.utente = ""
+        st.session_state.ruolo = ""
+        st.session_state.squadra = ""
+    
+        # ---------------------------------------------
+        # RITORNA AL LOGIN
+        # ---------------------------------------------
+    
+        st.rerun()
 # =========================
 # 📥 CARICA DATABASE (SUPABASE)
 # =========================
