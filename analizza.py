@@ -1,3 +1,8 @@
+# ==========================================================
+# ANALIZZA.PY
+# ANALIZZATORE LOG FDE DM1 / DM8
+# ==========================================================
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -181,7 +186,7 @@ DECODIFICHE = {
 
 
 # ==========================================================
-# DECODIFICA MAU
+# DECODIFICA NUMBER MAU
 # ==========================================================
 
 DECODIFICA_NUMBER_MAU = {
@@ -193,92 +198,12 @@ DECODIFICA_NUMBER_MAU = {
 
 
 # ==========================================================
-# DECODIFICA SENSORI FUMO
+# SENSORI FUMO
 # ==========================================================
 
 DECODIFICA_NUMBER_SMOKE = {
-
-    "0": "SD1",
-    "1": "SD2",
-    "2": "SD3",
-    "3": "SD4",
-    "4": "SD5",
-    "5": "SD6",
-    "6": "SD7",
-    "7": "SD8",
-    "8": "SD9",
-    "9": "SD10",
-
-    "10": "SD11",
-    "11": "SD12",
-    "12": "SD13",
-    "13": "SD14",
-    "14": "SD15",
-    "15": "SD16",
-    "16": "SD17",
-    "17": "SD18",
-    "18": "SD19",
-    "19": "SD20",
-
-    "20": "SD21",
-    "21": "SD22",
-    "22": "SD23",
-    "23": "SD24",
-    "24": "SD25",
-    "25": "SD26",
-    "26": "SD27",
-    "27": "SD28",
-    "28": "SD29",
-    "29": "SD30",
-
-    "30": "SD31",
-    "31": "SD32",
-    "32": "SD33",
-    "33": "SD34",
-    "34": "SD35",
-    "35": "SD36",
-    "36": "SD37",
-    "37": "SD38",
-    "38": "SD39",
-    "39": "SD40",
-
-    "40": "SD41",
-    "41": "SD42",
-    "42": "SD43",
-    "43": "SD44",
-    "44": "SD45",
-    "45": "SD46",
-    "46": "SD47",
-    "47": "SD48",
-    "48": "SD49",
-    "49": "SD50",
-
-    "50": "SD51",
-    "51": "SD52",
-    "52": "SD53",
-    "53": "SD54",
-    "54": "SD55",
-    "55": "SD56",
-    "56": "SD57",
-    "57": "SD58",
-    "58": "SD59",
-    "59": "SD60",
-
-    "60": "SD61",
-    "61": "SD62",
-    "62": "SD63",
-    "63": "SD64",
-    "64": "SD65",
-    "65": "SD66",
-    "66": "SD67",
-    "67": "SD68",
-    "68": "SD69",
-    "69": "SD70",
-
-    "70": "SD71",
-    "71": "SD72",
-    "72": "SD73",
-    "73": "SD74",
+    str(i): f"SD{i + 1}"
+    for i in range(74)
 }
 
 
@@ -287,7 +212,6 @@ DECODIFICA_NUMBER_SMOKE = {
 # ==========================================================
 
 DECODIFICA_CASSA = {
-
     "1": "DM1",
     "2": "TT2",
     "3": "M3",
@@ -296,7 +220,6 @@ DECODIFICA_CASSA = {
     "6": "M6",
     "7": "TT7",
     "8": "DM8",
-
 }
 
 
@@ -313,7 +236,7 @@ def decodifica_cassa(valore):
 
 
 # ==========================================================
-# NORMALIZZAZIONE SEGNALE
+# NORMALIZZA SEGNALE
 # ==========================================================
 
 def normalizza_segnale(segnale):
@@ -321,9 +244,7 @@ def normalizza_segnale(segnale):
     if segnale is None:
         return ""
 
-    segnale = str(
-        segnale
-    ).strip()
+    segnale = str(segnale).strip()
 
     segnale = re.split(
         r"[\[_]",
@@ -371,7 +292,7 @@ def parse_timestamp(valore):
 
         except ValueError:
 
-            pass
+            continue
 
     return None
 
@@ -382,9 +303,7 @@ def parse_timestamp(valore):
 
 def estrai_parametri(valore):
 
-    valore = str(
-        valore
-    )
+    valore = str(valore)
 
     cassa = "-"
     number = "-"
@@ -467,7 +386,7 @@ def decodifica_segnale(
     )
 
     # ------------------------------------------------------
-    # DECODIFICA DATA
+    # DECODIFICHE GENERALI
     # ------------------------------------------------------
 
     for nome, mapping in DECODIFICHE.items():
@@ -620,9 +539,7 @@ def classifica_evento(
 # IMPORTA LOG
 # ==========================================================
 
-def importa_log(
-    uploaded_file
-):
+def importa_log(uploaded_file):
 
     dati = []
 
@@ -652,7 +569,7 @@ def importa_log(
         )
 
     # ======================================================
-    # LETTURA RIGHE
+    # CICLO RIGHE
     # ======================================================
 
     for riga in testo.splitlines():
@@ -660,6 +577,7 @@ def importa_log(
         riga = riga.strip()
 
         if not riga:
+
             continue
 
         # ==================================================
@@ -679,11 +597,13 @@ def importa_log(
             )
 
             dataset_corrente = None
+
             segnale_corrente = None
 
             continue
 
         if timestamp is None:
+
             continue
 
         # ==================================================
@@ -727,6 +647,7 @@ def importa_log(
                 break
 
         if trovato:
+
             continue
 
         # ==================================================
@@ -738,8 +659,6 @@ def importa_log(
             and
             segnale_corrente
         ):
-
-            valore = riga
 
             dati.append({
 
@@ -753,11 +672,12 @@ def importa_log(
                     segnale_corrente,
 
                 "valore":
-                    valore
+                    riga
 
             })
 
             dataset_corrente = None
+
             segnale_corrente = None
 
     # ======================================================
@@ -810,7 +730,7 @@ def prepara_eventi(
     eventi = []
 
     # ======================================================
-    # DECODIFICA RIGHE
+    # DECODIFICA
     # ======================================================
 
     for _, riga in df.iterrows():
@@ -886,71 +806,66 @@ def colora_riga(row):
 
     # ======================================================
     # ALLARME INCENDIO
-    # ROSSO
     # ======================================================
 
     if "ALLARME INCENDIO" in evento:
 
         return [
-            "background-color: #ff0000; "
-            "color: white; "
+            "background-color: #ff0000;"
+            "color: white;"
             "font-weight: bold;"
         ] * len(row)
 
     # ======================================================
     # BASSA PRESSIONE
-    # VERDE
     # ======================================================
 
     if "BASSA PRESSIONE" in evento:
 
         return [
-            "background-color: #00b050; "
-            "color: white; "
+            "background-color: #00b050;"
+            "color: white;"
             "font-weight: bold;"
         ] * len(row)
 
     # ======================================================
     # ACQUA PRESSURIZZATA
-    # VIOLA
     # ======================================================
 
     if "ACQUA PRESSURIZZATA" in evento:
 
         return [
-            "background-color: #7030a0; "
-            "color: white; "
+            "background-color: #7030a0;"
+            "color: white;"
             "font-weight: bold;"
         ] * len(row)
 
     # ======================================================
     # FUMO
-    # ARANCIONE
     # ======================================================
 
     if "FUMO" in evento:
 
         return [
-            "background-color: #ff9900; "
-            "color: black; "
+            "background-color: #ff9900;"
+            "color: black;"
             "font-weight: bold;"
         ] * len(row)
 
     # ======================================================
     # FUORI SERVIZIO
-    # GIALLO
     # ======================================================
 
     if "FUORI SERVIZIO" in evento:
 
         return [
-            "background-color: #ffff00; "
-            "color: black; "
+            "background-color: #ffff00;"
+            "color: black;"
             "font-weight: bold;"
         ] * len(row)
 
     # ======================================================
-    # ALTRE RIGHE
+    # NORMALE
     # ======================================================
 
     return [
@@ -972,26 +887,26 @@ def mostra_legenda():
 
     with col1:
 
-        st.error(
-            "🔴 ALLARME INCENDIO"
+        st.markdown(
+            "🔴 **ALLARME INCENDIO**"
         )
 
     with col2:
 
-        st.success(
-            "🟢 BASSA PRESSIONE"
+        st.markdown(
+            "🟢 **BASSA PRESSIONE**"
         )
 
     with col3:
 
-        st.info(
-            "🟣 ACQUA PRESSURIZZATA"
+        st.markdown(
+            "🟣 **ACQUA PRESSURIZZATA**"
         )
 
     with col4:
 
-        st.warning(
-            "🟠 FUMO"
+        st.markdown(
+            "🟠 **FUMO**"
         )
 
     with col5:
@@ -1008,6 +923,10 @@ def mostra_legenda():
 def prepara_tabella(df):
 
     tabella = df.copy()
+
+    # ------------------------------------------------------
+    # ORDINAMENTO CRONOLOGICO
+    # ------------------------------------------------------
 
     tabella = tabella.sort_values(
         "timestamp"
@@ -1096,13 +1015,13 @@ def analizza_page():
     )
 
     st.caption(
-        "Analisi completa dei log DM1 e DM8"
+        "Analisi completa dei log DM1 / DM8"
     )
 
     st.divider()
 
     # ======================================================
-    # CARICAMENTO DM1 / DM8
+    # CARICAMENTO LOG
     # ======================================================
 
     col1, col2 = st.columns(2)
@@ -1132,7 +1051,7 @@ def analizza_page():
         )
 
     # ======================================================
-    # CONTROLLO FILE
+    # CONTROLLO
     # ======================================================
 
     if (
@@ -1148,7 +1067,7 @@ def analizza_page():
         return
 
     # ======================================================
-    # LISTA DATAFRAME
+    # DATAFRAME
     # ======================================================
 
     frames = []
@@ -1245,7 +1164,7 @@ def analizza_page():
     )
 
     # ======================================================
-    # ORDINAMENTO CRONOLOGICO
+    # ORDINAMENTO
     # ======================================================
 
     df = df.sort_values(
@@ -1262,24 +1181,25 @@ def analizza_page():
 
     eventi_dm1 = int(
         (
-            df["origine"]
-            == "DM1"
+            df["origine"] == "DM1"
         ).sum()
     )
 
     eventi_dm8 = int(
         (
-            df["origine"]
-            == "DM8"
+            df["origine"] == "DM8"
         ).sum()
     )
 
     eventi_importanti = int(
         (
-            df["evento"]
-            != ""
+            df["evento"] != ""
         ).sum()
     )
+
+    # ======================================================
+    # METRICHE A SCHERMO
+    # ======================================================
 
     st.divider()
 
@@ -1322,71 +1242,18 @@ def analizza_page():
     mostra_legenda()
 
     # ======================================================
-    # TABELLA COMPLETA
-    # ======================================================
-
-    st.divider()
-
-    st.subheader(
-        f"📋 TUTTI GLI EVENTI — {len(df)}"
-    )
-
-    tabella_completa = prepara_tabella(
-        df
-    )
-
-    st.dataframe(
-
-        tabella_completa.style.apply(
-            colora_riga,
-            axis=1
-        ),
-
-        use_container_width=True,
-
-        hide_index=True,
-
-        height=700
-
-    )
-
-    # ======================================================
-    # DOWNLOAD TABELLA COMPLETA
-    # ======================================================
-
-    csv_completo = (
-        tabella_completa
-        .to_csv(
-            index=False
-        )
-        .encode(
-            "utf-8-sig"
-        )
-    )
-
-    st.download_button(
-
-        "📥 Scarica tutti gli eventi",
-
-        data=csv_completo,
-
-        file_name="analisi_completa_fde.csv",
-
-        mime="text/csv",
-
-        key="download_completo_fde"
-
-    )
-
-    # ======================================================
     # FILTRI
     # ======================================================
 
     st.divider()
 
     st.subheader(
-        "🔎 Filtra gli eventi"
+        "🔎 Filtri"
     )
+
+    # ------------------------------------------------------
+    # DATE
+    # ------------------------------------------------------
 
     data_min = df[
         "timestamp"
@@ -1395,10 +1262,6 @@ def analizza_page():
     data_max = df[
         "timestamp"
     ].max().date()
-
-    # ------------------------------------------------------
-    # DATE / ORIGINE
-    # ------------------------------------------------------
 
     col1, col2, col3 = st.columns(3)
 
@@ -1454,9 +1317,9 @@ def analizza_page():
 
         )
 
-    # ======================================================
-    # TIPO EVENTO
-    # ======================================================
+    # ------------------------------------------------------
+    # EVENTI
+    # ------------------------------------------------------
 
     eventi_disponibili = sorted(
         [
@@ -1473,7 +1336,7 @@ def analizza_page():
 
     eventi_selezionati = st.multiselect(
 
-        "🚨 Tipo evento",
+        "🚨 Eventi da visualizzare",
 
         eventi_disponibili,
 
@@ -1481,9 +1344,9 @@ def analizza_page():
 
     )
 
-    # ======================================================
+    # ------------------------------------------------------
     # RICERCA
-    # ======================================================
+    # ------------------------------------------------------
 
     ricerca = st.text_input(
 
@@ -1491,8 +1354,8 @@ def analizza_page():
 
         placeholder=(
             "Segnale, sensore, "
-            "cassa, number, "
-            "allarme..."
+            "DM1, DM8, cassa, "
+            "number, allarme..."
         ),
 
         key="analizza_ricerca"
@@ -1500,7 +1363,7 @@ def analizza_page():
     )
 
     # ======================================================
-    # DATA FILTRO
+    # CREAZIONE DATAFRAME VISUALIZZATO
     # ======================================================
 
     data_da_dt = datetime.combine(
@@ -1513,7 +1376,11 @@ def analizza_page():
         datetime.max.time()
     )
 
-    filtrato = df[
+    # ------------------------------------------------------
+    # PARTIAMO DA TUTTI GLI EVENTI
+    # ------------------------------------------------------
+
+    df_visualizzato = df[
         (
             df["timestamp"]
             >= data_da_dt
@@ -1531,13 +1398,17 @@ def analizza_page():
 
     if origini:
 
-        filtrato = filtrato[
-            filtrato[
+        df_visualizzato = df_visualizzato[
+            df_visualizzato[
                 "origine"
             ].isin(
                 origini
             )
         ]
+
+    else:
+
+        df_visualizzato = df_visualizzato.iloc[0:0]
 
     # ======================================================
     # FILTRO EVENTO
@@ -1545,8 +1416,8 @@ def analizza_page():
 
     if eventi_selezionati:
 
-        filtrato = filtrato[
-            filtrato[
+        df_visualizzato = df_visualizzato[
+            df_visualizzato[
                 "evento"
             ].isin(
                 eventi_selezionati
@@ -1577,13 +1448,14 @@ def analizza_page():
 
         mask = pd.Series(
             False,
-            index=filtrato.index
+            index=df_visualizzato.index
         )
 
         for colonna in colonne_ricerca:
 
             mask |= (
-                filtrato[
+
+                df_visualizzato[
                     colonna
                 ]
                 .astype(str)
@@ -1593,23 +1465,36 @@ def analizza_page():
                     regex=False,
                     na=False
                 )
+
             )
 
-        filtrato = filtrato[
+        df_visualizzato = df_visualizzato[
             mask
         ]
 
     # ======================================================
-    # RISULTATI FILTRATI
+    # TABELLA UNICA
     # ======================================================
 
     st.divider()
 
     st.subheader(
-        f"🔎 Risultati filtrati — {len(filtrato)}"
+        f"📋 Eventi — {len(df_visualizzato)}"
     )
 
-    if filtrato.empty:
+    # ------------------------------------------------------
+    # PREPARAZIONE TABELLA
+    # ------------------------------------------------------
+
+    tabella = prepara_tabella(
+        df_visualizzato
+    )
+
+    # ======================================================
+    # VISUALIZZAZIONE
+    # ======================================================
+
+    if tabella.empty:
 
         st.warning(
             "⚠️ Nessun evento corrisponde "
@@ -1618,13 +1503,9 @@ def analizza_page():
 
     else:
 
-        tabella_filtrata = prepara_tabella(
-            filtrato
-        )
-
         st.dataframe(
 
-            tabella_filtrata.style.apply(
+            tabella.style.apply(
                 colora_riga,
                 axis=1
             ),
@@ -1633,16 +1514,18 @@ def analizza_page():
 
             hide_index=True,
 
-            height=600
+            height=700
 
         )
 
-        # ==================================================
-        # DOWNLOAD FILTRATI
-        # ==================================================
+    # ======================================================
+    # DOWNLOAD
+    # ======================================================
 
-        csv_filtrato = (
-            tabella_filtrata
+    if not tabella.empty:
+
+        csv = (
+            tabella
             .to_csv(
                 index=False
             )
@@ -1653,14 +1536,14 @@ def analizza_page():
 
         st.download_button(
 
-            "📥 Scarica eventi filtrati",
+            "📥 Scarica eventi visualizzati",
 
-            data=csv_filtrato,
+            data=csv,
 
-            file_name="eventi_filtrati_fde.csv",
+            file_name="analisi_fde.csv",
 
             mime="text/csv",
 
-            key="download_filtrati_fde"
+            key="download_analisi_fde"
 
         )
