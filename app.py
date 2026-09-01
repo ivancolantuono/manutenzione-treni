@@ -838,7 +838,6 @@ with st.sidebar:
                 "Ferie e Permessi",
                 "Scadenze Temporali",
                 "Software",
-                "Analisi FDE",
                 "Treno"
             ],
 
@@ -2554,8 +2553,6 @@ elif menu == "Software":
                 else:
                     st.info("Nessuna procedura")
 
-elif menu == "Analisi FDE":
-    fde_page()
 
 elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
@@ -2580,9 +2577,9 @@ elif menu == "Treno":
         st.title("HVAC")
         st.info("Sezione HVAC in preparazione.")
 
-    elif sistema == "Analisi FDE":
+    elif sistema == "Antincendio":
 
-        st.title("Analisi FDE")
+        st.title("Antincendio")
         st.info("Sezione Antincendio in preparazione.")
 
     elif sistema == "Propulsione":
