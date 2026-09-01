@@ -1340,194 +1340,381 @@ def fde_page():
     )
 
     # ======================================================
-    # TAB TIMELINE
-    # ======================================================
+# TAB TIMELINE
+# ======================================================
 
-    with tab1:
+with tab1:
 
-        st.subheader(
-            "📈 Timeline FDE"
-        )
+    st.subheader(
+        "📈 Timeline FDE"
+    )
 
-        plot = out.copy()
+    plot = out.copy()
 
-        plot["asse_y"] = (
-            plot[
-                "segnale_norm"
-            ]
-            .astype(str)
-        )
+    # ==================================================
+    # ORDINE CRONOLOGICO
+    # ==================================================
 
-        # --------------------------------------------------
-        # GRAFICO
-        # --------------------------------------------------
+    plot = plot.sort_values(
+        "timestamp"
+    ).copy()
 
-        fig = px.scatter(
+    # ==================================================
+    # SEGNALI
+    # ==================================================
 
-            plot,
+    segnali = (
+        plot["segnale_norm"]
+        .astype(str)
+        .drop_duplicates()
+        .tolist()
+    )
 
-            x="timestamp",
+    # ==================================================
+    # POSIZIONE DEI SEGNALI
+    # ==================================================
 
-            y="asse_y",
+    posizione_segnale = {
+        segnale: i
+        for i, segnale in enumerate(segnali)
+    }
 
-            color="evento",
+    fig = go.Figure()
 
-            symbol="origine",
+    # ==================================================
+    # TIMELINE A ONDA QUADRA
+    # ==================================================
 
-            color_discrete_map=COLORI_EVENTO,
+    for segnale in segnali:
 
-            hover_data={
+        dati = plot[
+            plot["segnale_norm"].astype(str)
+            == segnale
+        ].sort_values(
+            "timestamp"
+        ).copy()
 
-                "timestamp":
-                    "|%d-%m-%Y %H:%M:%S",
+        if dati.empty:
+            continue
 
-                "origine":
-                    True,
+        x = []
+        y = []
+        colori = []
 
-                "dataset":
-                    True,
-
-                "segnale_norm":
-                    True,
-
-                "cassa":
-                    True,
-
-                "number":
-                    True,
-
-                "data_val":
-                    True,
-
-                "descrizione":
-                    True,
-
-                "valore":
-                    True,
-
-                "asse_y":
-                    False,
-
-            },
-
-            labels={
-
-                "timestamp":
-                    "Data / Ora",
-
-                "asse_y":
-                    "Segnale",
-
-                "evento":
-                    "Evento",
-
-                "origine":
-                    "Origine",
-
-            }
-
-        )
+        base = posizione_segnale[segnale]
 
         # --------------------------------------------------
-        # DIMENSIONE PUNTI
+        # COSTRUZIONE ONDA
         # --------------------------------------------------
 
-        fig.update_traces(
+        precedente_y = base
 
-            marker=dict(
+        for _, riga in dati.iterrows():
 
-                size=10,
+            timestamp = riga["timestamp"]
 
-                line=dict(
-                    width=0.5
-                )
+            # ----------------------------------------------
+            # VALORE
+            # ----------------------------------------------
 
+            valore = riga.get(
+                "data_val",
+                0
             )
 
-        )
-
-        # --------------------------------------------------
-        # ALTEZZA GRAFICO
-        # --------------------------------------------------
-
-        altezza = max(
-
-            550,
-
-            min(
-
-                1100,
-
-                350
-                +
-                (
-                    plot[
-                        "segnale_norm"
-                    ].nunique()
-                    * 22
+            try:
+                valore_num = float(
+                    str(valore)
+                    .replace(",", ".")
                 )
+            except:
+                valore_num = 0
 
+            # ----------------------------------------------
+            # ONDA:
+            #
+            # 0 -> livello basso
+            # 1 -> livello alto
+            #
+            # Per valori > 1 manteniamo comunque
+            # il livello alto.
+            # ----------------------------------------------
+
+            if valore_num == 0:
+
+                livello = base
+
+            else:
+
+                livello = base + 0.7
+
+            evento = str(
+                riga.get(
+                    "evento",
+                    "NORMALE"
+                )
             )
 
-        )
+            colore = COLORI_EVENTO.get(
+                evento,
+                COLORI_EVENTO["NORMALE"]
+            )
 
-        # --------------------------------------------------
-        # LAYOUT
-        # --------------------------------------------------
+            # ----------------------------------------------
+            # PRIMO PUNTO
+            # ----------------------------------------------
 
-        fig.update_layout(
+            if not x:
 
-            height=altezza,
+                x.append(timestamp)
+                y.append(livello)
+                colori.append(colore)
 
-            hovermode="closest",
+            else:
 
-            margin=dict(
+                # ------------------------------------------
+                # MANTIENI IL LIVELLO PRECEDENTE FINO
+                # ALL'ISTANTE DEL CAMBIO
+                # ------------------------------------------
 
-                l=10,
-                r=10,
-                t=30,
-                b=10
+                x.append(timestamp)
+                y.append(precedente_y)
+                colori.append(colore)
 
-            ),
+                # ------------------------------------------
+                # SALITA / DISCESA VERTICALE
+                # ------------------------------------------
 
-            legend_title_text="Tipo evento",
+                x.append(timestamp)
+                y.append(livello)
+                colori.append(colore)
 
-            xaxis=dict(
+            precedente_y = livello
 
-                rangeslider=dict(
-                    visible=True
+        # ==================================================
+        # DISEGNO DELLA LINEA
+        # ==================================================
+
+        # Plotly non permette un colore diverso per ogni
+        # segmento della stessa linea in modo semplice.
+        # Creiamo quindi i segmenti separati per colore.
+
+        for i in range(
+            len(x) - 1
+        ):
+
+            fig.add_trace(
+                go.Scatter(
+                    x=[
+                        x[i],
+                        x[i + 1]
+                    ],
+
+                    y=[
+                        y[i],
+                        y[i + 1]
+                    ],
+
+                    mode="lines",
+
+                    line=dict(
+                        color=colori[i],
+                        width=3,
+                        shape="linear"
+                    ),
+
+                    hoverinfo="skip",
+
+                    showlegend=False
+                )
+            )
+
+        # ==================================================
+        # PUNTI INVISIBILI PER HOVER
+        # ==================================================
+
+        hover_text = []
+
+        for _, riga in dati.iterrows():
+
+            timestamp = riga["timestamp"]
+
+            hover_text.append(
+                f"<b>Data/Ora:</b> "
+                f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}"
+                f"<br>"
+                f"<b>Origine:</b> "
+                f"{riga.get('origine', '')}"
+                f"<br>"
+                f"<b>Dataset:</b> "
+                f"{riga.get('dataset', '')}"
+                f"<br>"
+                f"<b>Segnale:</b> "
+                f"{segnale}"
+                f"<br>"
+                f"<b>Cassa:</b> "
+                f"{riga.get('cassa', '')}"
+                f"<br>"
+                f"<b>Number:</b> "
+                f"{riga.get('number', '')}"
+                f"<br>"
+                f"<b>Valore:</b> "
+                f"{riga.get('data_val', '')}"
+                f"<br>"
+                f"<b>Descrizione:</b> "
+                f"{riga.get('descrizione', '')}"
+                f"<br>"
+                f"<b>Evento:</b> "
+                f"{riga.get('evento', '')}"
+            )
+
+        # ==================================================
+        # HOVER
+        # ==================================================
+
+        fig.add_trace(
+            go.Scatter(
+                x=dati["timestamp"],
+                y=[
+                    (
+                        base + 0.7
+                        if str(v) not in ["0", "0.0"]
+                        else base
+                    )
+                    for v in dati["data_val"]
+                ],
+
+                mode="markers",
+
+                marker=dict(
+                    size=7,
+                    opacity=0
                 ),
 
-                type="date"
+                text=hover_text,
 
+                hoverinfo="text",
+
+                showlegend=False
             )
-
         )
 
-        # --------------------------------------------------
-        # PLOTLY
-        # --------------------------------------------------
+    # ======================================================
+    # LEGENDA COLORI
+    # ======================================================
 
-        st.plotly_chart(
+    for evento, colore in COLORI_EVENTO.items():
 
-            fig,
+        # Mostra in legenda solo gli eventi presenti
+        if evento not in plot["evento"].astype(str).values:
+            continue
 
-            use_container_width=True,
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
 
-            config={
+                mode="lines",
 
-                "displaylogo":
-                    False,
+                line=dict(
+                    color=colore,
+                    width=4
+                ),
 
-                "scrollZoom":
-                    True,
+                name=evento,
 
-                "responsive":
-                    True,
-
-            }
-
+                showlegend=True
+            )
         )
+
+    # ======================================================
+    # ALTEZZA
+    # ======================================================
+
+    altezza = max(
+        550,
+        min(
+            1100,
+            350 + len(segnali) * 35
+        )
+    )
+
+    # ======================================================
+    # LAYOUT
+    # ======================================================
+
+    fig.update_layout(
+
+        height=altezza,
+
+        hovermode="closest",
+
+        margin=dict(
+            l=10,
+            r=10,
+            t=30,
+            b=10
+        ),
+
+        legend_title_text="Tipo evento",
+
+        xaxis=dict(
+            title="Data / Ora",
+
+            type="date",
+
+            rangeslider=dict(
+                visible=True
+            ),
+
+            showgrid=True
+        ),
+
+        yaxis=dict(
+
+            title="Segnale",
+
+            tickmode="array",
+
+            tickvals=[
+                posizione_segnale[s]
+                for s in segnali
+            ],
+
+            ticktext=segnali,
+
+            autorange="reversed",
+
+            showgrid=True,
+
+            zeroline=False
+        )
+    )
+
+    # ======================================================
+    # VISUALIZZAZIONE
+    # ======================================================
+
+    st.plotly_chart(
+
+        fig,
+
+        use_container_width=True,
+
+        config={
+
+            "displaylogo":
+                False,
+
+            "scrollZoom":
+                True,
+
+            "responsive":
+                True,
+
+        }
+
+    )
 
     # ======================================================
     # TAB EVENTI
