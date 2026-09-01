@@ -186,7 +186,6 @@ DECODIFICHE = {
 # ==========================================================
 
 DECODIFICA_CASSA = {
-
     "1": "DM1",
     "2": "TT2",
     "3": "M3",
@@ -195,14 +194,13 @@ DECODIFICA_CASSA = {
     "6": "M6",
     "7": "TT7",
     "8": "DM8",
-
 }
 
 
 def decodifica_cassa(valore):
 
     return DECODIFICA_CASSA.get(
-        str(valore),
+        str(valore).strip(),
         str(valore)
     )
 
@@ -213,102 +211,20 @@ def decodifica_cassa(valore):
 
 DECODIFICA_NUMBER_SMOKE = {
 
-    "0": "SD1",
-    "1": "SD2",
-    "2": "SD3",
-    "3": "SD4",
-    "4": "SD5",
-    "5": "SD6",
-    "6": "SD7",
-    "7": "SD8",
-    "8": "SD9",
-    "9": "SD10",
-
-    "10": "SD11",
-    "11": "SD12",
-    "12": "SD13",
-    "13": "SD14",
-    "14": "SD15",
-    "15": "SD16",
-    "16": "SD17",
-    "17": "SD18",
-    "18": "SD19",
-    "19": "SD20",
-
-    "20": "SD21",
-    "21": "SD22",
-    "22": "SD23",
-    "23": "SD24",
-    "24": "SD25",
-    "25": "SD26",
-    "26": "SD27",
-    "27": "SD28",
-    "28": "SD29",
-    "29": "SD30",
-
-    "30": "SD31",
-    "31": "SD32",
-    "32": "SD33",
-    "33": "SD34",
-    "34": "SD35",
-    "35": "SD36",
-    "36": "SD37",
-    "37": "SD38",
-    "38": "SD39",
-    "39": "SD40",
-
-    "40": "SD41",
-    "41": "SD42",
-    "42": "SD43",
-    "43": "SD44",
-    "44": "SD45",
-    "45": "SD46",
-    "46": "SD47",
-    "47": "SD48",
-    "48": "SD49",
-    "49": "SD50",
-
-    "50": "SD51",
-    "51": "SD52",
-    "52": "SD53",
-    "53": "SD54",
-    "54": "SD55",
-    "55": "SD56",
-    "56": "SD57",
-    "57": "SD58",
-    "58": "SD59",
-    "59": "SD60",
-
-    "60": "SD61",
-    "61": "SD62",
-    "62": "SD63",
-    "63": "SD64",
-    "64": "SD65",
-    "65": "SD66",
-    "66": "SD67",
-    "67": "SD68",
-    "68": "SD69",
-    "69": "SD70",
-
-    "70": "SD71",
-    "71": "SD72",
-    "72": "SD73",
-    "73": "SD74",
-
+    str(i): f"SD{i + 1}"
+    for i in range(74)
 }
 
 
 # ==========================================================
-# DECODIFICA MAU
+# DECODIFICA NUMBER MAU
 # ==========================================================
 
 DECODIFICA_NUMBER_MAU = {
-
     "0": "BASSA PRESSIONE",
     "1": "CONDOTTA ACQUA PRESSURIZZATA",
     "2": "BASSA PRESSIONE",
     "3": "CONDOTTA ACQUA PRESSURIZZATA",
-
 }
 
 
@@ -318,47 +234,15 @@ DECODIFICA_NUMBER_MAU = {
 
 COLORI_EVENTO = {
 
-    "FUMO": "#ff3b30",
-    "TERMICO": "#ff9500",
-    "FAULT": "#8e8e93",
+    "SENSORE FUMO": "#ff3b30",
+
     "ALLARME INCENDIO": "#ff0000",
-    "FUORI SERVIZIO": "#af52de",
+
     "BASSA PRESSIONE": "#007aff",
+
     "CONDOTTA ACQUA PRESSURIZZATA": "#34c759",
-    "NORMALE": "#808080",
 
 }
-
-
-# ==========================================================
-# COLORI SEGNALI
-# ==========================================================
-
-COLORI_SEGNALI = [
-
-    "#1f77b4",
-    "#ff7f0e",
-    "#2ca02c",
-    "#d62728",
-    "#9467bd",
-    "#8c564b",
-    "#e377c2",
-    "#7f7f7f",
-    "#bcbd22",
-    "#17becf",
-
-    "#393b79",
-    "#637939",
-    "#8c6d31",
-    "#843c39",
-    "#7b4173",
-    "#3182bd",
-    "#31a354",
-    "#756bb1",
-    "#636363",
-    "#e6550d",
-
-]
 
 
 # ==========================================================
@@ -368,12 +252,9 @@ COLORI_SEGNALI = [
 def normalizza_segnale(segnale):
 
     if segnale is None:
-
         return ""
 
-    segnale = str(
-        segnale
-    ).strip()
+    segnale = str(segnale).strip()
 
     segnale = re.split(
         r"[\[_]",
@@ -390,7 +271,6 @@ def normalizza_segnale(segnale):
 def parse_timestamp(valore):
 
     if not valore:
-
         return None
 
     valore = " ".join(
@@ -409,6 +289,8 @@ def parse_timestamp(valore):
 
         "%d-%m-%Y %H:%M:%S",
 
+        "%d/%m/%Y %H:%M:%S",
+
     ]
 
     for formato in formati:
@@ -421,7 +303,6 @@ def parse_timestamp(valore):
             )
 
         except ValueError:
-
             pass
 
     return None
@@ -433,26 +314,20 @@ def parse_timestamp(valore):
 
 def estrai_parametri(valore):
 
-    valore = str(
-        valore
-    )
+    valore = str(valore)
 
     cassa = "-"
     number = "-"
     data = "-"
 
-    # ======================================================
+    # ------------------------------------------------------
     # COACH N
-    # ======================================================
+    # ------------------------------------------------------
 
     match = re.search(
-
         r"COACH\s*N\s*:\s*(\d+)",
-
         valore,
-
         re.IGNORECASE
-
     )
 
     if match:
@@ -461,36 +336,28 @@ def estrai_parametri(valore):
             match.group(1)
         )
 
-    # ======================================================
+    # ------------------------------------------------------
     # NUMBER
-    # ======================================================
+    # ------------------------------------------------------
 
     match = re.search(
-
         r"NUMBER\s*:\s*(\d+)",
-
         valore,
-
         re.IGNORECASE
-
     )
 
     if match:
 
         number = match.group(1)
 
-    # ======================================================
+    # ------------------------------------------------------
     # DATA
-    # ======================================================
+    # ------------------------------------------------------
 
     match = re.search(
-
         r"DATA\s*:\s*(\d+)",
-
         valore,
-
         re.IGNORECASE
-
     )
 
     if match:
@@ -511,15 +378,11 @@ def decodifica_segnale(
 
     segnale = str(
         segnale
-    ).upper()
+    ).upper().strip()
 
     valore = str(
         valore
     )
-
-    # ======================================================
-    # MAPPING
-    # ======================================================
 
     mapping = None
 
@@ -528,20 +391,11 @@ def decodifica_segnale(
         if segnale.startswith(nome):
 
             mapping = valori
-
             break
-
-    # ======================================================
-    # PARAMETRI
-    # ======================================================
 
     cassa, number, data = estrai_parametri(
         valore
     )
-
-    # ======================================================
-    # DECODIFICA DATA
-    # ======================================================
 
     descrizione = data
 
@@ -553,32 +407,38 @@ def decodifica_segnale(
         )
 
     # ======================================================
-    # DECODIFICA NUMBER
+    # SENSORI FUMO
     # ======================================================
 
-    if (
-
-        segnale.startswith(
-            "ISMOKESENSSTATE"
-        )
-
-        or
-
-        segnale.startswith(
-            "FSMOKESENS"
-        )
-
+    if segnale.startswith(
+        "ISMOKESENSSTATE"
     ):
 
         number_decodificato = (
             DECODIFICA_NUMBER_SMOKE.get(
-
                 str(number),
-
                 str(number)
-
             )
         )
+
+    # ======================================================
+    # DIAGNOSTICA SENSORI FUMO
+    # ======================================================
+
+    elif segnale.startswith(
+        "FSMOKESENS"
+    ):
+
+        number_decodificato = (
+            DECODIFICA_NUMBER_SMOKE.get(
+                str(number),
+                str(number)
+            )
+        )
+
+    # ======================================================
+    # MAU
+    # ======================================================
 
     elif segnale.startswith(
         "IMAUINPUTSTATE"
@@ -586,11 +446,8 @@ def decodifica_segnale(
 
         number_decodificato = (
             DECODIFICA_NUMBER_MAU.get(
-
                 str(number),
-
                 str(number)
-
             )
         )
 
@@ -601,24 +458,20 @@ def decodifica_segnale(
         )
 
     return (
-
         cassa,
-
         number_decodificato,
-
         data,
-
         descrizione
-
     )
 
 
 # ==========================================================
-# CLASSIFICA EVENTO
+# CLASSIFICAZIONE DEGLI EVENTI IMPORTANTI
 # ==========================================================
 
 def classifica_evento(
     segnale,
+    number,
     descrizione
 ):
 
@@ -626,78 +479,99 @@ def classifica_evento(
         segnale
     ).upper()
 
+    number = str(
+        number
+    ).upper()
+
     descrizione = str(
         descrizione
     ).upper()
 
     # ======================================================
-    # FUMO
-    # ======================================================
-
-    if "ALLARME FUMO" in descrizione:
-
-        return "FUMO"
-
-    # ======================================================
-    # TERMICO
-    # ======================================================
-
-    if "ALLARME TERMICO" in descrizione:
-
-        return "TERMICO"
-
-    # ======================================================
-    # FAULT
+    # SENSORE FUMO
     # ======================================================
 
     if (
-
-        descrizione == "FAULT"
-
-        or
-
-        "FAULT" in descrizione
-
-        or
-
-        "FAIL" in descrizione
-
+        segnale.startswith("ISMOKESENSSTATE")
+        and
+        (
+            "ALLARME FUMO" in descrizione
+            or
+            "ALLARME TERMICO" in descrizione
+            or
+            "FUMO E TERMICO" in descrizione
+        )
     ):
 
-        return "FAULT"
+        return "SENSORE FUMO"
 
     # ======================================================
-    # INCENDIO
+    # ALLARME INCENDIO
     # ======================================================
 
-    if "ALLARME INCENDIO" in descrizione:
+    if (
+        "ALLARME INCENDIO" in descrizione
+        or
+        (
+            segnale.startswith(
+                "IFIREGENERALALARM"
+            )
+            and
+            descrizione != "NESSUN ALLARME"
+        )
+        or
+        (
+            segnale.startswith(
+                "ICARFIREALARM"
+            )
+            and
+            "ALLARME" in descrizione
+        )
+    ):
 
         return "ALLARME INCENDIO"
 
     # ======================================================
-    # FUORI SERVIZIO
+    # BASSA PRESSIONE
     # ======================================================
 
-    if "FUORI SERVIZIO" in descrizione:
-
-        return "FUORI SERVIZIO"
-
-    # ======================================================
-    # PRESSIONE
-    # ======================================================
-
-    if "BASSA PRESSIONE" in descrizione:
+    if (
+        "BASSA PRESSIONE" in descrizione
+        or
+        (
+            segnale.startswith(
+                "IMAUINPUTSTATE"
+            )
+            and
+            number in [
+                "BASSA PRESSIONE"
+            ]
+        )
+    ):
 
         return "BASSA PRESSIONE"
+
+    # ======================================================
+    # ACQUA PRESSURIZZATA
+    # ======================================================
 
     if (
         "CONDOTTA ACQUA PRESSURIZZATA"
         in descrizione
+        or
+        (
+            segnale.startswith(
+                "IMAUINPUTSTATE"
+            )
+            and
+            number
+            == "CONDOTTA ACQUA PRESSURIZZATA"
+        )
     ):
 
         return "CONDOTTA ACQUA PRESSURIZZATA"
 
-    return "NORMALE"
+    return None
 
 
 # ==========================================================
@@ -720,21 +594,26 @@ def importa_log(
 
         contenuto = uploaded_file.getvalue()
 
-        testo = contenuto.decode(
-            "utf-8",
-            errors="ignore"
-        )
+        try:
 
-    except Exception:
+            testo = contenuto.decode(
+                "utf-8"
+            )
 
-        testo = (
-            uploaded_file
-            .getvalue()
-            .decode(
+        except UnicodeDecodeError:
+
+            testo = contenuto.decode(
                 "latin-1",
                 errors="ignore"
             )
+
+    except Exception as e:
+
+        st.error(
+            f"Errore lettura file: {e}"
         )
+
+        return pd.DataFrame()
 
     # ======================================================
     # RIGHE
@@ -745,7 +624,6 @@ def importa_log(
         riga = riga.strip()
 
         if not riga:
-
             continue
 
         # ==================================================
@@ -757,23 +635,19 @@ def importa_log(
         ):
 
             timestamp = parse_timestamp(
-
                 riga.replace(
                     "------->",
                     "",
                     1
                 ).strip()
-
             )
 
             dataset_corrente = None
-
             segnale_corrente = None
 
             continue
 
         if timestamp is None:
-
             continue
 
         # ==================================================
@@ -817,7 +691,6 @@ def importa_log(
                 break
 
         if trovato:
-
             continue
 
         # ==================================================
@@ -825,16 +698,10 @@ def importa_log(
         # ==================================================
 
         if (
-
             dataset_corrente
-
             and
-
             segnale_corrente
-
         ):
-
-            valore = riga
 
             dati.append({
 
@@ -848,12 +715,11 @@ def importa_log(
                     segnale_corrente,
 
                 "valore":
-                    valore,
+                    riga,
 
             })
 
             dataset_corrente = None
-
             segnale_corrente = None
 
     # ======================================================
@@ -865,7 +731,6 @@ def importa_log(
     )
 
     if df.empty:
-
         return df
 
     df["timestamp"] = pd.to_datetime(
@@ -874,9 +739,7 @@ def importa_log(
     )
 
     df = df.dropna(
-        subset=[
-            "timestamp"
-        ]
+        subset=["timestamp"]
     )
 
     return df
@@ -892,7 +755,6 @@ def prepara_eventi(
 ):
 
     if df.empty:
-
         return df
 
     df = df.copy()
@@ -900,15 +762,9 @@ def prepara_eventi(
     df["origine"] = origine
 
     casse = []
-
     numbers = []
-
-    numbers_raw = []
-
     date_valori = []
-
     descrizioni = []
-
     eventi = []
 
     for _, riga in df.iterrows():
@@ -918,64 +774,32 @@ def prepara_eventi(
             number,
             data,
             descrizione
-
         ) = decodifica_segnale(
 
             riga["segnale"],
-
-            riga["valore"]
-
-        )
-
-        # ==================================================
-        # NUMBER ORIGINALE
-        # ==================================================
-
-        _, number_raw, _ = estrai_parametri(
             riga["valore"]
         )
-
-        # ==================================================
-        # EVENTO
-        # ==================================================
 
         evento = classifica_evento(
 
             riga["segnale"],
-
-            descrizione
-
-        )
-
-        casse.append(
-            cassa
-        )
-
-        numbers.append(
-            number
-        )
-
-        numbers_raw.append(
-            number_raw
-        )
-
-        date_valori.append(
-            data
-        )
-
-        descrizioni.append(
+            number,
             descrizione
         )
 
-        eventi.append(
-            evento
-        )
+        casse.append(cassa)
+
+        numbers.append(number)
+
+        date_valori.append(data)
+
+        descrizioni.append(descrizione)
+
+        eventi.append(evento)
 
     df["cassa"] = casse
 
     df["number"] = numbers
-
-    df["number_raw"] = numbers_raw
 
     df["data_val"] = date_valori
 
@@ -984,6 +808,34 @@ def prepara_eventi(
     df["evento"] = eventi
 
     return df
+
+
+# ==========================================================
+# FILTRO EVENTI IMPORTANTI
+# ==========================================================
+
+def filtra_eventi_importanti(df):
+
+    if df.empty:
+        return df
+
+    eventi_validi = [
+
+        "SENSORE FUMO",
+
+        "ALLARME INCENDIO",
+
+        "BASSA PRESSIONE",
+
+        "CONDOTTA ACQUA PRESSURIZZATA",
+
+    ]
+
+    return df[
+        df["evento"].isin(
+            eventi_validi
+        )
+    ].copy()
 
 
 # ==========================================================
@@ -996,7 +848,6 @@ def filtra_ricerca(
 ):
 
     if not ricerca:
-
         return df
 
     ricerca = str(
@@ -1004,7 +855,6 @@ def filtra_ricerca(
     ).lower().strip()
 
     if not ricerca:
-
         return df
 
     colonne = [
@@ -1015,7 +865,6 @@ def filtra_ricerca(
         "valore",
         "cassa",
         "number",
-        "number_raw",
         "data_val",
         "descrizione",
         "evento",
@@ -1032,7 +881,6 @@ def filtra_ricerca(
         if colonna in df.columns:
 
             mask |= (
-
                 df[colonna]
                 .astype(str)
                 .str.lower()
@@ -1041,14 +889,13 @@ def filtra_ricerca(
                     regex=False,
                     na=False
                 )
-
             )
 
     return df[mask]
 
 
 # ==========================================================
-# TIMELINE PLOTLY
+# TIMELINE
 # ==========================================================
 
 def crea_timeline(df):
@@ -1056,110 +903,90 @@ def crea_timeline(df):
     fig = go.Figure()
 
     if df.empty:
-
         return fig
-
-    # ======================================================
-    # COPIA E ORDINAMENTO
-    # ======================================================
-
-    df = df.copy()
-
-    df["timestamp"] = pd.to_datetime(
-        df["timestamp"],
-        errors="coerce"
-    )
-
-    df = df.dropna(
-        subset=[
-            "timestamp"
-        ]
-    )
 
     df = df.sort_values(
         "timestamp"
-    )
+    ).copy()
 
     # ======================================================
-    # SEGNALI
+    # CATEGORIE FISSE
     # ======================================================
 
-    segnali = (
+    categorie = [
 
-        df["segnale"]
-        .astype(str)
-        .drop_duplicates()
-        .tolist()
+        "SENSORE FUMO",
 
-    )
+        "ALLARME INCENDIO",
 
-    if not segnali:
+        "BASSA PRESSIONE",
 
-        return fig
+        "CONDOTTA ACQUA PRESSURIZZATA",
 
-    # ======================================================
-    # POSIZIONE VERTICALE
-    # ======================================================
+    ]
 
-    mappa_y = {
+    y_map = {
 
-        segnale: i
+        "SENSORE FUMO": 3,
 
-        for i, segnale
-        in enumerate(segnali)
+        "ALLARME INCENDIO": 2,
+
+        "BASSA PRESSIONE": 1,
+
+        "CONDOTTA ACQUA PRESSURIZZATA": 0,
 
     }
 
     # ======================================================
-    # COLORE FISSO PER OGNI SEGNALE
+    # LEGENDA
     # ======================================================
 
-    colore_segnale = {
+    for categoria in categorie:
 
-        segnale:
-            COLORI_SEGNALI[
-                i % len(COLORI_SEGNALI)
-            ]
+        fig.add_trace(
 
-        for i, segnale
-        in enumerate(segnali)
+            go.Scatter(
 
-    }
+                x=[None],
 
-    # ======================================================
-    # TRACCE
-    # ======================================================
+                y=[None],
 
-    for segnale in segnali:
+                mode="markers",
 
-        dati = df[
-            df["segnale"].astype(str)
-            == segnale
-        ].sort_values(
-            "timestamp"
+                marker=dict(
+
+                    size=12,
+
+                    color=COLORI_EVENTO[
+                        categoria
+                    ]
+
+                ),
+
+                name=categoria,
+
+                showlegend=True
+
+            )
         )
 
-        if dati.empty:
+    # ======================================================
+    # EVENTI
+    # ======================================================
 
+    for categoria in categorie:
+
+        dati = df[
+            df["evento"] == categoria
+        ].copy()
+
+        if dati.empty:
             continue
 
         x = []
-
         y = []
-
         testi = []
-
-        number_x = []
-
-        number_y = []
-
-        number_text = []
-
-        number_hover = []
-
-        # ==================================================
-        # EVENTI
-        # ==================================================
+        labels = []
 
         for _, riga in dati.iterrows():
 
@@ -1167,75 +994,76 @@ def crea_timeline(df):
                 "timestamp"
             ]
 
-            posizione = mappa_y[
-                segnale
-            ]
+            # ------------------------------------------------
+            # LABEL SULLA TIMELINE
+            # ------------------------------------------------
 
-            number_nome = str(
-                riga.get(
-                    "number",
-                    ""
+            if categoria == "SENSORE FUMO":
+
+                label = str(
+                    riga.get(
+                        "number",
+                        ""
+                    )
                 )
-            ).strip()
 
-            number_raw = str(
-                riga.get(
-                    "number_raw",
-                    ""
-                )
-            ).strip()
+            elif categoria == "ALLARME INCENDIO":
 
-            evento = str(
-                riga.get(
-                    "evento",
-                    "NORMALE"
-                )
-            )
+                label = "🔥 INCENDIO"
 
-            # ==============================================
+            elif categoria == "BASSA PRESSIONE":
+
+                label = "💧 BASSA PRESSIONE"
+
+            else:
+
+                label = "💧 ACQUA PRESSURIZZATA"
+
+            # ------------------------------------------------
             # TOOLTIP
-            # ==============================================
+            # ------------------------------------------------
 
             testo = (
 
+                f"<b>{categoria}</b><br>"
+
                 f"<b>Ora:</b> "
                 f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}"
+
                 f"<br>"
 
                 f"<b>Origine:</b> "
                 f"{riga.get('origine', '')}"
+
                 f"<br>"
 
                 f"<b>Dataset:</b> "
                 f"{riga.get('dataset', '')}"
+
                 f"<br>"
 
                 f"<b>Segnale:</b> "
-                f"{segnale}"
+                f"{riga.get('segnale', '')}"
+
                 f"<br>"
 
                 f"<b>Cassa:</b> "
                 f"{riga.get('cassa', '')}"
+
                 f"<br>"
 
-                f"<b>Number:</b> "
-                f"{number_nome}"
-                f"<br>"
+                f"<b>NUMBER:</b> "
+                f"{riga.get('number', '')}"
 
-                f"<b>Number originale:</b> "
-                f"{number_raw}"
                 f"<br>"
 
                 f"<b>Valore:</b> "
                 f"{riga.get('valore', '')}"
+
                 f"<br>"
 
                 f"<b>Descrizione:</b> "
                 f"{riga.get('descrizione', '')}"
-                f"<br>"
-
-                f"<b>Evento:</b> "
-                f"{evento}"
 
             )
 
@@ -1244,51 +1072,19 @@ def crea_timeline(df):
             )
 
             y.append(
-                posizione
+                y_map[categoria]
             )
 
             testi.append(
                 testo
             )
 
-            # ==============================================
-            # NUMBER SULLA TIMELINE
-            # ==============================================
-
-            if (
-
-                number_nome
-
-                and
-
-                number_nome.lower()
-                not in [
-                    "",
-                    "nan",
-                    "none",
-                    "-"
-                ]
-
-            ):
-
-                number_x.append(
-                    timestamp
-                )
-
-                number_y.append(
-                    posizione
-                )
-
-                number_text.append(
-                    number_nome
-                )
-
-                number_hover.append(
-                    testo
-                )
+            labels.append(
+                label
+            )
 
         # ==================================================
-        # LINEA DEL SEGNALE
+        # PALLINI + NOME
         # ==================================================
 
         fig.add_trace(
@@ -1299,101 +1095,78 @@ def crea_timeline(df):
 
                 y=y,
 
-                mode="lines",
+                mode="markers+text",
 
-                name=segnale,
+                text=labels,
 
-                line=dict(
+                textposition="top center",
 
-                    color=
-                        colore_segnale[
-                            segnale
-                        ],
+                textfont=dict(
+                    size=11
+                ),
 
-                    width=3,
+                marker=dict(
 
-                    shape="hv"
+                    size=13,
+
+                    color=COLORI_EVENTO[
+                        categoria
+                    ],
+
+                    line=dict(
+                        width=1,
+                        color="white"
+                    )
 
                 ),
 
-                text=testi,
+                name=categoria,
+
+                hovertext=testi,
 
                 hoverinfo="text",
 
-                connectgaps=False,
-
-                showlegend=True
+                showlegend=False
 
             )
-
         )
 
-        # ==================================================
-        # NUMBER SULLA LINEA
-        # ==================================================
-
-        if number_text:
-
-            fig.add_trace(
-
-                go.Scatter(
-
-                    x=number_x,
-
-                    y=number_y,
-
-                    mode="text",
-
-                    text=number_text,
-
-                    textposition="top center",
-
-                    textfont=dict(
-
-                        size=10,
-
-                        color=
-                            colore_segnale[
-                                segnale
-                            ],
-
-                        family="Arial"
-
-                    ),
-
-                    hovertext=number_hover,
-
-                    hoverinfo="text",
-
-                    showlegend=False
-
-                )
-
-            )
-
     # ======================================================
-    # ASSE Y
+    # LINEE DI COLLEGAMENTO VERTICALI
     # ======================================================
 
-    fig.update_yaxes(
+    for _, riga in df.iterrows():
 
-        tickmode="array",
+        categoria = riga["evento"]
 
-        tickvals=list(
-            mappa_y.values()
-        ),
+        if categoria not in y_map:
+            continue
 
-        ticktext=list(
-            mappa_y.keys()
-        ),
+        fig.add_shape(
 
-        autorange="reversed",
+            type="line",
 
-        showgrid=True,
+            x0=riga["timestamp"],
 
-        zeroline=False
+            x1=riga["timestamp"],
 
-    )
+            y0=0,
+
+            y1=3,
+
+            line=dict(
+
+                color="rgba(120,120,120,0.25)",
+
+                width=1,
+
+                dash="dot"
+
+            ),
+
+            layer="below"
+
+        )
 
     # ======================================================
     # LAYOUT
@@ -1401,69 +1174,21 @@ def crea_timeline(df):
 
     fig.update_layout(
 
-        height=max(
-
-            650,
-
-            len(segnali) * 38
-
-        ),
+        height=550,
 
         margin=dict(
 
-            l=150,
+            l=20,
 
-            r=230,
+            r=20,
 
-            t=30,
+            t=50,
 
-            b=80
+            b=30
 
         ),
 
         hovermode="closest",
-
-        # ==================================================
-        # LEGENDA
-        # ==================================================
-
-        showlegend=True,
-
-        legend=dict(
-
-            title=dict(
-
-                text="<b>SEGNALI</b>"
-
-            ),
-
-            orientation="v",
-
-            x=1.01,
-
-            y=1,
-
-            xanchor="left",
-
-            yanchor="top",
-
-            bgcolor="rgba(255,255,255,0.95)",
-
-            bordercolor="#cccccc",
-
-            borderwidth=1,
-
-            font=dict(
-
-                size=11
-
-            )
-
-        ),
-
-        # ==================================================
-        # ASSE X
-        # ==================================================
 
         xaxis=dict(
 
@@ -1484,72 +1209,37 @@ def crea_timeline(df):
                 buttons=[
 
                     dict(
-
-                        count=1,
-
-                        label="1h",
-
-                        step="hour",
-
+                        count=10,
+                        label="10 min",
+                        step="minute",
                         stepmode="backward"
-
                     ),
 
                     dict(
+                        count=30,
+                        label="30 min",
+                        step="minute",
+                        stepmode="backward"
+                    ),
 
+                    dict(
+                        count=1,
+                        label="1 h",
+                        step="hour",
+                        stepmode="backward"
+                    ),
+
+                    dict(
                         count=6,
-
-                        label="6h",
-
+                        label="6 h",
                         step="hour",
-
                         stepmode="backward"
-
                     ),
 
                     dict(
-
-                        count=12,
-
-                        label="12h",
-
-                        step="hour",
-
-                        stepmode="backward"
-
-                    ),
-
-                    dict(
-
-                        count=1,
-
-                        label="1g",
-
-                        step="day",
-
-                        stepmode="backward"
-
-                    ),
-
-                    dict(
-
-                        count=3,
-
-                        label="3g",
-
-                        step="day",
-
-                        stepmode="backward"
-
-                    ),
-
-                    dict(
-
                         step="all",
-
-                        label="TUTTO"
-
-                    )
+                        label="Tutto"
+                    ),
 
                 ]
 
@@ -1557,17 +1247,63 @@ def crea_timeline(df):
 
         ),
 
-        # ==================================================
-        # HOVER
-        # ==================================================
+        yaxis=dict(
+
+            title="",
+
+            tickmode="array",
+
+            tickvals=[
+
+                3,
+
+                2,
+
+                1,
+
+                0
+
+            ],
+
+            ticktext=[
+
+                "🔥 SENSORE FUMO",
+
+                "🚨 ALLARME INCENDIO",
+
+                "🔵 BASSA PRESSIONE",
+
+                "🟢 ACQUA PRESSURIZZATA",
+
+            ],
+
+            range=[
+
+                -0.7,
+
+                3.7
+
+            ],
+
+            showgrid=True,
+
+        ),
+
+        legend=dict(
+
+            orientation="h",
+
+            yanchor="bottom",
+
+            y=1.02,
+
+            xanchor="left",
+
+            x=0,
+
+        ),
 
         hoverlabel=dict(
-
-            bgcolor="white",
-
-            font_size=12,
-
-            font_family="Arial",
 
             align="left"
 
@@ -1589,7 +1325,7 @@ def fde_page():
     )
 
     st.caption(
-        "Analisi Log FDE DM1 / DM8"
+        "Analisi degli eventi incendio e pressione"
     )
 
     st.divider()
@@ -1624,18 +1360,10 @@ def fde_page():
 
         )
 
-    # ======================================================
-    # CONTROLLO FILE
-    # ======================================================
-
     if (
-
         file_dm1 is None
-
         and
-
         file_dm8 is None
-
     ):
 
         st.info(
@@ -1669,6 +1397,10 @@ def fde_page():
                 "DM1"
             )
 
+            df_dm1 = filtra_eventi_importanti(
+                df_dm1
+            )
+
         if not df_dm1.empty:
 
             frames.append(
@@ -1676,13 +1408,13 @@ def fde_page():
             )
 
             st.success(
-                f"✅ DM1: {len(df_dm1)} eventi"
+                f"✅ DM1: {len(df_dm1)} eventi importanti"
             )
 
         else:
 
             st.warning(
-                "⚠️ Nessun evento riconosciuto nel DM1."
+                "⚠️ Nessun evento importante nel DM1."
             )
 
     # ======================================================
@@ -1704,6 +1436,10 @@ def fde_page():
                 "DM8"
             )
 
+            df_dm8 = filtra_eventi_importanti(
+                df_dm8
+            )
+
         if not df_dm8.empty:
 
             frames.append(
@@ -1711,23 +1447,19 @@ def fde_page():
             )
 
             st.success(
-                f"✅ DM8: {len(df_dm8)} eventi"
+                f"✅ DM8: {len(df_dm8)} eventi importanti"
             )
 
         else:
 
             st.warning(
-                "⚠️ Nessun evento riconosciuto nel DM8."
+                "⚠️ Nessun evento importante nel DM8."
             )
-
-    # ======================================================
-    # NESSUN DATO
-    # ======================================================
 
     if not frames:
 
         st.error(
-            "❌ Nessun dato riconosciuto."
+            "❌ Nessun evento importante riconosciuto."
         )
 
         return
@@ -1737,21 +1469,14 @@ def fde_page():
     # ======================================================
 
     df = pd.concat(
-
         frames,
-
         ignore_index=True
-
     )
 
     df = df.sort_values(
-
         "timestamp"
-
     ).reset_index(
-
         drop=True
-
     )
 
     # ======================================================
@@ -1813,13 +1538,19 @@ def fde_page():
             "💻 Origine",
 
             [
+
                 "DM1",
+
                 "DM8"
+
             ],
 
             default=[
+
                 "DM1",
+
                 "DM8"
+
             ],
 
             key="fde_origini"
@@ -1827,26 +1558,28 @@ def fde_page():
         )
 
     # ======================================================
-    # FILTRO EVENTO
+    # FILTRO EVENTI
     # ======================================================
 
-    eventi = sorted(
+    eventi_disponibili = [
 
-        df[
-            "evento"
-        ]
-        .dropna()
-        .astype(str)
-        .unique()
-        .tolist()
+        "SENSORE FUMO",
 
-    )
+        "ALLARME INCENDIO",
+
+        "BASSA PRESSIONE",
+
+        "CONDOTTA ACQUA PRESSURIZZATA",
+
+    ]
 
     eventi_selezionati = st.multiselect(
 
-        "🚨 Tipo evento",
+        "🚨 Eventi da visualizzare",
 
-        eventi,
+        eventi_disponibili,
+
+        default=eventi_disponibili,
 
         key="fde_eventi"
 
@@ -1861,8 +1594,10 @@ def fde_page():
         "🔍 Ricerca",
 
         placeholder=(
-            "Sensore, segnale, cassa, "
-            "number, allarme..."
+
+            "SD23, DM1, allarme, "
+            "pressione, cassa..."
+
         ),
 
         key="fde_ricerca"
@@ -1895,9 +1630,7 @@ def fde_page():
 
             df["timestamp"]
 
-            >=
-
-            data_da_dt
+            >= data_da_dt
 
         )
 
@@ -1907,9 +1640,7 @@ def fde_page():
 
             df["timestamp"]
 
-            <=
-
-            data_a_dt
+            <= data_a_dt
 
         )
 
@@ -1926,13 +1657,19 @@ def fde_page():
             filtrato[
                 "origine"
             ].isin(
+
                 origini
+
             )
 
         ]
 
+    else:
+
+        filtrato = filtrato.iloc[0:0]
+
     # ======================================================
-    # EVENTO
+    # EVENTI
     # ======================================================
 
     if eventi_selezionati:
@@ -1942,10 +1679,16 @@ def fde_page():
             filtrato[
                 "evento"
             ].isin(
+
                 eventi_selezionati
+
             )
 
         ]
+
+    else:
+
+        filtrato = filtrato.iloc[0:0]
 
     # ======================================================
     # RICERCA
@@ -1977,19 +1720,15 @@ def fde_page():
 
     col2.metric(
 
-        "DM1",
+        "🔥 Sensori",
 
         int(
 
             (
 
-                filtrato[
-                    "origine"
-                ]
+                filtrato["evento"]
 
-                ==
-
-                "DM1"
+                == "SENSORE FUMO"
 
             ).sum()
 
@@ -1999,19 +1738,15 @@ def fde_page():
 
     col3.metric(
 
-        "DM8",
+        "🚨 Incendi",
 
         int(
 
             (
 
-                filtrato[
-                    "origine"
-                ]
+                filtrato["evento"]
 
-                ==
-
-                "DM8"
+                == "ALLARME INCENDIO"
 
             ).sum()
 
@@ -2021,34 +1756,36 @@ def fde_page():
 
     col4.metric(
 
-        "🚨 Anomalie",
+        "💧 Pressione",
 
         int(
 
             (
 
-                filtrato[
-                    "evento"
-                ]
+                filtrato["evento"].isin(
 
-                !=
+                    [
 
-                "NORMALE"
+                        "BASSA PRESSIONE",
+
+                        "CONDOTTA ACQUA PRESSURIZZATA",
+
+                    ]
+
+                )
 
             ).sum()
 
         )
 
-    )
-
     # ======================================================
-    # RISULTATI
+    # NESSUN RISULTATO
     # ======================================================
 
     if filtrato.empty:
 
         st.warning(
-            "⚠️ Nessun risultato."
+            "⚠️ Nessun evento trovato."
         )
 
         return
@@ -2060,8 +1797,11 @@ def fde_page():
     tab1, tab2 = st.tabs(
 
         [
+
             "📈 Timeline",
+
             "📋 Eventi"
+
         ]
 
     )
@@ -2073,7 +1813,13 @@ def fde_page():
     with tab1:
 
         st.subheader(
-            "📈 Timeline FDE"
+            "📈 Timeline eventi FDE"
+        )
+
+        st.info(
+            "La timeline mostra solo gli eventi "
+            "significativi: sensore fumo, allarme "
+            "incendio e pressione acqua."
         )
 
         fig = crea_timeline(
@@ -2109,8 +1855,7 @@ def fde_page():
 
         st.subheader(
 
-            f"📋 Eventi: "
-            f"{len(filtrato)}"
+            f"📋 Eventi: {len(filtrato)}"
 
         )
 
@@ -2133,17 +1878,27 @@ def fde_page():
         tabella = tabella[
 
             [
+
                 "Time",
-                "origine",
-                "dataset",
-                "segnale",
-                "cassa",
-                "number",
-                "number_raw",
-                "data_val",
-                "descrizione",
+
                 "evento",
+
+                "origine",
+
+                "dataset",
+
+                "segnale",
+
+                "cassa",
+
+                "number",
+
+                "data_val",
+
+                "descrizione",
+
                 "valore",
+
             ]
 
         ]
@@ -2151,6 +1906,9 @@ def fde_page():
         tabella = tabella.rename(
 
             columns={
+
+                "evento":
+                    "Evento",
 
                 "origine":
                     "Origine",
@@ -2165,19 +1923,13 @@ def fde_page():
                     "Cassa",
 
                 "number":
-                    "Number",
-
-                "number_raw":
-                    "Number originale",
+                    "NUMBER / SENSORE",
 
                 "data_val":
-                    "Data",
+                    "DATA",
 
                 "descrizione":
                     "Descrizione",
-
-                "evento":
-                    "Evento",
 
                 "valore":
                     "Valore grezzo",
@@ -2207,7 +1959,9 @@ def fde_page():
             index=False
 
         ).encode(
+
             "utf-8-sig"
+
         )
 
         st.download_button(
@@ -2216,7 +1970,7 @@ def fde_page():
 
             data=csv,
 
-            file_name="analisi_fde.csv",
+            file_name="analisi_fde_eventi_importanti.csv",
 
             mime="text/csv"
 
