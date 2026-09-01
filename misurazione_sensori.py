@@ -1122,48 +1122,6 @@ def misurazione_sensori_page():
 
     st.divider()
 
-    # ======================================================
-    # ORDINE
-    # ======================================================
-
-    st.subheader(
-        f"📋 Ordine ADD {cassa}"
-    )
-
-    ordine = get_order(
-        cassa
-    )
-
-    add_presenti = (
-        grafico_df["ADD"]
-        .tolist()
-    )
-
-    ordine_visualizzato = [
-        add
-        for add in ordine
-        if add in add_presenti
-    ]
-
-    st.code(
-        " → ".join(
-            ordine_visualizzato
-        )
-    )
-
-    st.divider()
-
-    # ======================================================
-    # FILTRO ADD
-    # ======================================================
-
-    add_selezionati = st.multiselect(
-        "📍 Seleziona ADD da visualizzare",
-        options=ordine_visualizzato,
-        default=[],
-        key="mnt_add_filter"
-    )
-
     df_view = grafico_df.copy()
 
     if add_selezionati:
