@@ -2580,7 +2580,7 @@ elif menu == "Treno":
         st.title("HVAC")
         st.info("Sezione HVAC in preparazione.")
 
-    elif sistema == "Antincendio":
+    elif sistema == "Misurazione Sensori":
 
         st.title("Antincendio")
         st.info("Sezione Antincendio in preparazione.")
