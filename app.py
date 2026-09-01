@@ -913,7 +913,7 @@ with st.sidebar:
                     "Carrelli",
                     "HVAC",
                     "Misurazione Sensori",
-                    "Analizza"
+                    "Analizza Log FDE"
                 ],
                 key="sistema_treno",
                 label_visibility="collapsed"
@@ -1000,7 +1000,7 @@ with st.sidebar:
                 "Carrelli",
                 "HVAC",
                 "Misurazione Sensori",
-                "Analizza"
+                "Analizza Log FDE"
             ],
             key="sistema_treno",
             label_visibility="collapsed"
@@ -2610,5 +2610,5 @@ elif menu == "Treno":
         misurazione_sensori_page()
 
 
-    elif sistema == "Analizza":
+    elif sistema == "Analizza Log FDE":
         analizza_page()
