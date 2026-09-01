@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import re
 from datetime import datetime
-import plotly.graph_objects as go
 
 
 # ==========================================================
@@ -23,7 +22,7 @@ DATASETS = [
 
 
 # ==========================================================
-# DECODIFICHE
+# DECODIFICHE SEGNALI
 # ==========================================================
 
 DECODIFICHE = {
@@ -201,7 +200,7 @@ def decodifica_cassa(valore):
 
     return DECODIFICA_CASSA.get(
         str(valore).strip(),
-        str(valore)
+        str(valore).strip()
     )
 
 
@@ -211,8 +210,87 @@ def decodifica_cassa(valore):
 
 DECODIFICA_NUMBER_SMOKE = {
 
-    str(i): f"SD{i + 1}"
-    for i in range(74)
+    "0": "SD1",
+    "1": "SD2",
+    "2": "SD3",
+    "3": "SD4",
+    "4": "SD5",
+    "5": "SD6",
+    "6": "SD7",
+    "7": "SD8",
+    "8": "SD9",
+    "9": "SD10",
+
+    "10": "SD11",
+    "11": "SD12",
+    "12": "SD13",
+    "13": "SD14",
+    "14": "SD15",
+    "15": "SD16",
+    "16": "SD17",
+    "17": "SD18",
+    "18": "SD19",
+    "19": "SD20",
+
+    "20": "SD21",
+    "21": "SD22",
+    "22": "SD23",
+    "23": "SD24",
+    "24": "SD25",
+    "25": "SD26",
+    "26": "SD27",
+    "27": "SD28",
+    "28": "SD29",
+    "29": "SD30",
+
+    "30": "SD31",
+    "31": "SD32",
+    "32": "SD33",
+    "33": "SD34",
+    "34": "SD35",
+    "35": "SD36",
+    "36": "SD37",
+    "37": "SD38",
+    "38": "SD39",
+    "39": "SD40",
+
+    "40": "SD41",
+    "41": "SD42",
+    "42": "SD43",
+    "43": "SD44",
+    "44": "SD45",
+    "45": "SD46",
+    "46": "SD47",
+    "47": "SD48",
+    "48": "SD49",
+    "49": "SD50",
+
+    "50": "SD51",
+    "51": "SD52",
+    "52": "SD53",
+    "53": "SD54",
+    "54": "SD55",
+    "55": "SD56",
+    "56": "SD57",
+    "57": "SD58",
+    "58": "SD59",
+    "59": "SD60",
+
+    "60": "SD61",
+    "61": "SD62",
+    "62": "SD63",
+    "63": "SD64",
+    "64": "SD65",
+    "65": "SD66",
+    "66": "SD67",
+    "67": "SD68",
+    "68": "SD69",
+    "69": "SD70",
+
+    "70": "SD71",
+    "71": "SD72",
+    "72": "SD73",
+    "73": "SD74",
 }
 
 
@@ -229,24 +307,7 @@ DECODIFICA_NUMBER_MAU = {
 
 
 # ==========================================================
-# COLORI
-# ==========================================================
-
-COLORI_EVENTO = {
-
-    "SENSORE FUMO": "#ff3b30",
-
-    "ALLARME INCENDIO": "#ff0000",
-
-    "BASSA PRESSIONE": "#007aff",
-
-    "CONDOTTA ACQUA PRESSURIZZATA": "#34c759",
-
-}
-
-
-# ==========================================================
-# NORMALIZZAZIONE SEGNALE
+# NORMALIZZA NOME SEGNALE
 # ==========================================================
 
 def normalizza_segnale(segnale):
@@ -255,6 +316,10 @@ def normalizza_segnale(segnale):
         return ""
 
     segnale = str(segnale).strip()
+
+    # Rimuove eventuali indici:
+    # SIGNAL[1]
+    # SIGNAL_1
 
     segnale = re.split(
         r"[\[_]",
@@ -265,12 +330,12 @@ def normalizza_segnale(segnale):
 
 
 # ==========================================================
-# TIMESTAMP
+# PARSE TIMESTAMP
 # ==========================================================
 
 def parse_timestamp(valore):
 
-    if not valore:
+    if valore is None:
         return None
 
     valore = " ".join(
@@ -289,8 +354,6 @@ def parse_timestamp(valore):
 
         "%d-%m-%Y %H:%M:%S",
 
-        "%d/%m/%Y %H:%M:%S",
-
     ]
 
     for formato in formati:
@@ -303,13 +366,14 @@ def parse_timestamp(valore):
             )
 
         except ValueError:
-            pass
+
+            continue
 
     return None
 
 
 # ==========================================================
-# ESTRAI PARAMETRI
+# ESTRAZIONE PARAMETRI
 # ==========================================================
 
 def estrai_parametri(valore):
@@ -376,28 +440,43 @@ def decodifica_segnale(
     valore
 ):
 
-    segnale = str(
+    segnale_originale = str(
         segnale
-    ).upper().strip()
+    ).strip()
+
+    segnale_upper = segnale_originale.upper()
 
     valore = str(
         valore
-    )
+    ).strip()
+
+    # ------------------------------------------------------
+    # CERCA DECODIFICA
+    # ------------------------------------------------------
 
     mapping = None
 
     for nome, valori in DECODIFICHE.items():
 
-        if segnale.startswith(nome):
+        if segnale_upper.startswith(
+            nome
+        ):
 
             mapping = valori
+
             break
+
+    # ------------------------------------------------------
+    # PARAMETRI
+    # ------------------------------------------------------
 
     cassa, number, data = estrai_parametri(
         valore
     )
 
-    descrizione = data
+    # ------------------------------------------------------
+    # DECODIFICA DATA
+    # ------------------------------------------------------
 
     if mapping:
 
@@ -406,11 +485,15 @@ def decodifica_segnale(
             str(data)
         )
 
-    # ======================================================
-    # SENSORI FUMO
-    # ======================================================
+    else:
 
-    if segnale.startswith(
+        descrizione = str(data)
+
+    # ------------------------------------------------------
+    # SENSORI FUMO
+    # ------------------------------------------------------
+
+    if segnale_upper.startswith(
         "ISMOKESENSSTATE"
     ):
 
@@ -421,11 +504,7 @@ def decodifica_segnale(
             )
         )
 
-    # ======================================================
-    # DIAGNOSTICA SENSORI FUMO
-    # ======================================================
-
-    elif segnale.startswith(
+    elif segnale_upper.startswith(
         "FSMOKESENS"
     ):
 
@@ -436,11 +515,11 @@ def decodifica_segnale(
             )
         )
 
-    # ======================================================
+    # ------------------------------------------------------
     # MAU
-    # ======================================================
+    # ------------------------------------------------------
 
-    elif segnale.startswith(
+    elif segnale_upper.startswith(
         "IMAUINPUTSTATE"
     ):
 
@@ -466,12 +545,11 @@ def decodifica_segnale(
 
 
 # ==========================================================
-# CLASSIFICAZIONE DEGLI EVENTI IMPORTANTI
+# CLASSIFICAZIONE EVENTO
 # ==========================================================
 
 def classifica_evento(
     segnale,
-    number,
     descrizione
 ):
 
@@ -479,103 +557,73 @@ def classifica_evento(
         segnale
     ).upper()
 
-    number = str(
-        number
-    ).upper()
-
     descrizione = str(
         descrizione
     ).upper()
 
-    # ======================================================
+    # ------------------------------------------------------
     # SENSORE FUMO
-    # ======================================================
+    # ------------------------------------------------------
 
     if (
-        segnale.startswith("ISMOKESENSSTATE")
-        and
-        (
-            "ALLARME FUMO" in descrizione
-            or
-            "ALLARME TERMICO" in descrizione
-            or
-            "FUMO E TERMICO" in descrizione
-        )
+        "ALLARME FUMO" in descrizione
+        or
+        "ALLARME FUMO E TERMICO" in descrizione
     ):
 
         return "SENSORE FUMO"
 
-    # ======================================================
-    # ALLARME INCENDIO
-    # ======================================================
+    # ------------------------------------------------------
+    # ALLARME TERMICO
+    # ------------------------------------------------------
 
-    if (
-        "ALLARME INCENDIO" in descrizione
-        or
-        (
-            segnale.startswith(
-                "IFIREGENERALALARM"
-            )
-            and
-            descrizione != "NESSUN ALLARME"
-        )
-        or
-        (
-            segnale.startswith(
-                "ICARFIREALARM"
-            )
-            and
-            "ALLARME" in descrizione
-        )
-    ):
+    if "ALLARME TERMICO" in descrizione:
+
+        return "SENSORE FUMO"
+
+    # ------------------------------------------------------
+    # ALLARME INCENDIO
+    # ------------------------------------------------------
+
+    if "ALLARME INCENDIO" in descrizione:
 
         return "ALLARME INCENDIO"
 
-    # ======================================================
+    # ------------------------------------------------------
     # BASSA PRESSIONE
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "BASSA PRESSIONE" in descrizione
-        or
-        (
-            segnale.startswith(
-                "IMAUINPUTSTATE"
-            )
-            and
-            number in [
-                "BASSA PRESSIONE"
-            ]
-        )
-    ):
+    if "BASSA PRESSIONE" in descrizione:
 
         return "BASSA PRESSIONE"
 
-    # ======================================================
+    # ------------------------------------------------------
     # ACQUA PRESSURIZZATA
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "CONDOTTA ACQUA PRESSURIZZATA"
-        in descrizione
-        or
-        (
-            segnale.startswith(
-                "IMAUINPUTSTATE"
-            )
-            and
-            number
-            == "CONDOTTA ACQUA PRESSURIZZATA"
-        )
-    ):
+    if "CONDOTTA ACQUA PRESSURIZZATA" in descrizione:
 
         return "CONDOTTA ACQUA PRESSURIZZATA"
 
-    return None
+    # ------------------------------------------------------
+    # FAULT
+    # ------------------------------------------------------
+
+    if (
+        descrizione == "FAULT"
+        or
+        "FAULT" in descrizione
+        or
+        "FAIL" in descrizione
+    ):
+
+        return "FAULT"
+
+    return "NORMALE"
 
 
 # ==========================================================
-# IMPORTA LOG
+# IMPORTAZIONE LOG
 # ==========================================================
 
 def importa_log(
@@ -590,33 +638,27 @@ def importa_log(
 
     segnale_corrente = None
 
+    # ======================================================
+    # LETTURA FILE
+    # ======================================================
+
+    contenuto = uploaded_file.getvalue()
+
     try:
 
-        contenuto = uploaded_file.getvalue()
-
-        try:
-
-            testo = contenuto.decode(
-                "utf-8"
-            )
-
-        except UnicodeDecodeError:
-
-            testo = contenuto.decode(
-                "latin-1",
-                errors="ignore"
-            )
-
-    except Exception as e:
-
-        st.error(
-            f"Errore lettura file: {e}"
+        testo = contenuto.decode(
+            "utf-8"
         )
 
-        return pd.DataFrame()
+    except UnicodeDecodeError:
+
+        testo = contenuto.decode(
+            "latin-1",
+            errors="ignore"
+        )
 
     # ======================================================
-    # RIGHE
+    # LETTURA RIGHE
     # ======================================================
 
     for riga in testo.splitlines():
@@ -624,6 +666,7 @@ def importa_log(
         riga = riga.strip()
 
         if not riga:
+
             continue
 
         # ==================================================
@@ -643,15 +686,17 @@ def importa_log(
             )
 
             dataset_corrente = None
+
             segnale_corrente = None
 
             continue
 
         if timestamp is None:
+
             continue
 
         # ==================================================
-        # DATASET / SEGNALE
+        # RICERCA DATASET
         # ==================================================
 
         trovato = False
@@ -667,6 +712,10 @@ def importa_log(
                     1
                 )[1]
 
+                # ------------------------------------------
+                # SEGNALE
+                # ------------------------------------------
+
                 if ":" in parte:
 
                     segnale = parte.split(
@@ -680,10 +729,8 @@ def importa_log(
 
                 dataset_corrente = dataset
 
-                segnale_corrente = (
-                    normalizza_segnale(
-                        segnale
-                    )
+                segnale_corrente = normalizza_segnale(
+                    segnale
                 )
 
                 trovato = True
@@ -691,6 +738,7 @@ def importa_log(
                 break
 
         if trovato:
+
             continue
 
         # ==================================================
@@ -698,10 +746,12 @@ def importa_log(
         # ==================================================
 
         if (
-            dataset_corrente
+            dataset_corrente is not None
             and
             segnale_corrente
         ):
+
+            valore = riga
 
             dati.append({
 
@@ -715,11 +765,12 @@ def importa_log(
                     segnale_corrente,
 
                 "valore":
-                    riga,
+                    valore,
 
             })
 
             dataset_corrente = None
+
             segnale_corrente = None
 
     # ======================================================
@@ -731,6 +782,7 @@ def importa_log(
     )
 
     if df.empty:
+
         return df
 
     df["timestamp"] = pd.to_datetime(
@@ -739,7 +791,9 @@ def importa_log(
     )
 
     df = df.dropna(
-        subset=["timestamp"]
+        subset=[
+            "timestamp"
+        ]
     )
 
     return df
@@ -755,6 +809,7 @@ def prepara_eventi(
 ):
 
     if df.empty:
+
         return df
 
     df = df.copy()
@@ -777,25 +832,38 @@ def prepara_eventi(
         ) = decodifica_segnale(
 
             riga["segnale"],
+
             riga["valore"]
+
         )
 
         evento = classifica_evento(
 
             riga["segnale"],
-            number,
+
+            descrizione
+
+        )
+
+        casse.append(
+            cassa
+        )
+
+        numbers.append(
+            number
+        )
+
+        date_valori.append(
+            data
+        )
+
+        descrizioni.append(
             descrizione
         )
 
-        casse.append(cassa)
-
-        numbers.append(number)
-
-        date_valori.append(data)
-
-        descrizioni.append(descrizione)
-
-        eventi.append(evento)
+        eventi.append(
+            evento
+        )
 
     df["cassa"] = casse
 
@@ -811,34 +879,6 @@ def prepara_eventi(
 
 
 # ==========================================================
-# FILTRO EVENTI IMPORTANTI
-# ==========================================================
-
-def filtra_eventi_importanti(df):
-
-    if df.empty:
-        return df
-
-    eventi_validi = [
-
-        "SENSORE FUMO",
-
-        "ALLARME INCENDIO",
-
-        "BASSA PRESSIONE",
-
-        "CONDOTTA ACQUA PRESSURIZZATA",
-
-    ]
-
-    return df[
-        df["evento"].isin(
-            eventi_validi
-        )
-    ].copy()
-
-
-# ==========================================================
 # RICERCA
 # ==========================================================
 
@@ -847,14 +887,20 @@ def filtra_ricerca(
     ricerca
 ):
 
+    if df.empty:
+
+        return df
+
     if not ricerca:
+
         return df
 
     ricerca = str(
         ricerca
-    ).lower().strip()
+    ).strip().lower()
 
     if not ricerca:
+
         return df
 
     colonne = [
@@ -878,407 +924,26 @@ def filtra_ricerca(
 
     for colonna in colonne:
 
-        if colonna in df.columns:
+        if colonna not in df.columns:
 
-            mask |= (
-                df[colonna]
-                .astype(str)
-                .str.lower()
-                .str.contains(
-                    ricerca,
-                    regex=False,
-                    na=False
-                )
+            continue
+
+        mask |= (
+            df[colonna]
+            .astype(str)
+            .str.lower()
+            .str.contains(
+                ricerca,
+                regex=False,
+                na=False
             )
+        )
 
     return df[mask]
 
 
 # ==========================================================
-# TIMELINE A ONDA QUADRA
-# ==========================================================
-
-def crea_timeline(df):
-
-    fig = go.Figure()
-
-    if df.empty:
-        return fig
-
-    df = df.sort_values("timestamp").copy()
-
-    # ======================================================
-    # CATEGORIE
-    # ======================================================
-
-    categorie = [
-        "SENSORE FUMO",
-        "ALLARME INCENDIO",
-        "BASSA PRESSIONE",
-        "CONDOTTA ACQUA PRESSURIZZATA",
-    ]
-
-    # Posizione delle 4 righe
-    y_map = {
-        "SENSORE FUMO": 3,
-        "ALLARME INCENDIO": 2,
-        "BASSA PRESSIONE": 1,
-        "CONDOTTA ACQUA PRESSURIZZATA": 0,
-    }
-
-    # ======================================================
-    # COLORI
-    # ======================================================
-
-    colori = {
-        "SENSORE FUMO": "#ff3b30",
-        "ALLARME INCENDIO": "#ff0000",
-        "BASSA PRESSIONE": "#007aff",
-        "CONDOTTA ACQUA PRESSURIZZATA": "#34c759",
-    }
-
-    # ======================================================
-    # LEGENDA
-    # ======================================================
-
-    for categoria in categorie:
-
-        fig.add_trace(
-            go.Scatter(
-                x=[None],
-                y=[None],
-                mode="lines",
-                line=dict(
-                    color=colori[categoria],
-                    width=4
-                ),
-                name=categoria,
-                showlegend=True
-            )
-        )
-
-    # ======================================================
-    # CREAZIONE ONDE
-    # ======================================================
-
-    for categoria in categorie:
-
-        dati = df[
-            df["evento"] == categoria
-        ].sort_values("timestamp").copy()
-
-        if dati.empty:
-            continue
-
-        base = y_map[categoria]
-
-        # --------------------------------------------------
-        # ONDA:
-        #
-        # 0 = base
-        # 1 = base + 0.65
-        #
-        # Usiamo "hv" per ottenere una vera onda quadra.
-        # --------------------------------------------------
-
-        x = []
-        y = []
-
-        testi = []
-
-        stato_precedente = 0
-
-        for _, riga in dati.iterrows():
-
-            timestamp = riga["timestamp"]
-
-            # ==================================================
-            # DETERMINAZIONE STATO
-            # ==================================================
-
-            stato = 1
-
-            # ==================================================
-            # PUNTO PRECEDENTE
-            # ==================================================
-
-            if not x:
-
-                x.append(timestamp)
-                y.append(base)
-
-            # ==================================================
-            # SALITA
-            # ==================================================
-
-            if stato == 1 and stato_precedente == 0:
-
-                x.append(timestamp)
-                y.append(base)
-
-                x.append(timestamp)
-                y.append(base + 0.65)
-
-            # ==================================================
-            # MANTIENI ALTO
-            # ==================================================
-
-            elif stato == 1 and stato_precedente == 1:
-
-                x.append(timestamp)
-                y.append(base + 0.65)
-
-            # ==================================================
-            # DISCESA
-            # ==================================================
-
-            elif stato == 0 and stato_precedente == 1:
-
-                x.append(timestamp)
-                y.append(base + 0.65)
-
-                x.append(timestamp)
-                y.append(base)
-
-            # ==================================================
-            # RIMANI BASSO
-            # ==================================================
-
-            else:
-
-                x.append(timestamp)
-                y.append(base)
-
-            # ==================================================
-            # TOOLTIP
-            # ==================================================
-
-            numero = str(
-                riga.get(
-                    "number",
-                    ""
-                )
-            )
-
-            descrizione = str(
-                riga.get(
-                    "descrizione",
-                    ""
-                )
-            )
-
-            testo = (
-                f"<b>{categoria}</b><br>"
-                f"<b>Ora:</b> "
-                f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}<br>"
-                f"<b>Origine:</b> "
-                f"{riga.get('origine', '')}<br>"
-                f"<b>Dataset:</b> "
-                f"{riga.get('dataset', '')}<br>"
-                f"<b>Segnale:</b> "
-                f"{riga.get('segnale', '')}<br>"
-                f"<b>Cassa:</b> "
-                f"{riga.get('cassa', '')}<br>"
-                f"<b>NUMBER / SENSORE:</b> "
-                f"{numero}<br>"
-                f"<b>Valore:</b> "
-                f"{riga.get('valore', '')}<br>"
-                f"<b>Descrizione:</b> "
-                f"{descrizione}"
-            )
-
-            testi.append(testo)
-
-            stato_precedente = stato
-
-        # ==================================================
-        # LINEA
-        # ==================================================
-
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-
-                mode="lines",
-
-                line=dict(
-                    color=colori[categoria],
-                    width=3,
-                    shape="hv"
-                ),
-
-                hoverinfo="text",
-
-                text=testi,
-
-                connectgaps=False,
-
-                name=categoria,
-
-                showlegend=False
-            )
-        )
-
-    # ======================================================
-    # LINEE ORIZZONTALI DI BASE
-    # ======================================================
-
-    for categoria in categorie:
-
-        base = y_map[categoria]
-
-        fig.add_shape(
-            type="line",
-
-            x0=df["timestamp"].min(),
-            x1=df["timestamp"].max(),
-
-            y0=base,
-            y1=base,
-
-            line=dict(
-                color="rgba(120,120,120,0.25)",
-                width=1
-            ),
-
-            layer="below"
-        )
-
-    # ======================================================
-    # LAYOUT
-    # ======================================================
-
-    fig.update_layout(
-
-        height=600,
-
-        margin=dict(
-            l=20,
-            r=20,
-            t=70,
-            b=30
-        ),
-
-        hovermode="closest",
-
-        # --------------------------------------------------
-        # ASSE X
-        # --------------------------------------------------
-
-        xaxis=dict(
-
-            title="Data / Ora",
-
-            type="date",
-
-            showgrid=True,
-
-            rangeslider=dict(
-                visible=True
-            ),
-
-            rangeselector=dict(
-
-                buttons=[
-
-                    dict(
-                        count=10,
-                        label="10 min",
-                        step="minute",
-                        stepmode="backward"
-                    ),
-
-                    dict(
-                        count=30,
-                        label="30 min",
-                        step="minute",
-                        stepmode="backward"
-                    ),
-
-                    dict(
-                        count=1,
-                        label="1 h",
-                        step="hour",
-                        stepmode="backward"
-                    ),
-
-                    dict(
-                        count=6,
-                        label="6 h",
-                        step="hour",
-                        stepmode="backward"
-                    ),
-
-                    dict(
-                        step="all",
-                        label="Tutto"
-                    ),
-                ]
-            )
-        ),
-
-        # --------------------------------------------------
-        # ASSE Y
-        # --------------------------------------------------
-
-        yaxis=dict(
-
-            title="",
-
-            tickmode="array",
-
-            tickvals=[
-                3,
-                2,
-                1,
-                0
-            ],
-
-            ticktext=[
-                "🔥 SENSORE FUMO",
-                "🚨 ALLARME INCENDIO",
-                "🔵 BASSA PRESSIONE",
-                "🟢 ACQUA PRESSURIZZATA",
-            ],
-
-            range=[
-                -0.7,
-                3.9
-            ],
-
-            showgrid=True,
-
-            zeroline=False
-        ),
-
-        # --------------------------------------------------
-        # LEGENDA
-        # --------------------------------------------------
-
-        legend=dict(
-
-            orientation="h",
-
-            yanchor="bottom",
-
-            y=1.02,
-
-            xanchor="left",
-
-            x=0
-        ),
-
-        hoverlabel=dict(
-            align="left"
-        )
-    )
-
-    return fig
-
-
-# ==========================================================
-# PAGINA FDE
+# PAGINA STREAMLIT FDE
 # ==========================================================
 
 def fde_page():
@@ -1288,7 +953,7 @@ def fde_page():
     )
 
     st.caption(
-        "Analisi degli eventi incendio e pressione"
+        "Analisi log FDE DM1 / DM8"
     )
 
     st.divider()
@@ -1302,25 +967,17 @@ def fde_page():
     with col1:
 
         file_dm1 = st.file_uploader(
-
             "📥 Carica Log DM1",
-
             type=None,
-
             key="fde_file_dm1"
-
         )
 
     with col2:
 
         file_dm8 = st.file_uploader(
-
             "📥 Carica Log DM8",
-
             type=None,
-
             key="fde_file_dm8"
-
         )
 
     if (
@@ -1336,7 +993,7 @@ def fde_page():
         return
 
     # ======================================================
-    # LETTURA FILE
+    # ANALISI
     # ======================================================
 
     frames = []
@@ -1348,7 +1005,7 @@ def fde_page():
     if file_dm1 is not None:
 
         with st.spinner(
-            "🔄 Analisi DM1..."
+            "🔄 Analisi Log DM1..."
         ):
 
             df_dm1 = importa_log(
@@ -1360,10 +1017,6 @@ def fde_page():
                 "DM1"
             )
 
-            df_dm1 = filtra_eventi_importanti(
-                df_dm1
-            )
-
         if not df_dm1.empty:
 
             frames.append(
@@ -1371,13 +1024,13 @@ def fde_page():
             )
 
             st.success(
-                f"✅ DM1: {len(df_dm1)} eventi importanti"
+                f"✅ DM1 analizzato: {len(df_dm1)} righe"
             )
 
         else:
 
             st.warning(
-                "⚠️ Nessun evento importante nel DM1."
+                "⚠️ Nessun dato riconosciuto nel DM1."
             )
 
     # ======================================================
@@ -1387,7 +1040,7 @@ def fde_page():
     if file_dm8 is not None:
 
         with st.spinner(
-            "🔄 Analisi DM8..."
+            "🔄 Analisi Log DM8..."
         ):
 
             df_dm8 = importa_log(
@@ -1399,10 +1052,6 @@ def fde_page():
                 "DM8"
             )
 
-            df_dm8 = filtra_eventi_importanti(
-                df_dm8
-            )
-
         if not df_dm8.empty:
 
             frames.append(
@@ -1410,19 +1059,23 @@ def fde_page():
             )
 
             st.success(
-                f"✅ DM8: {len(df_dm8)} eventi importanti"
+                f"✅ DM8 analizzato: {len(df_dm8)} righe"
             )
 
         else:
 
             st.warning(
-                "⚠️ Nessun evento importante nel DM8."
+                "⚠️ Nessun dato riconosciuto nel DM8."
             )
+
+    # ======================================================
+    # NESSUN DATO
+    # ======================================================
 
     if not frames:
 
         st.error(
-            "❌ Nessun evento importante riconosciuto."
+            "❌ Nessun dato riconosciuto nei log."
         )
 
         return
@@ -1441,6 +1094,28 @@ def fde_page():
     ).reset_index(
         drop=True
     )
+
+    # ======================================================
+    # SOLO EVENTI INTERESSANTI
+    # ======================================================
+
+    eventi_interessanti = [
+
+        "SENSORE FUMO",
+
+        "ALLARME INCENDIO",
+
+        "BASSA PRESSIONE",
+
+        "CONDOTTA ACQUA PRESSURIZZATA",
+
+    ]
+
+    df_eventi = df[
+        df["evento"].isin(
+            eventi_interessanti
+        )
+    ].copy()
 
     # ======================================================
     # FILTRI
@@ -1465,33 +1140,21 @@ def fde_page():
     with col1:
 
         data_da = st.date_input(
-
             "📅 Da",
-
             value=data_min,
-
             min_value=data_min,
-
             max_value=data_max,
-
             key="fde_data_da"
-
         )
 
     with col2:
 
         data_a = st.date_input(
-
             "📅 A",
-
             value=data_max,
-
             min_value=data_min,
-
             max_value=data_max,
-
             key="fde_data_a"
-
         )
 
     with col3:
@@ -1500,49 +1163,25 @@ def fde_page():
 
             "💻 Origine",
 
-            [
+            ["DM1", "DM8"],
 
-                "DM1",
-
-                "DM8"
-
-            ],
-
-            default=[
-
-                "DM1",
-
-                "DM8"
-
-            ],
+            default=["DM1", "DM8"],
 
             key="fde_origini"
 
         )
 
     # ======================================================
-    # FILTRO EVENTI
+    # TIPO EVENTO
     # ======================================================
-
-    eventi_disponibili = [
-
-        "SENSORE FUMO",
-
-        "ALLARME INCENDIO",
-
-        "BASSA PRESSIONE",
-
-        "CONDOTTA ACQUA PRESSURIZZATA",
-
-    ]
 
     eventi_selezionati = st.multiselect(
 
         "🚨 Eventi da visualizzare",
 
-        eventi_disponibili,
+        eventi_interessanti,
 
-        default=eventi_disponibili,
+        default=eventi_interessanti,
 
         key="fde_eventi"
 
@@ -1554,13 +1193,11 @@ def fde_page():
 
     ricerca = st.text_input(
 
-        "🔍 Ricerca",
+        "🔍 Cerca",
 
         placeholder=(
-
-            "SD23, DM1, allarme, "
-            "pressione, cassa..."
-
+            "SD1, SD25, NUMBER, DM1, "
+            "BASSA PRESSIONE..."
         ),
 
         key="fde_ricerca"
@@ -1568,63 +1205,41 @@ def fde_page():
     )
 
     # ======================================================
-    # FILTRO DATE
+    # FILTRO DATA
     # ======================================================
 
     data_da_dt = datetime.combine(
-
         data_da,
-
         datetime.min.time()
-
     )
 
     data_a_dt = datetime.combine(
-
         data_a,
-
         datetime.max.time()
-
     )
 
-    filtrato = df[
-
+    filtrato = df_eventi[
         (
-
-            df["timestamp"]
-
+            df_eventi["timestamp"]
             >= data_da_dt
-
         )
-
         &
-
         (
-
-            df["timestamp"]
-
+            df_eventi["timestamp"]
             <= data_a_dt
-
         )
-
     ].copy()
 
     # ======================================================
-    # ORIGINE
+    # FILTRO ORIGINE
     # ======================================================
 
     if origini:
 
         filtrato = filtrato[
-
-            filtrato[
-                "origine"
-            ].isin(
-
+            filtrato["origine"].isin(
                 origini
-
             )
-
         ]
 
     else:
@@ -1632,21 +1247,15 @@ def fde_page():
         filtrato = filtrato.iloc[0:0]
 
     # ======================================================
-    # EVENTI
+    # FILTRO EVENTO
     # ======================================================
 
     if eventi_selezionati:
 
         filtrato = filtrato[
-
-            filtrato[
-                "evento"
-            ].isin(
-
+            filtrato["evento"].isin(
                 eventi_selezionati
-
             )
-
         ]
 
     else:
@@ -1658,53 +1267,55 @@ def fde_page():
     # ======================================================
 
     filtrato = filtra_ricerca(
-
         filtrato,
-
         ricerca
-
     )
 
-    # ==========================================================
+    # ======================================================
     # METRICHE
-    # ==========================================================
-    
+    # ======================================================
+
     st.divider()
-    
+
     col1, col2, col3, col4 = st.columns(4)
-    
+
     col1.metric(
         "📋 Eventi",
         len(filtrato)
     )
-    
+
     col2.metric(
-        "🔥 Sensori",
+        "🔥 Incendio",
         int(
             (
-                filtrato["evento"] == "SENSORE FUMO"
+                filtrato["evento"]
+                == "ALLARME INCENDIO"
             ).sum()
         )
     )
-    
+
     col3.metric(
-        "🚨 Incendi",
+        "💨 Sensori fumo",
         int(
             (
-                filtrato["evento"] == "ALLARME INCENDIO"
+                filtrato["evento"]
+                == "SENSORE FUMO"
             ).sum()
         )
     )
-    
+
     col4.metric(
         "💧 Pressione",
         int(
             (
-                filtrato["evento"].isin(
-                    [
-                        "BASSA PRESSIONE",
-                        "CONDOTTA ACQUA PRESSURIZZATA",
-                    ]
+                (
+                    filtrato["evento"]
+                    == "BASSA PRESSIONE"
+                )
+                |
+                (
+                    filtrato["evento"]
+                    == "CONDOTTA ACQUA PRESSURIZZATA"
                 )
             ).sum()
         )
@@ -1717,193 +1328,150 @@ def fde_page():
     if filtrato.empty:
 
         st.warning(
-            "⚠️ Nessun evento trovato."
+            "⚠️ Nessun evento trovato con i filtri selezionati."
         )
 
         return
 
     # ======================================================
-    # TABS
+    # TABELLA
     # ======================================================
 
-    tab1, tab2 = st.tabs(
+    st.divider()
 
-        [
-
-            "📈 Timeline",
-
-            "📋 Eventi"
-
-        ]
-
+    st.subheader(
+        f"📋 Eventi rilevati: {len(filtrato)}"
     )
 
-    # ======================================================
-    # TIMELINE
-    # ======================================================
+    tabella = filtrato.copy()
 
-    with tab1:
+    # ------------------------------------------------------
+    # ORA
+    # ------------------------------------------------------
 
-        st.subheader(
-            "📈 Timeline eventi FDE"
+    tabella["Ora"] = (
+        tabella["timestamp"]
+        .dt
+        .strftime(
+            "%d-%m-%Y %H:%M:%S"
         )
+    )
 
-        st.info(
-            "La timeline mostra solo gli eventi "
-            "significativi: sensore fumo, allarme "
-            "incendio e pressione acqua."
-        )
+    # ------------------------------------------------------
+    # NUMERO / SEGNALE
+    # ------------------------------------------------------
 
-        fig = crea_timeline(
-            filtrato
-        )
+    tabella["Segnale / Sensore"] = (
+        tabella["number"].astype(str)
+    )
 
-        st.plotly_chart(
+    # ------------------------------------------------------
+    # SELEZIONE COLONNE
+    # ------------------------------------------------------
 
-            fig,
+    colonne = [
 
-            use_container_width=True,
+        "Ora",
 
-            config={
+        "origine",
 
-                "displaylogo":
-                    False,
+        "dataset",
 
-                "scrollZoom":
-                    True,
+        "segnale",
 
-                "responsive":
-                    True,
+        "Segnale / Sensore",
 
-            }
+        "cassa",
 
-        )
+        "data_val",
+
+        "descrizione",
+
+        "evento",
+
+        "valore",
+
+    ]
+
+    colonne = [
+        c for c in colonne
+        if c in tabella.columns
+    ]
+
+    tabella = tabella[
+        colonne
+    ]
+
+    # ------------------------------------------------------
+    # RINOMINA
+    # ------------------------------------------------------
+
+    tabella = tabella.rename(
+
+        columns={
+
+            "origine":
+                "Origine",
+
+            "dataset":
+                "Dataset",
+
+            "segnale":
+                "Segnale",
+
+            "cassa":
+                "Cassa",
+
+            "data_val":
+                "Valore",
+
+            "descrizione":
+                "Descrizione",
+
+            "evento":
+                "Evento",
+
+            "valore":
+                "Valore grezzo",
+
+        }
+
+    )
 
     # ======================================================
     # TABELLA
     # ======================================================
 
-    with tab2:
+    st.dataframe(
 
-        st.subheader(
+        tabella,
 
-            f"📋 Eventi: {len(filtrato)}"
+        use_container_width=True,
 
-        )
+        hide_index=True,
 
-        tabella = filtrato.copy()
+        height=650
 
-        tabella["Time"] = (
+    )
 
-            tabella[
-                "timestamp"
-            ]
+    # ======================================================
+    # DOWNLOAD CSV
+    # ======================================================
 
-            .dt
+    csv = tabella.to_csv(
+        index=False
+    ).encode(
+        "utf-8-sig"
+    )
 
-            .strftime(
-                "%d-%m-%Y %H:%M:%S"
-            )
+    st.download_button(
 
-        )
+        "📥 Scarica CSV",
 
-        tabella = tabella[
+        data=csv,
 
-            [
+        file_name="analisi_fde_eventi.csv",
 
-                "Time",
+        mime="text/csv"
 
-                "evento",
-
-                "origine",
-
-                "dataset",
-
-                "segnale",
-
-                "cassa",
-
-                "number",
-
-                "data_val",
-
-                "descrizione",
-
-                "valore",
-
-            ]
-
-        ]
-
-        tabella = tabella.rename(
-
-            columns={
-
-                "evento":
-                    "Evento",
-
-                "origine":
-                    "Origine",
-
-                "dataset":
-                    "Dataset",
-
-                "segnale":
-                    "Segnale",
-
-                "cassa":
-                    "Cassa",
-
-                "number":
-                    "NUMBER / SENSORE",
-
-                "data_val":
-                    "DATA",
-
-                "descrizione":
-                    "Descrizione",
-
-                "valore":
-                    "Valore grezzo",
-
-            }
-
-        )
-
-        st.dataframe(
-
-            tabella,
-
-            use_container_width=True,
-
-            hide_index=True,
-
-            height=600
-
-        )
-
-        # ==================================================
-        # DOWNLOAD CSV
-        # ==================================================
-
-        csv = tabella.to_csv(
-
-            index=False
-
-        ).encode(
-
-            "utf-8-sig"
-
-        )
-
-        st.download_button(
-
-            "📥 Scarica CSV",
-
-            data=csv,
-
-            file_name="analisi_fde_eventi_importanti.csv",
-
-            mime="text/csv"
-
-        )
+    )
