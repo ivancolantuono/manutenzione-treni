@@ -15,6 +15,7 @@ from db import get_utenti
 from db import get_operatori
 from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
+from misurazione_sensori import misurazione_sensori_page
 from carrelli import carrelli_page
 import urllib.parse
 
@@ -2552,6 +2553,8 @@ elif menu == "Software":
                 else:
                     st.info("Nessuna procedura")
 
+elif menu == "Misurazione Sensori":
+    misurazione_sensori_page()
 
 elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
