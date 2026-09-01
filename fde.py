@@ -1702,81 +1702,50 @@ def fde_page():
 
     )
 
-    # ======================================================
+    # ==========================================================
     # METRICHE
-    # ======================================================
-
+    # ==========================================================
+    
     st.divider()
-
+    
     col1, col2, col3, col4 = st.columns(4)
-
+    
     col1.metric(
-
         "📋 Eventi",
-
         len(filtrato)
-
     )
-
+    
     col2.metric(
-
         "🔥 Sensori",
-
         int(
-
             (
-
-                filtrato["evento"]
-
-                == "SENSORE FUMO"
-
+                filtrato["evento"] == "SENSORE FUMO"
             ).sum()
-
         )
-
     )
-
+    
     col3.metric(
-
         "🚨 Incendi",
-
         int(
-
             (
-
-                filtrato["evento"]
-
-                == "ALLARME INCENDIO"
-
+                filtrato["evento"] == "ALLARME INCENDIO"
             ).sum()
-
         )
-
     )
-
+    
     col4.metric(
-
         "💧 Pressione",
-
         int(
-
             (
-
                 filtrato["evento"].isin(
-
                     [
-
                         "BASSA PRESSIONE",
-
                         "CONDOTTA ACQUA PRESSURIZZATA",
-
                     ]
-
                 )
-
             ).sum()
-
         )
+    )
 
     # ======================================================
     # NESSUN RISULTATO
