@@ -769,7 +769,7 @@ if not st.session_state.logged_in:
                     try:
 
                         cookie_manager.delete(
-                            COOKIE_LOGIN
+                            "manager_etr1000_login"
                         )
 
                     except:
