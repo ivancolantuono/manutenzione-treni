@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
-import re
+import matplotlib.pyplot as plt
 
 
 # ==========================================================
-# ORDINE ADD DM1
+# ORDINE SENSORI DM1
 # ==========================================================
 
-ORDINE_DM1 = [
+ORDER_DM1 = [
     "007", "005", "006", "004", "003", "002", "001", "008", "009",
     "010", "011", "012", "013", "014", "015", "017", "016", "018",
     "027", "029", "030", "028", "026", "025", "023", "024", "022",
@@ -21,10 +21,10 @@ ORDINE_DM1 = [
 
 
 # ==========================================================
-# ORDINE ADD DM8
+# ORDINE SENSORI DM8
 # ==========================================================
 
-ORDINE_DM8 = [
+ORDER_DM8 = [
     "069", "070", "071", "072", "073", "074", "068", "067", "058",
     "059", "060", "061", "062", "063", "064", "065", "066", "049",
     "050", "051", "052", "053", "054", "055", "056", "057", "040",
@@ -38,489 +38,324 @@ ORDINE_DM8 = [
 
 
 # ==========================================================
-# OTTIENI ORDINE
+# LETTURA EXCEL
 # ==========================================================
 
-def ottieni_ordine(cassa):
+def _carica_excel(uploaded_file):
 
-    cassa = str(cassa).upper().strip()
-
-    if cassa == "DM1":
-        return ORDINE_DM1
-
-    if cassa == "DM8":
-        return ORDINE_DM8
-
-    return []
-
-
-# ==========================================================
-# NORMALIZZA ADD
-# ==========================================================
-
-def normalizza_add(valore):
-
-    if valore is None:
-        return ""
-
-    valore = str(valore).strip()
-
-    if valore.endswith(".0"):
-        valore = valore[:-2]
-
-    match = re.match(
-        r"^(\d{1,3})",
-        valore
+    df_grafico = pd.read_excel(
+        uploaded_file,
+        sheet_name="DATI_GRAFICO"
     )
 
-    if match:
-        return match.group(1).zfill(3)
+    df_sensori = pd.read_excel(
+        uploaded_file,
+        sheet_name="Foglio1"
+    )
 
-    return valore
-
-
-# ==========================================================
-# RICONOSCE DM1 / DM8
-# ==========================================================
-
-def rileva_cassa(nome_file, testo):
-
-    nome_file = str(nome_file).upper()
-
-    # ------------------------------------------------------
-    # Controllo nome file
-    # ------------------------------------------------------
-
-    if "DM1" in nome_file:
-        return "DM1"
-
-    if "DM8" in nome_file:
-        return "DM8"
-
-    # ------------------------------------------------------
-    # Controllo contenuto
-    # ------------------------------------------------------
-
-    testo_upper = str(testo).upper()
-
-    if re.search(r"\bDM1\b", testo_upper):
-        return "DM1"
-
-    if re.search(r"\bDM8\b", testo_upper):
-        return "DM8"
-
-    return "SCONOSCIUTA"
+    return df_grafico, df_sensori
 
 
 # ==========================================================
-# PARSER DELLA RIGA .MNT
+# NORMALIZZA COLONNE
 # ==========================================================
 
-def parse_riga_mnt(riga):
+def _normalizza_colonne(df):
 
-    riga = riga.strip()
+    df = df.copy()
 
-    if not riga:
-        return None
-
-    parti = riga.split()
-
-    if len(parti) < 2:
-        return None
-
-    # ------------------------------------------------------
-    # Una riga sensore deve iniziare con ADD numerico
-    # ------------------------------------------------------
-
-    if not re.match(
-        r"^\d{1,3}$",
-        parti[0]
-    ):
-        return None
-
-    colonne = [
-        "Add",
-        "M/S",
-        "Type",
-        "Man",
-        "Serial N",
-        "YY/WW",
-        "PW1",
-        "PW2",
-        "PW3",
-        "PW4",
-        "PW5",
-        "I",
-        "I_I",
-        "STA",
-        "ISO"
+    df.columns = [
+        str(c).strip()
+        for c in df.columns
     ]
 
-    record = {}
-
-    for colonna in colonne:
-        record[colonna] = ""
-
-    # ------------------------------------------------------
-    # Inserimento valori
-    # ------------------------------------------------------
-
-    for indice, colonna in enumerate(colonne):
-
-        if indice < len(parti):
-
-            record[colonna] = parti[indice]
-
-    # ------------------------------------------------------
-    # Normalizzazione ADD
-    # ------------------------------------------------------
-
-    record["Add"] = normalizza_add(
-        record["Add"]
-    )
-
-    return record
+    return df
 
 
 # ==========================================================
-# IMPORTAZIONE FILE .MNT
+# PREPARAZIONE DATI
 # ==========================================================
 
-def importa_mnt(uploaded_file):
+def _prepara_dati(
+    df_grafico,
+    df_sensori
+):
 
-    # ======================================================
-    # LETTURA DIRETTA DEL FILE .MNT
-    # ======================================================
-
-    contenuto = uploaded_file.getvalue()
-
-    testo = contenuto.decode(
-        "latin-1",
-        errors="ignore"
+    df_grafico = _normalizza_colonne(
+        df_grafico
     )
 
-    righe = testo.splitlines()
-
-    # ======================================================
-    # IDENTIFICAZIONE CASSA
-    # ======================================================
-
-    cassa = rileva_cassa(
-        uploaded_file.name,
-        testo
+    df_sensori = _normalizza_colonne(
+        df_sensori
     )
 
-    software = ""
-    database = ""
+    # ------------------------------------------------------
+    # ADD
+    # ------------------------------------------------------
 
-    # ======================================================
-    # TESTATA
-    # ======================================================
+    if "ADD" in df_grafico.columns:
 
-    for riga in righe[:100]:
-
-        match = re.search(
-            r"Software Version\s*:\s*(.*?)\s+Database Version\s*:\s*(.*)",
-            riga,
-            re.IGNORECASE
+        df_grafico["ADD"] = (
+            pd.to_numeric(
+                df_grafico["ADD"],
+                errors="coerce"
+            )
+            .astype("Int64")
+            .astype(str)
+            .str.zfill(3)
         )
 
-        if match:
+    # ------------------------------------------------------
+    # I / I_I
+    # ------------------------------------------------------
 
-            software = match.group(1).strip()
-            database = match.group(2).strip()
+    for col in ["I", "I_I", "STA"]:
 
-            break
+        if col in df_grafico.columns:
 
-    # ======================================================
-    # LETTURA RIGHE SENSORI
-    # ======================================================
-
-    records = []
-
-    for riga in righe:
-
-        record = parse_riga_mnt(
-            riga
-        )
-
-        if record is not None:
-
-            records.append(
-                record
+            df_grafico[col] = pd.to_numeric(
+                df_grafico[col],
+                errors="coerce"
             )
 
-    # ======================================================
-    # DATAFRAME
-    # ======================================================
+    # ------------------------------------------------------
+    # ORDINE
+    # ------------------------------------------------------
 
-    df = pd.DataFrame(
-        records,
-        columns=[
-            "Add",
-            "M/S",
-            "Type",
-            "Man",
-            "Serial N",
-            "YY/WW",
-            "PW1",
-            "PW2",
-            "PW3",
-            "PW4",
-            "PW5",
-            "I",
-            "I_I",
-            "STA",
-            "ISO"
-        ]
-    )
+    if "ORDINE" in df_grafico.columns:
 
-    if df.empty:
-
-        return (
-            df,
-            cassa,
-            software,
-            database
-        )
-
-    # ======================================================
-    # CONVERSIONE VALORI
-    # ======================================================
-
-    for colonna in [
-        "I",
-        "I_I",
-        "STA"
-    ]:
-
-        df[colonna] = pd.to_numeric(
-            df[colonna],
+        df_grafico["ORDINE"] = pd.to_numeric(
+            df_grafico["ORDINE"],
             errors="coerce"
         )
 
-    # ======================================================
-    # NORMALIZZA ADD
-    # ======================================================
+    # ------------------------------------------------------
+    # FOGLIO1
+    # ------------------------------------------------------
 
-    df["Add"] = (
-        df["Add"]
-        .apply(normalizza_add)
+    if "ADD" in df_sensori.columns:
+
+        df_sensori["ADD"] = (
+            pd.to_numeric(
+                df_sensori["ADD"],
+                errors="coerce"
+            )
+            .astype("Int64")
+            .astype(str)
+            .str.zfill(3)
+        )
+
+    for col in ["I", "I_I", "STA"]:
+
+        if col in df_sensori.columns:
+
+            df_sensori[col] = pd.to_numeric(
+                df_sensori[col],
+                errors="coerce"
+            )
+
+    return (
+        df_grafico,
+        df_sensori
     )
 
-    # ======================================================
-    # ORDINE DM1 / DM8
-    # ======================================================
 
-    ordine = ottieni_ordine(
-        cassa
+# ==========================================================
+# APPLICA ORDINE DM1 / DM8
+# ==========================================================
+
+def _applica_ordine(
+    df,
+    tipo_dm
+):
+
+    df = df.copy()
+
+    if "ADD" not in df.columns:
+
+        return df, []
+
+    # ------------------------------------------------------
+    # Scegli ordine
+    # ------------------------------------------------------
+
+    if tipo_dm == "DM1":
+
+        order_list = ORDER_DM1
+
+    else:
+
+        order_list = ORDER_DM8
+
+    # ------------------------------------------------------
+    # Normalizza ADD
+    # ------------------------------------------------------
+
+    df["ADD"] = (
+        df["ADD"]
+        .astype(str)
+        .str.extract(r"(\d+)", expand=False)
+        .fillna("")
+        .str.zfill(3)
     )
 
-    if ordine:
+    # ------------------------------------------------------
+    # Crea posizione
+    # ------------------------------------------------------
 
-        mappa_ordine = {
-            add: posizione
-            for posizione, add
-            in enumerate(ordine)
-        }
+    posizione = {
+        add: i
+        for i, add in enumerate(order_list)
+    }
 
-        df["_ordine_add"] = (
-            df["Add"]
-            .map(mappa_ordine)
-        )
+    df["POSIZIONE"] = (
+        df["ADD"]
+        .map(posizione)
+    )
 
-        df = df.sort_values(
-            "_ordine_add",
-            na_position="last"
-        )
+    # ------------------------------------------------------
+    # Teniamo solo gli ADD presenti nell'ordine
+    # ------------------------------------------------------
 
-        df = df.drop(
-            columns="_ordine_add"
-        )
+    df = df[
+        df["POSIZIONE"].notna()
+    ].copy()
 
-    # ======================================================
-    # RESET INDEX
-    # ======================================================
+    # ------------------------------------------------------
+    # Ordina secondo orderList
+    # ------------------------------------------------------
 
-    df = df.reset_index(
+    df = df.sort_values(
+        "POSIZIONE"
+    ).reset_index(
         drop=True
     )
+
+    # ------------------------------------------------------
+    # ADD realmente presenti
+    # ------------------------------------------------------
+
+    add_presenti = df[
+        "ADD"
+    ].drop_duplicates().tolist()
 
     return (
         df,
-        cassa,
-        software,
-        database
+        add_presenti
     )
-
-
-# ==========================================================
-# PREPARA GRAFICO
-# ==========================================================
-
-def prepara_dati_grafico(
-    df,
-    cassa
-):
-
-    grafico = df.copy()
-
-    # ======================================================
-    # ORDINE DM1 / DM8
-    # ======================================================
-
-    ordine = ottieni_ordine(
-        cassa
-    )
-
-    if ordine:
-
-        mappa_ordine = {
-            add: posizione
-            for posizione, add
-            in enumerate(ordine)
-        }
-
-        grafico["_ordine_add"] = (
-            grafico["Add"]
-            .map(mappa_ordine)
-        )
-
-        grafico = grafico.sort_values(
-            "_ordine_add",
-            na_position="last"
-        )
-
-    # ======================================================
-    # RESET
-    # ======================================================
-
-    grafico = grafico.reset_index(
-        drop=True
-    )
-
-    # ======================================================
-    # COSTRUISCE DATAFRAME GRAFICO
-    # ======================================================
-
-    dati = pd.DataFrame()
-
-    # ------------------------------------------------------
-    # ADD COME ASSE
-    # ------------------------------------------------------
-
-    dati["ADD"] = (
-        grafico["Add"]
-        .astype(str)
-    )
-
-    # ------------------------------------------------------
-    # STA
-    # ------------------------------------------------------
-
-    if "STA" in grafico.columns:
-
-        dati["STA"] = pd.to_numeric(
-            grafico["STA"],
-            errors="coerce"
-        )
-
-    # ------------------------------------------------------
-    # I_I
-    # ------------------------------------------------------
-
-    if "I_I" in grafico.columns:
-
-        dati["I_I"] = pd.to_numeric(
-            grafico["I_I"],
-            errors="coerce"
-        )
-
-    return dati
 
 
 # ==========================================================
 # GRAFICO
 # ==========================================================
 
-def mostra_grafico(
+def _grafico_linee(
     df,
-    cassa
+    tipo_dm
 ):
 
-    dati = prepara_dati_grafico(
+    df = df.copy()
+
+    # ------------------------------------------------------
+    # ORDINE
+    # ------------------------------------------------------
+
+    df, add_presenti = _applica_ordine(
         df,
-        cassa
+        tipo_dm
     )
 
-    if dati.empty:
+    if df.empty:
 
-        st.warning(
-            "Nessun dato disponibile."
-        )
+        return None
 
-        return
+    # ------------------------------------------------------
+    # POSIZIONE X
+    # ------------------------------------------------------
 
-    colonne = []
-
-    if "STA" in dati.columns:
-        colonne.append("STA")
-
-    if "I_I" in dati.columns:
-        colonne.append("I_I")
-
-    if not colonne:
-
-        st.warning(
-            "Nel file .MNT non sono presenti "
-            "STA / I_I."
-        )
-
-        return
-
-    # ======================================================
-    # GRAFICO NATIVO STREAMLIT
-    # ======================================================
-
-    grafico_streamlit = dati[
-        colonne
-    ].copy()
-
-    # L'indice numerico serve internamente al grafico
-    # ma le etichette ADD vengono mostrate sotto.
-    grafico_streamlit.index = range(
-        len(grafico_streamlit)
-    )
-
-    st.line_chart(
-        grafico_streamlit,
-        height=500
-    )
-
-    # ======================================================
-    # TABELLA ADD + VALORI
-    # ======================================================
-
-    st.markdown(
-        "### 🔢 Valori nell'ordine fisico"
-    )
-
-    tabella_grafico = dati.copy()
-
-    tabella_grafico.insert(
-        0,
-        "Posizione",
+    x = list(
         range(
-            1,
-            len(tabella_grafico) + 1
+            len(df)
         )
     )
 
-    st.dataframe(
-        tabella_grafico,
-        use_container_width=True,
-        hide_index=True
+    fig, ax = plt.subplots(
+        figsize=(16, 6)
     )
+
+    # ------------------------------------------------------
+    # LINEA I
+    # ------------------------------------------------------
+
+    if "I" in df.columns:
+
+        ax.plot(
+            x,
+            df["I"],
+            linewidth=2,
+            marker="o",
+            label="I"
+        )
+
+    # ------------------------------------------------------
+    # LINEA I_I
+    # ------------------------------------------------------
+
+    if "I_I" in df.columns:
+
+        ax.plot(
+            x,
+            df["I_I"],
+            linewidth=2,
+            marker="o",
+            label="I_I"
+        )
+
+    # ------------------------------------------------------
+    # ASSE X
+    # ------------------------------------------------------
+
+    ax.set_xticks(x)
+
+    ax.set_xticklabels(
+        add_presenti,
+        rotation=90
+    )
+
+    # ------------------------------------------------------
+    # TITOLO
+    # ------------------------------------------------------
+
+    ax.set_title(
+        f"Misurazione sensori - ORDINATO {tipo_dm}"
+    )
+
+    ax.set_xlabel(
+        "ADD"
+    )
+
+    ax.set_ylabel(
+        "Valore"
+    )
+
+    # ------------------------------------------------------
+    # GRIGLIA
+    # ------------------------------------------------------
+
+    ax.grid(
+        True,
+        alpha=0.25
+    )
+
+    # ------------------------------------------------------
+    # LEGENDA
+    # ------------------------------------------------------
+
+    ax.legend()
+
+    fig.tight_layout()
+
+    return fig
 
 
 # ==========================================================
@@ -534,43 +369,45 @@ def misurazione_sensori_page():
     )
 
     st.caption(
-        "Analisi diretta dei file .MNT"
+        "Analisi delle misure I e I_I "
+        "con ordinamento sensori DM1 / DM8."
     )
 
     st.divider()
 
     # ======================================================
-    # CARICAMENTO SOLO .MNT
+    # SELEZIONE DM
+    # ======================================================
+
+    tipo_dm = st.radio(
+        "🚆 Ordine sensori",
+        [
+            "DM1",
+            "DM8"
+        ],
+        horizontal=True,
+        key="misurazione_tipo_dm"
+    )
+
+    st.divider()
+
+    # ======================================================
+    # UPLOAD
     # ======================================================
 
     uploaded_file = st.file_uploader(
-        "📥 Carica file MNT",
-        type=["mnt"],
-        key="mnt_file"
+        "📥 Carica Misurazione sensori.xlsm",
+        type=[
+            "xlsm",
+            "xlsx"
+        ],
+        key="misurazione_sensori_file"
     )
-
-    # ======================================================
-    # NESSUN FILE
-    # ======================================================
 
     if uploaded_file is None:
 
         st.info(
-            "Carica un file .MNT per iniziare."
-        )
-
-        return
-
-    # ======================================================
-    # CONTROLLO ESTENSIONE
-    # ======================================================
-
-    if not uploaded_file.name.lower().endswith(
-        ".mnt"
-    ):
-
-        st.error(
-            "❌ Devi caricare un file con estensione .MNT."
+            "Carica il file Excel per iniziare."
         )
 
         return
@@ -579,242 +416,295 @@ def misurazione_sensori_page():
     # LETTURA
     # ======================================================
 
-    with st.spinner(
-        "🔄 Lettura del file .MNT..."
-    ):
+    try:
 
-        try:
+        with st.spinner(
+            "🔄 Lettura misurazioni..."
+        ):
 
             (
-                df,
-                cassa,
-                software,
-                database
-            ) = importa_mnt(
+                df_grafico,
+                df_sensori
+            ) = _carica_excel(
                 uploaded_file
             )
 
-        except Exception as errore:
-
-            st.error(
-                "❌ Errore durante la lettura del file .MNT."
+            (
+                df_grafico,
+                df_sensori
+            ) = _prepara_dati(
+                df_grafico,
+                df_sensori
             )
 
-            st.exception(
-                errore
-            )
+    except Exception as e:
 
-            return
+        st.error(
+            "❌ Errore durante la lettura del file."
+        )
+
+        st.exception(e)
+
+        return
 
     # ======================================================
     # CONTROLLO
     # ======================================================
 
-    if df.empty:
+    if df_grafico.empty:
+
+        st.warning(
+            "⚠️ Il foglio DATI_GRAFICO è vuoto."
+        )
+
+        return
+
+    if "ADD" not in df_grafico.columns:
 
         st.error(
-            "❌ Il file .MNT è stato caricato, "
-            "ma non sono state trovate righe sensore."
+            "❌ Nel foglio DATI_GRAFICO "
+            "non è presente la colonna ADD."
         )
 
         return
 
     # ======================================================
-    # CASSA NON RICONOSCIUTA
+    # APPLICA ORDINE
     # ======================================================
 
-    if cassa == "SCONOSCIUTA":
-
-        st.warning(
-            "⚠️ DM1/DM8 non riconosciuto automaticamente."
-        )
-
-        cassa = st.selectbox(
-            "Seleziona la cassa",
-            [
-                "DM1",
-                "DM8"
-            ],
-            key="mnt_cassa"
-        )
-
-        ordine = ottieni_ordine(
-            cassa
-        )
-
-        mappa_ordine = {
-            add: posizione
-            for posizione, add
-            in enumerate(ordine)
-        }
-
-        df["_ordine_add"] = (
-            df["Add"]
-            .map(mappa_ordine)
-        )
-
-        df = (
-            df
-            .sort_values(
-                "_ordine_add",
-                na_position="last"
-            )
-            .drop(
-                columns="_ordine_add"
-            )
-            .reset_index(
-                drop=True
-            )
-        )
-
-    # ======================================================
-    # INFORMAZIONI
-    # ======================================================
-
-    st.success(
-        f"✅ File .MNT caricato: {uploaded_file.name}"
+    (
+        df_ordinato,
+        add_presenti
+    ) = _applica_ordine(
+        df_grafico,
+        tipo_dm
     )
 
-    col1, col2, col3, col4 = st.columns(4)
+    # ======================================================
+    # METRICHE
+    # ======================================================
 
-    with col1:
+    c1, c2, c3, c4 = st.columns(4)
 
-        st.metric(
-            "Cassa",
-            cassa
+    c1.metric(
+        "Sensori trovati",
+        len(df_ordinato)
+    )
+
+    if "I" in df_ordinato.columns:
+
+        c2.metric(
+            "Media I",
+            f"{df_ordinato['I'].mean():.2f}"
         )
 
-    with col2:
+    if "I_I" in df_ordinato.columns:
 
-        st.metric(
-            "Sensori",
-            len(df)
+        c3.metric(
+            "Media I_I",
+            f"{df_ordinato['I_I'].mean():.2f}"
         )
 
-    with col3:
-
-        st.metric(
-            "Software",
-            software or "-"
-        )
-
-    with col4:
-
-        st.metric(
-            "Database",
-            database or "-"
-        )
+    c4.metric(
+        "Ordine",
+        tipo_dm
+    )
 
     st.divider()
 
     # ======================================================
-    # RICERCA
+    # MOSTRA ORDINE
     # ======================================================
 
-    ricerca = st.text_input(
-        "🔍 Cerca sensore",
-        placeholder=(
-            "ADD, seriale, tipo, produttore..."
-        ),
-        key="mnt_ricerca"
+    st.subheader(
+        f"📋 Ordine utilizzato: {tipo_dm}"
     )
 
-    risultato = df.copy()
-
-    if ricerca.strip():
-
-        query = ricerca.strip().lower()
-
-        testo_ricerca = (
-            risultato
-            .astype(str)
-            .agg(
-                " ".join,
-                axis=1
-            )
-            .str.lower()
-        )
-
-        risultato = risultato[
-            testo_ricerca.str.contains(
-                query,
-                regex=False,
-                na=False
-            )
-        ]
-
-    # ======================================================
-    # NUMERO SENSORI
-    # ======================================================
-
-    st.markdown(
-        f"### 📋 Sensori visualizzati: {len(risultato)}"
+    st.write(
+        " → ".join(add_presenti)
     )
 
-    if risultato.empty:
+    st.divider()
 
-        st.warning(
-            "Nessun sensore trovato."
+    # ======================================================
+    # FILTRI ADD
+    # ======================================================
+
+    add_selezionati = st.multiselect(
+        "📍 Seleziona ADD",
+        options=add_presenti,
+        default=[],
+        key="misurazione_add"
+    )
+
+    df_view = df_ordinato.copy()
+
+    if add_selezionati:
+
+        df_view = df_view[
+            df_view["ADD"].isin(
+                add_selezionati
+            )
+        ].copy()
+
+        # Mantiene SEMPRE l'ordine DM1/DM8
+        df_view["POSIZIONE"] = (
+            df_view["ADD"].map(
+                {
+                    add: i
+                    for i, add in enumerate(
+                        ORDER_DM1
+                        if tipo_dm == "DM1"
+                        else ORDER_DM8
+                    )
+                }
+            )
         )
 
-        return
+        df_view = df_view.sort_values(
+            "POSIZIONE"
+        )
 
     # ======================================================
     # TABS
     # ======================================================
 
-    tab1, tab2 = st.tabs(
+    tab_grafico, tab_misure, tab_anagrafica = st.tabs(
         [
-            "📈 Misurazioni",
-            "📋 Dati MNT"
+            "📈 Grafico",
+            "📊 Misurazioni",
+            "🔧 Anagrafica sensori"
         ]
     )
 
     # ======================================================
-    # TAB GRAFICO
+    # GRAFICO
     # ======================================================
 
-    with tab1:
+    with tab_grafico:
 
         st.subheader(
-            f"📈 STA / I_I — {cassa}"
+            f"📈 Misurazione sensori - {tipo_dm}"
         )
 
-        mostra_grafico(
-            risultato,
-            cassa
-        )
+        if df_view.empty:
+
+            st.warning(
+                "Nessun sensore corrisponde ai filtri."
+            )
+
+        else:
+
+            fig = _grafico_linee(
+                df_view,
+                tipo_dm
+            )
+
+            if fig is not None:
+
+                st.pyplot(
+                    fig,
+                    use_container_width=True
+                )
 
     # ======================================================
-    # TAB DATI
+    # TABELLA
     # ======================================================
 
-    with tab2:
+    with tab_misure:
 
         st.subheader(
-            "📋 Dati letti direttamente dal file .MNT"
+            "📊 DATI_GRAFICO"
         )
+
+        colonne = [
+            c
+            for c in [
+                "ADD",
+                "I",
+                "I_I",
+                "STA",
+                "ORDINE",
+                "POSIZIONE"
+            ]
+            if c in df_view.columns
+        ]
 
         st.dataframe(
-            risultato,
+            df_view[colonne],
             use_container_width=True,
-            hide_index=True,
-            height=600
+            hide_index=True
         )
 
         # --------------------------------------------------
-        # ESPORTAZIONE CSV
+        # CSV
         # --------------------------------------------------
 
-        csv = risultato.to_csv(
-            index=False
-        ).encode(
-            "utf-8-sig"
+        csv = (
+            df_view[colonne]
+            .to_csv(
+                index=False
+            )
+            .encode(
+                "utf-8-sig"
+            )
         )
 
         st.download_button(
-            "📥 Esporta risultato CSV",
+            "📥 Scarica CSV",
             data=csv,
-            file_name="misurazione_sensori.csv",
+            file_name=(
+                f"misurazione_sensori_{tipo_dm}.csv"
+            ),
             mime="text/csv"
         )
+
+    # ======================================================
+    # ANAGRAFICA
+    # ======================================================
+
+    with tab_anagrafica:
+
+        st.subheader(
+            "🔧 Anagrafica sensori"
+        )
+
+        if df_sensori.empty:
+
+            st.warning(
+                "Il foglio Foglio1 è vuoto."
+            )
+
+        else:
+
+            colonne_preferite = [
+                "Add",
+                "M/S",
+                "Type",
+                "Man",
+                "Serial",
+                "N",
+                "YY/WW",
+                "PW1",
+                "PW2",
+                "PW3",
+                "PW4",
+                "PW5",
+                "I",
+                "I_I",
+                "STA",
+                "ISO"
+            ]
+
+            colonne = [
+                c
+                for c in colonne_preferite
+                if c in df_sensori.columns
+            ]
+
+            st.dataframe(
+                df_sensori[colonne],
+                use_container_width=True,
+                hide_index=True,
+                height=600
+            )
