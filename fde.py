@@ -895,7 +895,7 @@ def filtra_ricerca(
 
 
 # ==========================================================
-# TIMELINE
+# TIMELINE A ONDA QUADRA
 # ==========================================================
 
 def crea_timeline(df):
@@ -905,36 +905,36 @@ def crea_timeline(df):
     if df.empty:
         return fig
 
-    df = df.sort_values(
-        "timestamp"
-    ).copy()
+    df = df.sort_values("timestamp").copy()
 
     # ======================================================
-    # CATEGORIE FISSE
+    # CATEGORIE
     # ======================================================
 
     categorie = [
-
         "SENSORE FUMO",
-
         "ALLARME INCENDIO",
-
         "BASSA PRESSIONE",
-
         "CONDOTTA ACQUA PRESSURIZZATA",
-
     ]
 
+    # Posizione delle 4 righe
     y_map = {
-
         "SENSORE FUMO": 3,
-
         "ALLARME INCENDIO": 2,
-
         "BASSA PRESSIONE": 1,
-
         "CONDOTTA ACQUA PRESSURIZZATA": 0,
+    }
 
+    # ======================================================
+    # COLORI
+    # ======================================================
+
+    colori = {
+        "SENSORE FUMO": "#ff3b30",
+        "ALLARME INCENDIO": "#ff0000",
+        "BASSA PRESSIONE": "#007aff",
+        "CONDOTTA ACQUA PRESSURIZZATA": "#34c759",
     }
 
     # ======================================================
@@ -944,228 +944,205 @@ def crea_timeline(df):
     for categoria in categorie:
 
         fig.add_trace(
-
             go.Scatter(
-
                 x=[None],
-
                 y=[None],
-
-                mode="markers",
-
-                marker=dict(
-
-                    size=12,
-
-                    color=COLORI_EVENTO[
-                        categoria
-                    ]
-
+                mode="lines",
+                line=dict(
+                    color=colori[categoria],
+                    width=4
                 ),
-
                 name=categoria,
-
                 showlegend=True
-
             )
         )
 
     # ======================================================
-    # EVENTI
+    # CREAZIONE ONDE
     # ======================================================
 
     for categoria in categorie:
 
         dati = df[
             df["evento"] == categoria
-        ].copy()
+        ].sort_values("timestamp").copy()
 
         if dati.empty:
             continue
 
+        base = y_map[categoria]
+
+        # --------------------------------------------------
+        # ONDA:
+        #
+        # 0 = base
+        # 1 = base + 0.65
+        #
+        # Usiamo "hv" per ottenere una vera onda quadra.
+        # --------------------------------------------------
+
         x = []
         y = []
+
         testi = []
-        labels = []
+
+        stato_precedente = 0
 
         for _, riga in dati.iterrows():
 
-            timestamp = riga[
-                "timestamp"
-            ]
+            timestamp = riga["timestamp"]
 
-            # ------------------------------------------------
-            # LABEL SULLA TIMELINE
-            # ------------------------------------------------
+            # ==================================================
+            # DETERMINAZIONE STATO
+            # ==================================================
 
-            if categoria == "SENSORE FUMO":
+            stato = 1
 
-                label = str(
-                    riga.get(
-                        "number",
-                        ""
-                    )
-                )
+            # ==================================================
+            # PUNTO PRECEDENTE
+            # ==================================================
 
-            elif categoria == "ALLARME INCENDIO":
+            if not x:
 
-                label = "🔥 INCENDIO"
+                x.append(timestamp)
+                y.append(base)
 
-            elif categoria == "BASSA PRESSIONE":
+            # ==================================================
+            # SALITA
+            # ==================================================
 
-                label = "💧 BASSA PRESSIONE"
+            if stato == 1 and stato_precedente == 0:
+
+                x.append(timestamp)
+                y.append(base)
+
+                x.append(timestamp)
+                y.append(base + 0.65)
+
+            # ==================================================
+            # MANTIENI ALTO
+            # ==================================================
+
+            elif stato == 1 and stato_precedente == 1:
+
+                x.append(timestamp)
+                y.append(base + 0.65)
+
+            # ==================================================
+            # DISCESA
+            # ==================================================
+
+            elif stato == 0 and stato_precedente == 1:
+
+                x.append(timestamp)
+                y.append(base + 0.65)
+
+                x.append(timestamp)
+                y.append(base)
+
+            # ==================================================
+            # RIMANI BASSO
+            # ==================================================
 
             else:
 
-                label = "💧 ACQUA PRESSURIZZATA"
+                x.append(timestamp)
+                y.append(base)
 
-            # ------------------------------------------------
+            # ==================================================
             # TOOLTIP
-            # ------------------------------------------------
+            # ==================================================
+
+            numero = str(
+                riga.get(
+                    "number",
+                    ""
+                )
+            )
+
+            descrizione = str(
+                riga.get(
+                    "descrizione",
+                    ""
+                )
+            )
 
             testo = (
-
                 f"<b>{categoria}</b><br>"
-
                 f"<b>Ora:</b> "
-                f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}"
-
-                f"<br>"
-
+                f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}<br>"
                 f"<b>Origine:</b> "
-                f"{riga.get('origine', '')}"
-
-                f"<br>"
-
+                f"{riga.get('origine', '')}<br>"
                 f"<b>Dataset:</b> "
-                f"{riga.get('dataset', '')}"
-
-                f"<br>"
-
+                f"{riga.get('dataset', '')}<br>"
                 f"<b>Segnale:</b> "
-                f"{riga.get('segnale', '')}"
-
-                f"<br>"
-
+                f"{riga.get('segnale', '')}<br>"
                 f"<b>Cassa:</b> "
-                f"{riga.get('cassa', '')}"
-
-                f"<br>"
-
-                f"<b>NUMBER:</b> "
-                f"{riga.get('number', '')}"
-
-                f"<br>"
-
+                f"{riga.get('cassa', '')}<br>"
+                f"<b>NUMBER / SENSORE:</b> "
+                f"{numero}<br>"
                 f"<b>Valore:</b> "
-                f"{riga.get('valore', '')}"
-
-                f"<br>"
-
+                f"{riga.get('valore', '')}<br>"
                 f"<b>Descrizione:</b> "
-                f"{riga.get('descrizione', '')}"
-
+                f"{descrizione}"
             )
 
-            x.append(
-                timestamp
-            )
+            testi.append(testo)
 
-            y.append(
-                y_map[categoria]
-            )
-
-            testi.append(
-                testo
-            )
-
-            labels.append(
-                label
-            )
+            stato_precedente = stato
 
         # ==================================================
-        # PALLINI + NOME
+        # LINEA
         # ==================================================
 
         fig.add_trace(
-
             go.Scatter(
-
                 x=x,
-
                 y=y,
 
-                mode="markers+text",
+                mode="lines",
 
-                text=labels,
-
-                textposition="top center",
-
-                textfont=dict(
-                    size=11
+                line=dict(
+                    color=colori[categoria],
+                    width=3,
+                    shape="hv"
                 ),
-
-                marker=dict(
-
-                    size=13,
-
-                    color=COLORI_EVENTO[
-                        categoria
-                    ],
-
-                    line=dict(
-                        width=1,
-                        color="white"
-                    )
-
-                ),
-
-                name=categoria,
-
-                hovertext=testi,
 
                 hoverinfo="text",
 
-                showlegend=False
+                text=testi,
 
+                connectgaps=False,
+
+                name=categoria,
+
+                showlegend=False
             )
         )
 
     # ======================================================
-    # LINEE DI COLLEGAMENTO VERTICALI
+    # LINEE ORIZZONTALI DI BASE
     # ======================================================
 
-    for _, riga in df.iterrows():
+    for categoria in categorie:
 
-        categoria = riga["evento"]
-
-        if categoria not in y_map:
-            continue
+        base = y_map[categoria]
 
         fig.add_shape(
-
             type="line",
 
-            x0=riga["timestamp"],
+            x0=df["timestamp"].min(),
+            x1=df["timestamp"].max(),
 
-            x1=riga["timestamp"],
-
-            y0=0,
-
-            y1=3,
+            y0=base,
+            y1=base,
 
             line=dict(
-
                 color="rgba(120,120,120,0.25)",
-
-                width=1,
-
-                dash="dot"
-
+                width=1
             ),
 
             layer="below"
-
         )
 
     # ======================================================
@@ -1174,21 +1151,20 @@ def crea_timeline(df):
 
     fig.update_layout(
 
-        height=550,
+        height=600,
 
         margin=dict(
-
             l=20,
-
             r=20,
-
-            t=50,
-
+            t=70,
             b=30
-
         ),
 
         hovermode="closest",
+
+        # --------------------------------------------------
+        # ASSE X
+        # --------------------------------------------------
 
         xaxis=dict(
 
@@ -1199,9 +1175,7 @@ def crea_timeline(df):
             showgrid=True,
 
             rangeslider=dict(
-
                 visible=True
-
             ),
 
             rangeselector=dict(
@@ -1240,12 +1214,13 @@ def crea_timeline(df):
                         step="all",
                         label="Tutto"
                     ),
-
                 ]
-
             )
-
         ),
+
+        # --------------------------------------------------
+        # ASSE Y
+        # --------------------------------------------------
 
         yaxis=dict(
 
@@ -1254,40 +1229,32 @@ def crea_timeline(df):
             tickmode="array",
 
             tickvals=[
-
                 3,
-
                 2,
-
                 1,
-
                 0
-
             ],
 
             ticktext=[
-
                 "🔥 SENSORE FUMO",
-
                 "🚨 ALLARME INCENDIO",
-
                 "🔵 BASSA PRESSIONE",
-
                 "🟢 ACQUA PRESSURIZZATA",
-
             ],
 
             range=[
-
                 -0.7,
-
-                3.7
-
+                3.9
             ],
 
             showgrid=True,
 
+            zeroline=False
         ),
+
+        # --------------------------------------------------
+        # LEGENDA
+        # --------------------------------------------------
 
         legend=dict(
 
@@ -1299,16 +1266,12 @@ def crea_timeline(df):
 
             xanchor="left",
 
-            x=0,
-
+            x=0
         ),
 
         hoverlabel=dict(
-
             align="left"
-
-        ),
-
+        )
     )
 
     return fig
