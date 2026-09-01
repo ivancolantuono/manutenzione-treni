@@ -1124,13 +1124,7 @@ def misurazione_sensori_page():
 
     df_view = grafico_df.copy()
 
-    if add_selezionati:
-
-        df_view = df_view[
-            df_view["ADD"].isin(
-                add_selezionati
-            )
-        ].copy()
+    
 
         # --------------------------------------------------
         # Mantieni l'ordine fisico
