@@ -1,228 +1,321 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import io
+import re
+
 
 # ==========================================================
-# MISURAZIONE SENSORI
-# Conversione del file Excel "Misurazione sensori.xlsm"
+# LETTURA FILE MNT
 # ==========================================================
 
-def _carica_excel(uploaded_file):
-    """Legge i due fogli del file Excel senza dipendere da macro/VBA."""
-    return (
-        pd.read_excel(uploaded_file, sheet_name="DATI_GRAFICO"),
-        pd.read_excel(uploaded_file, sheet_name="Foglio1"),
+def leggi_mnt(file_mnt):
+
+    contenuto = file_mnt.getvalue()
+
+    testo = contenuto.decode(
+        "latin-1",
+        errors="ignore"
     )
 
+    righe = testo.splitlines()
 
-def _normalizza_colonne(df):
-    df = df.copy()
-    df.columns = [str(c).strip() for c in df.columns]
-    return df
+    dati = []
 
+    software = ""
+    database = ""
 
-def _prepara_dati(df_grafico, df_sensori):
-    df_grafico = _normalizza_colonne(df_grafico)
-    df_sensori = _normalizza_colonne(df_sensori)
+    # ======================================================
+    # TESTATA
+    # ======================================================
 
-    # Il foglio DATI_GRAFICO contiene già l'ordinamento usato
-    # dal grafico originale Excel.
-    if "ORDINE" in df_grafico.columns:
-        df_grafico = df_grafico.sort_values("ORDINE").reset_index(drop=True)
+    for riga in righe[:10]:
 
-    # Conversione numerica delle misure
-    for col in ["I", "I_I", "ADD", "ORDINE"]:
-        if col in df_grafico.columns:
-            df_grafico[col] = pd.to_numeric(
-                df_grafico[col], errors="coerce"
+        match = re.search(
+            r"Software Version:\s*(.*?)\s+Database Version:\s*(.*)",
+            riga,
+            re.IGNORECASE
+        )
+
+        if match:
+
+            software = match.group(1).strip()
+            database = match.group(2).strip()
+
+            break
+
+    # ======================================================
+    # DATI SENSORI
+    # ======================================================
+
+    for riga in righe:
+
+        riga = riga.strip()
+
+        if not riga:
+            continue
+
+        # Una riga sensore inizia con ADD numerico
+        if not re.match(
+            r"^\d+",
+            riga
+        ):
+            continue
+
+        parti = riga.split()
+
+        # Servono almeno i campi principali
+        if len(parti) < 10:
+            continue
+
+        try:
+
+            record = {}
+
+            record["Add"] = parti[0]
+
+            if len(parti) > 1:
+                record["M/S"] = parti[1]
+
+            if len(parti) > 2:
+                record["Type"] = parti[2]
+
+            if len(parti) > 3:
+                record["Man"] = parti[3]
+
+            if len(parti) > 4:
+                record["Serial"] = parti[4]
+
+            if len(parti) > 5:
+                record["YY/WW"] = parti[5]
+
+            if len(parti) > 6:
+                record["PW1"] = parti[6]
+
+            if len(parti) > 7:
+                record["PW2"] = parti[7]
+
+            if len(parti) > 8:
+                record["PW3"] = parti[8]
+
+            if len(parti) > 9:
+                record["PW4"] = parti[9]
+
+            if len(parti) > 10:
+                record["PW5"] = parti[10]
+
+            if len(parti) > 11:
+                record["I"] = parti[11]
+
+            if len(parti) > 12:
+                record["I_I"] = parti[12]
+
+            if len(parti) > 13:
+                record["STA"] = parti[13]
+
+            if len(parti) > 14:
+                record["ISO"] = parti[14]
+
+            dati.append(record)
+
+        except Exception:
+            continue
+
+    df = pd.DataFrame(dati)
+
+    if df.empty:
+        return df, software, database
+
+    # ======================================================
+    # CONVERSIONI
+    # ======================================================
+
+    for colonna in [
+        "Add",
+        "I",
+        "I_I",
+        "STA"
+    ]:
+
+        if colonna in df.columns:
+
+            df[colonna] = pd.to_numeric(
+                df[colonna],
+                errors="coerce"
             )
 
-    for col in ["I", "I_I", "ADD"]:
-        if col in df_sensori.columns:
-            df_sensori[col] = pd.to_numeric(
-                df_sensori[col], errors="coerce"
-            )
-
-    return df_grafico, df_sensori
+    return df, software, database
 
 
-def _grafico_linee(df):
-    """Ricrea il grafico del foglio DATI_GRAFICO con linee."""
-    import matplotlib.pyplot as plt
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-
-    x = df["ADD"].astype(str)
-
-    ax.plot(
-        x,
-        df["I"],
-        marker="o",
-        linewidth=2,
-        label="I",
-    )
-
-    ax.plot(
-        x,
-        df["I_I"],
-        marker="o",
-        linewidth=2,
-        label="I_I",
-    )
-
-    ax.set_title("ORDINATO DA DM1")
-    ax.set_xlabel("ADD")
-    ax.set_ylabel("Valore")
-    ax.grid(True, alpha=0.25)
-    ax.legend()
-    fig.tight_layout()
-
-    return fig
-
+# ==========================================================
+# PAGINA STREAMLIT
+# ==========================================================
 
 def misurazione_sensori_page():
 
-    st.title("🔬 Misurazione Sensori")
+    st.title(
+        "🔬 Misurazione Sensori"
+    )
+
     st.caption(
-        "Analisi delle misure I e I_I dei sensori "
-        "ordinati secondo il file DATI_GRAFICO."
+        "Analisi diretta dei file MNT"
+    )
+
+    st.divider()
+
+    # ======================================================
+    # FILE MNT
+    # ======================================================
+
+    file_mnt = st.file_uploader(
+
+        "📥 Carica file MNT",
+
+        type=["mnt"],
+
+        key="file_misurazione_mnt"
+
     )
 
     # ======================================================
-    # UPLOAD
+    # NESSUN FILE
     # ======================================================
 
-    uploaded_file = st.file_uploader(
-        "📥 Carica Misurazione sensori.xlsm",
-        type=["xlsm", "xlsx"],
-        key="misurazione_sensori_file",
-    )
+    if file_mnt is None:
 
-    if uploaded_file is None:
-        st.info("Carica il file Excel per iniziare.")
+        st.info(
+            "Carica un file .MNT per iniziare."
+        )
+
         return
 
     # ======================================================
-    # LETTURA
+    # ANALISI
     # ======================================================
 
-    try:
-        with st.spinner("🔄 Lettura misurazioni..."):
-            df_grafico, df_sensori = _carica_excel(uploaded_file)
-            df_grafico, df_sensori = _prepara_dati(
-                df_grafico,
-                df_sensori,
+    with st.spinner(
+        "🔄 Analisi file MNT..."
+    ):
+
+        try:
+
+            df, software, database = leggi_mnt(
+                file_mnt
             )
 
-    except Exception as e:
-        st.error("❌ Errore durante la lettura del file.")
-        st.exception(e)
-        return
+        except Exception as e:
 
-    if df_grafico.empty:
-        st.warning("⚠️ Il foglio DATI_GRAFICO è vuoto.")
+            st.error(
+                "❌ Errore nella lettura del file MNT"
+            )
+
+            st.exception(e)
+
+            return
+
+    # ======================================================
+    # CONTROLLO
+    # ======================================================
+
+    if df.empty:
+
+        st.error(
+            "❌ Nessun dato sensore trovato nel file MNT."
+        )
+
         return
 
     # ======================================================
-    # METRICHE
+    # INFORMAZIONI
     # ======================================================
 
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Sensori",
-        len(df_grafico),
+    st.success(
+        f"✅ File {file_mnt.name} analizzato"
     )
 
-    if "I" in df_grafico:
-        c2.metric(
-            "Media I",
-            f"{df_grafico['I'].mean():.2f}",
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "Sensori",
+            len(df)
         )
 
-    if "I_I" in df_grafico:
-        c3.metric(
-            "Media I_I",
-            f"{df_grafico['I_I'].mean():.2f}",
+    with col2:
+
+        st.metric(
+            "Software",
+            software or "-"
         )
 
-    if "ADD" in df_grafico:
-        c4.metric(
-            "ADD",
-            int(df_grafico["ADD"].nunique()),
+    with col3:
+
+        st.metric(
+            "Database",
+            database or "-"
         )
 
     st.divider()
 
     # ======================================================
-    # FILTRI
+    # FILTRO
     # ======================================================
 
-    st.subheader("🔎 Filtri")
+    ricerca = st.text_input(
 
-    col1, col2 = st.columns(2)
+        "🔍 Cerca sensore",
 
-    with col1:
-        add_disponibili = (
-            df_grafico["ADD"]
-            .dropna()
-            .tolist()
-            if "ADD" in df_grafico.columns
-            else []
-        )
+        placeholder=(
+            "ADD, seriale, tipo, produttore..."
+        ),
 
-        add_selezionati = st.multiselect(
-            "📍 ADD",
-            options=add_disponibili,
-            default=[],
-            key="misurazione_add",
-        )
+        key="ricerca_mnt"
 
-    with col2:
-        ricerca = st.text_input(
-            "🔍 Cerca sensore / seriale",
-            placeholder="ADD, seriale, tipo, modello...",
-            key="misurazione_ricerca",
-        )
+    )
 
-    df_view = df_grafico.copy()
+    risultato = df.copy()
 
-    if add_selezionati:
-        df_view = df_view[
-            df_view["ADD"].isin(add_selezionati)
-        ]
+    if ricerca:
 
-    # Se possibile arricchiamo la ricerca con Foglio1
-    if ricerca and not df_sensori.empty:
+        ricerca = ricerca.strip().lower()
+
         testo = (
-            df_sensori.astype(str)
-            .fillna("")
-            .agg(" ".join, axis=1)
+            risultato
+            .astype(str)
+            .agg(
+                " ".join,
+                axis=1
+            )
             .str.lower()
         )
 
-        mask = testo.str.contains(
-            ricerca.lower().strip(),
-            regex=False,
-            na=False,
+        risultato = risultato[
+            testo.str.contains(
+                ricerca,
+                regex=False,
+                na=False
+            )
+        ]
+
+    st.markdown(
+        f"### 📋 Sensori trovati: {len(risultato)}"
+    )
+
+    if risultato.empty:
+
+        st.warning(
+            "Nessun sensore trovato."
         )
 
-        if "ADD" in df_sensori.columns:
-            add_trovati = df_sensori.loc[mask, "ADD"].tolist()
-            df_view = df_view[
-                df_view["ADD"].isin(add_trovati)
-            ]
+        return
 
     # ======================================================
     # TABS
     # ======================================================
 
-    tab_grafico, tab_misure, tab_anagrafica = st.tabs(
+    tab1, tab2 = st.tabs(
         [
-            "📈 Grafico",
-            "📊 Misurazioni",
-            "🔧 Anagrafica sensori",
+            "📈 Misurazioni",
+            "📋 Dati sensori"
         ]
     )
 
@@ -230,88 +323,81 @@ def misurazione_sensori_page():
     # GRAFICO
     # ======================================================
 
-    with tab_grafico:
+    with tab1:
 
-        st.subheader("📈 Misurazione")
+        st.subheader(
+            "📈 Misurazioni I / I_I"
+        )
 
-        if df_view.empty:
-            st.warning("Nessun sensore corrisponde ai filtri.")
+        grafico = risultato.copy()
+
+        grafico = grafico.sort_values(
+            "Add"
+        )
+
+        colonne_grafico = []
+
+        if "I" in grafico.columns:
+            colonne_grafico.append("I")
+
+        if "I_I" in grafico.columns:
+            colonne_grafico.append("I_I")
+
+        if colonne_grafico:
+
+            st.line_chart(
+
+                grafico.set_index(
+                    "Add"
+                )[colonne_grafico],
+
+                height=500
+
+            )
+
         else:
-            fig = _grafico_linee(df_view)
-            st.pyplot(fig, use_container_width=True)
+
+            st.warning(
+                "Nel file non sono presenti "
+                "le colonne I / I_I."
+            )
 
     # ======================================================
-    # TABELLA MISURAZIONI
+    # TABELLA
     # ======================================================
 
-    with tab_misure:
+    with tab2:
 
-        st.subheader("📊 DATI_GRAFICO")
-
-        colonne = [
-            c for c in
-            ["ADD", "I", "I_I", "ORDINE"]
-            if c in df_view.columns
-        ]
+        st.subheader(
+            "📋 Dati sensori"
+        )
 
         st.dataframe(
-            df_view[colonne],
+
+            risultato,
+
             use_container_width=True,
+
             hide_index=True,
+
+            height=600
+
         )
 
-        # CSV
-        csv = df_view[colonne].to_csv(
+        csv = risultato.to_csv(
             index=False
-        ).encode("utf-8-sig")
+        ).encode(
+            "utf-8-sig"
+        )
 
         st.download_button(
+
             "📥 Scarica CSV",
+
             data=csv,
+
             file_name="misurazione_sensori.csv",
-            mime="text/csv",
+
+            mime="text/csv"
+
         )
-
-    # ======================================================
-    # ANAGRAFICA
-    # ======================================================
-
-    with tab_anagrafica:
-
-        st.subheader("🔧 Anagrafica sensori")
-
-        if df_sensori.empty:
-            st.warning("Il foglio Foglio1 è vuoto.")
-        else:
-
-            # Selezione colonne leggibile
-            colonne_preferite = [
-                "Add",
-                "M/S",
-                "Type",
-                "Man",
-                "Serial",
-                "N",
-                "YY/WW",
-                "PW1",
-                "PW2",
-                "PW3",
-                "PW4",
-                "PW5",
-                "I",
-                "I_I",
-                "STA",
-                "ISO",
-            ]
-
-            colonne = [
-                c for c in colonne_preferite
-                if c in df_sensori.columns
-            ]
-
-            st.dataframe(
-                df_sensori[colonne],
-                use_container_width=True,
-                hide_index=True,
-                height=600,
-            )
