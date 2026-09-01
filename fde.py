@@ -3,7 +3,7 @@ import pandas as pd
 import re
 from datetime import datetime
 import plotly.express as px
-
+import plotly.graph_objects as go
 
 # ==========================================================
 # DATASET PRESENTI NEI LOG FDE
