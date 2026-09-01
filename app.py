@@ -222,7 +222,13 @@ if "squadra" not in st.session_state:
 # 🔄 RIPRISTINO LOGIN DAL COOKIE
 # ==========================================================
 
-if not st.session_state.logged_in:
+if (
+    not st.session_state.logged_in
+    and not st.session_state.get(
+        "logout_effettuato",
+        False
+    )
+):
 
     try:
 
@@ -310,21 +316,23 @@ if not st.session_state.logged_in:
 
             else:
 
-                # Cookie non valido
+                # ==========================================
+                # COOKIE NON VALIDO
+                # ==========================================
+
                 try:
 
                     cookie_manager.delete(
-                        "manager_etr1000_login"
+                        COOKIE_LOGIN
                     )
 
-                except:
+                except Exception:
 
                     pass
 
     except Exception:
 
         pass
-
 # ==========================================================
 # BLOCCO LOGIN
 # ==========================================================
@@ -1025,41 +1033,71 @@ with st.sidebar:
     st.divider()
 
     # =====================================================
-    # 🔓 LOGOUT
-    # =====================================================
+# 🔓 LOGOUT
+# =====================================================
 
-    if st.button(
-        "🔓 Logout",
-        use_container_width=True
-    ):
+if st.button(
+    "🔓 Logout",
+    use_container_width=True
+):
 
-        try:
+    matricola = st.session_state.get(
+        "matricola",
+        ""
+    )
 
-            matricola = st.session_state.get(
-                "matricola"
-            )
+    # ---------------------------------------------
+    # INVALIDA SESSIONE
+    # ---------------------------------------------
 
-            if matricola:
+    try:
 
-                supabase.table(
-                    "login"
-                ).update({
-                    "session_token": None
-                }).eq(
-                    "matricola",
-                    matricola
-                ).execute()
+        if matricola:
 
-            cookie_manager.delete(
-                "manager_etr1000_login"
-            )
+            supabase.table(
+                "login"
+            ).update({
+                "session_token": None
+            }).eq(
+                "matricola",
+                matricola
+            ).execute()
 
-        except:
-            pass
+    except Exception:
 
-        st.session_state.clear()
+        pass
 
-        st.rerun()
+    # ---------------------------------------------
+    # CANCELLA COOKIE
+    # ---------------------------------------------
+
+    try:
+
+        cookie_manager.delete(
+            COOKIE_LOGIN
+        )
+
+    except Exception:
+
+        pass
+
+    # ---------------------------------------------
+    # BLOCCA IL RIPRISTINO AUTOMATICO
+    # ---------------------------------------------
+
+    st.session_state["logout_effettuato"] = True
+
+    st.session_state.logged_in = False
+    st.session_state.matricola = ""
+    st.session_state.utente = ""
+    st.session_state.ruolo = ""
+    st.session_state.squadra = ""
+
+    # ---------------------------------------------
+    # RITORNA AL LOGIN
+    # ---------------------------------------------
+
+    st.rerun()
 # =========================
 # 📥 CARICA DATABASE (SUPABASE)
 # =========================
