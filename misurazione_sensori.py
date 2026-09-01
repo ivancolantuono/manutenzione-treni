@@ -5,17 +5,7 @@ import altair as alt
 
 
 # ==========================================================
-# CONFIGURAZIONE
-# ==========================================================
-
-st.set_page_config(
-    page_title="Misurazione Sensori",
-    layout="wide"
-)
-
-
-# ==========================================================
-# ORDINE DM1
+# ORDINE SENSORI DM1
 # ==========================================================
 
 ORDER_DM1 = [
@@ -32,7 +22,7 @@ ORDER_DM1 = [
 
 
 # ==========================================================
-# ORDINE DM8
+# ORDINE SENSORI DM8
 # ==========================================================
 
 ORDER_DM8 = [
@@ -83,7 +73,7 @@ def normalize_add(value):
         value
     )
 
-    # Cerca numero
+    # Cerca il numero
     match = re.search(
         r"\d+",
         value
@@ -110,25 +100,22 @@ def normalize_column_name(value):
         ""
     )
 
-    value_upper = value.upper()
+    upper = value.upper()
 
-    # ADD
-    if value_upper in [
+    if upper in [
         "ADD",
         "ADDRESS",
         "ADDR"
     ]:
         return "ADD"
 
-    # I
-    if value_upper in [
+    if upper in [
         "I",
         "I."
     ]:
         return "I"
 
-    # I_I
-    if value_upper in [
+    if upper in [
         "I_I",
         "I/I",
         "I-I",
@@ -136,23 +123,27 @@ def normalize_column_name(value):
     ]:
         return "I_I"
 
-    # STA
-    if value_upper == "STA":
+    if upper == "STA":
         return "STA"
 
-    return value.strip()
+    return value
 
 
 # ==========================================================
 # RILEVA DM1 / DM8
 # ==========================================================
 
-def detect_cassa(nome_file, testo):
+def detect_cassa(
+    nome_file,
+    testo
+):
 
-    nome = str(nome_file).upper()
+    nome = str(
+        nome_file
+    ).upper()
 
     # ------------------------------------------------------
-    # Prima il nome del file
+    # Nome file
     # ------------------------------------------------------
 
     if "DM1" in nome:
@@ -162,12 +153,13 @@ def detect_cassa(nome_file, testo):
         return "DM8"
 
     # ------------------------------------------------------
-    # Poi il contenuto
+    # Contenuto
     # ------------------------------------------------------
 
-    testo_upper = str(testo).upper()
+    testo_upper = str(
+        testo
+    ).upper()
 
-    # Cerca indicazioni esplicite
     if re.search(
         r"\bDM1\b",
         testo_upper
@@ -184,12 +176,10 @@ def detect_cassa(nome_file, testo):
 
 
 # ==========================================================
-# RICONOSCE HEADER
+# CERCA HEADER
 # ==========================================================
 
 def trova_header(righe):
-
-    candidati = []
 
     for indice, riga in enumerate(righe):
 
@@ -200,11 +190,9 @@ def trova_header(righe):
 
         upper = testo.upper()
 
-        # Deve esserci ADD
         if "ADD" not in upper:
             continue
 
-        # Deve esserci almeno STA oppure I_I
         if (
             "STA" not in upper
             and
@@ -214,12 +202,7 @@ def trova_header(righe):
         ):
             continue
 
-        candidati.append(
-            indice
-        )
-
-    if candidati:
-        return candidati[0]
+        return indice
 
     return None
 
@@ -232,43 +215,30 @@ def split_header(riga):
 
     riga = riga.strip()
 
-    # Tab
     if "\t" in riga:
 
-        parti = [
+        return [
             x.strip()
             for x in riga.split("\t")
-            if x.strip()
         ]
 
-        return parti
-
-    # ;
     if ";" in riga:
 
-        parti = [
+        return [
             x.strip()
             for x in riga.split(";")
-            if x.strip()
         ]
 
-        return parti
-
-    # ,
     if "," in riga:
 
-        parti = [
+        return [
             x.strip()
             for x in riga.split(",")
-            if x.strip()
         ]
 
-        return parti
-
-    # Spazi multipli
     return re.split(
         r"\s+",
-        riga.strip()
+        riga
     )
 
 
@@ -308,10 +278,13 @@ def split_data_line(riga):
 
 
 # ==========================================================
-# CERCA INDICE COLONNA
+# CERCA COLONNA
 # ==========================================================
 
-def trova_colonna(header, possibili):
+def trova_colonna(
+    header,
+    possibili
+):
 
     for indice, nome in enumerate(header):
 
@@ -320,16 +293,19 @@ def trova_colonna(header, possibili):
         )
 
         if nome_norm in possibili:
+
             return indice
 
     return None
 
 
 # ==========================================================
-# PARSE FILE MNT
+# IMPORTA FILE MNT
 # ==========================================================
 
-def importa_mnt(uploaded_file):
+def importa_mnt(
+    uploaded_file
+):
 
     contenuto = uploaded_file.getvalue()
 
@@ -353,7 +329,7 @@ def importa_mnt(uploaded_file):
     righe = testo.splitlines()
 
     # ------------------------------------------------------
-    # Cassa
+    # Rileva cassa
     # ------------------------------------------------------
 
     cassa = detect_cassa(
@@ -362,20 +338,16 @@ def importa_mnt(uploaded_file):
     )
 
     # ------------------------------------------------------
-    # Trova header
+    # Cerca intestazione
     # ------------------------------------------------------
 
     indice_header = trova_header(
         righe
     )
 
-    # ------------------------------------------------------
-    # Se non troviamo header, proviamo parser automatico
-    # ------------------------------------------------------
-
     if indice_header is None:
 
-        return importa_mnt_senza_header(
+        return importa_senza_header(
             righe,
             cassa
         )
@@ -389,12 +361,14 @@ def importa_mnt(uploaded_file):
     )
 
     header = [
-        normalize_column_name(x)
+        normalize_column_name(
+            x
+        )
         for x in header_raw
     ]
 
     # ------------------------------------------------------
-    # Trova colonne
+    # Colonne
     # ------------------------------------------------------
 
     indice_add = trova_colonna(
@@ -418,10 +392,21 @@ def importa_mnt(uploaded_file):
     )
 
     # ------------------------------------------------------
-    # Dati
+    # Controllo ADD
     # ------------------------------------------------------
 
+    if indice_add is None:
+
+        return (
+            pd.DataFrame(),
+            cassa
+        )
+
     records = []
+
+    # ======================================================
+    # LETTURA DATI
+    # ======================================================
 
     for riga in righe[
         indice_header + 1:
@@ -436,16 +421,6 @@ def importa_mnt(uploaded_file):
             riga
         )
 
-        if not parti:
-            continue
-
-        # --------------------------------------------------
-        # ADD
-        # --------------------------------------------------
-
-        if indice_add is None:
-            continue
-
         if indice_add >= len(parti):
             continue
 
@@ -453,7 +428,6 @@ def importa_mnt(uploaded_file):
             parti[indice_add]
         )
 
-        # Un sensore deve avere ADD
         if not add:
             continue
 
@@ -521,9 +495,9 @@ def importa_mnt(uploaded_file):
             cassa
         )
 
-    # ------------------------------------------------------
-    # Numerici
-    # ------------------------------------------------------
+    # ======================================================
+    # CONVERSIONE NUMERICA
+    # ======================================================
 
     for colonna in [
         "I",
@@ -531,26 +505,23 @@ def importa_mnt(uploaded_file):
         "STA"
     ]:
 
-        if colonna in df.columns:
+        df[colonna] = pd.to_numeric(
+            df[colonna],
+            errors="coerce"
+        )
 
-            df[colonna] = pd.to_numeric(
-                df[colonna],
-                errors="coerce"
-            )
-
-    # ------------------------------------------------------
-    # Rimuove duplicati ADD
-    # Manteniamo l'ultima occorrenza
-    # ------------------------------------------------------
+    # ======================================================
+    # UN SOLO RECORD PER ADD
+    # ======================================================
 
     df = df.drop_duplicates(
         subset=["ADD"],
         keep="last"
     )
 
-    # ------------------------------------------------------
-    # Ordina
-    # ------------------------------------------------------
+    # ======================================================
+    # ORDINE
+    # ======================================================
 
     df = applica_ordine(
         df,
@@ -564,10 +535,10 @@ def importa_mnt(uploaded_file):
 
 
 # ==========================================================
-# PARSER SENZA HEADER
+# IMPORTAZIONE SENZA HEADER
 # ==========================================================
 
-def importa_mnt_senza_header(
+def importa_senza_header(
     righe,
     cassa
 ):
@@ -585,12 +556,8 @@ def importa_mnt_senza_header(
             riga
         )
 
-        if len(parti) < 3:
+        if len(parti) < 2:
             continue
-
-        # --------------------------------------------------
-        # Il primo campo deve essere ADD
-        # --------------------------------------------------
 
         add = normalize_add(
             parti[0]
@@ -600,22 +567,18 @@ def importa_mnt_senza_header(
             continue
 
         # --------------------------------------------------
-        # Cerchiamo numeri nella riga
+        # Cerca valori numerici
         # --------------------------------------------------
 
         numeri = []
 
         for valore in parti[1:]:
 
-            valore = valore.strip()
-
             try:
 
                 numero = float(
-                    valore.replace(
-                        ",",
-                        "."
-                    )
+                    str(valore)
+                    .replace(",", ".")
                 )
 
                 numeri.append(
@@ -623,6 +586,7 @@ def importa_mnt_senza_header(
                 )
 
             except Exception:
+
                 pass
 
         if not numeri:
@@ -634,11 +598,6 @@ def importa_mnt_senza_header(
             "I_I": None,
             "STA": None
         }
-
-        # --------------------------------------------------
-        # Fallback:
-        # gli ultimi valori numerici vengono conservati
-        # --------------------------------------------------
 
         if len(numeri) >= 1:
             record["I"] = numeri[-1]
@@ -664,10 +623,6 @@ def importa_mnt_senza_header(
             cassa
         )
 
-    # ------------------------------------------------------
-    # Numerici
-    # ------------------------------------------------------
-
     for colonna in [
         "I",
         "I_I",
@@ -679,18 +634,10 @@ def importa_mnt_senza_header(
             errors="coerce"
         )
 
-    # ------------------------------------------------------
-    # Duplicati
-    # ------------------------------------------------------
-
     df = df.drop_duplicates(
         subset=["ADD"],
         keep="last"
     )
-
-    # ------------------------------------------------------
-    # Ordine
-    # ------------------------------------------------------
 
     df = applica_ordine(
         df,
@@ -735,15 +682,15 @@ def applica_ordine(
     # Mappa posizione
     # ------------------------------------------------------
 
-    posizione = {
-        add: indice
-        for indice, add
+    mappa = {
+        add: posizione
+        for posizione, add
         in enumerate(ordine)
     }
 
     df["_POSIZIONE"] = (
         df["ADD"]
-        .map(posizione)
+        .map(mappa)
     )
 
     # ------------------------------------------------------
@@ -754,10 +701,6 @@ def applica_ordine(
         "_POSIZIONE",
         na_position="last"
     )
-
-    # ------------------------------------------------------
-    # Reset
-    # ------------------------------------------------------
 
     df = df.reset_index(
         drop=True
@@ -784,23 +727,19 @@ def prepara_grafico(
         cassa
     )
 
-    # ------------------------------------------------------
-    # Posizione
-    # ------------------------------------------------------
-
-    posizione = {
-        add: indice
-        for indice, add
+    mappa = {
+        add: posizione
+        for posizione, add
         in enumerate(ordine)
     }
 
     df["POSIZIONE"] = (
         df["ADD"]
-        .map(posizione)
+        .map(mappa)
     )
 
     # ------------------------------------------------------
-    # Solo sensori presenti nell'ordine
+    # Tieni solo ADD presenti nell'ordine
     # ------------------------------------------------------
 
     df = df[
@@ -808,7 +747,7 @@ def prepara_grafico(
     ].copy()
 
     # ------------------------------------------------------
-    # Ordina definitivamente
+    # Ordinamento definitivo
     # ------------------------------------------------------
 
     df = df.sort_values(
@@ -832,7 +771,7 @@ def prepara_grafico(
 
 
 # ==========================================================
-# GRAFICO ALTAIR
+# CREA GRAFICO
 # ==========================================================
 
 def crea_grafico(
@@ -862,7 +801,7 @@ def crea_grafico(
         return None
 
     # ------------------------------------------------------
-    # Trasformiamo il dataframe in formato LONG
+    # FORMATO LONG
     # ------------------------------------------------------
 
     long_df = grafico[
@@ -881,7 +820,7 @@ def crea_grafico(
     )
 
     # ------------------------------------------------------
-    # Grafico
+    # GRAFICO
     # ------------------------------------------------------
 
     chart = (
@@ -943,7 +882,7 @@ def crea_grafico(
 
 
 # ==========================================================
-# PAGINA
+# PAGINA STREAMLIT
 # ==========================================================
 
 def misurazione_sensori_page():
@@ -953,41 +892,29 @@ def misurazione_sensori_page():
     )
 
     st.caption(
-        "Lettura diretta dei file .MNT"
+        "Analisi dei sensori tramite file .MNT"
     )
 
     st.divider()
 
     # ======================================================
-    # SELEZIONE DM
+    # SELEZIONE CASSA
     # ======================================================
 
-    c1, c2 = st.columns(
-        [1, 3]
+    cassa = st.radio(
+        "🚆 Cassa",
+        [
+            "DM1",
+            "DM8"
+        ],
+        horizontal=True,
+        key="mnt_cassa"
     )
-
-    with c1:
-
-        cassa_selezionata = st.selectbox(
-            "🚆 Cassa",
-            [
-                "DM1",
-                "DM8"
-            ],
-            key="mnt_cassa"
-        )
-
-    with c2:
-
-        st.info(
-            "L'ordine ADD viene applicato automaticamente "
-            f"secondo la configurazione {cassa_selezionata}."
-        )
 
     st.divider()
 
     # ======================================================
-    # UPLOAD SOLO MNT
+    # CARICAMENTO .MNT
     # ======================================================
 
     uploaded_file = st.file_uploader(
@@ -1005,7 +932,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # CONTROLLO ESTENSIONE
+    # CONTROLLO FILE
     # ======================================================
 
     if not uploaded_file.name.lower().endswith(
@@ -1025,12 +952,12 @@ def misurazione_sensori_page():
     try:
 
         with st.spinner(
-            "🔄 Lettura del file .MNT..."
+            "🔄 Lettura file .MNT..."
         ):
 
             (
                 df,
-                cassa_rilevata
+                cassa_file
             ) = importa_mnt(
                 uploaded_file
             )
@@ -1054,25 +981,14 @@ def misurazione_sensori_page():
     if df.empty:
 
         st.error(
-            "❌ Nessun dato sensore riconosciuto "
+            "❌ Nessun sensore riconosciuto "
             "nel file .MNT."
-        )
-
-        st.info(
-            "Il file è stato letto, ma il formato delle "
-            "righe non è stato riconosciuto."
         )
 
         return
 
     # ======================================================
-    # USIAMO LA SELEZIONE DELL'UTENTE
-    # ======================================================
-
-    cassa = cassa_selezionata
-
-    # ======================================================
-    # ORDINA
+    # USA CASSA SELEZIONATA
     # ======================================================
 
     df = applica_ordine(
@@ -1081,7 +997,7 @@ def misurazione_sensori_page():
     )
 
     # ======================================================
-    # PREPARA GRAFICO
+    # PREPARA DATI
     # ======================================================
 
     grafico_df = prepara_grafico(
@@ -1094,7 +1010,7 @@ def misurazione_sensori_page():
     # ======================================================
 
     st.success(
-        f"✅ File MNT caricato: {uploaded_file.name}"
+        f"✅ File caricato: {uploaded_file.name}"
     )
 
     col1, col2, col3 = st.columns(3)
@@ -1102,7 +1018,7 @@ def misurazione_sensori_page():
     with col1:
 
         st.metric(
-            "Sensori trovati",
+            "Sensori",
             len(grafico_df)
         )
 
@@ -1116,37 +1032,11 @@ def misurazione_sensori_page():
     with col3:
 
         st.metric(
-            "ADD disponibili",
+            "ADD",
             grafico_df["ADD"].nunique()
         )
 
     st.divider()
-
-    df_view = grafico_df.copy()
-
-    
-
-        # --------------------------------------------------
-        # Mantieni l'ordine fisico
-        # --------------------------------------------------
-
-        df_view["POS_TEMP"] = (
-            df_view["ADD"].map(
-                {
-                    add: indice
-                    for indice, add
-                    in enumerate(ordine)
-                }
-            )
-        )
-
-        df_view = df_view.sort_values(
-            "POS_TEMP"
-        )
-
-        df_view = df_view.drop(
-            columns="POS_TEMP"
-        )
 
     # ======================================================
     # TABS
@@ -1154,8 +1044,8 @@ def misurazione_sensori_page():
 
     tab1, tab2 = st.tabs(
         [
-            "📈 Grafico",
-            "📋 Dati"
+            "📈 Misurazioni",
+            "📋 Dati MNT"
         ]
     )
 
@@ -1170,14 +1060,14 @@ def misurazione_sensori_page():
         )
 
         chart = crea_grafico(
-            df_view,
+            grafico_df,
             cassa
         )
 
         if chart is None:
 
             st.warning(
-                "Nel file .MNT non sono disponibili "
+                "Nel file .MNT non sono presenti "
                 "STA / I_I."
             )
 
@@ -1189,7 +1079,7 @@ def misurazione_sensori_page():
             )
 
     # ======================================================
-    # TABELLA
+    # DATI
     # ======================================================
 
     with tab2:
@@ -1208,11 +1098,13 @@ def misurazione_sensori_page():
         colonne = [
             c
             for c in colonne
-            if c in df_view.columns
+            if c in grafico_df.columns
         ]
 
         st.dataframe(
-            df_view[colonne],
+            grafico_df[
+                colonne
+            ],
             use_container_width=True,
             hide_index=True,
             height=600
@@ -1223,7 +1115,9 @@ def misurazione_sensori_page():
         # --------------------------------------------------
 
         csv = (
-            df_view[colonne]
+            grafico_df[
+                colonne
+            ]
             .to_csv(
                 index=False
             )
@@ -1240,8 +1134,3 @@ def misurazione_sensori_page():
             ),
             mime="text/csv"
         )
-
-
-# ==========================================================
-# FINE
-# ==========================================================
