@@ -2584,6 +2584,8 @@ elif menu == "Treno":
 
         st.title("Antincendio")
         st.info("Sezione Antincendio in preparazione.")
+        misurazione_sensori_page()
+
 
     elif sistema == "Propulsione":
 
