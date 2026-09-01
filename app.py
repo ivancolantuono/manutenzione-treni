@@ -2581,7 +2581,7 @@ elif menu == "Treno":
 
     elif sistema == "Analisi FDE":
 
-        st.title("Antincendio")
+        st.title("Analisi FDE")
         st.info("Sezione Antincendio in preparazione.")
 
     elif sistema == "Propulsione":
