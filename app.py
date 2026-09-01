@@ -838,7 +838,6 @@ with st.sidebar:
                 "Ferie e Permessi",
                 "Scadenze Temporali",
                 "Software",
-                "Misurazione Sensori",
                 "Treno"
             ],
 
@@ -2554,8 +2553,7 @@ elif menu == "Software":
                 else:
                     st.info("Nessuna procedura")
 
-elif menu == "Misurazione Sensori":
-    misurazione_sensori_page()
+
 
 elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
@@ -2582,8 +2580,6 @@ elif menu == "Treno":
 
     elif sistema == "Misurazione Sensori":
 
-        st.title("Antincendio")
-        st.info("Sezione Antincendio in preparazione.")
         misurazione_sensori_page()
 
 
