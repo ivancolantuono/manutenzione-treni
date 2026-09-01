@@ -16,7 +16,6 @@ from db import get_operatori
 from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
 from carrelli import carrelli_page
-from fde import fde_page
 import urllib.parse
 
 st.set_page_config(
@@ -911,7 +910,7 @@ with st.sidebar:
                 [
                     "Carrelli",
                     "HVAC",
-                    "Analisi FDE",
+                    "Antincendio",
                     "Propulsione"
                 ],
                 key="sistema_treno",
