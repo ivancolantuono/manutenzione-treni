@@ -39,7 +39,7 @@ ORDER_DM8 = [
 
 
 # ==========================================================
-# RESTITUISCE ORDINE
+# RESTITUISCE ORDINE SENSORI
 # ==========================================================
 
 def get_order(cassa):
@@ -56,7 +56,7 @@ def get_order(cassa):
 
 
 # ==========================================================
-# NORMALIZZA SENSOR / ADD
+# NORMALIZZA ADD
 # ==========================================================
 
 def normalize_add(value):
@@ -298,7 +298,7 @@ def importa_mnt(
     contenuto = uploaded_file.getvalue()
 
     # ------------------------------------------------------
-    # DECODIFICA
+    # DECODIFICA FILE
     # ------------------------------------------------------
 
     try:
@@ -341,7 +341,7 @@ def importa_mnt(
         )
 
     # ------------------------------------------------------
-    # LETTURA HEADER
+    # HEADER
     # ------------------------------------------------------
 
     header_raw = split_header(
@@ -354,7 +354,7 @@ def importa_mnt(
     ]
 
     # ------------------------------------------------------
-    # INDICI COLONNE
+    # TROVA COLONNE
     # ------------------------------------------------------
 
     indice_add = trova_colonna(
@@ -391,7 +391,7 @@ def importa_mnt(
     records = []
 
     # ======================================================
-    # LETTURA DATI
+    # LETTURA RIGHE DATI
     # ======================================================
 
     for riga in righe[
@@ -501,7 +501,7 @@ def importa_mnt(
         )
 
     # ======================================================
-    # UN RECORD PER SENSOR
+    # ELIMINA DOPPIONI
     # ======================================================
 
     df = df.drop_duplicates(
@@ -510,7 +510,7 @@ def importa_mnt(
     )
 
     # ======================================================
-    # ORDINE
+    # APPLICA ORDINE
     # ======================================================
 
     df = applica_ordine(
@@ -609,6 +609,10 @@ def importa_senza_header(
             cassa
         )
 
+    # ======================================================
+    # NUMERICI
+    # ======================================================
+
     for colonna in [
         "I",
         "I_I",
@@ -620,10 +624,18 @@ def importa_senza_header(
             errors="coerce"
         )
 
+    # ======================================================
+    # DOPPIONI
+    # ======================================================
+
     df = df.drop_duplicates(
         subset=["ADD"],
         keep="last"
     )
+
+    # ======================================================
+    # ORDINE
+    # ======================================================
 
     df = applica_ordine(
         df,
@@ -637,7 +649,7 @@ def importa_senza_header(
 
 
 # ==========================================================
-# APPLICA ORDINE FISICO
+# APPLICA ORDINE SENSORI
 # ==========================================================
 
 def applica_ordine(
@@ -655,10 +667,18 @@ def applica_ordine(
 
         return df
 
+    # ------------------------------------------------------
+    # NORMALIZZA ADD
+    # ------------------------------------------------------
+
     df["ADD"] = (
         df["ADD"]
         .apply(normalize_add)
     )
+
+    # ------------------------------------------------------
+    # MAPPA POSIZIONE
+    # ------------------------------------------------------
 
     mappa = {
         add: posizione
@@ -670,6 +690,10 @@ def applica_ordine(
         df["ADD"]
         .map(mappa)
     )
+
+    # ------------------------------------------------------
+    # ORDINA
+    # ------------------------------------------------------
 
     df = df.sort_values(
         "_POSIZIONE",
@@ -684,7 +708,7 @@ def applica_ordine(
 
 
 # ==========================================================
-# PREPARA GRAFICO
+# PREPARA DATI GRAFICO
 # ==========================================================
 
 def prepara_grafico(
@@ -701,6 +725,10 @@ def prepara_grafico(
         cassa
     )
 
+    # ------------------------------------------------------
+    # MAPPA ORDINE
+    # ------------------------------------------------------
+
     mappa = {
         add: posizione
         for posizione, add
@@ -708,7 +736,7 @@ def prepara_grafico(
     }
 
     # ------------------------------------------------------
-    # POSIZIONE
+    # POSIZIONE SENSORI
     # ------------------------------------------------------
 
     df["POSIZIONE"] = (
@@ -717,7 +745,7 @@ def prepara_grafico(
     )
 
     # ------------------------------------------------------
-    # SOLO SENSORI PRESENTI NELL'ORDINE
+    # SOLO SENSORI CONOSCIUTI
     # ------------------------------------------------------
 
     df = df[
@@ -725,7 +753,7 @@ def prepara_grafico(
     ].copy()
 
     # ------------------------------------------------------
-    # ORDINAMENTO
+    # ORDINE DEFINITIVO
     # ------------------------------------------------------
 
     df = df.sort_values(
@@ -737,7 +765,7 @@ def prepara_grafico(
     )
 
     # ------------------------------------------------------
-    # NOME SENSORE
+    # ETICHETTA SENSORI
     # ------------------------------------------------------
 
     df["SENSORE"] = (
@@ -795,7 +823,7 @@ def crea_grafico(
         return None
 
     # ======================================================
-    # FORMATO LONG
+    # TRASFORMA IN FORMATO LONG
     # ======================================================
 
     long_df = grafico[
@@ -872,7 +900,7 @@ def crea_grafico(
     chart = linee
 
     # ======================================================
-    # SENSORI STA <= 45
+    # SENSORI CON STA <= 45
     # ======================================================
 
     if "STA" in grafico.columns:
@@ -928,7 +956,11 @@ def crea_grafico(
             )
 
     # ======================================================
-    # MASSIMO / MINIMO SOLO I_I
+    # I_I MASSIMO E MINIMO
+    #
+    # IMPORTANTE:
+    # MASSIMO E MINIMO VENGONO CALCOLATI
+    # ESCLUSIVAMENTE SULLA COLONNA I_I
     # ======================================================
 
     if "I_I" in grafico.columns:
@@ -947,16 +979,24 @@ def crea_grafico(
                 "I_I"
             ].min()
 
+            # ------------------------------------------------
+            # SENSORI DEL MASSIMO
+            # ------------------------------------------------
+
             max_ii_df = ii_validi[
                 ii_validi["I_I"] == massimo_ii
             ].copy()
+
+            # ------------------------------------------------
+            # SENSORI DEL MINIMO
+            # ------------------------------------------------
 
             min_ii_df = ii_validi[
                 ii_validi["I_I"] == minimo_ii
             ].copy()
 
             # ------------------------------------------------
-            # I_I MASSIMO
+            # PUNTO MASSIMO I_I
             # ------------------------------------------------
 
             punti_max_ii = (
@@ -985,7 +1025,7 @@ def crea_grafico(
                     tooltip=[
                         alt.Tooltip(
                             "SENSORE:N",
-                            title="⬆️ I_I massimo - Sensore"
+                            title="I_I massimo - Sensore"
                         ),
 
                         alt.Tooltip(
@@ -997,7 +1037,7 @@ def crea_grafico(
             )
 
             # ------------------------------------------------
-            # I_I MINIMO
+            # PUNTO MINIMO I_I
             # ------------------------------------------------
 
             punti_min_ii = (
@@ -1026,7 +1066,7 @@ def crea_grafico(
                     tooltip=[
                         alt.Tooltip(
                             "SENSORE:N",
-                            title="⬇️ I_I minimo - Sensore"
+                            title="I_I minimo - Sensore"
                         ),
 
                         alt.Tooltip(
@@ -1093,7 +1133,7 @@ def misurazione_sensori_page():
     st.divider()
 
     # ======================================================
-    # FILE .MNT
+    # CARICAMENTO FILE MNT
     # ======================================================
 
     uploaded_file = st.file_uploader(
@@ -1125,7 +1165,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # LETTURA
+    # LETTURA FILE
     # ======================================================
 
     try:
@@ -1155,7 +1195,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # CONTROLLO DATI
+    # CONTROLLO
     # ======================================================
 
     if df.empty:
@@ -1168,7 +1208,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # ORDINE SELEZIONATO
+    # ORDINE
     # ======================================================
 
     df = applica_ordine(
@@ -1177,7 +1217,7 @@ def misurazione_sensori_page():
     )
 
     # ======================================================
-    # PREPARA DATI
+    # PREPARAZIONE
     # ======================================================
 
     grafico_df = prepara_grafico(
@@ -1195,7 +1235,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # SENSORI CON STA <= 45
+    # SENSORI STA <= 45
     # ======================================================
 
     sta_numerica = pd.to_numeric(
@@ -1208,7 +1248,9 @@ def misurazione_sensori_page():
     ].copy()
 
     # ======================================================
-    # VALORI I_I
+    # CALCOLO I_I
+    #
+    # SOLO I_I
     # ======================================================
 
     ii_validi = grafico_df[
@@ -1240,7 +1282,7 @@ def misurazione_sensori_page():
         ]["ADD"].tolist()
 
     # ======================================================
-    # INFORMAZIONI
+    # INFORMAZIONI FILE
     # ======================================================
 
     st.success(
@@ -1248,7 +1290,15 @@ def misurazione_sensori_page():
         f"{uploaded_file.name}"
     )
 
-    col1, col2, col3, col4 = st.columns(4)
+    # ======================================================
+    # METRICHE
+    # ======================================================
+
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    # ------------------------------------------------------
+    # SENSORI
+    # ------------------------------------------------------
 
     with col1:
 
@@ -1257,6 +1307,10 @@ def misurazione_sensori_page():
             len(grafico_df)
         )
 
+    # ------------------------------------------------------
+    # CASSA
+    # ------------------------------------------------------
+
     with col2:
 
         st.metric(
@@ -1264,12 +1318,20 @@ def misurazione_sensori_page():
             cassa
         )
 
+    # ------------------------------------------------------
+    # STA <= 45
+    # ------------------------------------------------------
+
     with col3:
 
         st.metric(
             "STA ≤ 45",
             len(sensori_critici)
         )
+
+    # ------------------------------------------------------
+    # I_I MASSIMO
+    # ------------------------------------------------------
 
     with col4:
 
@@ -1284,6 +1346,26 @@ def misurazione_sensori_page():
 
             st.metric(
                 "I_I massimo",
+                "-"
+            )
+
+    # ------------------------------------------------------
+    # I_I MINIMO
+    # ------------------------------------------------------
+
+    with col5:
+
+        if minimo_ii is not None:
+
+            st.metric(
+                "I_I minimo",
+                minimo_ii
+            )
+
+        else:
+
+            st.metric(
+                "I_I minimo",
                 "-"
             )
 
@@ -1302,7 +1384,7 @@ def misurazione_sensori_page():
     )
 
     # ======================================================
-    # TAB GRAFICO
+    # TAB MISURAZIONI
     # ======================================================
 
     with tab1:
