@@ -992,7 +992,8 @@ with st.sidebar:
             ">
                 🚆 SISTEMI TRENO
             </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True
+        )
     
         sistema_treno = st.radio(
             "",
@@ -1005,6 +1006,13 @@ with st.sidebar:
             key="sistema_treno",
             label_visibility="collapsed"
         )
+        
+    else:
+
+        sistema_treno = st.session_state.get(
+                "sistema_treno_operatore",
+                "Carrelli"
+         )
 
     # =====================================================
     # SEPARATORE
