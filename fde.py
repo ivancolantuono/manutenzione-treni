@@ -1340,381 +1340,381 @@ def fde_page():
     )
 
     # ======================================================
-# TAB TIMELINE
-# ======================================================
-
-with tab1:
-
-    st.subheader(
-        "📈 Timeline FDE"
-    )
-
-    plot = out.copy()
-
-    # ==================================================
-    # ORDINE CRONOLOGICO
-    # ==================================================
-
-    plot = plot.sort_values(
-        "timestamp"
-    ).copy()
-
-    # ==================================================
-    # SEGNALI
-    # ==================================================
-
-    segnali = (
-        plot["segnale_norm"]
-        .astype(str)
-        .drop_duplicates()
-        .tolist()
-    )
-
-    # ==================================================
-    # POSIZIONE DEI SEGNALI
-    # ==================================================
-
-    posizione_segnale = {
-        segnale: i
-        for i, segnale in enumerate(segnali)
-    }
-
-    fig = go.Figure()
-
-    # ==================================================
-    # TIMELINE A ONDA QUADRA
-    # ==================================================
-
-    for segnale in segnali:
-
-        dati = plot[
-            plot["segnale_norm"].astype(str)
-            == segnale
-        ].sort_values(
+    # TAB TIMELINE
+    # ======================================================
+    
+    with tab1:
+    
+        st.subheader(
+            "📈 Timeline FDE"
+        )
+    
+        plot = out.copy()
+    
+        # ==================================================
+        # ORDINE CRONOLOGICO
+        # ==================================================
+    
+        plot = plot.sort_values(
             "timestamp"
         ).copy()
-
-        if dati.empty:
-            continue
-
-        x = []
-        y = []
-        colori = []
-
-        base = posizione_segnale[segnale]
-
-        # --------------------------------------------------
-        # COSTRUZIONE ONDA
-        # --------------------------------------------------
-
-        precedente_y = base
-
-        for _, riga in dati.iterrows():
-
-            timestamp = riga["timestamp"]
-
-            # ----------------------------------------------
-            # VALORE
-            # ----------------------------------------------
-
-            valore = riga.get(
-                "data_val",
-                0
-            )
-
-            try:
-                valore_num = float(
-                    str(valore)
-                    .replace(",", ".")
-                )
-            except:
-                valore_num = 0
-
-            # ----------------------------------------------
-            # ONDA:
-            #
-            # 0 -> livello basso
-            # 1 -> livello alto
-            #
-            # Per valori > 1 manteniamo comunque
-            # il livello alto.
-            # ----------------------------------------------
-
-            if valore_num == 0:
-
-                livello = base
-
-            else:
-
-                livello = base + 0.7
-
-            evento = str(
-                riga.get(
-                    "evento",
-                    "NORMALE"
-                )
-            )
-
-            colore = COLORI_EVENTO.get(
-                evento,
-                COLORI_EVENTO["NORMALE"]
-            )
-
-            # ----------------------------------------------
-            # PRIMO PUNTO
-            # ----------------------------------------------
-
-            if not x:
-
-                x.append(timestamp)
-                y.append(livello)
-                colori.append(colore)
-
-            else:
-
-                # ------------------------------------------
-                # MANTIENI IL LIVELLO PRECEDENTE FINO
-                # ALL'ISTANTE DEL CAMBIO
-                # ------------------------------------------
-
-                x.append(timestamp)
-                y.append(precedente_y)
-                colori.append(colore)
-
-                # ------------------------------------------
-                # SALITA / DISCESA VERTICALE
-                # ------------------------------------------
-
-                x.append(timestamp)
-                y.append(livello)
-                colori.append(colore)
-
-            precedente_y = livello
-
+    
         # ==================================================
-        # DISEGNO DELLA LINEA
+        # SEGNALI
         # ==================================================
-
-        # Plotly non permette un colore diverso per ogni
-        # segmento della stessa linea in modo semplice.
-        # Creiamo quindi i segmenti separati per colore.
-
-        for i in range(
-            len(x) - 1
-        ):
-
+    
+        segnali = (
+            plot["segnale_norm"]
+            .astype(str)
+            .drop_duplicates()
+            .tolist()
+        )
+    
+        # ==================================================
+        # POSIZIONE DEI SEGNALI
+        # ==================================================
+    
+        posizione_segnale = {
+            segnale: i
+            for i, segnale in enumerate(segnali)
+        }
+    
+        fig = go.Figure()
+    
+        # ==================================================
+        # TIMELINE A ONDA QUADRA
+        # ==================================================
+    
+        for segnale in segnali:
+    
+            dati = plot[
+                plot["segnale_norm"].astype(str)
+                == segnale
+            ].sort_values(
+                "timestamp"
+            ).copy()
+    
+            if dati.empty:
+                continue
+    
+            x = []
+            y = []
+            colori = []
+    
+            base = posizione_segnale[segnale]
+    
+            # --------------------------------------------------
+            # COSTRUZIONE ONDA
+            # --------------------------------------------------
+    
+            precedente_y = base
+    
+            for _, riga in dati.iterrows():
+    
+                timestamp = riga["timestamp"]
+    
+                # ----------------------------------------------
+                # VALORE
+                # ----------------------------------------------
+    
+                valore = riga.get(
+                    "data_val",
+                    0
+                )
+    
+                try:
+                    valore_num = float(
+                        str(valore)
+                        .replace(",", ".")
+                    )
+                except:
+                    valore_num = 0
+    
+                # ----------------------------------------------
+                # ONDA:
+                #
+                # 0 -> livello basso
+                # 1 -> livello alto
+                #
+                # Per valori > 1 manteniamo comunque
+                # il livello alto.
+                # ----------------------------------------------
+    
+                if valore_num == 0:
+    
+                    livello = base
+    
+                else:
+    
+                    livello = base + 0.7
+    
+                evento = str(
+                    riga.get(
+                        "evento",
+                        "NORMALE"
+                    )
+                )
+    
+                colore = COLORI_EVENTO.get(
+                    evento,
+                    COLORI_EVENTO["NORMALE"]
+                )
+    
+                # ----------------------------------------------
+                # PRIMO PUNTO
+                # ----------------------------------------------
+    
+                if not x:
+    
+                    x.append(timestamp)
+                    y.append(livello)
+                    colori.append(colore)
+    
+                else:
+    
+                    # ------------------------------------------
+                    # MANTIENI IL LIVELLO PRECEDENTE FINO
+                    # ALL'ISTANTE DEL CAMBIO
+                    # ------------------------------------------
+    
+                    x.append(timestamp)
+                    y.append(precedente_y)
+                    colori.append(colore)
+    
+                    # ------------------------------------------
+                    # SALITA / DISCESA VERTICALE
+                    # ------------------------------------------
+    
+                    x.append(timestamp)
+                    y.append(livello)
+                    colori.append(colore)
+    
+                precedente_y = livello
+    
+            # ==================================================
+            # DISEGNO DELLA LINEA
+            # ==================================================
+    
+            # Plotly non permette un colore diverso per ogni
+            # segmento della stessa linea in modo semplice.
+            # Creiamo quindi i segmenti separati per colore.
+    
+            for i in range(
+                len(x) - 1
+            ):
+    
+                fig.add_trace(
+                    go.Scatter(
+                        x=[
+                            x[i],
+                            x[i + 1]
+                        ],
+    
+                        y=[
+                            y[i],
+                            y[i + 1]
+                        ],
+    
+                        mode="lines",
+    
+                        line=dict(
+                            color=colori[i],
+                            width=3,
+                            shape="linear"
+                        ),
+    
+                        hoverinfo="skip",
+    
+                        showlegend=False
+                    )
+                )
+    
+            # ==================================================
+            # PUNTI INVISIBILI PER HOVER
+            # ==================================================
+    
+            hover_text = []
+    
+            for _, riga in dati.iterrows():
+    
+                timestamp = riga["timestamp"]
+    
+                hover_text.append(
+                    f"<b>Data/Ora:</b> "
+                    f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}"
+                    f"<br>"
+                    f"<b>Origine:</b> "
+                    f"{riga.get('origine', '')}"
+                    f"<br>"
+                    f"<b>Dataset:</b> "
+                    f"{riga.get('dataset', '')}"
+                    f"<br>"
+                    f"<b>Segnale:</b> "
+                    f"{segnale}"
+                    f"<br>"
+                    f"<b>Cassa:</b> "
+                    f"{riga.get('cassa', '')}"
+                    f"<br>"
+                    f"<b>Number:</b> "
+                    f"{riga.get('number', '')}"
+                    f"<br>"
+                    f"<b>Valore:</b> "
+                    f"{riga.get('data_val', '')}"
+                    f"<br>"
+                    f"<b>Descrizione:</b> "
+                    f"{riga.get('descrizione', '')}"
+                    f"<br>"
+                    f"<b>Evento:</b> "
+                    f"{riga.get('evento', '')}"
+                )
+    
+            # ==================================================
+            # HOVER
+            # ==================================================
+    
             fig.add_trace(
                 go.Scatter(
-                    x=[
-                        x[i],
-                        x[i + 1]
-                    ],
-
+                    x=dati["timestamp"],
                     y=[
-                        y[i],
-                        y[i + 1]
+                        (
+                            base + 0.7
+                            if str(v) not in ["0", "0.0"]
+                            else base
+                        )
+                        for v in dati["data_val"]
                     ],
-
-                    mode="lines",
-
-                    line=dict(
-                        color=colori[i],
-                        width=3,
-                        shape="linear"
+    
+                    mode="markers",
+    
+                    marker=dict(
+                        size=7,
+                        opacity=0
                     ),
-
-                    hoverinfo="skip",
-
+    
+                    text=hover_text,
+    
+                    hoverinfo="text",
+    
                     showlegend=False
                 )
             )
-
-        # ==================================================
-        # PUNTI INVISIBILI PER HOVER
-        # ==================================================
-
-        hover_text = []
-
-        for _, riga in dati.iterrows():
-
-            timestamp = riga["timestamp"]
-
-            hover_text.append(
-                f"<b>Data/Ora:</b> "
-                f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}"
-                f"<br>"
-                f"<b>Origine:</b> "
-                f"{riga.get('origine', '')}"
-                f"<br>"
-                f"<b>Dataset:</b> "
-                f"{riga.get('dataset', '')}"
-                f"<br>"
-                f"<b>Segnale:</b> "
-                f"{segnale}"
-                f"<br>"
-                f"<b>Cassa:</b> "
-                f"{riga.get('cassa', '')}"
-                f"<br>"
-                f"<b>Number:</b> "
-                f"{riga.get('number', '')}"
-                f"<br>"
-                f"<b>Valore:</b> "
-                f"{riga.get('data_val', '')}"
-                f"<br>"
-                f"<b>Descrizione:</b> "
-                f"{riga.get('descrizione', '')}"
-                f"<br>"
-                f"<b>Evento:</b> "
-                f"{riga.get('evento', '')}"
+    
+        # ======================================================
+        # LEGENDA COLORI
+        # ======================================================
+    
+        for evento, colore in COLORI_EVENTO.items():
+    
+            # Mostra in legenda solo gli eventi presenti
+            if evento not in plot["evento"].astype(str).values:
+                continue
+    
+            fig.add_trace(
+                go.Scatter(
+                    x=[None],
+                    y=[None],
+    
+                    mode="lines",
+    
+                    line=dict(
+                        color=colore,
+                        width=4
+                    ),
+    
+                    name=evento,
+    
+                    showlegend=True
+                )
             )
-
-        # ==================================================
-        # HOVER
-        # ==================================================
-
-        fig.add_trace(
-            go.Scatter(
-                x=dati["timestamp"],
-                y=[
-                    (
-                        base + 0.7
-                        if str(v) not in ["0", "0.0"]
-                        else base
-                    )
-                    for v in dati["data_val"]
-                ],
-
-                mode="markers",
-
-                marker=dict(
-                    size=7,
-                    opacity=0
-                ),
-
-                text=hover_text,
-
-                hoverinfo="text",
-
-                showlegend=False
+    
+        # ======================================================
+        # ALTEZZA
+        # ======================================================
+    
+        altezza = max(
+            550,
+            min(
+                1100,
+                350 + len(segnali) * 35
             )
         )
-
-    # ======================================================
-    # LEGENDA COLORI
-    # ======================================================
-
-    for evento, colore in COLORI_EVENTO.items():
-
-        # Mostra in legenda solo gli eventi presenti
-        if evento not in plot["evento"].astype(str).values:
-            continue
-
-        fig.add_trace(
-            go.Scatter(
-                x=[None],
-                y=[None],
-
-                mode="lines",
-
-                line=dict(
-                    color=colore,
-                    width=4
-                ),
-
-                name=evento,
-
-                showlegend=True
-            )
-        )
-
-    # ======================================================
-    # ALTEZZA
-    # ======================================================
-
-    altezza = max(
-        550,
-        min(
-            1100,
-            350 + len(segnali) * 35
-        )
-    )
-
-    # ======================================================
-    # LAYOUT
-    # ======================================================
-
-    fig.update_layout(
-
-        height=altezza,
-
-        hovermode="closest",
-
-        margin=dict(
-            l=10,
-            r=10,
-            t=30,
-            b=10
-        ),
-
-        legend_title_text="Tipo evento",
-
-        xaxis=dict(
-            title="Data / Ora",
-
-            type="date",
-
-            rangeslider=dict(
-                visible=True
+    
+        # ======================================================
+        # LAYOUT
+        # ======================================================
+    
+        fig.update_layout(
+    
+            height=altezza,
+    
+            hovermode="closest",
+    
+            margin=dict(
+                l=10,
+                r=10,
+                t=30,
+                b=10
             ),
-
-            showgrid=True
-        ),
-
-        yaxis=dict(
-
-            title="Segnale",
-
-            tickmode="array",
-
-            tickvals=[
-                posizione_segnale[s]
-                for s in segnali
-            ],
-
-            ticktext=segnali,
-
-            autorange="reversed",
-
-            showgrid=True,
-
-            zeroline=False
+    
+            legend_title_text="Tipo evento",
+    
+            xaxis=dict(
+                title="Data / Ora",
+    
+                type="date",
+    
+                rangeslider=dict(
+                    visible=True
+                ),
+    
+                showgrid=True
+            ),
+    
+            yaxis=dict(
+    
+                title="Segnale",
+    
+                tickmode="array",
+    
+                tickvals=[
+                    posizione_segnale[s]
+                    for s in segnali
+                ],
+    
+                ticktext=segnali,
+    
+                autorange="reversed",
+    
+                showgrid=True,
+    
+                zeroline=False
+            )
         )
-    )
-
-    # ======================================================
-    # VISUALIZZAZIONE
-    # ======================================================
-
-    st.plotly_chart(
-
-        fig,
-
-        use_container_width=True,
-
-        config={
-
-            "displaylogo":
-                False,
-
-            "scrollZoom":
-                True,
-
-            "responsive":
-                True,
-
-        }
-
-    )
+    
+        # ======================================================
+        # VISUALIZZAZIONE
+        # ======================================================
+    
+        st.plotly_chart(
+    
+            fig,
+    
+            use_container_width=True,
+    
+            config={
+    
+                "displaylogo":
+                    False,
+    
+                "scrollZoom":
+                    True,
+    
+                "responsive":
+                    True,
+    
+            }
+    
+        )
 
     # ======================================================
     # TAB EVENTI
