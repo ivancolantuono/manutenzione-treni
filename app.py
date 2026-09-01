@@ -980,6 +980,32 @@ with st.sidebar:
             default_index=0,
         )
 
+    if menu == "Treno":
+
+    st.markdown("""
+        <div style="
+            margin-top:5px;
+            margin-bottom:5px;
+            padding-left:10px;
+            font-weight:bold;
+            font-size:15px;
+        ">
+            🚆 SISTEMI TRENO
+        </div>
+    """, unsafe_allow_html=True)
+
+    sistema_treno = st.radio(
+        "",
+        [
+            "Carrelli",
+            "HVAC",
+            "Misurazione Sensori",
+            "Analizza"
+        ],
+        key="sistema_treno",
+        label_visibility="collapsed"
+    )
+
     # =====================================================
     # SEPARATORE
     # =====================================================
