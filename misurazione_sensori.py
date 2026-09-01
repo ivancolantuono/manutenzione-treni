@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-import matplotlib.pyplot as plt
 
 
 # ==========================================================
@@ -39,7 +38,7 @@ ORDINE_DM8 = [
 
 
 # ==========================================================
-# RESTITUISCE L'ORDINE CORRETTO
+# OTTIENI ORDINE
 # ==========================================================
 
 def ottieni_ordine(cassa):
@@ -56,34 +55,34 @@ def ottieni_ordine(cassa):
 
 
 # ==========================================================
-# RICONOSCIMENTO DM1 / DM8
+# RILEVA DM1 / DM8
 # ==========================================================
 
 def rileva_cassa(nome_file, testo):
 
     nome = str(nome_file).upper()
 
-    # Prima controlliamo il nome del file
+    # Prima dal nome del file
     if "DM1" in nome:
         return "DM1"
 
     if "DM8" in nome:
         return "DM8"
 
-    # Poi controlliamo il contenuto del file
-    testo = str(testo).upper()
+    # Poi dal contenuto
+    testo_upper = str(testo).upper()
 
-    if re.search(r"\bDM1\b", testo):
+    if re.search(r"\bDM1\b", testo_upper):
         return "DM1"
 
-    if re.search(r"\bDM8\b", testo):
+    if re.search(r"\bDM8\b", testo_upper):
         return "DM8"
 
     return "SCONOSCIUTA"
 
 
 # ==========================================================
-# NORMALIZZAZIONE ADD
+# NORMALIZZA ADD
 # ==========================================================
 
 def normalizza_add(valore):
@@ -108,7 +107,7 @@ def normalizza_add(valore):
 
 
 # ==========================================================
-# LETTURA DI UNA RIGA DEL FILE MNT
+# PARSER RIGA MNT
 # ==========================================================
 
 def parse_riga_mnt(riga):
@@ -166,14 +165,14 @@ def parse_riga_mnt(riga):
 
 
 # ==========================================================
-# IMPORTAZIONE DIRETTA FILE .MNT
+# IMPORTA FILE .MNT
 # ==========================================================
 
 def importa_mnt(uploaded_file):
 
-    # ------------------------------------------------------
-    # LEGGE DIRETTAMENTE IL FILE .MNT
-    # ------------------------------------------------------
+    # ======================================================
+    # LETTURA DIRETTA DEL .MNT
+    # ======================================================
 
     contenuto = uploaded_file.getvalue()
 
@@ -184,9 +183,9 @@ def importa_mnt(uploaded_file):
 
     righe = testo.splitlines()
 
-    # ------------------------------------------------------
-    # IDENTIFICA DM1 / DM8
-    # ------------------------------------------------------
+    # ======================================================
+    # RICONOSCIMENTO DM1 / DM8
+    # ======================================================
 
     cassa = rileva_cassa(
         uploaded_file.name,
@@ -196,9 +195,9 @@ def importa_mnt(uploaded_file):
     software = ""
     database = ""
 
-    # ------------------------------------------------------
-    # CERCA INFORMAZIONI TESTATA
-    # ------------------------------------------------------
+    # ======================================================
+    # LETTURA TESTATA
+    # ======================================================
 
     for riga in righe[:50]:
 
@@ -215,9 +214,9 @@ def importa_mnt(uploaded_file):
 
             break
 
-    # ------------------------------------------------------
-    # PARSE SENSORI
-    # ------------------------------------------------------
+    # ======================================================
+    # LETTURA SENSORI
+    # ======================================================
 
     records = []
 
@@ -228,7 +227,14 @@ def importa_mnt(uploaded_file):
         )
 
         if record is not None:
-            records.append(record)
+
+            records.append(
+                record
+            )
+
+    # ======================================================
+    # DATAFRAME
+    # ======================================================
 
     df = pd.DataFrame(
         records,
@@ -260,24 +266,23 @@ def importa_mnt(uploaded_file):
             database
         )
 
-    # ------------------------------------------------------
-    # CONVERSIONE NUMERICA
-    # ------------------------------------------------------
+    # ======================================================
+    # CONVERSIONE STA / I_I
+    # ======================================================
 
-    for colonna in [
-        "I",
-        "I_I",
-        "STA"
-    ]:
+    df["STA"] = pd.to_numeric(
+        df["STA"],
+        errors="coerce"
+    )
 
-        df[colonna] = pd.to_numeric(
-            df[colonna],
-            errors="coerce"
-        )
+    df["I_I"] = pd.to_numeric(
+        df["I_I"],
+        errors="coerce"
+    )
 
-    # ------------------------------------------------------
-    # ORDINE SENSORI
-    # ------------------------------------------------------
+    # ======================================================
+    # ORDINE ADD
+    # ======================================================
 
     ordine = ottieni_ordine(
         cassa
@@ -291,19 +296,19 @@ def importa_mnt(uploaded_file):
             in enumerate(ordine)
         }
 
-        df["_ordine"] = (
+        df["_ordine_add"] = (
             df["Add"]
             .astype(str)
             .map(mappa_ordine)
         )
 
         df = df.sort_values(
-            "_ordine",
+            "_ordine_add",
             na_position="last"
         )
 
         df = df.drop(
-            columns="_ordine"
+            columns="_ordine_add"
         )
 
     return (
@@ -315,19 +320,16 @@ def importa_mnt(uploaded_file):
 
 
 # ==========================================================
-# GRAFICO STA / I_I
+# GRAFICO NATIVO STREAMLIT
 # ==========================================================
 
-def crea_grafico(
-    df,
-    cassa
-):
+def mostra_grafico(df, cassa):
 
     grafico = df.copy()
 
-    # ------------------------------------------------------
+    # ======================================================
     # ORDINE ADD
-    # ------------------------------------------------------
+    # ======================================================
 
     ordine = ottieni_ordine(
         cassa
@@ -341,94 +343,77 @@ def crea_grafico(
             in enumerate(ordine)
         }
 
-        grafico["_ordine"] = (
+        grafico["_ordine_add"] = (
             grafico["Add"]
             .astype(str)
             .map(mappa_ordine)
         )
 
         grafico = grafico.sort_values(
-            "_ordine",
+            "_ordine_add",
             na_position="last"
         )
 
-    # ------------------------------------------------------
-    # X = POSIZIONE FISICA
-    # ------------------------------------------------------
-
-    x = list(
-        range(len(grafico))
+    grafico = grafico.reset_index(
+        drop=True
     )
 
-    fig, ax = plt.subplots(
-        figsize=(16, 7)
-    )
+    # ======================================================
+    # COSTRUISCE DATAFRAME GRAFICO
+    # ======================================================
 
-    # ------------------------------------------------------
-    # STA
-    # ------------------------------------------------------
+    dati_grafico = pd.DataFrame(
+        index=range(len(grafico))
+    )
 
     if "STA" in grafico.columns:
 
-        ax.plot(
-            x,
-            grafico["STA"],
-            linewidth=2,
-            marker="o",
-            label="STA"
+        dati_grafico["STA"] = (
+            grafico["STA"].values
         )
-
-    # ------------------------------------------------------
-    # I_I
-    # ------------------------------------------------------
 
     if "I_I" in grafico.columns:
 
-        ax.plot(
-            x,
-            grafico["I_I"],
-            linewidth=2,
-            marker="o",
-            label="I_I"
+        dati_grafico["I_I"] = (
+            grafico["I_I"].values
         )
 
-    # ------------------------------------------------------
-    # ADD
-    # ------------------------------------------------------
+    # ======================================================
+    # GRAFICO
+    # ======================================================
 
-    ax.set_xticks(x)
+    if dati_grafico.empty:
 
-    ax.set_xticklabels(
-        grafico["Add"].astype(str),
-        rotation=90
+        st.warning(
+            "Nessun dato STA / I_I disponibile."
+        )
+
+        return
+
+    st.line_chart(
+        dati_grafico,
+        height=500
     )
 
-    ax.set_xlabel(
-        "ADD"
+    # ======================================================
+    # ORDINE ADD VISUALIZZATO
+    # ======================================================
+
+    st.caption(
+        "Ordine ADD utilizzato:"
     )
 
-    ax.set_ylabel(
-        "Valore"
+    st.write(
+        " → ".join(
+            grafico["Add"]
+            .astype(str)
+            .tolist()
+        )
     )
-
-    ax.set_title(
-        f"Misurazione Sensori - {cassa}"
-    )
-
-    ax.grid(
-        True,
-        alpha=0.3
-    )
-
-    ax.legend()
-
-    fig.tight_layout()
-
-    return fig
 
 
 # ==========================================================
-# PAGINA STREAMLIT
+# PAGINA MISURAZIONE SENSORI
 # ==========================================================
 
 def misurazione_sensori_page():
@@ -444,7 +429,7 @@ def misurazione_sensori_page():
     st.divider()
 
     # ======================================================
-    # CARICAMENTO FILE .MNT
+    # CARICAMENTO .MNT
     # ======================================================
 
     uploaded_file = st.file_uploader(
@@ -452,10 +437,6 @@ def misurazione_sensori_page():
         type=["mnt"],
         key="mnt_file"
     )
-
-    # ======================================================
-    # NESSUN FILE
-    # ======================================================
 
     if uploaded_file is None:
 
@@ -474,17 +455,17 @@ def misurazione_sensori_page():
     ):
 
         st.error(
-            "❌ Il file deve avere estensione .MNT"
+            "❌ Devi caricare un file .MNT."
         )
 
         return
 
     # ======================================================
-    # IMPORTAZIONE
+    # LETTURA
     # ======================================================
 
     with st.spinner(
-        "🔄 Lettura file .MNT..."
+        "🔄 Lettura del file .MNT..."
     ):
 
         try:
@@ -501,7 +482,7 @@ def misurazione_sensori_page():
         except Exception as errore:
 
             st.error(
-                "❌ Errore durante la lettura del file .MNT"
+                "❌ Errore durante la lettura del file .MNT."
             )
 
             st.exception(
@@ -511,25 +492,27 @@ def misurazione_sensori_page():
             return
 
     # ======================================================
-    # NESSUN SENSORE
+    # CONTROLLO DATI
     # ======================================================
 
     if df.empty:
 
         st.error(
-            "❌ Nessun sensore trovato nel file .MNT."
+            "❌ Il file .MNT è stato caricato "
+            "ma non sono state trovate righe sensore."
         )
 
         return
 
     # ======================================================
-    # CASSA NON RICONOSCIUTA
+    # SE DM1 / DM8 NON RICONOSCIUTO
     # ======================================================
 
     if cassa == "SCONOSCIUTA":
 
         st.warning(
-            "⚠️ DM1/DM8 non riconosciuto automaticamente."
+            "⚠️ Non è stato possibile riconoscere "
+            "automaticamente DM1 o DM8."
         )
 
         cassa = st.selectbox(
@@ -551,7 +534,7 @@ def misurazione_sensori_page():
             in enumerate(ordine)
         }
 
-        df["_ordine"] = (
+        df["_ordine_add"] = (
             df["Add"]
             .astype(str)
             .map(mappa_ordine)
@@ -560,11 +543,11 @@ def misurazione_sensori_page():
         df = (
             df
             .sort_values(
-                "_ordine",
+                "_ordine_add",
                 na_position="last"
             )
             .drop(
-                columns="_ordine"
+                columns="_ordine_add"
             )
             .reset_index(
                 drop=True
@@ -572,7 +555,7 @@ def misurazione_sensori_page():
         )
 
     # ======================================================
-    # INFORMAZIONI
+    # INFORMAZIONI FILE
     # ======================================================
 
     st.success(
@@ -629,7 +612,7 @@ def misurazione_sensori_page():
 
         query = ricerca.strip().lower()
 
-        testo_ricerca = (
+        testo = (
             risultato
             .astype(str)
             .agg(
@@ -640,12 +623,16 @@ def misurazione_sensori_page():
         )
 
         risultato = risultato[
-            testo_ricerca.str.contains(
+            testo.str.contains(
                 query,
                 regex=False,
                 na=False
             )
         ]
+
+    # ======================================================
+    # NUMERO SENSORI
+    # ======================================================
 
     st.markdown(
         f"### 📋 Sensori visualizzati: {len(risultato)}"
@@ -680,14 +667,9 @@ def misurazione_sensori_page():
             f"📈 STA / I_I — {cassa}"
         )
 
-        fig = crea_grafico(
+        mostra_grafico(
             risultato,
             cassa
-        )
-
-        st.pyplot(
-            fig,
-            clear_figure=True
         )
 
     # ======================================================
@@ -707,9 +689,9 @@ def misurazione_sensori_page():
             height=600
         )
 
-        # --------------------------------------------------
-        # ESPORTAZIONE FACOLTATIVA
-        # --------------------------------------------------
+        # ==================================================
+        # ESPORTAZIONE CSV
+        # ==================================================
 
         csv = risultato.to_csv(
             index=False
