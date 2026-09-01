@@ -39,7 +39,7 @@ ORDER_DM8 = [
 
 
 # ==========================================================
-# RESTITUISCE ORDINE
+# OTTIENI ORDINE
 # ==========================================================
 
 def get_order(cassa):
@@ -56,7 +56,7 @@ def get_order(cassa):
 
 
 # ==========================================================
-# NORMALIZZAZIONE ADD
+# NORMALIZZA ADD
 # ==========================================================
 
 def normalize_add(value):
@@ -66,14 +66,12 @@ def normalize_add(value):
 
     value = str(value).strip()
 
-    # Elimina .0
     value = re.sub(
         r"\.0$",
         "",
         value
     )
 
-    # Cerca numero
     match = re.search(
         r"\d+",
         value
@@ -82,13 +80,11 @@ def normalize_add(value):
     if not match:
         return ""
 
-    numero = match.group(0)
-
-    return numero.zfill(3)
+    return match.group(0).zfill(3)
 
 
 # ==========================================================
-# NORMALIZZAZIONE COLONNE
+# NORMALIZZA COLONNE
 # ==========================================================
 
 def normalize_column_name(value):
@@ -102,7 +98,6 @@ def normalize_column_name(value):
 
     upper = value.upper()
 
-    # ADD
     if upper in [
         "ADD",
         "ADDRESS",
@@ -110,14 +105,12 @@ def normalize_column_name(value):
     ]:
         return "ADD"
 
-    # I
     if upper in [
         "I",
         "I."
     ]:
         return "I"
 
-    # I_I
     if upper in [
         "I_I",
         "I/I",
@@ -126,7 +119,6 @@ def normalize_column_name(value):
     ]:
         return "I_I"
 
-    # STA
     if upper == "STA":
         return "STA"
 
@@ -146,19 +138,11 @@ def detect_cassa(
         nome_file
     ).upper()
 
-    # ------------------------------------------------------
-    # Prima controlliamo il nome del file
-    # ------------------------------------------------------
-
     if "DM1" in nome:
         return "DM1"
 
     if "DM8" in nome:
         return "DM8"
-
-    # ------------------------------------------------------
-    # Poi il contenuto
-    # ------------------------------------------------------
 
     testo_upper = str(
         testo
@@ -180,7 +164,7 @@ def detect_cassa(
 
 
 # ==========================================================
-# RICERCA HEADER
+# CERCA HEADER
 # ==========================================================
 
 def trova_header(righe):
@@ -194,11 +178,9 @@ def trova_header(righe):
 
         upper = testo.upper()
 
-        # Deve esserci ADD
         if "ADD" not in upper:
             continue
 
-        # Deve esserci almeno una delle misure
         if (
             "STA" not in upper
             and
@@ -214,14 +196,13 @@ def trova_header(righe):
 
 
 # ==========================================================
-# SEPARAZIONE HEADER
+# SEPARA HEADER
 # ==========================================================
 
 def split_header(riga):
 
     riga = riga.strip()
 
-    # TAB
     if "\t" in riga:
 
         return [
@@ -229,7 +210,6 @@ def split_header(riga):
             for x in riga.split("\t")
         ]
 
-    # ;
     if ";" in riga:
 
         return [
@@ -237,7 +217,6 @@ def split_header(riga):
             for x in riga.split(";")
         ]
 
-    # ,
     if "," in riga:
 
         return [
@@ -245,7 +224,6 @@ def split_header(riga):
             for x in riga.split(",")
         ]
 
-    # Spazi
     return re.split(
         r"\s+",
         riga
@@ -253,14 +231,13 @@ def split_header(riga):
 
 
 # ==========================================================
-# SEPARAZIONE RIGA DATI
+# SEPARA RIGA DATI
 # ==========================================================
 
 def split_data_line(riga):
 
     riga = riga.strip()
 
-    # TAB
     if "\t" in riga:
 
         return [
@@ -268,7 +245,6 @@ def split_data_line(riga):
             for x in riga.split("\t")
         ]
 
-    # ;
     if ";" in riga:
 
         return [
@@ -276,7 +252,6 @@ def split_data_line(riga):
             for x in riga.split(";")
         ]
 
-    # ,
     if "," in riga:
 
         return [
@@ -284,7 +259,6 @@ def split_data_line(riga):
             for x in riga.split(",")
         ]
 
-    # Spazi
     return re.split(
         r"\s+",
         riga
@@ -292,7 +266,7 @@ def split_data_line(riga):
 
 
 # ==========================================================
-# CERCA COLONNA
+# TROVA COLONNA
 # ==========================================================
 
 def trova_colonna(
@@ -314,7 +288,7 @@ def trova_colonna(
 
 
 # ==========================================================
-# IMPORTAZIONE FILE .MNT
+# IMPORTA FILE .MNT
 # ==========================================================
 
 def importa_mnt(
@@ -343,7 +317,7 @@ def importa_mnt(
     righe = testo.splitlines()
 
     # ------------------------------------------------------
-    # RICONOSCI CASSA
+    # CASSA
     # ------------------------------------------------------
 
     cassa = detect_cassa(
@@ -352,16 +326,12 @@ def importa_mnt(
     )
 
     # ------------------------------------------------------
-    # CERCA HEADER
+    # HEADER
     # ------------------------------------------------------
 
     indice_header = trova_header(
         righe
     )
-
-    # ------------------------------------------------------
-    # SE NON C'È HEADER
-    # ------------------------------------------------------
 
     if indice_header is None:
 
@@ -371,7 +341,7 @@ def importa_mnt(
         )
 
     # ------------------------------------------------------
-    # LETTURA HEADER
+    # HEADER
     # ------------------------------------------------------
 
     header_raw = split_header(
@@ -379,14 +349,12 @@ def importa_mnt(
     )
 
     header = [
-        normalize_column_name(
-            x
-        )
+        normalize_column_name(x)
         for x in header_raw
     ]
 
     # ------------------------------------------------------
-    # INDICI COLONNE
+    # COLONNE
     # ------------------------------------------------------
 
     indice_add = trova_colonna(
@@ -409,10 +377,6 @@ def importa_mnt(
         {"STA"}
     )
 
-    # ------------------------------------------------------
-    # ADD OBBLIGATORIO
-    # ------------------------------------------------------
-
     if indice_add is None:
 
         return (
@@ -423,7 +387,7 @@ def importa_mnt(
     records = []
 
     # ======================================================
-    # LETTURA RIGHE
+    # DATI
     # ======================================================
 
     for riga in righe[
@@ -441,10 +405,6 @@ def importa_mnt(
 
         if indice_add >= len(parti):
             continue
-
-        # --------------------------------------------------
-        # ADD
-        # --------------------------------------------------
 
         add = normalize_add(
             parti[indice_add]
@@ -506,10 +466,6 @@ def importa_mnt(
             record
         )
 
-    # ======================================================
-    # DATAFRAME
-    # ======================================================
-
     df = pd.DataFrame(
         records
     )
@@ -537,7 +493,7 @@ def importa_mnt(
         )
 
     # ======================================================
-    # DUPLICATI
+    # UN RECORD PER SENSOR
     # ======================================================
 
     df = df.drop_duplicates(
@@ -585,10 +541,6 @@ def importa_senza_header(
         if len(parti) < 2:
             continue
 
-        # --------------------------------------------------
-        # ADD
-        # --------------------------------------------------
-
         add = normalize_add(
             parti[0]
         )
@@ -596,25 +548,15 @@ def importa_senza_header(
         if not add:
             continue
 
-        # --------------------------------------------------
-        # CERCA NUMERI
-        # --------------------------------------------------
-
         numeri = []
 
         for valore in parti[1:]:
 
-            valore = str(
-                valore
-            ).strip()
-
             try:
 
                 numero = float(
-                    valore.replace(
-                        ",",
-                        "."
-                    )
+                    str(valore)
+                    .replace(",", ".")
                 )
 
                 numeri.append(
@@ -635,29 +577,18 @@ def importa_senza_header(
             "STA": None
         }
 
-        # --------------------------------------------------
-        # Fallback
-        # --------------------------------------------------
-
         if len(numeri) >= 1:
-
             record["I"] = numeri[-1]
 
         if len(numeri) >= 2:
-
             record["I_I"] = numeri[-2]
 
         if len(numeri) >= 3:
-
             record["STA"] = numeri[-3]
 
         records.append(
             record
         )
-
-    # ======================================================
-    # DATAFRAME
-    # ======================================================
 
     df = pd.DataFrame(
         records
@@ -670,10 +601,6 @@ def importa_senza_header(
             cassa
         )
 
-    # ======================================================
-    # NUMERICI
-    # ======================================================
-
     for colonna in [
         "I",
         "I_I",
@@ -685,18 +612,10 @@ def importa_senza_header(
             errors="coerce"
         )
 
-    # ======================================================
-    # DUPLICATI
-    # ======================================================
-
     df = df.drop_duplicates(
         subset=["ADD"],
         keep="last"
     )
-
-    # ======================================================
-    # ORDINE
-    # ======================================================
 
     df = applica_ordine(
         df,
@@ -728,18 +647,10 @@ def applica_ordine(
 
         return df
 
-    # ------------------------------------------------------
-    # NORMALIZZA ADD
-    # ------------------------------------------------------
-
     df["ADD"] = (
         df["ADD"]
         .apply(normalize_add)
     )
-
-    # ------------------------------------------------------
-    # MAPPA POSIZIONE
-    # ------------------------------------------------------
 
     mappa = {
         add: posizione
@@ -752,18 +663,10 @@ def applica_ordine(
         .map(mappa)
     )
 
-    # ------------------------------------------------------
-    # ORDINA
-    # ------------------------------------------------------
-
     df = df.sort_values(
         "_POSIZIONE",
         na_position="last"
     )
-
-    # ------------------------------------------------------
-    # RESET
-    # ------------------------------------------------------
 
     df = df.reset_index(
         drop=True
@@ -796,17 +699,13 @@ def prepara_grafico(
         in enumerate(ordine)
     }
 
-    # ------------------------------------------------------
-    # POSIZIONE
-    # ------------------------------------------------------
-
     df["POSIZIONE"] = (
         df["ADD"]
         .map(mappa)
     )
 
     # ------------------------------------------------------
-    # SOLO SENSORI PRESENTI NELL'ORDINE
+    # Solo ADD presenti nell'ordine
     # ------------------------------------------------------
 
     df = df[
@@ -814,7 +713,7 @@ def prepara_grafico(
     ].copy()
 
     # ------------------------------------------------------
-    # ORDINAMENTO DEFINITIVO
+    # Ordinamento definitivo
     # ------------------------------------------------------
 
     df = df.sort_values(
@@ -826,7 +725,7 @@ def prepara_grafico(
     )
 
     # ------------------------------------------------------
-    # ETICHETTA
+    # Nome visualizzato
     # ------------------------------------------------------
 
     df["SENSORE"] = (
@@ -834,11 +733,33 @@ def prepara_grafico(
         .astype(str)
     )
 
+    # ------------------------------------------------------
+    # STA NUMERICA
+    # ------------------------------------------------------
+
+    if "STA" in df.columns:
+
+        df["STA"] = pd.to_numeric(
+            df["STA"],
+            errors="coerce"
+        )
+
+    # ------------------------------------------------------
+    # I_I NUMERICA
+    # ------------------------------------------------------
+
+    if "I_I" in df.columns:
+
+        df["I_I"] = pd.to_numeric(
+            df["I_I"],
+            errors="coerce"
+        )
+
     return df
 
 
 # ==========================================================
-# CREA GRAFICO
+# GRAFICO
 # ==========================================================
 
 def crea_grafico(
@@ -887,7 +808,7 @@ def crea_grafico(
     )
 
     # ======================================================
-    # GRAFICO LINEE
+    # LINEE
     # ======================================================
 
     linee = (
@@ -895,7 +816,8 @@ def crea_grafico(
             long_df
         )
         .mark_line(
-            point=False
+            point=False,
+            strokeWidth=2
         )
         .encode(
 
@@ -952,9 +874,9 @@ def crea_grafico(
         ) <= 45
     ].copy()
 
-    # ------------------------------------------------------
-    # PUNTI CRITICI
-    # ------------------------------------------------------
+    # ======================================================
+    # PUNTI STA <= 45
+    # ======================================================
 
     if not critici.empty:
 
@@ -964,7 +886,7 @@ def crea_grafico(
             )
             .mark_point(
                 filled=True,
-                size=100
+                size=110
             )
             .encode(
 
@@ -995,16 +917,18 @@ def crea_grafico(
         )
 
         # --------------------------------------------------
-        # LINEA SOGLIA 45
+        # SOGLIA 45
         # --------------------------------------------------
+
+        soglia = pd.DataFrame(
+            {
+                "Soglia": [45]
+            }
+        )
 
         linea_soglia = (
             alt.Chart(
-                pd.DataFrame(
-                    {
-                        "Soglia": [45]
-                    }
-                )
+                soglia
             )
             .mark_rule(
                 strokeDash=[6, 4]
@@ -1025,6 +949,222 @@ def crea_grafico(
     else:
 
         chart = linee
+
+    # ======================================================
+    # MASSIMO / MINIMO STA
+    # ======================================================
+
+    if "STA" in grafico.columns:
+
+        sta_validi = grafico[
+            grafico["STA"].notna()
+        ].copy()
+
+        if not sta_validi.empty:
+
+            max_sta = sta_validi[
+                "STA"
+            ].max()
+
+            min_sta = sta_validi[
+                "STA"
+            ].min()
+
+            max_sta_df = sta_validi[
+                sta_validi["STA"] == max_sta
+            ].copy()
+
+            min_sta_df = sta_validi[
+                sta_validi["STA"] == min_sta
+            ].copy()
+
+            punti_max_sta = (
+                alt.Chart(
+                    max_sta_df
+                )
+                .mark_point(
+                    filled=True,
+                    size=180,
+                    shape="triangle"
+                )
+                .encode(
+
+                    x=alt.X(
+                        "SENSORE:N",
+                        sort=alt.SortField(
+                            field="POSIZIONE",
+                            order="ascending"
+                        )
+                    ),
+
+                    y=alt.Y(
+                        "STA:Q"
+                    ),
+
+                    tooltip=[
+                        alt.Tooltip(
+                            "SENSORE:N",
+                            title="⬆️ STA massimo"
+                        ),
+
+                        alt.Tooltip(
+                            "STA:Q",
+                            title="STA"
+                        )
+                    ]
+                )
+            )
+
+            punti_min_sta = (
+                alt.Chart(
+                    min_sta_df
+                )
+                .mark_point(
+                    filled=True,
+                    size=180,
+                    shape="triangle-down"
+                )
+                .encode(
+
+                    x=alt.X(
+                        "SENSORE:N",
+                        sort=alt.SortField(
+                            field="POSIZIONE",
+                            order="ascending"
+                        )
+                    ),
+
+                    y=alt.Y(
+                        "STA:Q"
+                    ),
+
+                    tooltip=[
+                        alt.Tooltip(
+                            "SENSORE:N",
+                            title="⬇️ STA minimo"
+                        ),
+
+                        alt.Tooltip(
+                            "STA:Q",
+                            title="STA"
+                        )
+                    ]
+                )
+            )
+
+            chart = (
+                chart
+                + punti_max_sta
+                + punti_min_sta
+            )
+
+    # ======================================================
+    # MASSIMO / MINIMO I_I
+    # ======================================================
+
+    if "I_I" in grafico.columns:
+
+        ii_validi = grafico[
+            grafico["I_I"].notna()
+        ].copy()
+
+        if not ii_validi.empty:
+
+            max_ii = ii_validi[
+                "I_I"
+            ].max()
+
+            min_ii = ii_validi[
+                "I_I"
+            ].min()
+
+            max_ii_df = ii_validi[
+                ii_validi["I_I"] == max_ii
+            ].copy()
+
+            min_ii_df = ii_validi[
+                ii_validi["I_I"] == min_ii
+            ].copy()
+
+            punti_max_ii = (
+                alt.Chart(
+                    max_ii_df
+                )
+                .mark_point(
+                    filled=True,
+                    size=160,
+                    shape="triangle"
+                )
+                .encode(
+
+                    x=alt.X(
+                        "SENSORE:N",
+                        sort=alt.SortField(
+                            field="POSIZIONE",
+                            order="ascending"
+                        )
+                    ),
+
+                    y=alt.Y(
+                        "I_I:Q"
+                    ),
+
+                    tooltip=[
+                        alt.Tooltip(
+                            "SENSORE:N",
+                            title="⬆️ I_I massimo"
+                        ),
+
+                        alt.Tooltip(
+                            "I_I:Q",
+                            title="I_I"
+                        )
+                    ]
+                )
+            )
+
+            punti_min_ii = (
+                alt.Chart(
+                    min_ii_df
+                )
+                .mark_point(
+                    filled=True,
+                    size=160,
+                    shape="triangle-down"
+                )
+                .encode(
+
+                    x=alt.X(
+                        "SENSORE:N",
+                        sort=alt.SortField(
+                            field="POSIZIONE",
+                            order="ascending"
+                        )
+                    ),
+
+                    y=alt.Y(
+                        "I_I:Q"
+                    ),
+
+                    tooltip=[
+                        alt.Tooltip(
+                            "SENSORE:N",
+                            title="⬇️ I_I minimo"
+                        ),
+
+                        alt.Tooltip(
+                            "I_I:Q",
+                            title="I_I"
+                        )
+                    ]
+                )
+            )
+
+            chart = (
+                chart
+                + punti_max_ii
+                + punti_min_ii
+            )
 
     # ======================================================
     # DIMENSIONI
@@ -1076,7 +1216,7 @@ def misurazione_sensori_page():
     st.divider()
 
     # ======================================================
-    # CARICAMENTO FILE .MNT
+    # CARICAMENTO .MNT
     # ======================================================
 
     uploaded_file = st.file_uploader(
@@ -1150,7 +1290,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # USA LA CASSA SELEZIONATA
+    # ORDINE
     # ======================================================
 
     df = applica_ordine(
@@ -1159,7 +1299,7 @@ def misurazione_sensori_page():
     )
 
     # ======================================================
-    # PREPARA DATI
+    # PREPARAZIONE
     # ======================================================
 
     grafico_df = prepara_grafico(
@@ -1175,6 +1315,31 @@ def misurazione_sensori_page():
         )
 
         return
+
+    # ======================================================
+    # SENSORI CRITICI
+    # ======================================================
+
+    sta_numerica = pd.to_numeric(
+        grafico_df["STA"],
+        errors="coerce"
+    )
+
+    sensori_critici = grafico_df[
+        sta_numerica <= 45
+    ].copy()
+
+    # ======================================================
+    # MASSIMI / MINIMI
+    # ======================================================
+
+    sta_validi = grafico_df[
+        grafico_df["STA"].notna()
+    ]
+
+    ii_validi = grafico_df[
+        grafico_df["I_I"].notna()
+    ]
 
     # ======================================================
     # INFORMAZIONI
@@ -1204,22 +1369,15 @@ def misurazione_sensori_page():
     with col3:
 
         st.metric(
-            "Sensori STA ≤ 45",
-            int(
-                (
-                    pd.to_numeric(
-                        grafico_df["STA"],
-                        errors="coerce"
-                    ) <= 45
-                ).sum()
-            )
+            "STA ≤ 45",
+            len(sensori_critici)
         )
 
     with col4:
 
         st.metric(
-            "Soglia STA",
-            "≤ 45"
+            "Soglia",
+            "45"
         )
 
     st.divider()
@@ -1231,7 +1389,7 @@ def misurazione_sensori_page():
     tab1, tab2, tab3 = st.tabs(
         [
             "📈 Misurazioni",
-            "⚠️ Sensori STA ≤ 45",
+            "⚠️ Analisi valori",
             "📋 Dati MNT"
         ]
     )
@@ -1265,60 +1423,170 @@ def misurazione_sensori_page():
                 use_container_width=True
             )
 
-        # --------------------------------------------------
-        # LEGENDA SOGLIA
-        # --------------------------------------------------
-
         st.caption(
-            "⚠️ I punti dei sensori con STA ≤ 45 "
-            "indicano una condizione sotto soglia."
+            "⚠️ STA ≤ 45 = sotto soglia | "
+            "▲ = massimo | "
+            "▼ = minimo"
         )
 
     # ======================================================
-    # TAB SENSORI CRITICI
+    # TAB ANALISI
     # ======================================================
 
     with tab2:
 
         st.subheader(
-            "⚠️ Sensori con STA ≤ 45"
+            "📊 Analisi dei valori"
         )
 
-        # --------------------------------------------------
-        # CONVERSIONE NUMERICA
-        # --------------------------------------------------
+        # ==================================================
+        # STA
+        # ==================================================
 
-        sta_numerica = pd.to_numeric(
-            grafico_df["STA"],
-            errors="coerce"
+        st.markdown(
+            "### STA"
         )
 
-        sensori_critici = grafico_df[
-            sta_numerica <= 45
-        ].copy()
+        if sta_validi.empty:
 
-        # --------------------------------------------------
-        # NESSUN SENSORE
-        # --------------------------------------------------
+            st.info(
+                "Nessun valore STA disponibile."
+            )
+
+        else:
+
+            massimo_sta = sta_validi[
+                "STA"
+            ].max()
+
+            minimo_sta = sta_validi[
+                "STA"
+            ].min()
+
+            sensori_max_sta = sta_validi[
+                sta_validi["STA"] == massimo_sta
+            ]["ADD"].tolist()
+
+            sensori_min_sta = sta_validi[
+                sta_validi["STA"] == minimo_sta
+            ]["ADD"].tolist()
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                st.success(
+                    f"⬆️ STA MASSIMO: "
+                    f"{massimo_sta}"
+                )
+
+                st.write(
+                    "Sensore/i: "
+                    + ", ".join(
+                        sensori_max_sta
+                    )
+                )
+
+            with col2:
+
+                st.error(
+                    f"⬇️ STA MINIMO: "
+                    f"{minimo_sta}"
+                )
+
+                st.write(
+                    "Sensore/i: "
+                    + ", ".join(
+                        sensori_min_sta
+                    )
+                )
+
+        st.divider()
+
+        # ==================================================
+        # I_I
+        # ==================================================
+
+        st.markdown(
+            "### I_I"
+        )
+
+        if ii_validi.empty:
+
+            st.info(
+                "Nessun valore I_I disponibile."
+            )
+
+        else:
+
+            massimo_ii = ii_validi[
+                "I_I"
+            ].max()
+
+            minimo_ii = ii_validi[
+                "I_I"
+            ].min()
+
+            sensori_max_ii = ii_validi[
+                ii_validi["I_I"] == massimo_ii
+            ]["ADD"].tolist()
+
+            sensori_min_ii = ii_validi[
+                ii_validi["I_I"] == minimo_ii
+            ]["ADD"].tolist()
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                st.success(
+                    f"⬆️ I_I MASSIMO: "
+                    f"{massimo_ii}"
+                )
+
+                st.write(
+                    "Sensore/i: "
+                    + ", ".join(
+                        sensori_max_ii
+                    )
+                )
+
+            with col2:
+
+                st.error(
+                    f"⬇️ I_I MINIMO: "
+                    f"{minimo_ii}"
+                )
+
+                st.write(
+                    "Sensore/i: "
+                    + ", ".join(
+                        sensori_min_ii
+                    )
+                )
+
+        st.divider()
+
+        # ==================================================
+        # SENSORI STA <= 45
+        # ==================================================
+
+        st.markdown(
+            "### ⚠️ Sensori con STA ≤ 45"
+        )
 
         if sensori_critici.empty:
 
             st.success(
-                "✅ Nessun sensore presenta "
-                "STA ≤ 45."
+                "✅ Nessun sensore con STA ≤ 45."
             )
 
         else:
 
             st.warning(
-                f"⚠️ Trovati "
-                f"{len(sensori_critici)} "
-                f"sensori con STA ≤ 45."
+                f"⚠️ {len(sensori_critici)} "
+                "sensori con STA ≤ 45."
             )
-
-            # ------------------------------------------------
-            # TABELLA
-            # ------------------------------------------------
 
             colonne_critici = [
                 "ADD",
@@ -1339,10 +1607,7 @@ def misurazione_sensori_page():
 
             tabella_critici = tabella_critici.rename(
                 columns={
-                    "ADD": "Sensore",
-                    "STA": "STA",
-                    "I": "I",
-                    "I_I": "I_I"
+                    "ADD": "Sensore"
                 }
             )
 
@@ -1384,9 +1649,9 @@ def misurazione_sensori_page():
             height=600
         )
 
-        # --------------------------------------------------
+        # ==================================================
         # CSV
-        # --------------------------------------------------
+        # ==================================================
 
         csv = (
             grafico_df[
