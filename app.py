@@ -838,6 +838,7 @@ with st.sidebar:
                 "Ferie e Permessi",
                 "Scadenze Temporali",
                 "Software",
+                "Analisi FDE",
                 "Treno"
             ],
 
