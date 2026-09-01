@@ -356,13 +356,7 @@ def misurazione_sensori_page():
                 "Nel file non sono presenti le colonne STA / I_I."
             )
 
-        else:
-
-            st.warning(
-                "Nel file non sono presenti "
-                "le colonne I / I_I."
-            )
-
+    
     # ======================================================
     # TABELLA
     # ======================================================
