@@ -326,33 +326,34 @@ def misurazione_sensori_page():
     with tab1:
 
         st.subheader(
-            "📈 Misurazioni I / I_I"
+            "📈 Misurazioni STA / I_I"
         )
-
+        
         grafico = risultato.copy()
-
+        
         grafico = grafico.sort_values(
             "Add"
         )
-
+        
         colonne_grafico = []
-
-        if "I" in grafico.columns:
-            colonne_grafico.append("I")
-
+        
+        if "STA" in grafico.columns:
+            colonne_grafico.append("STA")
+        
         if "I_I" in grafico.columns:
             colonne_grafico.append("I_I")
-
+        
         if colonne_grafico:
-
+        
             st.line_chart(
-
-                grafico.set_index(
-                    "Add"
-                )[colonne_grafico],
-
+                grafico.set_index("Add")[colonne_grafico],
                 height=500
-
+            )
+        
+        else:
+        
+            st.warning(
+                "Nel file non sono presenti le colonne STA / I_I."
             )
 
         else:
