@@ -55,33 +55,6 @@ def ottieni_ordine(cassa):
 
 
 # ==========================================================
-# RILEVA DM1 / DM8
-# ==========================================================
-
-def rileva_cassa(nome_file, testo):
-
-    nome = str(nome_file).upper()
-
-    # Prima dal nome del file
-    if "DM1" in nome:
-        return "DM1"
-
-    if "DM8" in nome:
-        return "DM8"
-
-    # Poi dal contenuto
-    testo_upper = str(testo).upper()
-
-    if re.search(r"\bDM1\b", testo_upper):
-        return "DM1"
-
-    if re.search(r"\bDM8\b", testo_upper):
-        return "DM8"
-
-    return "SCONOSCIUTA"
-
-
-# ==========================================================
 # NORMALIZZA ADD
 # ==========================================================
 
@@ -96,7 +69,7 @@ def normalizza_add(valore):
         valore = valore[:-2]
 
     match = re.match(
-        r"^(\d+)",
+        r"^(\d{1,3})",
         valore
     )
 
@@ -107,7 +80,40 @@ def normalizza_add(valore):
 
 
 # ==========================================================
-# PARSER RIGA MNT
+# RICONOSCE DM1 / DM8
+# ==========================================================
+
+def rileva_cassa(nome_file, testo):
+
+    nome_file = str(nome_file).upper()
+
+    # ------------------------------------------------------
+    # Controllo nome file
+    # ------------------------------------------------------
+
+    if "DM1" in nome_file:
+        return "DM1"
+
+    if "DM8" in nome_file:
+        return "DM8"
+
+    # ------------------------------------------------------
+    # Controllo contenuto
+    # ------------------------------------------------------
+
+    testo_upper = str(testo).upper()
+
+    if re.search(r"\bDM1\b", testo_upper):
+        return "DM1"
+
+    if re.search(r"\bDM8\b", testo_upper):
+        return "DM8"
+
+    return "SCONOSCIUTA"
+
+
+# ==========================================================
+# PARSER DELLA RIGA .MNT
 # ==========================================================
 
 def parse_riga_mnt(riga):
@@ -122,7 +128,10 @@ def parse_riga_mnt(riga):
     if len(parti) < 2:
         return None
 
-    # La riga deve iniziare con ADD numerico
+    # ------------------------------------------------------
+    # Una riga sensore deve iniziare con ADD numerico
+    # ------------------------------------------------------
+
     if not re.match(
         r"^\d{1,3}$",
         parti[0]
@@ -144,18 +153,27 @@ def parse_riga_mnt(riga):
         "I",
         "I_I",
         "STA",
-        "ISO",
+        "ISO"
     ]
 
-    record = {
-        colonna: ""
-        for colonna in colonne
-    }
+    record = {}
+
+    for colonna in colonne:
+        record[colonna] = ""
+
+    # ------------------------------------------------------
+    # Inserimento valori
+    # ------------------------------------------------------
 
     for indice, colonna in enumerate(colonne):
 
         if indice < len(parti):
+
             record[colonna] = parti[indice]
+
+    # ------------------------------------------------------
+    # Normalizzazione ADD
+    # ------------------------------------------------------
 
     record["Add"] = normalizza_add(
         record["Add"]
@@ -165,13 +183,13 @@ def parse_riga_mnt(riga):
 
 
 # ==========================================================
-# IMPORTA FILE .MNT
+# IMPORTAZIONE FILE .MNT
 # ==========================================================
 
 def importa_mnt(uploaded_file):
 
     # ======================================================
-    # LETTURA DIRETTA DEL .MNT
+    # LETTURA DIRETTA DEL FILE .MNT
     # ======================================================
 
     contenuto = uploaded_file.getvalue()
@@ -184,7 +202,7 @@ def importa_mnt(uploaded_file):
     righe = testo.splitlines()
 
     # ======================================================
-    # RICONOSCIMENTO DM1 / DM8
+    # IDENTIFICAZIONE CASSA
     # ======================================================
 
     cassa = rileva_cassa(
@@ -196,10 +214,10 @@ def importa_mnt(uploaded_file):
     database = ""
 
     # ======================================================
-    # LETTURA TESTATA
+    # TESTATA
     # ======================================================
 
-    for riga in righe[:50]:
+    for riga in righe[:100]:
 
         match = re.search(
             r"Software Version\s*:\s*(.*?)\s+Database Version\s*:\s*(.*)",
@@ -215,7 +233,7 @@ def importa_mnt(uploaded_file):
             break
 
     # ======================================================
-    # LETTURA SENSORI
+    # LETTURA RIGHE SENSORI
     # ======================================================
 
     records = []
@@ -253,7 +271,7 @@ def importa_mnt(uploaded_file):
             "I",
             "I_I",
             "STA",
-            "ISO",
+            "ISO"
         ]
     )
 
@@ -267,21 +285,31 @@ def importa_mnt(uploaded_file):
         )
 
     # ======================================================
-    # CONVERSIONE STA / I_I
+    # CONVERSIONE VALORI
     # ======================================================
 
-    df["STA"] = pd.to_numeric(
-        df["STA"],
-        errors="coerce"
-    )
+    for colonna in [
+        "I",
+        "I_I",
+        "STA"
+    ]:
 
-    df["I_I"] = pd.to_numeric(
-        df["I_I"],
-        errors="coerce"
+        df[colonna] = pd.to_numeric(
+            df[colonna],
+            errors="coerce"
+        )
+
+    # ======================================================
+    # NORMALIZZA ADD
+    # ======================================================
+
+    df["Add"] = (
+        df["Add"]
+        .apply(normalizza_add)
     )
 
     # ======================================================
-    # ORDINE ADD
+    # ORDINE DM1 / DM8
     # ======================================================
 
     ordine = ottieni_ordine(
@@ -298,7 +326,6 @@ def importa_mnt(uploaded_file):
 
         df["_ordine_add"] = (
             df["Add"]
-            .astype(str)
             .map(mappa_ordine)
         )
 
@@ -311,8 +338,16 @@ def importa_mnt(uploaded_file):
             columns="_ordine_add"
         )
 
+    # ======================================================
+    # RESET INDEX
+    # ======================================================
+
+    df = df.reset_index(
+        drop=True
+    )
+
     return (
-        df.reset_index(drop=True),
+        df,
         cassa,
         software,
         database
@@ -320,15 +355,18 @@ def importa_mnt(uploaded_file):
 
 
 # ==========================================================
-# GRAFICO NATIVO STREAMLIT
+# PREPARA GRAFICO
 # ==========================================================
 
-def mostra_grafico(df, cassa):
+def prepara_dati_grafico(
+    df,
+    cassa
+):
 
     grafico = df.copy()
 
     # ======================================================
-    # ORDINE ADD
+    # ORDINE DM1 / DM8
     # ======================================================
 
     ordine = ottieni_ordine(
@@ -345,7 +383,6 @@ def mostra_grafico(df, cassa):
 
         grafico["_ordine_add"] = (
             grafico["Add"]
-            .astype(str)
             .map(mappa_ordine)
         )
 
@@ -353,6 +390,10 @@ def mostra_grafico(df, cassa):
             "_ordine_add",
             na_position="last"
         )
+
+    # ======================================================
+    # RESET
+    # ======================================================
 
     grafico = grafico.reset_index(
         drop=True
@@ -362,58 +403,128 @@ def mostra_grafico(df, cassa):
     # COSTRUISCE DATAFRAME GRAFICO
     # ======================================================
 
-    dati_grafico = pd.DataFrame(
-        index=range(len(grafico))
+    dati = pd.DataFrame()
+
+    # ------------------------------------------------------
+    # ADD COME ASSE
+    # ------------------------------------------------------
+
+    dati["ADD"] = (
+        grafico["Add"]
+        .astype(str)
     )
+
+    # ------------------------------------------------------
+    # STA
+    # ------------------------------------------------------
 
     if "STA" in grafico.columns:
 
-        dati_grafico["STA"] = (
-            grafico["STA"].values
+        dati["STA"] = pd.to_numeric(
+            grafico["STA"],
+            errors="coerce"
         )
+
+    # ------------------------------------------------------
+    # I_I
+    # ------------------------------------------------------
 
     if "I_I" in grafico.columns:
 
-        dati_grafico["I_I"] = (
-            grafico["I_I"].values
+        dati["I_I"] = pd.to_numeric(
+            grafico["I_I"],
+            errors="coerce"
         )
 
-    # ======================================================
-    # GRAFICO
-    # ======================================================
+    return dati
 
-    if dati_grafico.empty:
+
+# ==========================================================
+# GRAFICO
+# ==========================================================
+
+def mostra_grafico(
+    df,
+    cassa
+):
+
+    dati = prepara_dati_grafico(
+        df,
+        cassa
+    )
+
+    if dati.empty:
 
         st.warning(
-            "Nessun dato STA / I_I disponibile."
+            "Nessun dato disponibile."
         )
 
         return
 
+    colonne = []
+
+    if "STA" in dati.columns:
+        colonne.append("STA")
+
+    if "I_I" in dati.columns:
+        colonne.append("I_I")
+
+    if not colonne:
+
+        st.warning(
+            "Nel file .MNT non sono presenti "
+            "STA / I_I."
+        )
+
+        return
+
+    # ======================================================
+    # GRAFICO NATIVO STREAMLIT
+    # ======================================================
+
+    grafico_streamlit = dati[
+        colonne
+    ].copy()
+
+    # L'indice numerico serve internamente al grafico
+    # ma le etichette ADD vengono mostrate sotto.
+    grafico_streamlit.index = range(
+        len(grafico_streamlit)
+    )
+
     st.line_chart(
-        dati_grafico,
+        grafico_streamlit,
         height=500
     )
 
     # ======================================================
-    # ORDINE ADD VISUALIZZATO
+    # TABELLA ADD + VALORI
     # ======================================================
 
-    st.caption(
-        "Ordine ADD utilizzato:"
+    st.markdown(
+        "### 🔢 Valori nell'ordine fisico"
     )
 
-    st.write(
-        " → ".join(
-            grafico["Add"]
-            .astype(str)
-            .tolist()
+    tabella_grafico = dati.copy()
+
+    tabella_grafico.insert(
+        0,
+        "Posizione",
+        range(
+            1,
+            len(tabella_grafico) + 1
         )
+    )
+
+    st.dataframe(
+        tabella_grafico,
+        use_container_width=True,
+        hide_index=True
     )
 
 
 # ==========================================================
-# PAGINA MISURAZIONE SENSORI
+# PAGINA STREAMLIT
 # ==========================================================
 
 def misurazione_sensori_page():
@@ -429,7 +540,7 @@ def misurazione_sensori_page():
     st.divider()
 
     # ======================================================
-    # CARICAMENTO .MNT
+    # CARICAMENTO SOLO .MNT
     # ======================================================
 
     uploaded_file = st.file_uploader(
@@ -437,6 +548,10 @@ def misurazione_sensori_page():
         type=["mnt"],
         key="mnt_file"
     )
+
+    # ======================================================
+    # NESSUN FILE
+    # ======================================================
 
     if uploaded_file is None:
 
@@ -455,7 +570,7 @@ def misurazione_sensori_page():
     ):
 
         st.error(
-            "❌ Devi caricare un file .MNT."
+            "❌ Devi caricare un file con estensione .MNT."
         )
 
         return
@@ -492,27 +607,26 @@ def misurazione_sensori_page():
             return
 
     # ======================================================
-    # CONTROLLO DATI
+    # CONTROLLO
     # ======================================================
 
     if df.empty:
 
         st.error(
-            "❌ Il file .MNT è stato caricato "
+            "❌ Il file .MNT è stato caricato, "
             "ma non sono state trovate righe sensore."
         )
 
         return
 
     # ======================================================
-    # SE DM1 / DM8 NON RICONOSCIUTO
+    # CASSA NON RICONOSCIUTA
     # ======================================================
 
     if cassa == "SCONOSCIUTA":
 
         st.warning(
-            "⚠️ Non è stato possibile riconoscere "
-            "automaticamente DM1 o DM8."
+            "⚠️ DM1/DM8 non riconosciuto automaticamente."
         )
 
         cassa = st.selectbox(
@@ -536,7 +650,6 @@ def misurazione_sensori_page():
 
         df["_ordine_add"] = (
             df["Add"]
-            .astype(str)
             .map(mappa_ordine)
         )
 
@@ -555,11 +668,11 @@ def misurazione_sensori_page():
         )
 
     # ======================================================
-    # INFORMAZIONI FILE
+    # INFORMAZIONI
     # ======================================================
 
     st.success(
-        f"✅ File MNT caricato: {uploaded_file.name}"
+        f"✅ File .MNT caricato: {uploaded_file.name}"
     )
 
     col1, col2, col3, col4 = st.columns(4)
@@ -612,7 +725,7 @@ def misurazione_sensori_page():
 
         query = ricerca.strip().lower()
 
-        testo = (
+        testo_ricerca = (
             risultato
             .astype(str)
             .agg(
@@ -623,7 +736,7 @@ def misurazione_sensori_page():
         )
 
         risultato = risultato[
-            testo.str.contains(
+            testo_ricerca.str.contains(
                 query,
                 regex=False,
                 na=False
@@ -658,7 +771,7 @@ def misurazione_sensori_page():
     )
 
     # ======================================================
-    # GRAFICO
+    # TAB GRAFICO
     # ======================================================
 
     with tab1:
@@ -673,7 +786,7 @@ def misurazione_sensori_page():
         )
 
     # ======================================================
-    # TABELLA
+    # TAB DATI
     # ======================================================
 
     with tab2:
@@ -689,9 +802,9 @@ def misurazione_sensori_page():
             height=600
         )
 
-        # ==================================================
+        # --------------------------------------------------
         # ESPORTAZIONE CSV
-        # ==================================================
+        # --------------------------------------------------
 
         csv = risultato.to_csv(
             index=False
