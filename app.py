@@ -912,7 +912,7 @@ with st.sidebar:
                 [
                     "Carrelli",
                     "HVAC",
-                    "Antincendio",
+                    "Misurazione Sensori",
                     "Propulsione"
                 ],
                 key="sistema_treno",
