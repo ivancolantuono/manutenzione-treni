@@ -39,7 +39,7 @@ ORDER_DM8 = [
 
 
 # ==========================================================
-# OTTIENI ORDINE
+# RESTITUISCE ORDINE
 # ==========================================================
 
 def get_order(cassa):
@@ -56,7 +56,7 @@ def get_order(cassa):
 
 
 # ==========================================================
-# NORMALIZZA ADD
+# NORMALIZZAZIONE ADD
 # ==========================================================
 
 def normalize_add(value):
@@ -66,14 +66,14 @@ def normalize_add(value):
 
     value = str(value).strip()
 
-    # Elimina eventuale .0
+    # Elimina .0
     value = re.sub(
         r"\.0$",
         "",
         value
     )
 
-    # Cerca il numero
+    # Cerca numero
     match = re.search(
         r"\d+",
         value
@@ -88,7 +88,7 @@ def normalize_add(value):
 
 
 # ==========================================================
-# NORMALIZZA NOME COLONNA
+# NORMALIZZAZIONE COLONNE
 # ==========================================================
 
 def normalize_column_name(value):
@@ -102,6 +102,7 @@ def normalize_column_name(value):
 
     upper = value.upper()
 
+    # ADD
     if upper in [
         "ADD",
         "ADDRESS",
@@ -109,12 +110,14 @@ def normalize_column_name(value):
     ]:
         return "ADD"
 
+    # I
     if upper in [
         "I",
         "I."
     ]:
         return "I"
 
+    # I_I
     if upper in [
         "I_I",
         "I/I",
@@ -123,6 +126,7 @@ def normalize_column_name(value):
     ]:
         return "I_I"
 
+    # STA
     if upper == "STA":
         return "STA"
 
@@ -130,7 +134,7 @@ def normalize_column_name(value):
 
 
 # ==========================================================
-# RILEVA DM1 / DM8
+# RICONOSCIMENTO DM1 / DM8
 # ==========================================================
 
 def detect_cassa(
@@ -143,7 +147,7 @@ def detect_cassa(
     ).upper()
 
     # ------------------------------------------------------
-    # Nome file
+    # Prima controlliamo il nome del file
     # ------------------------------------------------------
 
     if "DM1" in nome:
@@ -153,7 +157,7 @@ def detect_cassa(
         return "DM8"
 
     # ------------------------------------------------------
-    # Contenuto
+    # Poi il contenuto
     # ------------------------------------------------------
 
     testo_upper = str(
@@ -176,7 +180,7 @@ def detect_cassa(
 
 
 # ==========================================================
-# CERCA HEADER
+# RICERCA HEADER
 # ==========================================================
 
 def trova_header(righe):
@@ -190,9 +194,11 @@ def trova_header(righe):
 
         upper = testo.upper()
 
+        # Deve esserci ADD
         if "ADD" not in upper:
             continue
 
+        # Deve esserci almeno una delle misure
         if (
             "STA" not in upper
             and
@@ -208,13 +214,14 @@ def trova_header(righe):
 
 
 # ==========================================================
-# SEPARA HEADER
+# SEPARAZIONE HEADER
 # ==========================================================
 
 def split_header(riga):
 
     riga = riga.strip()
 
+    # TAB
     if "\t" in riga:
 
         return [
@@ -222,6 +229,7 @@ def split_header(riga):
             for x in riga.split("\t")
         ]
 
+    # ;
     if ";" in riga:
 
         return [
@@ -229,6 +237,7 @@ def split_header(riga):
             for x in riga.split(";")
         ]
 
+    # ,
     if "," in riga:
 
         return [
@@ -236,6 +245,7 @@ def split_header(riga):
             for x in riga.split(",")
         ]
 
+    # Spazi
     return re.split(
         r"\s+",
         riga
@@ -243,13 +253,14 @@ def split_header(riga):
 
 
 # ==========================================================
-# SEPARA RIGA DATI
+# SEPARAZIONE RIGA DATI
 # ==========================================================
 
 def split_data_line(riga):
 
     riga = riga.strip()
 
+    # TAB
     if "\t" in riga:
 
         return [
@@ -257,6 +268,7 @@ def split_data_line(riga):
             for x in riga.split("\t")
         ]
 
+    # ;
     if ";" in riga:
 
         return [
@@ -264,6 +276,7 @@ def split_data_line(riga):
             for x in riga.split(";")
         ]
 
+    # ,
     if "," in riga:
 
         return [
@@ -271,6 +284,7 @@ def split_data_line(riga):
             for x in riga.split(",")
         ]
 
+    # Spazi
     return re.split(
         r"\s+",
         riga
@@ -288,11 +302,11 @@ def trova_colonna(
 
     for indice, nome in enumerate(header):
 
-        nome_norm = normalize_column_name(
+        nome_normalizzato = normalize_column_name(
             nome
         )
 
-        if nome_norm in possibili:
+        if nome_normalizzato in possibili:
 
             return indice
 
@@ -300,7 +314,7 @@ def trova_colonna(
 
 
 # ==========================================================
-# IMPORTA FILE MNT
+# IMPORTAZIONE FILE .MNT
 # ==========================================================
 
 def importa_mnt(
@@ -310,7 +324,7 @@ def importa_mnt(
     contenuto = uploaded_file.getvalue()
 
     # ------------------------------------------------------
-    # Decodifica
+    # DECODIFICA
     # ------------------------------------------------------
 
     try:
@@ -329,7 +343,7 @@ def importa_mnt(
     righe = testo.splitlines()
 
     # ------------------------------------------------------
-    # Rileva cassa
+    # RICONOSCI CASSA
     # ------------------------------------------------------
 
     cassa = detect_cassa(
@@ -338,12 +352,16 @@ def importa_mnt(
     )
 
     # ------------------------------------------------------
-    # Cerca intestazione
+    # CERCA HEADER
     # ------------------------------------------------------
 
     indice_header = trova_header(
         righe
     )
+
+    # ------------------------------------------------------
+    # SE NON C'È HEADER
+    # ------------------------------------------------------
 
     if indice_header is None:
 
@@ -353,7 +371,7 @@ def importa_mnt(
         )
 
     # ------------------------------------------------------
-    # Header
+    # LETTURA HEADER
     # ------------------------------------------------------
 
     header_raw = split_header(
@@ -368,7 +386,7 @@ def importa_mnt(
     ]
 
     # ------------------------------------------------------
-    # Colonne
+    # INDICI COLONNE
     # ------------------------------------------------------
 
     indice_add = trova_colonna(
@@ -392,7 +410,7 @@ def importa_mnt(
     )
 
     # ------------------------------------------------------
-    # Controllo ADD
+    # ADD OBBLIGATORIO
     # ------------------------------------------------------
 
     if indice_add is None:
@@ -405,7 +423,7 @@ def importa_mnt(
     records = []
 
     # ======================================================
-    # LETTURA DATI
+    # LETTURA RIGHE
     # ======================================================
 
     for riga in righe[
@@ -423,6 +441,10 @@ def importa_mnt(
 
         if indice_add >= len(parti):
             continue
+
+        # --------------------------------------------------
+        # ADD
+        # --------------------------------------------------
 
         add = normalize_add(
             parti[indice_add]
@@ -484,6 +506,10 @@ def importa_mnt(
             record
         )
 
+    # ======================================================
+    # DATAFRAME
+    # ======================================================
+
     df = pd.DataFrame(
         records
     )
@@ -511,7 +537,7 @@ def importa_mnt(
         )
 
     # ======================================================
-    # UN SOLO RECORD PER ADD
+    # DUPLICATI
     # ======================================================
 
     df = df.drop_duplicates(
@@ -559,6 +585,10 @@ def importa_senza_header(
         if len(parti) < 2:
             continue
 
+        # --------------------------------------------------
+        # ADD
+        # --------------------------------------------------
+
         add = normalize_add(
             parti[0]
         )
@@ -567,18 +597,24 @@ def importa_senza_header(
             continue
 
         # --------------------------------------------------
-        # Cerca valori numerici
+        # CERCA NUMERI
         # --------------------------------------------------
 
         numeri = []
 
         for valore in parti[1:]:
 
+            valore = str(
+                valore
+            ).strip()
+
             try:
 
                 numero = float(
-                    str(valore)
-                    .replace(",", ".")
+                    valore.replace(
+                        ",",
+                        "."
+                    )
                 )
 
                 numeri.append(
@@ -599,18 +635,29 @@ def importa_senza_header(
             "STA": None
         }
 
+        # --------------------------------------------------
+        # Fallback
+        # --------------------------------------------------
+
         if len(numeri) >= 1:
+
             record["I"] = numeri[-1]
 
         if len(numeri) >= 2:
+
             record["I_I"] = numeri[-2]
 
         if len(numeri) >= 3:
+
             record["STA"] = numeri[-3]
 
         records.append(
             record
         )
+
+    # ======================================================
+    # DATAFRAME
+    # ======================================================
 
     df = pd.DataFrame(
         records
@@ -623,6 +670,10 @@ def importa_senza_header(
             cassa
         )
 
+    # ======================================================
+    # NUMERICI
+    # ======================================================
+
     for colonna in [
         "I",
         "I_I",
@@ -634,10 +685,18 @@ def importa_senza_header(
             errors="coerce"
         )
 
+    # ======================================================
+    # DUPLICATI
+    # ======================================================
+
     df = df.drop_duplicates(
         subset=["ADD"],
         keep="last"
     )
+
+    # ======================================================
+    # ORDINE
+    # ======================================================
 
     df = applica_ordine(
         df,
@@ -651,7 +710,7 @@ def importa_senza_header(
 
 
 # ==========================================================
-# APPLICA ORDINE DM1 / DM8
+# APPLICA ORDINE FISICO
 # ==========================================================
 
 def applica_ordine(
@@ -670,7 +729,7 @@ def applica_ordine(
         return df
 
     # ------------------------------------------------------
-    # Normalizza ADD
+    # NORMALIZZA ADD
     # ------------------------------------------------------
 
     df["ADD"] = (
@@ -679,7 +738,7 @@ def applica_ordine(
     )
 
     # ------------------------------------------------------
-    # Mappa posizione
+    # MAPPA POSIZIONE
     # ------------------------------------------------------
 
     mappa = {
@@ -694,13 +753,17 @@ def applica_ordine(
     )
 
     # ------------------------------------------------------
-    # Ordina
+    # ORDINA
     # ------------------------------------------------------
 
     df = df.sort_values(
         "_POSIZIONE",
         na_position="last"
     )
+
+    # ------------------------------------------------------
+    # RESET
+    # ------------------------------------------------------
 
     df = df.reset_index(
         drop=True
@@ -710,7 +773,7 @@ def applica_ordine(
 
 
 # ==========================================================
-# PREPARA DATI GRAFICO
+# PREPARA GRAFICO
 # ==========================================================
 
 def prepara_grafico(
@@ -733,13 +796,17 @@ def prepara_grafico(
         in enumerate(ordine)
     }
 
+    # ------------------------------------------------------
+    # POSIZIONE
+    # ------------------------------------------------------
+
     df["POSIZIONE"] = (
         df["ADD"]
         .map(mappa)
     )
 
     # ------------------------------------------------------
-    # Tieni solo ADD presenti nell'ordine
+    # SOLO SENSORI PRESENTI NELL'ORDINE
     # ------------------------------------------------------
 
     df = df[
@@ -747,7 +814,7 @@ def prepara_grafico(
     ].copy()
 
     # ------------------------------------------------------
-    # Ordinamento definitivo
+    # ORDINAMENTO DEFINITIVO
     # ------------------------------------------------------
 
     df = df.sort_values(
@@ -759,10 +826,10 @@ def prepara_grafico(
     )
 
     # ------------------------------------------------------
-    # Etichetta asse X
+    # ETICHETTA
     # ------------------------------------------------------
 
-    df["ADD_LABEL"] = (
+    df["SENSORE"] = (
         df["ADD"]
         .astype(str)
     )
@@ -800,18 +867,18 @@ def crea_grafico(
 
         return None
 
-    # ------------------------------------------------------
+    # ======================================================
     # FORMATO LONG
-    # ------------------------------------------------------
+    # ======================================================
 
     long_df = grafico[
         [
-            "ADD_LABEL",
+            "SENSORE",
             "POSIZIONE"
         ] + colonne
     ].melt(
         id_vars=[
-            "ADD_LABEL",
+            "SENSORE",
             "POSIZIONE"
         ],
         value_vars=colonne,
@@ -819,11 +886,11 @@ def crea_grafico(
         value_name="Valore"
     )
 
-    # ------------------------------------------------------
-    # GRAFICO
-    # ------------------------------------------------------
+    # ======================================================
+    # GRAFICO LINEE
+    # ======================================================
 
-    chart = (
+    linee = (
         alt.Chart(
             long_df
         )
@@ -833,13 +900,13 @@ def crea_grafico(
         .encode(
 
             x=alt.X(
-                "ADD_LABEL:N",
+                "SENSORE:N",
                 sort=alt.SortField(
                     field="POSIZIONE",
                     order="ascending"
                 ),
                 axis=alt.Axis(
-                    title="ADD",
+                    title="Sensori",
                     labelAngle=-90,
                     labelOverlap=False
                 )
@@ -857,8 +924,8 @@ def crea_grafico(
 
             tooltip=[
                 alt.Tooltip(
-                    "ADD_LABEL:N",
-                    title="ADD"
+                    "SENSORE:N",
+                    title="Sensore"
                 ),
 
                 alt.Tooltip(
@@ -872,11 +939,106 @@ def crea_grafico(
                 )
             ]
         )
-        .properties(
-            height=500
-        )
-        .interactive()
     )
+
+    # ======================================================
+    # SENSORI STA <= 45
+    # ======================================================
+
+    critici = grafico[
+        pd.to_numeric(
+            grafico["STA"],
+            errors="coerce"
+        ) <= 45
+    ].copy()
+
+    # ------------------------------------------------------
+    # PUNTI CRITICI
+    # ------------------------------------------------------
+
+    if not critici.empty:
+
+        punti_critici = (
+            alt.Chart(
+                critici
+            )
+            .mark_point(
+                filled=True,
+                size=100
+            )
+            .encode(
+
+                x=alt.X(
+                    "SENSORE:N",
+                    sort=alt.SortField(
+                        field="POSIZIONE",
+                        order="ascending"
+                    )
+                ),
+
+                y=alt.Y(
+                    "STA:Q"
+                ),
+
+                tooltip=[
+                    alt.Tooltip(
+                        "SENSORE:N",
+                        title="⚠️ Sensore"
+                    ),
+
+                    alt.Tooltip(
+                        "STA:Q",
+                        title="STA"
+                    )
+                ]
+            )
+        )
+
+        # --------------------------------------------------
+        # LINEA SOGLIA 45
+        # --------------------------------------------------
+
+        linea_soglia = (
+            alt.Chart(
+                pd.DataFrame(
+                    {
+                        "Soglia": [45]
+                    }
+                )
+            )
+            .mark_rule(
+                strokeDash=[6, 4]
+            )
+            .encode(
+                y=alt.Y(
+                    "Soglia:Q"
+                )
+            )
+        )
+
+        chart = (
+            linee
+            + linea_soglia
+            + punti_critici
+        )
+
+    else:
+
+        chart = linee
+
+    # ======================================================
+    # DIMENSIONI
+    # ======================================================
+
+    chart = chart.properties(
+        height=500
+    )
+
+    # ======================================================
+    # INTERAZIONE
+    # ======================================================
+
+    chart = chart.interactive()
 
     return chart
 
@@ -914,7 +1076,7 @@ def misurazione_sensori_page():
     st.divider()
 
     # ======================================================
-    # CARICAMENTO .MNT
+    # CARICAMENTO FILE .MNT
     # ======================================================
 
     uploaded_file = st.file_uploader(
@@ -932,7 +1094,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # CONTROLLO FILE
+    # CONTROLLO ESTENSIONE
     # ======================================================
 
     if not uploaded_file.name.lower().endswith(
@@ -952,7 +1114,7 @@ def misurazione_sensori_page():
     try:
 
         with st.spinner(
-            "🔄 Lettura file .MNT..."
+            "🔄 Lettura del file .MNT..."
         ):
 
             (
@@ -975,7 +1137,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # CONTROLLO DATI
+    # CONTROLLO
     # ======================================================
 
     if df.empty:
@@ -988,7 +1150,7 @@ def misurazione_sensori_page():
         return
 
     # ======================================================
-    # USA CASSA SELEZIONATA
+    # USA LA CASSA SELEZIONATA
     # ======================================================
 
     df = applica_ordine(
@@ -1005,15 +1167,25 @@ def misurazione_sensori_page():
         cassa
     )
 
+    if grafico_df.empty:
+
+        st.warning(
+            "⚠️ Nessun sensore valido "
+            "per l'ordine selezionato."
+        )
+
+        return
+
     # ======================================================
     # INFORMAZIONI
     # ======================================================
 
     st.success(
-        f"✅ File caricato: {uploaded_file.name}"
+        f"✅ File MNT caricato: "
+        f"{uploaded_file.name}"
     )
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
 
@@ -1032,8 +1204,22 @@ def misurazione_sensori_page():
     with col3:
 
         st.metric(
-            "ADD",
-            grafico_df["ADD"].nunique()
+            "Sensori STA ≤ 45",
+            int(
+                (
+                    pd.to_numeric(
+                        grafico_df["STA"],
+                        errors="coerce"
+                    ) <= 45
+                ).sum()
+            )
+        )
+
+    with col4:
+
+        st.metric(
+            "Soglia STA",
+            "≤ 45"
         )
 
     st.divider()
@@ -1042,15 +1228,16 @@ def misurazione_sensori_page():
     # TABS
     # ======================================================
 
-    tab1, tab2 = st.tabs(
+    tab1, tab2, tab3 = st.tabs(
         [
             "📈 Misurazioni",
+            "⚠️ Sensori STA ≤ 45",
             "📋 Dati MNT"
         ]
     )
 
     # ======================================================
-    # GRAFICO
+    # TAB GRAFICO
     # ======================================================
 
     with tab1:
@@ -1078,11 +1265,98 @@ def misurazione_sensori_page():
                 use_container_width=True
             )
 
+        # --------------------------------------------------
+        # LEGENDA SOGLIA
+        # --------------------------------------------------
+
+        st.caption(
+            "⚠️ I punti dei sensori con STA ≤ 45 "
+            "indicano una condizione sotto soglia."
+        )
+
     # ======================================================
-    # DATI
+    # TAB SENSORI CRITICI
     # ======================================================
 
     with tab2:
+
+        st.subheader(
+            "⚠️ Sensori con STA ≤ 45"
+        )
+
+        # --------------------------------------------------
+        # CONVERSIONE NUMERICA
+        # --------------------------------------------------
+
+        sta_numerica = pd.to_numeric(
+            grafico_df["STA"],
+            errors="coerce"
+        )
+
+        sensori_critici = grafico_df[
+            sta_numerica <= 45
+        ].copy()
+
+        # --------------------------------------------------
+        # NESSUN SENSORE
+        # --------------------------------------------------
+
+        if sensori_critici.empty:
+
+            st.success(
+                "✅ Nessun sensore presenta "
+                "STA ≤ 45."
+            )
+
+        else:
+
+            st.warning(
+                f"⚠️ Trovati "
+                f"{len(sensori_critici)} "
+                f"sensori con STA ≤ 45."
+            )
+
+            # ------------------------------------------------
+            # TABELLA
+            # ------------------------------------------------
+
+            colonne_critici = [
+                "ADD",
+                "STA",
+                "I",
+                "I_I"
+            ]
+
+            colonne_critici = [
+                col
+                for col in colonne_critici
+                if col in sensori_critici.columns
+            ]
+
+            tabella_critici = sensori_critici[
+                colonne_critici
+            ].copy()
+
+            tabella_critici = tabella_critici.rename(
+                columns={
+                    "ADD": "Sensore",
+                    "STA": "STA",
+                    "I": "I",
+                    "I_I": "I_I"
+                }
+            )
+
+            st.dataframe(
+                tabella_critici,
+                use_container_width=True,
+                hide_index=True
+            )
+
+    # ======================================================
+    # TAB DATI MNT
+    # ======================================================
+
+    with tab3:
 
         st.subheader(
             "📋 Dati estratti dal file .MNT"
@@ -1096,9 +1370,9 @@ def misurazione_sensori_page():
         ]
 
         colonne = [
-            c
-            for c in colonne
-            if c in grafico_df.columns
+            col
+            for col in colonne
+            if col in grafico_df.columns
         ]
 
         st.dataframe(
