@@ -5,17 +5,6 @@ import re
 
 
 # ==========================================================
-# CONFIGURAZIONE
-# ==========================================================
-
-st.set_page_config(
-    page_title="Analizza Log FDE",
-    page_icon="🔎",
-    layout="wide"
-)
-
-
-# ==========================================================
 # DATASET FDE
 # ==========================================================
 
@@ -192,7 +181,7 @@ DECODIFICHE = {
 
 
 # ==========================================================
-# DECODIFICA NUMBER MAU
+# DECODIFICA MAU
 # ==========================================================
 
 DECODIFICA_NUMBER_MAU = {
@@ -207,10 +196,90 @@ DECODIFICA_NUMBER_MAU = {
 # DECODIFICA SENSORI FUMO
 # ==========================================================
 
-DECODIFICA_NUMBER_SMOKE = {}
+DECODIFICA_NUMBER_SMOKE = {
 
-for i in range(74):
-    DECODIFICA_NUMBER_SMOKE[str(i)] = f"SD{i + 1}"
+    "0": "SD1",
+    "1": "SD2",
+    "2": "SD3",
+    "3": "SD4",
+    "4": "SD5",
+    "5": "SD6",
+    "6": "SD7",
+    "7": "SD8",
+    "8": "SD9",
+    "9": "SD10",
+
+    "10": "SD11",
+    "11": "SD12",
+    "12": "SD13",
+    "13": "SD14",
+    "14": "SD15",
+    "15": "SD16",
+    "16": "SD17",
+    "17": "SD18",
+    "18": "SD19",
+    "19": "SD20",
+
+    "20": "SD21",
+    "21": "SD22",
+    "22": "SD23",
+    "23": "SD24",
+    "24": "SD25",
+    "25": "SD26",
+    "26": "SD27",
+    "27": "SD28",
+    "28": "SD29",
+    "29": "SD30",
+
+    "30": "SD31",
+    "31": "SD32",
+    "32": "SD33",
+    "33": "SD34",
+    "34": "SD35",
+    "35": "SD36",
+    "36": "SD37",
+    "37": "SD38",
+    "38": "SD39",
+    "39": "SD40",
+
+    "40": "SD41",
+    "41": "SD42",
+    "42": "SD43",
+    "43": "SD44",
+    "44": "SD45",
+    "45": "SD46",
+    "46": "SD47",
+    "47": "SD48",
+    "48": "SD49",
+    "49": "SD50",
+
+    "50": "SD51",
+    "51": "SD52",
+    "52": "SD53",
+    "53": "SD54",
+    "54": "SD55",
+    "55": "SD56",
+    "56": "SD57",
+    "57": "SD58",
+    "58": "SD59",
+    "59": "SD60",
+
+    "60": "SD61",
+    "61": "SD62",
+    "62": "SD63",
+    "63": "SD64",
+    "64": "SD65",
+    "65": "SD66",
+    "66": "SD67",
+    "67": "SD68",
+    "68": "SD69",
+    "69": "SD70",
+
+    "70": "SD71",
+    "71": "SD72",
+    "72": "SD73",
+    "73": "SD74",
+}
 
 
 # ==========================================================
@@ -218,6 +287,7 @@ for i in range(74):
 # ==========================================================
 
 DECODIFICA_CASSA = {
+
     "1": "DM1",
     "2": "TT2",
     "3": "M3",
@@ -226,6 +296,7 @@ DECODIFICA_CASSA = {
     "6": "M6",
     "7": "TT7",
     "8": "DM8",
+
 }
 
 
@@ -482,82 +553,62 @@ def classifica_evento(
         number
     ).upper()
 
-    # ======================================================
+    # ------------------------------------------------------
     # ALLARME INCENDIO
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "ALLARME INCENDIO"
-        in descrizione
-    ):
+    if "ALLARME INCENDIO" in descrizione:
 
         return "ALLARME INCENDIO"
 
-    # ======================================================
+    # ------------------------------------------------------
     # FUMO
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "ALLARME FUMO"
-        in descrizione
-    ):
+    if "ALLARME FUMO" in descrizione:
 
         return "FUMO"
 
-    # ======================================================
+    # ------------------------------------------------------
     # TERMICO
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "ALLARME TERMICO"
-        in descrizione
-    ):
+    if "ALLARME TERMICO" in descrizione:
 
         return "TERMICO"
 
-    # ======================================================
+    # ------------------------------------------------------
     # BASSA PRESSIONE
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "BASSA PRESSIONE"
-        in number
-    ):
+    if "BASSA PRESSIONE" in number:
 
         return "BASSA PRESSIONE"
 
-    # ======================================================
+    # ------------------------------------------------------
     # ACQUA PRESSURIZZATA
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "CONDOTTA ACQUA PRESSURIZZATA"
-        in number
-    ):
+    if "CONDOTTA ACQUA PRESSURIZZATA" in number:
 
         return "ACQUA PRESSURIZZATA"
 
-    # ======================================================
+    # ------------------------------------------------------
     # FUORI SERVIZIO
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        "FUORI SERVIZIO"
-        in descrizione
-    ):
+    if "FUORI SERVIZIO" in descrizione:
 
         return "FUORI SERVIZIO"
 
-    # ======================================================
+    # ------------------------------------------------------
     # FAULT
-    # ======================================================
+    # ------------------------------------------------------
 
     if (
-        "FAULT"
-        in descrizione
+        "FAULT" in descrizione
         or
-        "FAIL"
-        in descrizione
+        "FAIL" in descrizione
     ):
 
         return "FAULT"
@@ -566,7 +617,7 @@ def classifica_evento(
 
 
 # ==========================================================
-# IMPORTAZIONE LOG
+# IMPORTA LOG
 # ==========================================================
 
 def importa_log(
@@ -580,6 +631,10 @@ def importa_log(
     dataset_corrente = None
 
     segnale_corrente = None
+
+    # ------------------------------------------------------
+    # LETTURA FILE
+    # ------------------------------------------------------
 
     contenuto = uploaded_file.getvalue()
 
@@ -597,7 +652,7 @@ def importa_log(
         )
 
     # ======================================================
-    # CICLO RIGHE
+    # LETTURA RIGHE
     # ======================================================
 
     for riga in testo.splitlines():
@@ -605,7 +660,6 @@ def importa_log(
         riga = riga.strip()
 
         if not riga:
-
             continue
 
         # ==================================================
@@ -630,7 +684,6 @@ def importa_log(
             continue
 
         if timestamp is None:
-
             continue
 
         # ==================================================
@@ -674,7 +727,6 @@ def importa_log(
                 break
 
         if trovato:
-
             continue
 
         # ==================================================
@@ -756,6 +808,10 @@ def prepara_eventi(
     data_valori = []
     descrizioni = []
     eventi = []
+
+    # ======================================================
+    # DECODIFICA RIGHE
+    # ======================================================
 
     for _, riga in df.iterrows():
 
@@ -912,74 +968,41 @@ def mostra_legenda():
         "🎨 Legenda eventi"
     )
 
-    st.markdown(
-        """
-        <div style="
-            display:flex;
-            flex-wrap:wrap;
-            gap:10px;
-            margin-top:5px;
-            margin-bottom:20px;
-        ">
+    col1, col2, col3, col4, col5 = st.columns(5)
 
-            <div style="
-                background:#ff0000;
-                color:white;
-                padding:8px 14px;
-                border-radius:6px;
-                font-weight:bold;
-            ">
-                🔴 ALLARME INCENDIO
-            </div>
+    with col1:
 
-            <div style="
-                background:#00b050;
-                color:white;
-                padding:8px 14px;
-                border-radius:6px;
-                font-weight:bold;
-            ">
-                🟢 BASSA PRESSIONE
-            </div>
+        st.error(
+            "🔴 ALLARME INCENDIO"
+        )
 
-            <div style="
-                background:#7030a0;
-                color:white;
-                padding:8px 14px;
-                border-radius:6px;
-                font-weight:bold;
-            ">
-                🟣 ACQUA PRESSURIZZATA
-            </div>
+    with col2:
 
-            <div style="
-                background:#ff9900;
-                color:black;
-                padding:8px 14px;
-                border-radius:6px;
-                font-weight:bold;
-            ">
-                🟠 FUMO
-            </div>
+        st.success(
+            "🟢 BASSA PRESSIONE"
+        )
 
-            <div style="
-                background:#ffff00;
-                color:black;
-                padding:8px 14px;
-                border-radius:6px;
-                font-weight:bold;
-            ">
-                🟡 FUORI SERVIZIO
-            </div>
+    with col3:
 
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        st.info(
+            "🟣 ACQUA PRESSURIZZATA"
+        )
+
+    with col4:
+
+        st.warning(
+            "🟠 FUMO"
+        )
+
+    with col5:
+
+        st.markdown(
+            "🟡 **FUORI SERVIZIO**"
+        )
 
 
 # ==========================================================
-# COSTRUISCI TABELLA
+# PREPARA TABELLA
 # ==========================================================
 
 def prepara_tabella(df):
@@ -990,6 +1013,10 @@ def prepara_tabella(df):
         "timestamp"
     )
 
+    # ------------------------------------------------------
+    # DATA / ORA
+    # ------------------------------------------------------
+
     tabella["Time"] = (
         tabella[
             "timestamp"
@@ -998,6 +1025,10 @@ def prepara_tabella(df):
             "%d-%m-%Y // %H:%M:%S"
         )
     )
+
+    # ------------------------------------------------------
+    # COLONNE
+    # ------------------------------------------------------
 
     tabella = tabella[
         [
@@ -1013,6 +1044,10 @@ def prepara_tabella(df):
             "valore",
         ]
     ].copy()
+
+    # ------------------------------------------------------
+    # RINOMINA
+    # ------------------------------------------------------
 
     tabella = tabella.rename(
         columns={
@@ -1096,6 +1131,10 @@ def analizza_page():
 
         )
 
+    # ======================================================
+    # CONTROLLO FILE
+    # ======================================================
+
     if (
         file_dm1 is None
         and
@@ -1109,7 +1148,7 @@ def analizza_page():
         return
 
     # ======================================================
-    # FRAME
+    # LISTA DATAFRAME
     # ======================================================
 
     frames = []
@@ -1140,13 +1179,13 @@ def analizza_page():
             )
 
             st.success(
-                f"✅ DM1: {len(df_dm1)} eventi"
+                f"✅ DM1 analizzato: {len(df_dm1)} righe"
             )
 
         else:
 
             st.warning(
-                "⚠️ Nessun evento riconosciuto nel DM1."
+                "⚠️ Nessun dato riconosciuto nel DM1."
             )
 
     # ======================================================
@@ -1175,14 +1214,18 @@ def analizza_page():
             )
 
             st.success(
-                f"✅ DM8: {len(df_dm8)} eventi"
+                f"✅ DM8 analizzato: {len(df_dm8)} righe"
             )
 
         else:
 
             st.warning(
-                "⚠️ Nessun evento riconosciuto nel DM8."
+                "⚠️ Nessun dato riconosciuto nel DM8."
             )
+
+    # ======================================================
+    # NESSUN DATO
+    # ======================================================
 
     if not frames:
 
@@ -1193,13 +1236,17 @@ def analizza_page():
         return
 
     # ======================================================
-    # UNIONE
+    # UNIONE DM1 + DM8
     # ======================================================
 
     df = pd.concat(
         frames,
         ignore_index=True
     )
+
+    # ======================================================
+    # ORDINAMENTO CRONOLOGICO
+    # ======================================================
 
     df = df.sort_values(
         "timestamp"
@@ -1278,6 +1325,8 @@ def analizza_page():
     # TABELLA COMPLETA
     # ======================================================
 
+    st.divider()
+
     st.subheader(
         f"📋 TUTTI GLI EVENTI — {len(df)}"
     )
@@ -1302,7 +1351,7 @@ def analizza_page():
     )
 
     # ======================================================
-    # DOWNLOAD COMPLETO
+    # DOWNLOAD TABELLA COMPLETA
     # ======================================================
 
     csv_completo = (
@@ -1346,6 +1395,10 @@ def analizza_page():
     data_max = df[
         "timestamp"
     ].max().date()
+
+    # ------------------------------------------------------
+    # DATE / ORIGINE
+    # ------------------------------------------------------
 
     col1, col2, col3 = st.columns(3)
 
@@ -1397,7 +1450,7 @@ def analizza_page():
                 "DM8"
             ],
 
-            key="analizza_origine"
+            key="analizza_origini"
 
         )
 
@@ -1424,7 +1477,7 @@ def analizza_page():
 
         eventi_disponibili,
 
-        key="analizza_tipo_evento"
+        key="analizza_eventi"
 
     )
 
@@ -1434,7 +1487,7 @@ def analizza_page():
 
     ricerca = st.text_input(
 
-        "🔍 Ricerca",
+        "🔍 Cerca",
 
         placeholder=(
             "Segnale, sensore, "
@@ -1447,7 +1500,7 @@ def analizza_page():
     )
 
     # ======================================================
-    # APPLICA FILTRI
+    # DATA FILTRO
     # ======================================================
 
     data_da_dt = datetime.combine(
@@ -1472,9 +1525,9 @@ def analizza_page():
         )
     ].copy()
 
-    # ------------------------------------------------------
-    # ORIGINE
-    # ------------------------------------------------------
+    # ======================================================
+    # FILTRO ORIGINE
+    # ======================================================
 
     if origini:
 
@@ -1486,9 +1539,9 @@ def analizza_page():
             )
         ]
 
-    # ------------------------------------------------------
-    # EVENTO
-    # ------------------------------------------------------
+    # ======================================================
+    # FILTRO EVENTO
+    # ======================================================
 
     if eventi_selezionati:
 
@@ -1500,28 +1553,15 @@ def analizza_page():
             )
         ]
 
-    # ------------------------------------------------------
-    # RICERCA
-    # ------------------------------------------------------
+    # ======================================================
+    # RICERCA TESTUALE
+    # ======================================================
 
-    if pesquisa := pesquisa if False else None:
-        pass
-
-    if pesquisa:
-        pass
-
-    if pesquisa:
-        pass
-
-    if pesquisa:
-        pass
-
-    # Ricerca effettiva
     if ricerca:
 
         testo = ricerca.lower().strip()
 
-        colonne = [
+        colonne_ricerca = [
 
             "origine",
             "dataset",
@@ -1540,10 +1580,9 @@ def analizza_page():
             index=filtrato.index
         )
 
-        for colonna in colonne:
+        for colonna in colonne_ricerca:
 
             mask |= (
-
                 filtrato[
                     colonna
                 ]
@@ -1554,7 +1593,6 @@ def analizza_page():
                     regex=False,
                     na=False
                 )
-
             )
 
         filtrato = filtrato[
@@ -1599,9 +1637,9 @@ def analizza_page():
 
         )
 
-        # --------------------------------------------------
-        # DOWNLOAD
-        # --------------------------------------------------
+        # ==================================================
+        # DOWNLOAD FILTRATI
+        # ==================================================
 
         csv_filtrato = (
             tabella_filtrata
