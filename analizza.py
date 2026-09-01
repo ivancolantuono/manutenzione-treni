@@ -207,94 +207,14 @@ DECODIFICA_NUMBER_MAU = {
 # DECODIFICA SENSORI FUMO
 # ==========================================================
 
-DECODIFICA_NUMBER_SMOKE = {
+DECODIFICA_NUMBER_SMOKE = {}
 
-    "0": "SD1",
-    "1": "SD2",
-    "2": "SD3",
-    "3": "SD4",
-    "4": "SD5",
-    "5": "SD6",
-    "6": "SD7",
-    "7": "SD8",
-    "8": "SD9",
-    "9": "SD10",
-
-    "10": "SD11",
-    "11": "SD12",
-    "12": "SD13",
-    "13": "SD14",
-    "14": "SD15",
-    "15": "SD16",
-    "16": "SD17",
-    "17": "SD18",
-    "18": "SD19",
-    "19": "SD20",
-
-    "20": "SD21",
-    "21": "SD22",
-    "22": "SD23",
-    "23": "SD24",
-    "24": "SD25",
-    "25": "SD26",
-    "26": "SD27",
-    "27": "SD28",
-    "28": "SD29",
-    "29": "SD30",
-
-    "30": "SD31",
-    "31": "SD32",
-    "32": "SD33",
-    "33": "SD34",
-    "34": "SD35",
-    "35": "SD36",
-    "36": "SD37",
-    "37": "SD38",
-    "38": "SD39",
-    "39": "SD40",
-
-    "40": "SD41",
-    "41": "SD42",
-    "42": "SD43",
-    "43": "SD44",
-    "44": "SD45",
-    "45": "SD46",
-    "46": "SD47",
-    "47": "SD48",
-    "48": "SD49",
-    "49": "SD50",
-
-    "50": "SD51",
-    "51": "SD52",
-    "52": "SD53",
-    "53": "SD54",
-    "54": "SD55",
-    "55": "SD56",
-    "56": "SD57",
-    "57": "SD58",
-    "58": "SD59",
-    "59": "SD60",
-
-    "60": "SD61",
-    "61": "SD62",
-    "62": "SD63",
-    "63": "SD64",
-    "64": "SD65",
-    "65": "SD66",
-    "66": "SD67",
-    "67": "SD68",
-    "68": "SD69",
-    "69": "SD70",
-
-    "70": "SD71",
-    "71": "SD72",
-    "72": "SD73",
-    "73": "SD74",
-}
+for i in range(74):
+    DECODIFICA_NUMBER_SMOKE[str(i)] = f"SD{i + 1}"
 
 
 # ==========================================================
-# DECODIFICA CASSA
+# DECODIFICA CASSE
 # ==========================================================
 
 DECODIFICA_CASSA = {
@@ -322,7 +242,7 @@ def decodifica_cassa(valore):
 
 
 # ==========================================================
-# NORMALIZZA SEGNALE
+# NORMALIZZAZIONE SEGNALE
 # ==========================================================
 
 def normalizza_segnale(segnale):
@@ -379,6 +299,7 @@ def parse_timestamp(valore):
             )
 
         except ValueError:
+
             pass
 
     return None
@@ -399,7 +320,7 @@ def estrai_parametri(valore):
     data_val = "-"
 
     # ------------------------------------------------------
-    # COACH N
+    # COACH
     # ------------------------------------------------------
 
     match = re.search(
@@ -462,7 +383,11 @@ def decodifica_segnale(
         segnale
     ).upper()
 
-    cassa, number, data_val = estrai_parametri(
+    (
+        cassa,
+        number,
+        data_val
+    ) = estrai_parametri(
         valore
     )
 
@@ -536,7 +461,7 @@ def decodifica_segnale(
 
 
 # ==========================================================
-# CLASSIFICA EVENTO
+# CLASSIFICAZIONE EVENTO
 # ==========================================================
 
 def classifica_evento(
@@ -557,77 +482,82 @@ def classifica_evento(
         number
     ).upper()
 
-    # ------------------------------------------------------
-    # FUMO
-    # ------------------------------------------------------
-
-    if (
-        "ALLARME FUMO" in descrizione
-    ):
-
-        return "FUMO"
-
-    # ------------------------------------------------------
-    # TERMICO
-    # ------------------------------------------------------
-
-    if (
-        "ALLARME TERMICO" in descrizione
-    ):
-
-        return "TERMICO"
-
-    # ------------------------------------------------------
+    # ======================================================
     # ALLARME INCENDIO
-    # ------------------------------------------------------
+    # ======================================================
 
     if (
-        "ALLARME INCENDIO" in descrizione
+        "ALLARME INCENDIO"
+        in descrizione
     ):
 
         return "ALLARME INCENDIO"
 
-    # ------------------------------------------------------
-    # BASSA PRESSIONE
-    # ------------------------------------------------------
+    # ======================================================
+    # FUMO
+    # ======================================================
 
     if (
-        "BASSA PRESSIONE" in number
+        "ALLARME FUMO"
+        in descrizione
+    ):
+
+        return "FUMO"
+
+    # ======================================================
+    # TERMICO
+    # ======================================================
+
+    if (
+        "ALLARME TERMICO"
+        in descrizione
+    ):
+
+        return "TERMICO"
+
+    # ======================================================
+    # BASSA PRESSIONE
+    # ======================================================
+
+    if (
+        "BASSA PRESSIONE"
+        in number
     ):
 
         return "BASSA PRESSIONE"
 
-    # ------------------------------------------------------
+    # ======================================================
     # ACQUA PRESSURIZZATA
-    # ------------------------------------------------------
+    # ======================================================
 
     if (
         "CONDOTTA ACQUA PRESSURIZZATA"
         in number
     ):
 
-        return "CONDOTTA ACQUA PRESSURIZZATA"
+        return "ACQUA PRESSURIZZATA"
 
-    # ------------------------------------------------------
+    # ======================================================
     # FUORI SERVIZIO
-    # ------------------------------------------------------
+    # ======================================================
 
     if (
-        "FUORI SERVIZIO" in descrizione
+        "FUORI SERVIZIO"
+        in descrizione
     ):
 
         return "FUORI SERVIZIO"
 
-    # ------------------------------------------------------
+    # ======================================================
     # FAULT
-    # ------------------------------------------------------
+    # ======================================================
 
     if (
-        descrizione == "FAULT"
+        "FAULT"
+        in descrizione
         or
-        "FAULT" in descrizione
-        or
-        "FAIL" in descrizione
+        "FAIL"
+        in descrizione
     ):
 
         return "FAULT"
@@ -636,7 +566,7 @@ def classifica_evento(
 
 
 # ==========================================================
-# IMPORTA LOG
+# IMPORTAZIONE LOG
 # ==========================================================
 
 def importa_log(
@@ -667,7 +597,7 @@ def importa_log(
         )
 
     # ======================================================
-    # LETTURA RIGHE
+    # CICLO RIGHE
     # ======================================================
 
     for riga in testo.splitlines():
@@ -675,6 +605,7 @@ def importa_log(
         riga = riga.strip()
 
         if not riga:
+
             continue
 
         # ==================================================
@@ -699,6 +630,7 @@ def importa_log(
             continue
 
         if timestamp is None:
+
             continue
 
         # ==================================================
@@ -742,6 +674,7 @@ def importa_log(
                 break
 
         if trovato:
+
             continue
 
         # ==================================================
@@ -768,7 +701,7 @@ def importa_log(
                     segnale_corrente,
 
                 "valore":
-                    valorе
+                    valore
 
             })
 
@@ -784,11 +717,10 @@ def importa_log(
     )
 
     if df.empty:
+
         return df
 
-    df[
-        "timestamp"
-    ] = pd.to_datetime(
+    df["timestamp"] = pd.to_datetime(
         df["timestamp"],
         errors="coerce"
     )
@@ -812,6 +744,7 @@ def prepara_eventi(
 ):
 
     if df.empty:
+
         return df
 
     df = df.copy()
@@ -836,6 +769,7 @@ def prepara_eventi(
             riga["segnale"],
 
             riga["valore"]
+
         )
 
         evento = classifica_evento(
@@ -845,6 +779,7 @@ def prepara_eventi(
             descrizione,
 
             number
+
         )
 
         casse.append(
@@ -893,79 +828,226 @@ def colora_riga(row):
         )
     ).upper().strip()
 
-    # ------------------------------------------------------
+    # ======================================================
     # ALLARME INCENDIO
-    # ------------------------------------------------------
+    # ROSSO
+    # ======================================================
 
-    if evento == "ALLARME INCENDIO":
-
-        return [
-            "background-color: #ff0000; color: white; font-weight: bold"
-        ] * len(row)
-
-    # ------------------------------------------------------
-    # FUMO
-    # ------------------------------------------------------
-
-    if evento == "FUMO":
+    if "ALLARME INCENDIO" in evento:
 
         return [
-            "background-color: #ff9500; color: black; font-weight: bold"
+            "background-color: #ff0000; "
+            "color: white; "
+            "font-weight: bold;"
         ] * len(row)
 
-    # ------------------------------------------------------
-    # TERMICO
-    # ------------------------------------------------------
-
-    if evento == "TERMICO":
-
-        return [
-            "background-color: #ff9500; color: black; font-weight: bold"
-        ] * len(row)
-
-    # ------------------------------------------------------
+    # ======================================================
     # BASSA PRESSIONE
-    # ------------------------------------------------------
+    # VERDE
+    # ======================================================
 
-    if evento == "BASSA PRESSIONE":
+    if "BASSA PRESSIONE" in evento:
 
         return [
-            "background-color: #007aff; color: white; font-weight: bold"
+            "background-color: #00b050; "
+            "color: white; "
+            "font-weight: bold;"
         ] * len(row)
 
-    # ------------------------------------------------------
+    # ======================================================
     # ACQUA PRESSURIZZATA
-    # ------------------------------------------------------
+    # VIOLA
+    # ======================================================
 
-    if evento == "CONDOTTA ACQUA PRESSURIZZATA":
+    if "ACQUA PRESSURIZZATA" in evento:
 
         return [
-            "background-color: #34c759; color: white; font-weight: bold"
+            "background-color: #7030a0; "
+            "color: white; "
+            "font-weight: bold;"
         ] * len(row)
 
-    # ------------------------------------------------------
+    # ======================================================
+    # FUMO
+    # ARANCIONE
+    # ======================================================
+
+    if "FUMO" in evento:
+
+        return [
+            "background-color: #ff9900; "
+            "color: black; "
+            "font-weight: bold;"
+        ] * len(row)
+
+    # ======================================================
     # FUORI SERVIZIO
-    # ------------------------------------------------------
+    # GIALLO
+    # ======================================================
 
-    if evento == "FUORI SERVIZIO":
-
-        return [
-            "background-color: #af52de; color: white; font-weight: bold"
-        ] * len(row)
-
-    # ------------------------------------------------------
-    # FAULT
-    # ------------------------------------------------------
-
-    if evento == "FAULT":
+    if "FUORI SERVIZIO" in evento:
 
         return [
-            "background-color: #8e8e93; color: white; font-weight: bold"
+            "background-color: #ffff00; "
+            "color: black; "
+            "font-weight: bold;"
         ] * len(row)
+
+    # ======================================================
+    # ALTRE RIGHE
+    # ======================================================
 
     return [
         ""
     ] * len(row)
+
+
+# ==========================================================
+# LEGENDA
+# ==========================================================
+
+def mostra_legenda():
+
+    st.subheader(
+        "🎨 Legenda eventi"
+    )
+
+    st.markdown(
+        """
+        <div style="
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-top:5px;
+            margin-bottom:20px;
+        ">
+
+            <div style="
+                background:#ff0000;
+                color:white;
+                padding:8px 14px;
+                border-radius:6px;
+                font-weight:bold;
+            ">
+                🔴 ALLARME INCENDIO
+            </div>
+
+            <div style="
+                background:#00b050;
+                color:white;
+                padding:8px 14px;
+                border-radius:6px;
+                font-weight:bold;
+            ">
+                🟢 BASSA PRESSIONE
+            </div>
+
+            <div style="
+                background:#7030a0;
+                color:white;
+                padding:8px 14px;
+                border-radius:6px;
+                font-weight:bold;
+            ">
+                🟣 ACQUA PRESSURIZZATA
+            </div>
+
+            <div style="
+                background:#ff9900;
+                color:black;
+                padding:8px 14px;
+                border-radius:6px;
+                font-weight:bold;
+            ">
+                🟠 FUMO
+            </div>
+
+            <div style="
+                background:#ffff00;
+                color:black;
+                padding:8px 14px;
+                border-radius:6px;
+                font-weight:bold;
+            ">
+                🟡 FUORI SERVIZIO
+            </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ==========================================================
+# COSTRUISCI TABELLA
+# ==========================================================
+
+def prepara_tabella(df):
+
+    tabella = df.copy()
+
+    tabella = tabella.sort_values(
+        "timestamp"
+    )
+
+    tabella["Time"] = (
+        tabella[
+            "timestamp"
+        ]
+        .dt.strftime(
+            "%d-%m-%Y // %H:%M:%S"
+        )
+    )
+
+    tabella = tabella[
+        [
+            "Time",
+            "origine",
+            "dataset",
+            "segnale",
+            "cassa",
+            "number",
+            "data_val",
+            "descrizione",
+            "evento",
+            "valore",
+        ]
+    ].copy()
+
+    tabella = tabella.rename(
+        columns={
+
+            "origine":
+                "Origine",
+
+            "dataset":
+                "Dataset",
+
+            "segnale":
+                "Segnale",
+
+            "cassa":
+                "Cassa",
+
+            "number":
+                "Number",
+
+            "data_val":
+                "Data",
+
+            "descrizione":
+                "Descrizione",
+
+            "evento":
+                "Evento",
+
+            "valore":
+                "Valore grezzo",
+
+        }
+    )
+
+    return tabella
 
 
 # ==========================================================
@@ -985,7 +1067,7 @@ def analizza_page():
     st.divider()
 
     # ======================================================
-    # UPLOAD
+    # CARICAMENTO DM1 / DM8
     # ======================================================
 
     col1, col2 = st.columns(2)
@@ -993,17 +1075,25 @@ def analizza_page():
     with col1:
 
         file_dm1 = st.file_uploader(
+
             "📥 Carica Log DM1",
+
             type=None,
+
             key="analizza_file_dm1"
+
         )
 
     with col2:
 
         file_dm8 = st.file_uploader(
+
             "📥 Carica Log DM8",
+
             type=None,
+
             key="analizza_file_dm8"
+
         )
 
     if (
@@ -1019,7 +1109,7 @@ def analizza_page():
         return
 
     # ======================================================
-    # LETTURA
+    # FRAME
     # ======================================================
 
     frames = []
@@ -1103,7 +1193,7 @@ def analizza_page():
         return
 
     # ======================================================
-    # UNIONE DM1 + DM8
+    # UNIONE
     # ======================================================
 
     df = pd.concat(
@@ -1118,26 +1208,26 @@ def analizza_page():
     )
 
     # ======================================================
-    # METRICHE GENERALI
+    # METRICHE
     # ======================================================
 
-    numero_eventi = len(df)
+    eventi_totali = len(df)
 
-    numero_dm1 = int(
+    eventi_dm1 = int(
         (
             df["origine"]
             == "DM1"
         ).sum()
     )
 
-    numero_dm8 = int(
+    eventi_dm8 = int(
         (
             df["origine"]
             == "DM8"
         ).sum()
     )
 
-    numero_importanti = int(
+    eventi_importanti = int(
         (
             df["evento"]
             != ""
@@ -1152,28 +1242,28 @@ def analizza_page():
 
         st.metric(
             "📋 Eventi totali",
-            numero_eventi
+            eventi_totali
         )
 
     with col2:
 
         st.metric(
             "DM1",
-            numero_dm1
+            eventi_dm1
         )
 
     with col3:
 
         st.metric(
             "DM8",
-            numero_dm8
+            eventi_dm8
         )
 
     with col4:
 
         st.metric(
             "🚨 Eventi importanti",
-            numero_importanti
+            eventi_importanti
         )
 
     # ======================================================
@@ -1182,112 +1272,18 @@ def analizza_page():
 
     st.divider()
 
-    st.subheader(
-        "🎨 Legenda eventi"
-    )
-
-    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
-
-    with col1:
-        st.markdown(
-            "🔴 **ALLARME INCENDIO**"
-        )
-
-    with col2:
-        st.markdown(
-            "🟠 **FUMO / TERMICO**"
-        )
-
-    with col3:
-        st.markdown(
-            "🔵 **BASSA PRESSIONE**"
-        )
-
-    with col4:
-        st.markdown(
-            "🟢 **ACQUA PRESSURIZZATA**"
-        )
-
-    with col5:
-        st.markdown(
-            "🟣 **FUORI SERVIZIO**"
-        )
-
-    with col6:
-        st.markdown(
-            "⚫ **FAULT**"
-        )
-
-    with col7:
-        st.markdown(
-            "⚪ **NORMALE**"
-        )
+    mostra_legenda()
 
     # ======================================================
     # TABELLA COMPLETA
     # ======================================================
 
-    st.divider()
-
     st.subheader(
         f"📋 TUTTI GLI EVENTI — {len(df)}"
     )
 
-    tabella_completa = df.copy()
-
-    tabella_completa["Time"] = (
-        tabella_completa[
-            "timestamp"
-        ]
-        .dt.strftime(
-            "%d-%m-%Y // %H:%M:%S"
-        )
-    )
-
-    tabella_completa = tabella_completa[
-        [
-            "Time",
-            "origine",
-            "dataset",
-            "segnale",
-            "cassa",
-            "number",
-            "data_val",
-            "descrizione",
-            "evento",
-            "valore",
-        ]
-    ].copy()
-
-    tabella_completa = tabella_completa.rename(
-        columns={
-            "origine":
-                "Origine",
-
-            "dataset":
-                "Dataset",
-
-            "segnale":
-                "Segnale",
-
-            "cassa":
-                "Cassa",
-
-            "number":
-                "Number",
-
-            "data_val":
-                "Data",
-
-            "descrizione":
-                "Descrizione",
-
-            "evento":
-                "Evento",
-
-            "valore":
-                "Valore grezzo",
-        }
+    tabella_completa = prepara_tabella(
+        df
     )
 
     st.dataframe(
@@ -1302,6 +1298,7 @@ def analizza_page():
         hide_index=True,
 
         height=700
+
     )
 
     # ======================================================
@@ -1329,6 +1326,7 @@ def analizza_page():
         mime="text/csv",
 
         key="download_completo_fde"
+
     )
 
     # ======================================================
@@ -1354,40 +1352,57 @@ def analizza_page():
     with col1:
 
         data_da = st.date_input(
+
             "📅 Da",
+
             value=data_min,
+
             min_value=data_min,
+
             max_value=data_max,
+
             key="analizza_data_da"
+
         )
 
     with col2:
 
         data_a = st.date_input(
+
             "📅 A",
+
             value=data_max,
+
             min_value=data_min,
+
             max_value=data_max,
+
             key="analizza_data_a"
+
         )
 
     with col3:
 
         origini = st.multiselect(
+
             "💻 Origine",
+
             [
                 "DM1",
                 "DM8"
             ],
+
             default=[
                 "DM1",
                 "DM8"
             ],
+
             key="analizza_origine"
+
         )
 
     # ======================================================
-    # EVENTI
+    # TIPO EVENTO
     # ======================================================
 
     eventi_disponibili = sorted(
@@ -1410,6 +1425,7 @@ def analizza_page():
         eventi_disponibili,
 
         key="analizza_tipo_evento"
+
     )
 
     # ======================================================
@@ -1427,6 +1443,7 @@ def analizza_page():
         ),
 
         key="analizza_ricerca"
+
     )
 
     # ======================================================
@@ -1487,11 +1504,24 @@ def analizza_page():
     # RICERCA
     # ------------------------------------------------------
 
+    if pesquisa := pesquisa if False else None:
+        pass
+
+    if pesquisa:
+        pass
+
+    if pesquisa:
+        pass
+
+    if pesquisa:
+        pass
+
+    # Ricerca effettiva
     if ricerca:
 
-        testo_ricerca = ricerca.lower().strip()
+        testo = ricerca.lower().strip()
 
-        colonne_ricerca = [
+        colonne = [
 
             "origine",
             "dataset",
@@ -1510,19 +1540,21 @@ def analizza_page():
             index=filtrato.index
         )
 
-        for colonna in colonne_ricerca:
+        for colonna in colonne:
 
             mask |= (
+
                 filtrato[
                     colonna
                 ]
                 .astype(str)
                 .str.lower()
                 .str.contains(
-                    testo_ricerca,
+                    testo,
                     regex=False,
                     na=False
                 )
+
             )
 
         filtrato = filtrato[
@@ -1536,7 +1568,7 @@ def analizza_page():
     st.divider()
 
     st.subheader(
-        f"🔎 Risultati filtrati: {len(filtrato)}"
+        f"🔎 Risultati filtrati — {len(filtrato)}"
     )
 
     if filtrato.empty:
@@ -1548,61 +1580,8 @@ def analizza_page():
 
     else:
 
-        tabella_filtrata = filtrato.copy()
-
-        tabella_filtrata["Time"] = (
-            tabella_filtrata[
-                "timestamp"
-            ]
-            .dt.strftime(
-                "%d-%m-%Y // %H:%M:%S"
-            )
-        )
-
-        tabella_filtrata = tabella_filtrata[
-            [
-                "Time",
-                "origine",
-                "dataset",
-                "segnale",
-                "cassa",
-                "number",
-                "data_val",
-                "descrizione",
-                "evento",
-                "valore",
-            ]
-        ].copy()
-
-        tabella_filtrata = tabella_filtrata.rename(
-            columns={
-                "origine":
-                    "Origine",
-
-                "dataset":
-                    "Dataset",
-
-                "segnale":
-                    "Segnale",
-
-                "cassa":
-                    "Cassa",
-
-                "number":
-                    "Number",
-
-                "data_val":
-                    "Data",
-
-                "descrizione":
-                    "Descrizione",
-
-                "evento":
-                    "Evento",
-
-                "valore":
-                    "Valore grezzo",
-            }
+        tabella_filtrata = prepara_tabella(
+            filtrato
         )
 
         st.dataframe(
@@ -1617,10 +1596,11 @@ def analizza_page():
             hide_index=True,
 
             height=600
+
         )
 
         # --------------------------------------------------
-        # DOWNLOAD FILTRATI
+        # DOWNLOAD
         # --------------------------------------------------
 
         csv_filtrato = (
@@ -1644,4 +1624,5 @@ def analizza_page():
             mime="text/csv",
 
             key="download_filtrati_fde"
+
         )
