@@ -911,7 +911,7 @@ with st.sidebar:
                 [
                     "Carrelli",
                     "HVAC",
-                    "Antincendio",
+                    "Analisi FDE",
                     "Propulsione"
                 ],
                 key="sistema_treno",
