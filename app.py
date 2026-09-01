@@ -17,6 +17,7 @@ from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
 from misurazione_sensori import misurazione_sensori_page
 from carrelli import carrelli_page
+from analizza import analizza_page
 import urllib.parse
 
 st.set_page_config(
@@ -912,7 +913,7 @@ with st.sidebar:
                     "Carrelli",
                     "HVAC",
                     "Misurazione Sensori",
-                    "Propulsione"
+                    "Analizza"
                 ],
                 key="sistema_treno",
                 label_visibility="collapsed"
@@ -2583,7 +2584,5 @@ elif menu == "Treno":
         misurazione_sensori_page()
 
 
-    elif sistema == "Propulsione":
-
-        st.title("Propulsione")
-        st.info("Sezione Propulsione in preparazione.")
+    elif sistema == "Analizza":
+        analizza_page()
