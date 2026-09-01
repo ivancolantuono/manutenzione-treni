@@ -946,87 +946,78 @@ def filtra_ricerca(
     return df[mask]
 
 
-# ==========================================================
-# CREAZIONE TIMELINE A LINEA
-# ==========================================================
-
-def crea_timeline(
-    df
-):
+def crea_timeline(df):
 
     fig = go.Figure()
 
     if df.empty:
-
         return fig
 
     # ======================================================
-    # SEGNALI
+    # ORDINA CRONOLOGICAMENTE
+    # ======================================================
+
+    df = df.sort_values(
+        "timestamp"
+    ).copy()
+
+    # ======================================================
+    # LISTA SEGNALI
     # ======================================================
 
     segnali = (
         df["segnale"]
         .astype(str)
-        .unique()
+        .drop_duplicates()
         .tolist()
     )
 
+    # ======================================================
+    # POSIZIONE VERTICALE DEI SEGNALI
+    # ======================================================
+
     mappa_y = {
-
-        segnale: indice
-
-        for indice, segnale
-        in enumerate(segnali)
-
+        segnale: i
+        for i, segnale in enumerate(segnali)
     }
 
     # ======================================================
-    # UN GRUPPO PER SEGNALE
+    # UN SEGNALE ALLA VOLTA
     # ======================================================
 
     for segnale in segnali:
 
         dati = df[
-            df["segnale"]
-            == segnale
+            df["segnale"].astype(str) == segnale
         ].sort_values(
             "timestamp"
         )
 
         if dati.empty:
-
             continue
 
         x = []
         y = []
         testi = []
-        colori = []
 
-        # --------------------------------------------------
-        # COSTRUZIONE LINEA
-        # --------------------------------------------------
+        # ==================================================
+        # COSTRUZIONE TIMELINE
+        # ==================================================
 
         for _, riga in dati.iterrows():
 
-            timestamp = riga[
-                "timestamp"
-            ]
+            timestamp = riga["timestamp"]
 
-            posizione = mappa_y[
-                segnale
-            ]
+            posizione = mappa_y[segnale]
 
-            evento = riga[
-                "evento"
-            ]
-
-            colore = COLORI_EVENTO.get(
-                evento,
-                COLORI_EVENTO["NORMALE"]
+            evento = str(
+                riga.get(
+                    "evento",
+                    "NORMALE"
+                )
             )
 
             testo = (
-
                 f"<b>Ora:</b> "
                 f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}"
                 f"<br>"
@@ -1045,46 +1036,27 @@ def crea_timeline(
                 f"<b>Number:</b> "
                 f"{riga.get('number', '')}"
                 f"<br>"
-                f"<b>Data:</b> "
-                f"{riga.get('data_val', '')}"
+                f"<b>Valore:</b> "
+                f"{riga.get('valore', '')}"
                 f"<br>"
                 f"<b>Descrizione:</b> "
                 f"{riga.get('descrizione', '')}"
                 f"<br>"
                 f"<b>Evento:</b> "
                 f"{evento}"
-                f"<br>"
-                f"<b>Valore:</b> "
-                f"{riga.get('valore', '')}"
-
             )
 
-            x.append(
-                timestamp
-            )
+            x.append(timestamp)
+            y.append(posizione)
+            testi.append(testo)
 
-            y.append(
-                posizione
-            )
-
-            testi.append(
-                testo
-            )
-
-            colori.append(
-                colore
-            )
-
-        # --------------------------------------------------
-        # LINEA
-        # --------------------------------------------------
+        # ==================================================
+        # LINEA A GRADINO
+        # ==================================================
 
         fig.add_trace(
-
             go.Scatter(
-
                 x=x,
-
                 y=y,
 
                 mode="lines",
@@ -1092,60 +1064,19 @@ def crea_timeline(
                 name=segnale,
 
                 line=dict(
-                    width=2
+                    width=2,
+                    shape="hv"
                 ),
 
                 hoverinfo="text",
 
                 text=testi,
 
-            )
+                connectgaps=False,
 
+                showlegend=False
+            )
         )
-
-        # --------------------------------------------------
-        # PUNTI EVENTO SOPRA LA LINEA
-        # --------------------------------------------------
-
-        for indice in range(
-            len(x)
-        ):
-
-            fig.add_trace(
-
-                go.Scatter(
-
-                    x=[
-                        x[indice]
-                    ],
-
-                    y=[
-                        y[indice]
-                    ],
-
-                    mode="markers",
-
-                    marker=dict(
-
-                        size=9,
-
-                        color=[
-                            colori[indice]
-                        ],
-
-                    ),
-
-                    showlegend=False,
-
-                    hoverinfo="text",
-
-                    text=[
-                        testi[indice]
-                    ],
-
-                )
-
-            )
 
     # ======================================================
     # LAYOUT
@@ -1155,19 +1086,17 @@ def crea_timeline(
 
         height=max(
             600,
-            len(segnali) * 28
+            len(segnali) * 30
         ),
 
-        hovermode="closest",
-
         margin=dict(
-
             l=10,
             r=10,
             t=30,
             b=20
-
         ),
+
+        hovermode="closest",
 
         xaxis=dict(
 
@@ -1175,12 +1104,11 @@ def crea_timeline(
 
             type="date",
 
-            rangeslider=dict(
-                visible=True
-            ),
-
             showgrid=True,
 
+            rangeslider=dict(
+                visible=True
+            )
         ),
 
         yaxis=dict(
@@ -1197,18 +1125,18 @@ def crea_timeline(
                 mappa_y.keys()
             ),
 
-            showgrid=True,
+            autorange="reversed",
 
+            showgrid=True
         ),
 
-        legend=dict(
-            visible=False
+        hoverlabel=dict(
+            align="left"
         ),
 
     )
 
     return fig
-
 
 # ==========================================================
 # PAGINA FDE
