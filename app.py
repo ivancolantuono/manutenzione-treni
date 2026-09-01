@@ -890,6 +890,7 @@ with st.sidebar:
         # 🚆 SOTTOMENU TRENO
         # =================================================
 
+         
         if menu == "Treno":
 
             st.markdown(
@@ -921,13 +922,10 @@ with st.sidebar:
 
         else:
 
-            # Se l'utente esce da Treno,
-            # non utilizziamo il sistema precedente.
             sistema_treno = st.session_state.get(
                 "sistema_treno",
                 "Carrelli"
             )
-
     # =====================================================
     # 👀 SUPERVISORE
     # =====================================================
@@ -980,39 +978,45 @@ with st.sidebar:
             default_index=0,
         )
 
-    if menu == "Treno":
+        # =================================================
+        # 🚆 SOTTOMENU TRENO
+        # =================================================
 
-        st.markdown("""
-            <div style="
-                margin-top:5px;
-                margin-bottom:5px;
-                padding-left:10px;
-                font-weight:bold;
-                font-size:15px;
-            ">
-                🚆 SISTEMI TRENO
-            </div>
-        """, unsafe_allow_html=True
-        )
-    
-        sistema_treno = st.radio(
-            "",
-            [
-                "Carrelli",
-                "HVAC",
-                "Misurazione Sensori",
-                "Analizza Log FDE"
-            ],
-            key="sistema_treno",
-            label_visibility="collapsed"
-        )
-        
-    else:
+        if menu == "Treno":
 
-        sistema_treno = st.session_state.get(
-                "sistema_treno_operatore",
+            st.markdown(
+                """
+                <div style="
+                    margin-top:5px;
+                    margin-bottom:5px;
+                    padding-left:10px;
+                    font-weight:bold;
+                    font-size:15px;
+                ">
+                    🚆 SISTEMI TRENO
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            sistema_treno = st.radio(
+                "",
+                [
+                    "Carrelli",
+                    "HVAC",
+                    "Misurazione Sensori",
+                    "Analizza Log FDE"
+                ],
+                key="sistema_treno",
+                label_visibility="collapsed"
+            )
+
+        else:
+
+            sistema_treno = st.session_state.get(
+                "sistema_treno",
                 "Carrelli"
-         )
+            )
 
     # =====================================================
     # SEPARATORE
