@@ -16,6 +16,7 @@ from db import get_operatori
 from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
 from carrelli import carrelli_page
+from fde import fde_page
 import urllib.parse
 
 st.set_page_config(
@@ -2552,6 +2553,9 @@ elif menu == "Software":
                 else:
                     st.info("Nessuna procedura")
 
+elif menu == "Analisi FDE":
+    fde_page()
+
 elif menu == "Passaggio Consegne":
     Passaggio_consegne_page()
 
@@ -2575,7 +2579,7 @@ elif menu == "Treno":
         st.title("HVAC")
         st.info("Sezione HVAC in preparazione.")
 
-    elif sistema == "Antincendio":
+    elif sistema == "Analisi FDE":
 
         st.title("Antincendio")
         st.info("Sezione Antincendio in preparazione.")
