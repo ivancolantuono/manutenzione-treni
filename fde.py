@@ -186,6 +186,7 @@ DECODIFICHE = {
 # ==========================================================
 
 DECODIFICA_CASSA = {
+
     "1": "DM1",
     "2": "TT2",
     "3": "M3",
@@ -194,6 +195,7 @@ DECODIFICA_CASSA = {
     "6": "M6",
     "7": "TT7",
     "8": "DM8",
+
 }
 
 
@@ -292,6 +294,7 @@ DECODIFICA_NUMBER_SMOKE = {
     "71": "SD72",
     "72": "SD73",
     "73": "SD74",
+
 }
 
 
@@ -300,10 +303,12 @@ DECODIFICA_NUMBER_SMOKE = {
 # ==========================================================
 
 DECODIFICA_NUMBER_MAU = {
+
     "0": "BASSA PRESSIONE",
     "1": "CONDOTTA ACQUA PRESSURIZZATA",
     "2": "BASSA PRESSIONE",
     "3": "CONDOTTA ACQUA PRESSURIZZATA",
+
 }
 
 
@@ -321,7 +326,39 @@ COLORI_EVENTO = {
     "BASSA PRESSIONE": "#007aff",
     "CONDOTTA ACQUA PRESSURIZZATA": "#34c759",
     "NORMALE": "#808080",
+
 }
+
+
+# ==========================================================
+# COLORI SEGNALI
+# ==========================================================
+
+COLORI_SEGNALI = [
+
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+
+    "#393b79",
+    "#637939",
+    "#8c6d31",
+    "#843c39",
+    "#7b4173",
+    "#3182bd",
+    "#31a354",
+    "#756bb1",
+    "#636363",
+    "#e6550d",
+
+]
 
 
 # ==========================================================
@@ -331,9 +368,12 @@ COLORI_EVENTO = {
 def normalizza_segnale(segnale):
 
     if segnale is None:
+
         return ""
 
-    segnale = str(segnale).strip()
+    segnale = str(
+        segnale
+    ).strip()
 
     segnale = re.split(
         r"[\[_]",
@@ -350,6 +390,7 @@ def normalizza_segnale(segnale):
 def parse_timestamp(valore):
 
     if not valore:
+
         return None
 
     valore = " ".join(
@@ -380,6 +421,7 @@ def parse_timestamp(valore):
             )
 
         except ValueError:
+
             pass
 
     return None
@@ -391,20 +433,26 @@ def parse_timestamp(valore):
 
 def estrai_parametri(valore):
 
-    valore = str(valore)
+    valore = str(
+        valore
+    )
 
     cassa = "-"
     number = "-"
     data = "-"
 
-    # ------------------------------------------------------
+    # ======================================================
     # COACH N
-    # ------------------------------------------------------
+    # ======================================================
 
     match = re.search(
+
         r"COACH\s*N\s*:\s*(\d+)",
+
         valore,
+
         re.IGNORECASE
+
     )
 
     if match:
@@ -413,28 +461,36 @@ def estrai_parametri(valore):
             match.group(1)
         )
 
-    # ------------------------------------------------------
+    # ======================================================
     # NUMBER
-    # ------------------------------------------------------
+    # ======================================================
 
     match = re.search(
+
         r"NUMBER\s*:\s*(\d+)",
+
         valore,
+
         re.IGNORECASE
+
     )
 
     if match:
 
         number = match.group(1)
 
-    # ------------------------------------------------------
+    # ======================================================
     # DATA
-    # ------------------------------------------------------
+    # ======================================================
 
     match = re.search(
+
         r"DATA\s*:\s*(\d+)",
+
         valore,
+
         re.IGNORECASE
+
     )
 
     if match:
@@ -461,9 +517,9 @@ def decodifica_segnale(
         valore
     )
 
-    # ------------------------------------------------------
-    # CERCA MAPPING
-    # ------------------------------------------------------
+    # ======================================================
+    # MAPPING
+    # ======================================================
 
     mapping = None
 
@@ -475,17 +531,17 @@ def decodifica_segnale(
 
             break
 
-    # ------------------------------------------------------
-    # ESTRAI NUMERO
-    # ------------------------------------------------------
+    # ======================================================
+    # PARAMETRI
+    # ======================================================
 
     cassa, number, data = estrai_parametri(
         valore
     )
 
-    # ------------------------------------------------------
+    # ======================================================
     # DECODIFICA DATA
-    # ------------------------------------------------------
+    # ======================================================
 
     descrizione = data
 
@@ -496,26 +552,33 @@ def decodifica_segnale(
             str(data)
         )
 
-    # ------------------------------------------------------
-    # SENSORI FUMO
-    # ------------------------------------------------------
+    # ======================================================
+    # DECODIFICA NUMBER
+    # ======================================================
 
     if (
-        segnale.startswith("ISMOKESENSSTATE")
+
+        segnale.startswith(
+            "ISMOKESENSSTATE"
+        )
+
         or
-        segnale.startswith("FSMOKESENS")
+
+        segnale.startswith(
+            "FSMOKESENS"
+        )
+
     ):
 
         number_decodificato = (
             DECODIFICA_NUMBER_SMOKE.get(
+
                 str(number),
+
                 str(number)
+
             )
         )
-
-    # ------------------------------------------------------
-    # MAU
-    # ------------------------------------------------------
 
     elif segnale.startswith(
         "IMAUINPUTSTATE"
@@ -523,8 +586,11 @@ def decodifica_segnale(
 
         number_decodificato = (
             DECODIFICA_NUMBER_MAU.get(
+
                 str(number),
+
                 str(number)
+
             )
         )
 
@@ -535,10 +601,15 @@ def decodifica_segnale(
         )
 
     return (
+
         cassa,
+
         number_decodificato,
+
         data,
+
         descrizione
+
     )
 
 
@@ -559,67 +630,63 @@ def classifica_evento(
         descrizione
     ).upper()
 
-    # ------------------------------------------------------
+    # ======================================================
     # FUMO
-    # ------------------------------------------------------
+    # ======================================================
 
-    if (
-        "ALLARME FUMO" in descrizione
-    ):
+    if "ALLARME FUMO" in descrizione:
 
         return "FUMO"
 
-    # ------------------------------------------------------
+    # ======================================================
     # TERMICO
-    # ------------------------------------------------------
+    # ======================================================
 
-    if (
-        "ALLARME TERMICO" in descrizione
-    ):
+    if "ALLARME TERMICO" in descrizione:
 
         return "TERMICO"
 
-    # ------------------------------------------------------
+    # ======================================================
     # FAULT
-    # ------------------------------------------------------
+    # ======================================================
 
     if (
+
         descrizione == "FAULT"
+
         or
+
         "FAULT" in descrizione
+
         or
+
         "FAIL" in descrizione
+
     ):
 
         return "FAULT"
 
-    # ------------------------------------------------------
+    # ======================================================
     # INCENDIO
-    # ------------------------------------------------------
+    # ======================================================
 
-    if (
-        "ALLARME INCENDIO" in descrizione
-    ):
+    if "ALLARME INCENDIO" in descrizione:
 
         return "ALLARME INCENDIO"
 
-    # ------------------------------------------------------
+    # ======================================================
     # FUORI SERVIZIO
-    # ------------------------------------------------------
+    # ======================================================
 
-    if (
-        "FUORI SERVIZIO" in descrizione
-    ):
+    if "FUORI SERVIZIO" in descrizione:
 
         return "FUORI SERVIZIO"
 
-    # ------------------------------------------------------
+    # ======================================================
     # PRESSIONE
-    # ------------------------------------------------------
+    # ======================================================
 
-    if (
-        "BASSA PRESSIONE" in descrizione
-    ):
+    if "BASSA PRESSIONE" in descrizione:
 
         return "BASSA PRESSIONE"
 
@@ -660,9 +727,13 @@ def importa_log(
 
     except Exception:
 
-        testo = uploaded_file.getvalue().decode(
-            "latin-1",
-            errors="ignore"
+        testo = (
+            uploaded_file
+            .getvalue()
+            .decode(
+                "latin-1",
+                errors="ignore"
+            )
         )
 
     # ======================================================
@@ -686,14 +757,17 @@ def importa_log(
         ):
 
             timestamp = parse_timestamp(
+
                 riga.replace(
                     "------->",
                     "",
                     1
                 ).strip()
+
             )
 
             dataset_corrente = None
+
             segnale_corrente = None
 
             continue
@@ -718,10 +792,6 @@ def importa_log(
                     token,
                     1
                 )[1]
-
-                # ------------------------------------------
-                # SEGNALE
-                # ------------------------------------------
 
                 if ":" in parte:
 
@@ -755,9 +825,13 @@ def importa_log(
         # ==================================================
 
         if (
+
             dataset_corrente
+
             and
+
             segnale_corrente
+
         ):
 
             valore = riga
@@ -779,6 +853,7 @@ def importa_log(
             })
 
             dataset_corrente = None
+
             segnale_corrente = None
 
     # ======================================================
@@ -793,9 +868,7 @@ def importa_log(
 
         return df
 
-    df[
-        "timestamp"
-    ] = pd.to_datetime(
+    df["timestamp"] = pd.to_datetime(
         df["timestamp"],
         errors="coerce"
     )
@@ -827,9 +900,15 @@ def prepara_eventi(
     df["origine"] = origine
 
     casse = []
+
     numbers = []
+
+    numbers_raw = []
+
     date_valori = []
+
     descrizioni = []
+
     eventi = []
 
     for _, riga in df.iterrows():
@@ -839,6 +918,7 @@ def prepara_eventi(
             number,
             data,
             descrizione
+
         ) = decodifica_segnale(
 
             riga["segnale"],
@@ -846,6 +926,18 @@ def prepara_eventi(
             riga["valore"]
 
         )
+
+        # ==================================================
+        # NUMBER ORIGINALE
+        # ==================================================
+
+        _, number_raw, _ = estrai_parametri(
+            riga["valore"]
+        )
+
+        # ==================================================
+        # EVENTO
+        # ==================================================
 
         evento = classifica_evento(
 
@@ -863,6 +955,10 @@ def prepara_eventi(
             number
         )
 
+        numbers_raw.append(
+            number_raw
+        )
+
         date_valori.append(
             data
         )
@@ -878,6 +974,8 @@ def prepara_eventi(
     df["cassa"] = casse
 
     df["number"] = numbers
+
+    df["number_raw"] = numbers_raw
 
     df["data_val"] = date_valori
 
@@ -917,6 +1015,7 @@ def filtra_ricerca(
         "valore",
         "cassa",
         "number",
+        "number_raw",
         "data_val",
         "descrizione",
         "evento",
@@ -933,6 +1032,7 @@ def filtra_ricerca(
         if colonna in df.columns:
 
             mask |= (
+
                 df[colonna]
                 .astype(str)
                 .str.lower()
@@ -941,74 +1041,149 @@ def filtra_ricerca(
                     regex=False,
                     na=False
                 )
+
             )
 
     return df[mask]
 
+
+# ==========================================================
+# TIMELINE PLOTLY
+# ==========================================================
 
 def crea_timeline(df):
 
     fig = go.Figure()
 
     if df.empty:
+
         return fig
 
     # ======================================================
-    # ORDINA CRONOLOGICAMENTE
+    # COPIA E ORDINAMENTO
     # ======================================================
+
+    df = df.copy()
+
+    df["timestamp"] = pd.to_datetime(
+        df["timestamp"],
+        errors="coerce"
+    )
+
+    df = df.dropna(
+        subset=[
+            "timestamp"
+        ]
+    )
 
     df = df.sort_values(
         "timestamp"
-    ).copy()
+    )
 
     # ======================================================
-    # LISTA SEGNALI
+    # SEGNALI
     # ======================================================
 
     segnali = (
+
         df["segnale"]
         .astype(str)
         .drop_duplicates()
         .tolist()
+
     )
 
+    if not segnali:
+
+        return fig
+
     # ======================================================
-    # POSIZIONE VERTICALE DEI SEGNALI
+    # POSIZIONE VERTICALE
     # ======================================================
 
     mappa_y = {
+
         segnale: i
-        for i, segnale in enumerate(segnali)
+
+        for i, segnale
+        in enumerate(segnali)
+
     }
 
     # ======================================================
-    # UN SEGNALE ALLA VOLTA
+    # COLORE FISSO PER OGNI SEGNALE
+    # ======================================================
+
+    colore_segnale = {
+
+        segnale:
+            COLORI_SEGNALI[
+                i % len(COLORI_SEGNALI)
+            ]
+
+        for i, segnale
+        in enumerate(segnali)
+
+    }
+
+    # ======================================================
+    # TRACCE
     # ======================================================
 
     for segnale in segnali:
 
         dati = df[
-            df["segnale"].astype(str) == segnale
+            df["segnale"].astype(str)
+            == segnale
         ].sort_values(
             "timestamp"
         )
 
         if dati.empty:
+
             continue
 
         x = []
+
         y = []
+
         testi = []
 
+        number_x = []
+
+        number_y = []
+
+        number_text = []
+
+        number_hover = []
+
         # ==================================================
-        # COSTRUZIONE TIMELINE
+        # EVENTI
         # ==================================================
 
         for _, riga in dati.iterrows():
 
-            timestamp = riga["timestamp"]
+            timestamp = riga[
+                "timestamp"
+            ]
 
-            posizione = mappa_y[segnale]
+            posizione = mappa_y[
+                segnale
+            ]
+
+            number_nome = str(
+                riga.get(
+                    "number",
+                    ""
+                )
+            ).strip()
+
+            number_raw = str(
+                riga.get(
+                    "number_raw",
+                    ""
+                )
+            ).strip()
 
             evento = str(
                 riga.get(
@@ -1017,46 +1192,111 @@ def crea_timeline(df):
                 )
             )
 
+            # ==============================================
+            # TOOLTIP
+            # ==============================================
+
             testo = (
+
                 f"<b>Ora:</b> "
                 f"{timestamp.strftime('%d-%m-%Y %H:%M:%S')}"
                 f"<br>"
+
                 f"<b>Origine:</b> "
                 f"{riga.get('origine', '')}"
                 f"<br>"
+
                 f"<b>Dataset:</b> "
                 f"{riga.get('dataset', '')}"
                 f"<br>"
+
                 f"<b>Segnale:</b> "
                 f"{segnale}"
                 f"<br>"
+
                 f"<b>Cassa:</b> "
                 f"{riga.get('cassa', '')}"
                 f"<br>"
+
                 f"<b>Number:</b> "
-                f"{riga.get('number', '')}"
+                f"{number_nome}"
                 f"<br>"
+
+                f"<b>Number originale:</b> "
+                f"{number_raw}"
+                f"<br>"
+
                 f"<b>Valore:</b> "
                 f"{riga.get('valore', '')}"
                 f"<br>"
+
                 f"<b>Descrizione:</b> "
                 f"{riga.get('descrizione', '')}"
                 f"<br>"
+
                 f"<b>Evento:</b> "
                 f"{evento}"
+
             )
 
-            x.append(timestamp)
-            y.append(posizione)
-            testi.append(testo)
+            x.append(
+                timestamp
+            )
+
+            y.append(
+                posizione
+            )
+
+            testi.append(
+                testo
+            )
+
+            # ==============================================
+            # NUMBER SULLA TIMELINE
+            # ==============================================
+
+            if (
+
+                number_nome
+
+                and
+
+                number_nome.lower()
+                not in [
+                    "",
+                    "nan",
+                    "none",
+                    "-"
+                ]
+
+            ):
+
+                number_x.append(
+                    timestamp
+                )
+
+                number_y.append(
+                    posizione
+                )
+
+                number_text.append(
+                    number_nome
+                )
+
+                number_hover.append(
+                    testo
+                )
 
         # ==================================================
-        # LINEA A GRADINO
+        # LINEA DEL SEGNALE
         # ==================================================
 
         fig.add_trace(
+
             go.Scatter(
+
                 x=x,
+
                 y=y,
 
                 mode="lines",
@@ -1064,19 +1304,96 @@ def crea_timeline(df):
                 name=segnale,
 
                 line=dict(
-                    width=2,
-                    shape="hv"
-                ),
 
-                hoverinfo="text",
+                    color=
+                        colore_segnale[
+                            segnale
+                        ],
+
+                    width=3,
+
+                    shape="hv"
+
+                ),
 
                 text=testi,
 
+                hoverinfo="text",
+
                 connectgaps=False,
 
-                showlegend=False
+                showlegend=True
+
             )
+
         )
+
+        # ==================================================
+        # NUMBER SULLA LINEA
+        # ==================================================
+
+        if number_text:
+
+            fig.add_trace(
+
+                go.Scatter(
+
+                    x=number_x,
+
+                    y=number_y,
+
+                    mode="text",
+
+                    text=number_text,
+
+                    textposition="top center",
+
+                    textfont=dict(
+
+                        size=10,
+
+                        color=
+                            colore_segnale[
+                                segnale
+                            ],
+
+                        family="Arial"
+
+                    ),
+
+                    hovertext=number_hover,
+
+                    hoverinfo="text",
+
+                    showlegend=False
+
+                )
+
+            )
+
+    # ======================================================
+    # ASSE Y
+    # ======================================================
+
+    fig.update_yaxes(
+
+        tickmode="array",
+
+        tickvals=list(
+            mappa_y.values()
+        ),
+
+        ticktext=list(
+            mappa_y.keys()
+        ),
+
+        autorange="reversed",
+
+        showgrid=True,
+
+        zeroline=False
+
+    )
 
     # ======================================================
     # LAYOUT
@@ -1085,18 +1402,68 @@ def crea_timeline(df):
     fig.update_layout(
 
         height=max(
-            600,
-            len(segnali) * 30
+
+            650,
+
+            len(segnali) * 38
+
         ),
 
         margin=dict(
-            l=10,
-            r=10,
+
+            l=150,
+
+            r=230,
+
             t=30,
-            b=20
+
+            b=80
+
         ),
 
         hovermode="closest",
+
+        # ==================================================
+        # LEGENDA
+        # ==================================================
+
+        showlegend=True,
+
+        legend=dict(
+
+            title=dict(
+
+                text="<b>SEGNALI</b>"
+
+            ),
+
+            orientation="v",
+
+            x=1.01,
+
+            y=1,
+
+            xanchor="left",
+
+            yanchor="top",
+
+            bgcolor="rgba(255,255,255,0.95)",
+
+            bordercolor="#cccccc",
+
+            borderwidth=1,
+
+            font=dict(
+
+                size=11
+
+            )
+
+        ),
+
+        # ==================================================
+        # ASSE X
+        # ==================================================
 
         xaxis=dict(
 
@@ -1107,36 +1474,109 @@ def crea_timeline(df):
             showgrid=True,
 
             rangeslider=dict(
+
                 visible=True
+
+            ),
+
+            rangeselector=dict(
+
+                buttons=[
+
+                    dict(
+
+                        count=1,
+
+                        label="1h",
+
+                        step="hour",
+
+                        stepmode="backward"
+
+                    ),
+
+                    dict(
+
+                        count=6,
+
+                        label="6h",
+
+                        step="hour",
+
+                        stepmode="backward"
+
+                    ),
+
+                    dict(
+
+                        count=12,
+
+                        label="12h",
+
+                        step="hour",
+
+                        stepmode="backward"
+
+                    ),
+
+                    dict(
+
+                        count=1,
+
+                        label="1g",
+
+                        step="day",
+
+                        stepmode="backward"
+
+                    ),
+
+                    dict(
+
+                        count=3,
+
+                        label="3g",
+
+                        step="day",
+
+                        stepmode="backward"
+
+                    ),
+
+                    dict(
+
+                        step="all",
+
+                        label="TUTTO"
+
+                    )
+
+                ]
+
             )
+
         ),
 
-        yaxis=dict(
-
-            title="Segnale",
-
-            tickmode="array",
-
-            tickvals=list(
-                mappa_y.values()
-            ),
-
-            ticktext=list(
-                mappa_y.keys()
-            ),
-
-            autorange="reversed",
-
-            showgrid=True
-        ),
+        # ==================================================
+        # HOVER
+        # ==================================================
 
         hoverlabel=dict(
+
+            bgcolor="white",
+
+            font_size=12,
+
+            font_family="Arial",
+
             align="left"
+
         ),
 
     )
 
     return fig
+
 
 # ==========================================================
 # PAGINA FDE
@@ -1184,10 +1624,18 @@ def fde_page():
 
         )
 
+    # ======================================================
+    # CONTROLLO FILE
+    # ======================================================
+
     if (
+
         file_dm1 is None
+
         and
+
         file_dm8 is None
+
     ):
 
         st.info(
@@ -1197,7 +1645,7 @@ def fde_page():
         return
 
     # ======================================================
-    # LETTURA
+    # LETTURA FILE
     # ======================================================
 
     frames = []
@@ -1272,6 +1720,10 @@ def fde_page():
                 "⚠️ Nessun evento riconosciuto nel DM8."
             )
 
+    # ======================================================
+    # NESSUN DATO
+    # ======================================================
+
     if not frames:
 
         st.error(
@@ -1285,14 +1737,21 @@ def fde_page():
     # ======================================================
 
     df = pd.concat(
+
         frames,
+
         ignore_index=True
+
     )
 
     df = df.sort_values(
+
         "timestamp"
+
     ).reset_index(
+
         drop=True
+
     )
 
     # ======================================================
@@ -1318,21 +1777,33 @@ def fde_page():
     with col1:
 
         data_da = st.date_input(
+
             "📅 Da",
+
             value=data_min,
+
             min_value=data_min,
+
             max_value=data_max,
+
             key="fde_data_da"
+
         )
 
     with col2:
 
         data_a = st.date_input(
+
             "📅 A",
+
             value=data_max,
+
             min_value=data_min,
+
             max_value=data_max,
+
             key="fde_data_a"
+
         )
 
     with col3:
@@ -1360,6 +1831,7 @@ def fde_page():
     # ======================================================
 
     eventi = sorted(
+
         df[
             "evento"
         ]
@@ -1367,6 +1839,7 @@ def fde_page():
         .astype(str)
         .unique()
         .tolist()
+
     )
 
     eventi_selezionati = st.multiselect(
@@ -1401,25 +1874,45 @@ def fde_page():
     # ======================================================
 
     data_da_dt = datetime.combine(
+
         data_da,
+
         datetime.min.time()
+
     )
 
     data_a_dt = datetime.combine(
+
         data_a,
+
         datetime.max.time()
+
     )
 
     filtrato = df[
+
         (
+
             df["timestamp"]
-            >= data_da_dt
+
+            >=
+
+            data_da_dt
+
         )
+
         &
+
         (
+
             df["timestamp"]
-            <= data_a_dt
+
+            <=
+
+            data_a_dt
+
         )
+
     ].copy()
 
     # ======================================================
@@ -1429,11 +1922,13 @@ def fde_page():
     if origini:
 
         filtrato = filtrato[
+
             filtrato[
                 "origine"
             ].isin(
                 origini
             )
+
         ]
 
     # ======================================================
@@ -1443,11 +1938,13 @@ def fde_page():
     if eventi_selezionati:
 
         filtrato = filtrato[
+
             filtrato[
                 "evento"
             ].isin(
                 eventi_selezionati
             )
+
         ]
 
     # ======================================================
@@ -1455,8 +1952,11 @@ def fde_page():
     # ======================================================
 
     filtrato = filtra_ricerca(
+
         filtrato,
+
         ricerca
+
     )
 
     # ======================================================
@@ -1468,44 +1968,77 @@ def fde_page():
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric(
+
         "📋 Eventi",
+
         len(filtrato)
+
     )
 
     col2.metric(
+
         "DM1",
+
         int(
+
             (
+
                 filtrato[
                     "origine"
                 ]
-                == "DM1"
+
+                ==
+
+                "DM1"
+
             ).sum()
+
         )
+
     )
 
     col3.metric(
+
         "DM8",
+
         int(
+
             (
+
                 filtrato[
                     "origine"
                 ]
-                == "DM8"
+
+                ==
+
+                "DM8"
+
             ).sum()
+
         )
+
     )
 
     col4.metric(
+
         "🚨 Anomalie",
+
         int(
+
             (
+
                 filtrato[
                     "evento"
                 ]
-                != "NORMALE"
+
+                !=
+
+                "NORMALE"
+
             ).sum()
+
         )
+
     )
 
     # ======================================================
@@ -1525,10 +2058,12 @@ def fde_page():
     # ======================================================
 
     tab1, tab2 = st.tabs(
+
         [
             "📈 Timeline",
             "📋 Eventi"
         ]
+
     )
 
     # ======================================================
@@ -1573,22 +2108,30 @@ def fde_page():
     with tab2:
 
         st.subheader(
-            f"📋 Eventi: {len(filtrato)}"
+
+            f"📋 Eventi: "
+            f"{len(filtrato)}"
+
         )
 
         tabella = filtrato.copy()
 
         tabella["Time"] = (
+
             tabella[
                 "timestamp"
             ]
+
             .dt
+
             .strftime(
                 "%d-%m-%Y %H:%M:%S"
             )
+
         )
 
         tabella = tabella[
+
             [
                 "Time",
                 "origine",
@@ -1596,11 +2139,13 @@ def fde_page():
                 "segnale",
                 "cassa",
                 "number",
+                "number_raw",
                 "data_val",
                 "descrizione",
                 "evento",
                 "valore",
             ]
+
         ]
 
         tabella = tabella.rename(
@@ -1621,6 +2166,9 @@ def fde_page():
 
                 "number":
                     "Number",
+
+                "number_raw":
+                    "Number originale",
 
                 "data_val":
                     "Data",
@@ -1651,11 +2199,13 @@ def fde_page():
         )
 
         # ==================================================
-        # DOWNLOAD
+        # DOWNLOAD CSV
         # ==================================================
 
         csv = tabella.to_csv(
+
             index=False
+
         ).encode(
             "utf-8-sig"
         )
