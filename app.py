@@ -678,6 +678,9 @@ if not st.session_state.logged_in:
                     "3-PRO-H24-NA",
                     "4-PRO-H24-NA",
                     "5-PRO-H24-NA",
+                    "1-COR-H16-NA",
+                    "2-COR-H16-NA",
+                    "3-COR-H16-NA",
                     "INGEGNERIA-MI",
                     "INGEGNERIA-NA"
                 ]
