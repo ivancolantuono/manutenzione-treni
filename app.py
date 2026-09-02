@@ -47,16 +47,15 @@ footer {
 
 </style>
 """, unsafe_allow_html=True)
-/* BOTTONI ROSSI */
+
+
 .stButton>button {
     background-color: #e10600;
     color: black;
     border-radius: 8px;
     font-weight: bold;
 }
-/* =====================================================
-   PULSANTE ACCEDI
-   ===================================================== */
+
 
 button[kind="primaryFormSubmit"] {
     background-color: #e10600 !important;
