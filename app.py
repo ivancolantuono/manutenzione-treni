@@ -421,7 +421,7 @@ if not st.session_state.logged_in:
         
                 accedi = st.form_submit_button(
                     "🔐 Accedi",
-                    use_container_width=True
+                    use_container_width=True,
                     type="primary"
                 )
         
