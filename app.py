@@ -63,7 +63,7 @@ st.markdown("""
 .stButton>button {
     background-color: #e10600;
     color: black;
-    border-radius: 10px;
+    border-radius: 8px;
     font-weight: bold;
 }
 
@@ -73,12 +73,12 @@ st.markdown("""
 
 button[kind="primaryFormSubmit"] {
     background-color: #e10600 !important;
-    color: white !important;
+    color: black !important;
     border: none !important;
     border-radius: 10px !important;
     min-height: 58px !important;
     font-size: 22px !important;
-    font-weight: 800 !important;
+    font-weight: bold !important;
     letter-spacing: 0.5px !important;
 }
 
