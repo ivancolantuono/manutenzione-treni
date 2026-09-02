@@ -47,7 +47,32 @@ footer {
 
 </style>
 """, unsafe_allow_html=True)
+/* BOTTONI ROSSI */
+.stButton>button {
+    background-color: #e10600;
+    color: black;
+    border-radius: 8px;
+    font-weight: bold;
+}
+/* =====================================================
+   PULSANTE ACCEDI
+   ===================================================== */
 
+button[kind="primaryFormSubmit"] {
+    background-color: #e10600 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    min-height: 58px !important;
+    font-size: 21px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+}
+
+button[kind="primaryFormSubmit"]:hover {
+    background-color: #c90000 !important;
+    color: white !important;
+}
 # =========================
 # STILE
 # =========================
@@ -401,6 +426,7 @@ if not st.session_state.logged_in:
                 accedi = st.form_submit_button(
                     "🔐 Accedi",
                     use_container_width=True
+                    type="primary"
                 )
         
             # ==================================================
@@ -624,6 +650,7 @@ if not st.session_state.logged_in:
                     "3-PRO-H24-NA",
                     "4-PRO-H24-NA",
                     "5-PRO-H24-NA",
+                    "INGEGNERIA-MI",
                     "INGEGNERIA-NA"
                 ]
             )
