@@ -371,156 +371,205 @@ if not st.session_state.logged_in:
         # ==================================================
         # 🔐 LOGIN
         # ==================================================
-
+        
         if pagina == "🔐Login":
-
+        
             st.markdown(
                 "## 🔐 Login"
             )
-
-            matricola = norm(
-                st.text_input(
-                    "Matricola"
-                )
-            )
-
-            password = st.text_input(
-                "Password",
-                type="password"
-            )
-
-            if st.button(
-                "**Accedi**",
-                use_container_width=True
+        
+            # ==================================================
+            # FORM LOGIN
+            # ==================================================
+        
+            with st.form(
+                "login_form",
+                clear_on_submit=False
             ):
-
+        
+                matricola_input = st.text_input(
+                    "Matricola",
+                    key="login_matricola"
+                )
+        
+                password_input = st.text_input(
+                    "Password",
+                    type="password",
+                    key="login_password"
+                )
+        
+                accedi = st.form_submit_button(
+                    "🔐 Accedi",
+                    use_container_width=True
+                )
+        
+            # ==================================================
+            # ELABORAZIONE LOGIN
+            # ==================================================
+        
+            if accedi:
+        
+                matricola = norm(
+                    matricola_input
+                )
+        
+                password = password_input.strip()
+        
+                # ----------------------------------------------
+                # CONTROLLO CAMPI
+                # ----------------------------------------------
+        
                 if not matricola or not password:
-
+        
                     st.error(
                         "❌ Inserisci matricola e password."
                     )
-
-                    st.stop()
-
-                try:
-
-                    # --------------------------------------
-                    # CERCA UTENTE
-                    # --------------------------------------
-
-                    res = (
-                        supabase
-                        .table("login")
-                        .select("*")
-                        .eq(
-                            "matricola",
-                            matricola
-                        )
-                        .execute()
-                    )
-
-                    utenti = res.data or []
-
-                    user = next(
-                        (
-                            x
-                            for x in utenti
-                            if norm(
-                                x.get("matricola")
-                            ) == matricola
-                            and x.get("password")
-                            == hash_password(
-                                password
+        
+                else:
+        
+                    try:
+        
+                        # --------------------------------------
+                        # CERCA UTENTE
+                        # --------------------------------------
+        
+                        res = (
+                            supabase
+                            .table("login")
+                            .select("*")
+                            .eq(
+                                "matricola",
+                                matricola
                             )
-                        ),
-                        None
-                    )
-
-                    if not user:
-
+                            .execute()
+                        )
+        
+                        utenti = res.data or []
+        
+                        # --------------------------------------
+                        # VERIFICA CREDENZIALI
+                        # --------------------------------------
+        
+                        user = next(
+                            (
+                                x
+                                for x in utenti
+                                if norm(
+                                    x.get("matricola")
+                                ) == matricola
+                                and x.get("password")
+                                == hash_password(
+                                    password
+                                )
+                            ),
+                            None
+                        )
+        
+                        if not user:
+        
+                            st.error(
+                                "❌ Credenziali errate"
+                            )
+        
+                        else:
+        
+                            # ----------------------------------
+                            # RECUPERA OPERATORE
+                            # ----------------------------------
+        
+                            op = (
+                                supabase
+                                .table("operatori")
+                                .select("*")
+                                .eq(
+                                    "Matricola",
+                                    matricola
+                                )
+                                .execute()
+                            )
+        
+                            if op.data:
+        
+                                nome = op.data[0].get(
+                                    "Nominativo"
+                                )
+        
+                            else:
+        
+                                nome = user.get(
+                                    "nome"
+                                )
+        
+                            # ==================================
+                            # 🍪 COOKIE LOGIN
+                            # ==================================
+        
+                            cookie_manager.set(
+                                COOKIE_LOGIN,
+                                matricola,
+                                expires_at=datetime(
+                                    2099,
+                                    12,
+                                    31
+                                )
+                            )
+        
+                            # ==================================
+                            # SESSION STATE
+                            # ==================================
+        
+                            st.session_state.logged_in = True
+        
+                            # 🔥 IMPORTANTE:
+                            # annulla il blocco che impedisce
+                            # il ripristino automatico dopo logout
+        
+                            st.session_state.pop(
+                                "logout_effettuato",
+                                None
+                            )
+        
+                            st.session_state.login_time = (
+                                datetime.now()
+                            )
+        
+                            st.session_state.matricola = (
+                                matricola
+                            )
+        
+                            st.session_state.utente = (
+                                nome
+                            )
+        
+                            st.session_state.ruolo = (
+                                user.get(
+                                    "ruolo",
+                                    "OPERATORE"
+                                )
+                            )
+        
+                            st.session_state.squadra = (
+                                user.get(
+                                    "squadra",
+                                    ""
+                                )
+                            )
+        
+                            st.success(
+                                "✅ Accesso riuscito"
+                            )
+        
+                            st.rerun()
+        
+                    except Exception as e:
+        
                         st.error(
-                            "❌ Credenziali errate"
+                            "❌ Errore durante il login."
                         )
-
-                        st.stop()
-
-                    # --------------------------------------
-                    # RECUPERA OPERATORE
-                    # --------------------------------------
-
-                    op = (
-                        supabase
-                        .table("operatori")
-                        .select("*")
-                        .eq(
-                            "Matricola",
-                            matricola
+        
+                        st.code(
+                            str(e)
                         )
-                        .execute()
-                    )
-
-                    if op.data:
-
-                        nome = op.data[0].get(
-                            "Nominativo"
-                        )
-
-                    else:
-
-                        nome = user.get(
-                            "nome"
-                        )
-
-                    # ==================================================
-                    # 🍪 SALVA MATRICOLA NEL COOKIE
-                    # ==================================================
-                    
-                    cookie_manager.set(
-                        COOKIE_LOGIN,
-                        matricola,
-                        expires_at=datetime(
-                            2099,
-                            12,
-                            31
-                        )
-                    )
-                    # --------------------------------------
-                    # SESSION STATE
-                    # --------------------------------------
-
-                    st.session_state.logged_in = True
-
-                    st.session_state.login_time = datetime.now()
-
-                    st.session_state.matricola = matricola
-
-                    st.session_state.utente = nome
-
-                    st.session_state.ruolo = user.get(
-                        "ruolo",
-                        "OPERATORE"
-                    )
-
-                    st.session_state.squadra = user.get(
-                        "squadra",
-                        ""
-                    )
-
-                    st.success(
-                        "✅ Accesso riuscito"
-                    )
-
-                    st.rerun()
-
-                except Exception as e:
-
-                    st.error(
-                        "❌ Errore durante il login."
-                    )
-
-                    st.code(
-                        str(e)
-                    )
 
         # ==================================================
         # 🆕 REGISTRAZIONE
