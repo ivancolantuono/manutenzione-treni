@@ -48,30 +48,6 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
-
-.stButton>button {
-    background-color: #e10600;
-    color: black;
-    border-radius: 8px;
-    font-weight: bold;
-}
-
-
-button[kind="primaryFormSubmit"] {
-    background-color: #e10600 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 10px !important;
-    min-height: 58px !important;
-    font-size: 21px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.5px;
-}
-
-button[kind="primaryFormSubmit"]:hover {
-    background-color: #c90000 !important;
-    color: white !important;
-}
 # =========================
 # STILE
 # =========================
@@ -90,6 +66,27 @@ st.markdown("""
     border-radius: 8px;
     font-weight: bold;
 }
+
+/* =====================================================
+   PULSANTE ACCEDI LOGIN
+   ===================================================== */
+
+button[kind="primaryFormSubmit"] {
+    background-color: #e10600 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    min-height: 58px !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+}
+
+button[kind="primaryFormSubmit"]:hover {
+    background-color: #c90000 !important;
+    color: white !important;
+}
+
 
 /* INPUT */
 .stTextInput>div>div>input {
