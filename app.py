@@ -19,6 +19,7 @@ from misurazione_sensori import misurazione_sensori_page
 from carrelli import carrelli_page
 from analizza import analizza_page
 import urllib.parse
+import secrets
 
 st.set_page_config(
     page_title="Manager ETR1000",
@@ -204,7 +205,7 @@ import extra_streamlit_components as stx
 cookie_manager = stx.CookieManager(
     key="manager_etr1000_cookie_manager"
 )
-COOKIE_LOGIN = "manager_etr1000_matricola"
+COOKIE_LOGIN = "manager_etr1000_session"
 # ==========================================================
 # UTILS
 # ==========================================================
@@ -240,7 +241,7 @@ if "squadra" not in st.session_state:
     st.session_state.squadra = ""
 
 # ==========================================================
-# 🔄 RIPRISTINO LOGIN DAL COOKIE
+# 🔄 RIPRISTINO LOGIN DAL TOKEN COOKIE
 # ==========================================================
 
 if (
@@ -253,27 +254,31 @@ if (
 
     try:
 
-        matricola_cookie = cookie_manager.get(
+        # ==================================================
+        # LEGGE IL TOKEN DAL COOKIE
+        # ==================================================
+
+        session_token = cookie_manager.get(
             COOKIE_LOGIN
         )
 
-        if matricola_cookie:
+        if session_token:
 
-            matricola = norm(
-                matricola_cookie
-            )
+            session_token = str(
+                session_token
+            ).strip()
 
-            # ==============================================
-            # CERCA UTENTE
-            # ==============================================
+            # ==================================================
+            # CERCA L'UTENTE SOLO SE IL TOKEN È VALIDO
+            # ==================================================
 
             res = (
                 supabase
                 .table("login")
                 .select("*")
                 .eq(
-                    "matricola",
-                    matricola
+                    "session_token",
+                    session_token
                 )
                 .limit(1)
                 .execute()
@@ -281,13 +286,21 @@ if (
 
             utenti = res.data or []
 
+            # ==================================================
+            # TOKEN VALIDO
+            # ==================================================
+
             if utenti:
 
                 user = utenti[0]
 
-                # ==========================================
+                matricola = norm(
+                    user.get("matricola", "")
+                )
+
+                # ==============================================
                 # RECUPERA OPERATORE
-                # ==========================================
+                # ==============================================
 
                 op = (
                     supabase
@@ -315,9 +328,9 @@ if (
                         ""
                     )
 
-                # ==========================================
+                # ==============================================
                 # RIPRISTINA SESSIONE
-                # ==========================================
+                # ==============================================
 
                 st.session_state.logged_in = True
 
@@ -335,11 +348,11 @@ if (
                     ""
                 )
 
-            else:
+            # ==================================================
+            # TOKEN NON VALIDO
+            # ==================================================
 
-                # ==========================================
-                # COOKIE NON VALIDO
-                # ==========================================
+            else:
 
                 try:
 
@@ -522,13 +535,32 @@ if not st.session_state.logged_in:
                                     "nome"
                                 )
         
-                            # ==================================
-                            # 🍪 COOKIE LOGIN
-                            # ==================================
-        
+                            # ==================================================
+                            # 🔐 CREA NUOVO TOKEN DI SESSIONE
+                            # ==================================================
+                            
+                            session_token = secrets.token_hex(32)
+                            
+                            # ==================================================
+                            # 💾 SALVA TOKEN IN SUPABASE
+                            # ==================================================
+                            
+                            supabase.table(
+                                "login"
+                            ).update({
+                                "session_token": session_token
+                            }).eq(
+                                "matricola",
+                                matricola
+                            ).execute()
+                            
+                            # ==================================================
+                            # 🍪 SALVA TOKEN NEL COOKIE
+                            # ==================================================
+                            
                             cookie_manager.set(
                                 COOKIE_LOGIN,
-                                matricola,
+                                session_token,
                                 expires_at=datetime(
                                     2099,
                                     12,
