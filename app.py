@@ -63,7 +63,7 @@ st.markdown("""
 .stButton>button {
     background-color: #e10600;
     color: black;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: bold;
 }
 
