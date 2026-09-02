@@ -610,17 +610,21 @@ if not st.session_state.logged_in:
             squadra = st.selectbox(
                 "Squadra",
                 [
-                    "1-COR-H24",
-                    "2-COR-H24",
-                    "3-COR-H24",
-                    "4-COR-H24",
-                    "5-COR-H24",
-                    "1-PRO-H24",
-                    "2-PRO-H24",
-                    "3-PRO-H24",
-                    "4-PRO-H24",
-                    "5-PRO-H24",
-                    "INGEGNERIA"
+                    "1-COR-H24-NA",
+                    "1-COR-H24-MI",
+                    "2-COR-H24-NA",
+                    "2-COR-H24-MI",
+                    "3-COR-H24-NA",
+                    "3-COR-H24-MI",
+                    "4-COR-H24-NA",
+                    "1-COR-H24-MI",
+                    "5-COR-H24-NA",
+                    "1-PRO-H24-NA",
+                    "2-PRO-H24-NA",
+                    "3-PRO-H24-NA",
+                    "4-PRO-H24-NA",
+                    "5-PRO-H24-NA",
+                    "INGEGNERIA-NA"
                 ]
             )
 
