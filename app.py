@@ -901,74 +901,119 @@ if not st.session_state.logged_in:
         # ==================================================
         # 🔑 RESET PASSWORD
         # ==================================================
-
+        
         elif pagina == "🔑Reset Password":
-
+        
             st.markdown(
-                "## 🔑 Reset Password"
+                """
+                <h1 style="
+                    font-size: 42px;
+                    font-weight: 800;
+                    color: #1f2937;
+                    margin-top: 10px;
+                    margin-bottom: 25px;
+                ">
+                    🔑 Reset Password
+                </h1>
+                """,
+                unsafe_allow_html=True
             )
-
-            matricola = norm(
-                st.text_input(
+        
+            # ==================================================
+            # FORM RESET PASSWORD
+            # ==================================================
+        
+            with st.form(
+                "form_reset_password",
+                clear_on_submit=False
+            ):
+        
+                matricola = st.text_input(
                     "Matricola"
                 )
-            )
-
-            nuova_password = st.text_input(
-                "Nuova Password",
-                type="password"
-            )
-
-            if st.button(
-                "Reimposta Password",
-                use_container_width=True
-            ):
-
+        
+                nuova_password = st.text_input(
+                    "Nuova Password",
+                    type="password"
+                )
+        
+                reimposta = st.form_submit_button(
+                    "🔑 REIMPOSTA PASSWORD",
+                    use_container_width=True,
+                    type="primary"
+                )
+        
+            # ==================================================
+            # ELABORAZIONE RESET
+            # ==================================================
+        
+            if reimposta:
+        
+                matricola = norm(
+                    matricola
+                )
+        
+                nuova_password = nuova_password.strip()
+        
+                # ==================================================
+                # CONTROLLO CAMPI
+                # ==================================================
+        
                 if not matricola or not nuova_password:
-
+        
                     st.error(
-                        "Inserisci tutti i campi"
+                        "❌ Inserisci tutti i campi"
                     )
-
+        
                     st.stop()
-
+        
                 try:
-
+        
+                    # ==================================================
+                    # CERCA UTENTE
+                    # ==================================================
+        
                     res = (
                         supabase
                         .table("login")
-                        .select("*")
+                        .select("matricola")
                         .eq(
                             "matricola",
                             matricola
                         )
+                        .limit(1)
                         .execute()
                     )
-
+        
                     if not res.data:
-
+        
                         st.error(
-                            "Matricola non trovata"
+                            "❌ Matricola non trovata"
                         )
-
+        
                         st.stop()
-
+        
+                    # ==================================================
+                    # AGGIORNA PASSWORD
+                    # ==================================================
+        
                     (
                         supabase
                         .table("login")
                         .update({
-
+        
                             "password":
                                 hash_password(
                                     nuova_password
                                 ),
-
-                            # --------------------------------
-                            # INVALIDA EVENTUALI SESSIONI
-                            # --------------------------------
+        
+                            # ==========================================
+                            # INVALIDA EVENTUALI SESSIONI ATTIVE
+                            # ==========================================
+        
                             "session_token":
                                 None
-
+        
                         })
                         .eq(
                             "matricola",
@@ -976,37 +1021,73 @@ if not st.session_state.logged_in:
                         )
                         .execute()
                     )
-
-                    # --------------------------------------
-                    # ELIMINA COOKIE
-                    # --------------------------------------
-
+        
+                    # ==================================================
+                    # CANCELLA COOKIE ATTUALE
+                    # ==================================================
+        
                     try:
-
+        
                         cookie_manager.delete(
-                            "manager_etr1000_login"
+                            COOKIE_LOGIN
                         )
-
-                    except:
+        
+                    except Exception:
+        
                         pass
-
+        
+                    # ==================================================
+                    # CANCELLA EVENTUALE VECCHIO COOKIE
+                    # ==================================================
+        
+                    try:
+        
+                        cookie_manager.delete(
+                            "manager_etr1000_matricola"
+                        )
+        
+                    except Exception:
+        
+                        pass
+        
+                    # ==================================================
+                    # RESET SESSIONE
+                    # ==================================================
+        
+                    st.session_state.logged_in = False
+        
+                    st.session_state.matricola = ""
+                    st.session_state.utente = ""
+                    st.session_state.ruolo = ""
+                    st.session_state.squadra = ""
+        
+                    # ==================================================
+                    # EVITA RIPRISTINO AUTOMATICO DAL COOKIE
+                    # ==================================================
+        
+                    st.session_state["logout_effettuato"] = True
+        
+                    # ==================================================
+                    # RITORNO AL LOGIN
+                    # ==================================================
+        
+                    st.session_state.redirect_login = True
+        
                     st.success(
                         "✅ Password aggiornata!"
                     )
-
-                    st.session_state.logged_in = False
-
-                    st.session_state.redirect_login = True
-                    
+        
                     st.rerun()
-
+        
                 except Exception as e:
-
+        
                     st.error(
-                        f"Errore: {e}"
+                        "❌ Errore durante il reset della password"
                     )
-
-    st.stop()
+        
+                    st.code(
+                        str(e)
+                    )
 # =========================
 # DOPO LOGIN
 # =========================
