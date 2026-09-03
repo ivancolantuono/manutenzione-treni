@@ -625,92 +625,150 @@ if not st.session_state.logged_in:
                             str(e)
                         )
 
+        
         # ==================================================
         # 🆕 REGISTRAZIONE
         # ==================================================
-
+        
         elif pagina == "🆕Registrazione":
-
+        
             st.markdown(
-                "## 🆕 Registrazione"
+                """
+                <h1 style="
+                    font-size: 42px;
+                    font-weight: 800;
+                    color: #1f2937;
+                    margin-top: 10px;
+                    margin-bottom: 25px;
+                ">
+                    🆕 Registrazione
+                </h1>
+                """,
+                unsafe_allow_html=True
             )
-
-            nome = st.text_input(
-                "Nome"
-            )
-
-            cognome = st.text_input(
-                "Cognome"
-            )
-
-            email = st.text_input(
-                "Email"
-            )
-
-            matricola = norm(
-                st.text_input(
-                    "Matricola"
-                )
-            )
-
-            ruolo = st.selectbox(
-                "Ruolo",
-                [
-                    "OPERATORE",
-                    "CAPOSQUADRA"
-                ]
-            )
-
-            squadra = st.selectbox(
-                "Squadra",
-                [
-                    "1-COR-H24-NA",
-                    "1-COR-H24-MI",
-                    "1-DEC-H24-NA",         
-                    "2-COR-H24-NA",
-                    "2-COR-H24-MI",
-                    "2-DEC-H24-NA",
-                    "3-COR-H24-NA",
-                    "3-COR-H24-MI",
-                    "3-DEC-H24-NA",
-                    "4-COR-H24-NA",
-                    "4-COR-H24-MI",
-                    "4-DEC-H24-NA",
-                    "5-COR-H24-NA",
-                    "5-DEC-H24-NA",
-                    "1-PRO-H24-NA",
-                    "2-PRO-H24-NA",
-                    "3-PRO-H24-NA",
-                    "4-PRO-H24-NA",
-                    "5-PRO-H24-NA",
-                    "1-COR-H16-NA",
-                    "2-COR-H16-NA",
-                    "3-COR-H16-NA",
-                    "INGEGNERIA-MI",
-                    "INGEGNERIA-NA"
-                ]
-            )
-
-            password = st.text_input(
-                "Password",
-                type="password"
-            )
-
-            if st.button(
-                "Registrati",
-                use_container_width=True
+        
+            # ==================================================
+            # FORM REGISTRAZIONE
+            # ==================================================
+        
+            with st.form(
+                "form_registrazione",
+                clear_on_submit=False
             ):
-
-                if not nome or not cognome or not email or not matricola or not password:
-
-                    st.error(
-                        "Compila tutti i campi"
+        
+                nome = st.text_input(
+                    "Nome"
+                )
+        
+                cognome = st.text_input(
+                    "Cognome"
+                )
+        
+                email = st.text_input(
+                    "Email"
+                )
+        
+                matricola = norm(
+                    st.text_input(
+                        "Matricola"
                     )
-
+                )
+        
+                ruolo = st.selectbox(
+                    "Ruolo",
+                    [
+                        "OPERATORE",
+                        "CAPOSQUADRA"
+                    ]
+                )
+        
+                squadra = st.selectbox(
+                    "Squadra",
+                    [
+                        "1-COR-H24-NA",
+                        "1-COR-H24-MI",
+                        "1-DEC-H24-NA",
+                        "2-COR-H24-NA",
+                        "2-COR-H24-MI",
+                        "2-DEC-H24-NA",
+                        "3-COR-H24-NA",
+                        "3-COR-H24-MI",
+                        "3-DEC-H24-NA",
+                        "4-COR-H24-NA",
+                        "4-COR-H24-MI",
+                        "4-DEC-H24-NA",
+                        "5-COR-H24-NA",
+                        "5-DEC-H24-NA",
+                        "1-PRO-H24-NA",
+                        "2-PRO-H24-NA",
+                        "3-PRO-H24-NA",
+                        "4-PRO-H24-NA",
+                        "5-PRO-H24-NA",
+                        "1-COR-H16-NA",
+                        "2-COR-H16-NA",
+                        "3-COR-H16-NA",
+                        "INGEGNERIA-MI",
+                        "INGEGNERIA-NA"
+                    ]
+                )
+        
+                password = st.text_input(
+                    "Password",
+                    type="password"
+                )
+        
+                # ==================================================
+                # PULSANTE REGISTRA
+                # ==================================================
+        
+                registrati = st.form_submit_button(
+                    "🆕 REGISTRATI",
+                    use_container_width=True,
+                    type="primary"
+                )
+        
+            # ==================================================
+            # ELABORAZIONE REGISTRAZIONE
+            # ==================================================
+        
+            if registrati:
+        
+                # ==================================================
+                # CONTROLLO CAMPI
+                # ==================================================
+        
+                if (
+                    not nome
+                    or not cognome
+                    or not email
+                    or not matricola
+                    or not password
+                ):
+        
+                    st.error(
+                        "❌ Compila tutti i campi"
+                    )
+        
                     st.stop()
-
+        
+                # ==================================================
+                # NORMALIZZAZIONE
+                # ==================================================
+        
+                matricola = norm(
+                    matricola
+                )
+        
+                nome = nome.strip()
+                cognome = cognome.strip()
+                email = email.strip()
+        
                 try:
-
+        
+                    # ==================================================
+                    # VERIFICA MATRICOLA
+                    # ==================================================
+        
                     esiste = (
                         supabase
                         .table("login")
@@ -719,49 +777,62 @@ if not st.session_state.logged_in:
                             "matricola",
                             matricola
                         )
+                        .limit(1)
                         .execute()
                     )
-
+        
                     if esiste.data:
-
+        
                         st.error(
-                            "Matricola già registrata"
+                            "❌ Matricola già registrata"
                         )
-
+        
                         st.stop()
-
+        
+                    # ==================================================
+                    # CREA UTENTE NELLA TABELLA LOGIN
+                    # ==================================================
+        
                     supabase.table(
                         "login"
                     ).insert({
-
+        
                         "nome":
-                            format_nome(nome),
-
+                            format_nome(
+                                nome
+                            ),
+        
                         "cognome":
-                            format_nome(cognome),
-
+                            format_nome(
+                                cognome
+                            ),
+        
                         "email":
                             email,
-
+        
                         "matricola":
                             matricola,
-
+        
                         "password":
                             hash_password(
                                 password
                             ),
-
+        
                         "ruolo":
                             ruolo,
-
+        
                         "squadra":
                             squadra,
-
+        
                         "session_token":
                             None
-
+        
                     }).execute()
-
+        
+                    # ==================================================
+                    # VERIFICA OPERATORE
+                    # ==================================================
+        
                     op = (
                         supabase
                         .table("operatori")
@@ -770,43 +841,63 @@ if not st.session_state.logged_in:
                             "Matricola",
                             matricola
                         )
+                        .limit(1)
                         .execute()
                     )
-
+        
+                    # ==================================================
+                    # CREA OPERATORE SE NON ESISTE
+                    # ==================================================
+        
                     if not op.data:
-
+        
                         supabase.table(
                             "operatori"
                         ).insert({
-
+        
                             "Matricola":
                                 matricola,
-
+        
                             "Nominativo":
                                 f"{format_nome(cognome)} "
                                 f"{format_nome(nome)}",
-
+        
                             "Telefono":
                                 ""
-
+        
                         }).execute()
-
+        
+                    # ==================================================
+                    # AGGIORNA CACHE OPERATORI
+                    # ==================================================
+        
                     get_operatori.clear()
-
+        
+                    # ==================================================
+                    # MESSAGGIO
+                    # ==================================================
+        
                     st.success(
                         "✅ Registrazione completata!"
                     )
-
+        
+                    # ==================================================
+                    # RITORNO AUTOMATICO AL LOGIN
+                    # ==================================================
+        
                     st.session_state.redirect_login = True
-
+        
                     st.rerun()
-
+        
                 except Exception as e:
-
+        
                     st.error(
-                        f"Errore: {e}"
+                        "❌ Errore durante la registrazione"
                     )
-
+        
+                    st.code(
+                        str(e)
+                    )
         # ==================================================
         # 🔑 RESET PASSWORD
         # ==================================================
