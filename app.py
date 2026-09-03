@@ -1088,6 +1088,8 @@ if not st.session_state.logged_in:
                     st.code(
                         str(e)
                     )
+
+                    st.stop()
 # =========================
 # DOPO LOGIN
 # =========================
