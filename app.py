@@ -1149,8 +1149,6 @@ with st.sidebar:
                 "journal-text",
                 "bar-chart",
                 "clock-history",
-                "calendar-heart",
-                "alarm",
                 "cpu",
                 "train-front"
             ],
@@ -1264,8 +1262,6 @@ with st.sidebar:
                 "journal-code",
                 "train-front",
                 "search",
-                "calendar-heart",
-                "alarm",
                 "cpu",
                 "train-front"
             ],
