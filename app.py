@@ -960,8 +960,6 @@ with st.sidebar:
                 "Planning",
                 "Dashboard",
                 "Storico",
-                "Ferie e Permessi",
-                "Scadenze Temporali",
                 "Software",
                 "Treno"
             ],
@@ -1081,8 +1079,6 @@ with st.sidebar:
                 "Schede SR VZI6",
                 "Manutenzione",
                 "Cerca Componente",
-                "Ferie e Permessi",
-                "Scadenze Temporali",
                 "Versioni Software",
                 "Treno"
             ],
