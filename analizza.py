@@ -269,13 +269,13 @@ def parse_timestamp(valore):
 
     formati = [
 
-        "%d-%m-%Y %H:%M:%S %Y",
+        "%Y-%m-%d %H:%M:%S %Y",
 
-        "%d-%m-%Y %H:%M:%S.%f %Y",
+        "%Y-%m-%d %H:%M:%S.%f %Y",
 
-        "%d-%m-%Y %H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
 
-        "%d-%m-%Y %H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S.%f",
 
         "%d-%m-%Y %H:%M:%S",
 
