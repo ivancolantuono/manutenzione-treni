@@ -265,34 +265,107 @@ def parse_timestamp(valore):
 
     valore = " ".join(
         str(valore).split()
+    ).strip()
+
+    if not valore:
+        return None
+
+    # ------------------------------------------------------
+    # FORMATI ISO
+    # ------------------------------------------------------
+
+    try:
+        return datetime.fromisoformat(
+            valore
+        )
+    except (ValueError, TypeError):
+        pass
+
+    # ------------------------------------------------------
+    # FORMATO TESTUALE FDE
+    #
+    # Esempio:
+    # Thu Sep 10 12:34:56 2026
+    #
+    # ------------------------------------------------------
+
+    match = re.match(
+        r"^[A-Za-z]{3}\s+"
+        r"([A-Za-z]{3})\s+"
+        r"(\d{1,2})\s+"
+        r"(\d{2}):(\d{2}):(\d{2})\s+"
+        r"(\d{4})$",
+        valore
     )
 
-    formati = [
+    if match:
 
-        "%a %b %d %H:%M:%S %Y",
+        mese_txt = match.group(1).lower()
 
-        "%a %b %d %H:%M:%S.%f %Y",
+        mesi = {
+            "jan": 1,
+            "feb": 2,
+            "mar": 3,
+            "apr": 4,
+            "may": 5,
+            "jun": 6,
+            "jul": 7,
+            "aug": 8,
+            "sep": 9,
+            "oct": 10,
+            "nov": 11,
+            "dec": 12
+        }
 
-        "%Y-%m-%d %H:%M:%S",
+        mese = mesi.get(
+            mese_txt
+        )
 
-        "%Y-%m-%d %H:%M:%S.%f",
+        if mese is not None:
 
-        "%d-%m-%Y %H:%M:%S",
+            try:
 
-    ]
+                return datetime(
+                    int(match.group(6)),   # anno
+                    mese,                  # mese
+                    int(match.group(2)),   # giorno
+                    int(match.group(3)),   # ora
+                    int(match.group(4)),   # minuti
+                    int(match.group(5))    # secondi
+                )
 
-    for formato in formati:
+            except ValueError:
+
+                return None
+
+    # ------------------------------------------------------
+    # FORMATO NUMERICO
+    #
+    # GG-MM-AAAA HH:MM:SS
+    # ------------------------------------------------------
+
+    match = re.match(
+        r"^(\d{1,2})-(\d{1,2})-(\d{4})\s+"
+        r"(\d{1,2}):(\d{2}):(\d{2})$",
+        valore
+    )
+
+    if match:
 
         try:
 
-            return datetime.strptime(
-                valore,
-                formato
+            return datetime(
+                int(match.group(3)),   # anno
+                int(match.group(2)),   # mese
+                int(match.group(1)),   # giorno
+                int(match.group(4)),   # ora
+                int(match.group(5)),   # minuti
+                int(match.group(6))    # secondi
             )
 
         except ValueError:
 
-            continue
+            return None
 
     return None
 
