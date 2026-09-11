@@ -271,9 +271,9 @@ def parse_timestamp(valore):
 
         "%d-%m-%Y %H:%M:%S %Y",
 
-        "%%d-%m-%Y %H:%M:%S.%f %Y",
+        "%d-%m-%Y %H:%M:%S.%f %Y",
 
-        "%%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y %H:%M:%S",
 
         "%d-%m-%Y %H:%M:%S.%f",
 
