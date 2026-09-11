@@ -1351,6 +1351,8 @@ def analizza_page():
             max_value=data_max,
 
             key="analizza_data_da"
+            
+            format="DD/MM/YYYY"
 
         )
 
@@ -1367,6 +1369,8 @@ def analizza_page():
             max_value=data_max,
 
             key="analizza_data_a"
+
+            format="DD/MM/YYYY"
 
         )
 
