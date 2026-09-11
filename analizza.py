@@ -1327,51 +1327,46 @@ def analizza_page():
     # ------------------------------------------------------
     # DATE
     # ------------------------------------------------------
-
+    
     data_min = df[
         "timestamp"
     ].min().date()
-
+    
     data_max = df[
         "timestamp"
     ].max().date()
-
+    
+    # Default: ultimi 2 giorni disponibili
+    data_da_default = max(
+        data_min,
+        data_max - timedelta(days=2)
+    )
+    
+    data_a_default = data_max
+    
+    
     col1, col2, col3 = st.columns(3)
-
+    
     with col1:
-
+    
         data_da = st.date_input(
-
             "📅 Da",
-
-            value=data_min,
-
+            value=data_da_default,
             min_value=data_min,
-
             max_value=data_max,
-
-            key="analizza_data_da",
-            
-            format="DD/MM/YYYY"
-
+            format="DD/MM/YYYY",
+            key="analizza_data_da"
         )
-
+    
     with col2:
-
+    
         data_a = st.date_input(
-
             "📅 A",
-
-            value=data_max,
-
+            value=data_a_default,
             min_value=data_min,
-
             max_value=data_max,
-
-            key="analizza_data_a",
-
-            format="DD/MM/YYYY"
-
+            format="DD/MM/YYYY",
+            key="analizza_data_a"
         )
 
     with col3:
