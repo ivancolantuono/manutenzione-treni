@@ -1138,7 +1138,7 @@ def misurazione_sensori_page():
 
     uploaded_file = st.file_uploader(
         "📥 Carica file .MNT",
-        type=["mnt"],
+        type=None
         key="mnt_file"
     )
 
