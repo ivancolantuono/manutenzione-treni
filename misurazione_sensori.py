@@ -1281,18 +1281,27 @@ def misurazione_sensori_page():
     st.divider()
 
     # ======================================================
-    # CARICAMENTO FILE MNT
-    # ======================================================
-
-    # ======================================================
-    # CARICAMENTO MNT COMPATIBILE CON MOBILE
+    # CARICAMENTO MNT
     # ======================================================
     
-    uploaded_file = st.file_uploader(
-        "📥 Carica file .MNT",
-        type=["mnt"],
-        key="mnt_file"
-    )
+    file_mobile = carica_mnt_mobile()
+    
+    uploaded_file = None
+    
+    if file_mobile is not None:
+    
+        class UploadedMNT:
+            def __init__(self, name, content):
+                self.name = name
+                self._content = content
+    
+            def getvalue(self):
+                return self._content
+    
+        uploaded_file = UploadedMNT(
+            file_mobile["name"],
+            file_mobile["content"]
+        )
 
     if uploaded_file is None:
 
