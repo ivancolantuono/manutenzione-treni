@@ -82,6 +82,154 @@ def normalize_add(value):
 
     return match.group(0).zfill(3)
 
+# ==========================================================
+# UPLOADER MNT COMPATIBILE CON IPHONE
+# ==========================================================
+
+def carica_mnt_mobile():
+
+    import base64
+
+    HTML = """
+    <div style="
+        width:100%;
+        padding:10px 0;
+    ">
+        <label style="
+            display:block;
+            font-weight:600;
+            margin-bottom:8px;
+            font-size:16px;
+        ">
+            📥 Carica file .MNT
+        </label>
+
+        <input
+            id="mnt_file"
+            type="file"
+            style="
+                width:100%;
+                padding:12px;
+                border:1px solid #ccc;
+                border-radius:8px;
+                font-size:16px;
+            "
+        />
+
+        <div id="mnt_nome" style="
+            margin-top:8px;
+            color:#666;
+            font-size:14px;
+        ">
+        </div>
+    </div>
+    """
+
+    JS = """
+    export default function(component) {
+
+        const {
+            parentElement,
+            setStateValue
+        } = component;
+
+        const input =
+            parentElement.querySelector("#mnt_file");
+
+        const nome =
+            parentElement.querySelector("#mnt_nome");
+
+        input.onchange = async () => {
+
+            const file = input.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            nome.textContent =
+                "📄 " + file.name;
+
+            const buffer =
+                await file.arrayBuffer();
+
+            const bytes =
+                new Uint8Array(buffer);
+
+            let binary = "";
+
+            const chunkSize = 8192;
+
+            for (
+                let i = 0;
+                i < bytes.length;
+                i += chunkSize
+            ) {
+
+                const chunk =
+                    bytes.subarray(
+                        i,
+                        Math.min(
+                            i + chunkSize,
+                            bytes.length
+                        )
+                    );
+
+                binary += String.fromCharCode(...chunk);
+            }
+
+            const base64 =
+                btoa(binary);
+
+            setStateValue(
+                "file",
+                {
+                    name: file.name,
+                    type: file.type ||
+                        "application/octet-stream",
+                    data: base64
+                }
+            );
+        };
+    }
+    """
+
+    uploader = st.components.v2.component(
+        "mnt_mobile_uploader",
+        html=HTML,
+        js=JS
+    )
+
+    risultato = uploader(
+        key="mnt_mobile_uploader",
+        default={}
+    )
+
+    if risultato and getattr(
+        risultato,
+        "file",
+        None
+    ):
+
+        dati = risultato.file
+
+        try:
+
+            contenuto = base64.b64decode(
+                dati["data"]
+            )
+
+            return {
+                "name": dati["name"],
+                "type": dati["type"],
+                "content": contenuto
+            }
+
+        except Exception:
+
+            return None
+
+    return None
 
 # ==========================================================
 # NORMALIZZA NOME COLONNA
