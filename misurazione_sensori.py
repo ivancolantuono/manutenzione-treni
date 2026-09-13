@@ -1140,22 +1140,11 @@ def misurazione_sensori_page():
     # CARICAMENTO MNT COMPATIBILE CON MOBILE
     # ======================================================
     
-    upload = st.chat_input(
-        "📥 Seleziona il file .MNT",
-        accept_file=True,
-        file_type=None,
-        key="mnt_mobile_upload"
+    uploaded_file = st.file_uploader(
+        "📥 Carica file .MNT",
+        type=["mnt"],
+        key="mnt_file"
     )
-    
-    uploaded_file = None
-    
-    if upload is not None:
-    
-        files = upload.files
-    
-        if files:
-    
-            uploaded_file = files[0]
 
     if uploaded_file is None:
 
