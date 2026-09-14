@@ -2933,11 +2933,8 @@ elif menu == "Treno":
 
         carrelli_page()
 
-    elif sistema == "HVAC":
-
-        st.title("HVAC")
-        st.info("Sezione HVAC in preparazione.")
-
+    elif sistema == "HVAC Cabina":
+        hvac_cabina_page()
     elif sistema == "Misurazione Sensori":
 
         misurazione_sensori_page()
