@@ -1775,43 +1775,47 @@ def misurazione_sensori_page():
                 use_container_width=True,
                 hide_index=True
             )
-            # ==================================================
-            # PW4
-            # ==================================================
+        # ==================================================
+        # PW4
+        # ==================================================
+        
+        st.divider()
+        
+        st.markdown(
+            "### 📊 Valori PW4"
+        )
+        
+        pw4_tabella = grafico_df[
+            [
+                "ADD",
+                "PW4"
+            ]
+        ].copy()
+        
+        pw4_tabella["PW4"] = pd.to_numeric(
+            pw4_tabella["PW4"],
+            errors="coerce"
+        )
+        
+        pw4_tabella = pw4_tabella[
+            pw4_tabella["PW4"].notna()
+        ].copy()
+        
+        pw4_tabella = pw4_tabella.rename(
+            columns={
+                "ADD": "Sensore"
+            }
+        )
+        
+        st.dataframe(
+            pw4_tabella,
+            use_container_width=True,
+            hide_index=True
+        )
+
+  
+     
             
-            st.divider()
-            
-            st.markdown(
-                "### 📊 Valori PW4"
-            )
-            
-            pw4_tabella = grafico_df[
-                [
-                    "ADD",
-                    "PW4"
-                ]
-            ].copy()
-            
-            pw4_tabella["PW4"] = pd.to_numeric(
-                pw4_tabella["PW4"],
-                errors="coerce"
-            )
-            
-            pw4_tabella = pw4_tabella[
-                pw4_tabella["PW4"].notna()
-            ].copy()
-            
-            pw4_tabella = pw4_tabella.rename(
-                columns={
-                    "ADD": "Sensore"
-                }
-            )
-            
-            st.dataframe(
-                pw4_tabella,
-                use_container_width=True,
-                hide_index=True
-            )
 
     # ======================================================
     # TAB DATI MNT
