@@ -1603,7 +1603,7 @@ def misurazione_sensori_page():
         
         pw4_df = pw4_df[
             pw4_df["PW4"].notna()
-        ].copy()
+        ]
         
         grafico_pw4 = (
             alt.Chart(pw4_df)
@@ -1612,7 +1612,6 @@ def misurazione_sensori_page():
                 strokeWidth=2
             )
             .encode(
-        
                 x=alt.X(
                     "SENSORE:N",
                     sort=alt.SortField(
@@ -1625,18 +1624,15 @@ def misurazione_sensori_page():
                         labelOverlap=False
                     )
                 ),
-        
                 y=alt.Y(
                     "PW4:Q",
                     title="PW4"
                 ),
-        
                 tooltip=[
                     alt.Tooltip(
                         "SENSORE:N",
                         title="Sensore"
                     ),
-        
                     alt.Tooltip(
                         "PW4:Q",
                         title="PW4"
