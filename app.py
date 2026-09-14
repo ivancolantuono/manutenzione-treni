@@ -19,6 +19,7 @@ from misurazione_sensori import misurazione_sensori_page
 from carrelli import carrelli_page
 from analizza import analizza_page
 from hvac_cabina import hvac_cabina_page
+from hvac_comparto import hvac_comparto_page
 import urllib.parse
 import secrets
 
