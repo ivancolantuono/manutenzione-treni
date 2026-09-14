@@ -912,7 +912,7 @@ if not st.session_state.logged_in:
                     font-weight: 600;
                     color: #1f2937;
                     margin-top: 10px;
-                    margin-bottom: 25px;
+                    margin-bottom: 20px;
                 ">
                     🔑 Reset Password
                 </h1>
