@@ -635,8 +635,8 @@ if not st.session_state.logged_in:
             st.markdown(
                 """
                 <h1 style="
-                    font-size: 42px;
-                    font-weight: 800;
+                    font-size: 32px;
+                    font-weight: 600;
                     color: #1f2937;
                     margin-top: 10px;
                     margin-bottom: 25px;
