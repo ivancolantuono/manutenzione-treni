@@ -10,7 +10,7 @@ import altair as alt
 
 ORDER_DM1 = [
     "007", "005", "006", "004", "003", "002", "001", "008", "009",
-    "010", "011", "012", "013", "014", "015", "017", "016", "018",a
+    "010", "011", "012", "013", "014", "015", "017", "016", "018",
     "027", "029", "030", "028", "026", "025", "023", "024", "022",
     "021", "020", "019", "031", "032", "033", "034", "035", "036",
     "038", "037", "039", "040", "041", "042", "043", "044", "045",
@@ -1775,6 +1775,44 @@ def misurazione_sensori_page():
                 use_container_width=True,
                 hide_index=True
             )
+
+        # ==================================================
+        # PW4
+        # ==================================================
+
+        st.divider()
+
+        st.markdown(
+            "### 📊 Valori PW4"
+        )
+
+        pw4_tabella = grafico_df[
+            [
+                "ADD",
+                "PW4"
+            ]
+        ].copy()
+
+        pw4_tabella["PW4"] = pd.to_numeric(
+            pw4_tabella["PW4"],
+            errors="coerce"
+        )
+
+        pw4_tabella = pw4_tabella[
+            pw4_tabella["PW4"].notna()
+        ].copy()
+
+        pw4_tabella = pw4_tabella.rename(
+            columns={
+                "ADD": "Sensore"
+            }
+        )
+
+        st.dataframe(
+            pw4_tabella,
+            use_container_width=True,
+            hide_index=True
+        )
 
   
     # ======================================================
