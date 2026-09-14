@@ -288,7 +288,7 @@ def hvac_cabina_page():
     # GRAFICO
     # -------------------------------------------------
     st.markdown("### 📈 Andamento Temperature")
-    st.caption("Il punto verticale indica il campione attualmente visualizzato. Usa la timeline sopra o i pulsanti ◀️ ▶️ per scorrere: tutti i valori sotto si aggiornano insieme.")
+    st.caption("🖱️ CLICCA DIRETTAMENTE SU UN PUNTO DEL GRAFICO per analizzare quel momento. Ora, evento, valori analogici e stati digitali si aggiornano automaticamente.")
 
     chart_df = pd.DataFrame(
         {
@@ -300,13 +300,17 @@ def hvac_cabina_page():
 
     fig = go.Figure()
 
+    point_index = list(range(len(chart_df)))
+
     fig.add_trace(
         go.Scatter(
             x=chart_df["Timestamp"],
             y=chart_df["Temperatura"],
-            mode="lines",
+            mode="lines+markers",
             name="Temperatura Cabina",
             line=dict(width=2),
+            marker=dict(size=5),
+            customdata=point_index,
             hovertemplate="%{x|%d/%m/%Y %H:%M:%S}<br>Temperatura: %{y:.2f} °C<extra></extra>",
         )
     )
@@ -315,9 +319,11 @@ def hvac_cabina_page():
         go.Scatter(
             x=chart_df["Timestamp"],
             y=chart_df["Set Point"],
-            mode="lines",
+            mode="lines+markers",
             name="Set Point",
             line=dict(width=2),
+            marker=dict(size=5),
+            customdata=point_index,
             hovertemplate="%{x|%d/%m/%Y %H:%M:%S}<br>Set Point: %{y:.2f} °C<extra></extra>",
         )
     )
@@ -356,12 +362,39 @@ def hvac_cabina_page():
         yaxis=dict(title="Temperatura °C"),
     )
 
-    st.plotly_chart(
+    chart_event = st.plotly_chart(
         fig,
         use_container_width=True,
         key="hvac_temperature_chart",
-        config={"displaylogo": False, "responsive": True, "displayModeBar": True},
+        on_select="rerun",
+        selection_mode="points",
+        config={
+            "displaylogo": False,
+            "responsive": True,
+            "displayModeBar": True,
+            "scrollZoom": False,
+        },
     )
+
+    # Click su un punto = selezione del campione.
+    # customdata contiene l'indice esatto del DataFrame.
+    try:
+        selected_points = chart_event.selection.points
+    except Exception:
+        selected_points = []
+
+    if selected_points:
+        selected_point = selected_points[0]
+        clicked_index = selected_point.get("customdata", selected_point.get("point_index"))
+        try:
+            clicked_index = int(clicked_index)
+        except (TypeError, ValueError):
+            clicked_index = None
+
+        if clicked_index is not None and 0 <= clicked_index <= max_index and clicked_index != index:
+            st.session_state[state_key] = clicked_index
+            st.session_state[running_key] = False
+            st.rerun()
 
     # -------------------------------------------------
     # FRECCE GRANDI SOTTO IL GRAFICO
