@@ -380,7 +380,7 @@ def hvac_cabina_page():
         unsafe_allow_html=True,
     )
 
-    prev_col, _, next_col = st.columns([1, 3, 1])
+    _, prev_col, next_col, _ = st.columns([1.8, 1, 1, 1.8])
     with prev_col:
         if st.button("◀  INDIETRO", use_container_width=True, key="hvac_cabina_click_prev"):
             st.session_state[index_key] = max(0, index - 1)
