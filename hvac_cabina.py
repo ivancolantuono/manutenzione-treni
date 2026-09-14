@@ -416,10 +416,11 @@ def hvac_cabina_page():
                 st.metric(name, safe_text(r, col))
 
     # =================================================
-    # GRAFICO TEMPERATURA + BARRA TEMPORALE
+    # GRAFICO INTERATTIVO + BARRA TEMPORALE
     # =================================================
 
     st.subheader("📈 Temperatura Cabina / Set Point")
+    st.caption("Clicca un punto del grafico oppure usa le frecce per scorrere campione per campione. I valori HVAC vengono aggiornati automaticamente.")
 
     chart_df = df[
         [
@@ -437,13 +438,12 @@ def hvac_cabina_page():
     )
 
     chart_df["Temperatura Cabina"] = pd.to_numeric(
-        chart_df["Temperatura Cabina"],
-        errors="coerce",
+        chart_df["Temperatura Cabina"], errors="coerce"
     )
     chart_df["Set Point"] = pd.to_numeric(
-        chart_df["Set Point"],
-        errors="coerce",
+        chart_df["Set Point"], errors="coerce"
     )
+    chart_df["Campione"] = chart_df.index
 
     fig = go.Figure()
 
@@ -453,7 +453,12 @@ def hvac_cabina_page():
             y=chart_df["Temperatura Cabina"],
             mode="lines",
             name="Temperatura Cabina",
+            customdata=chart_df[["Campione"]],
             line={"width": 2},
+            hovertemplate=(
+                "<b>%{x|%d/%m/%Y %H:%M:%S}</b><br>"
+                "Temperatura: %{y:.2f} °C<extra></extra>"
+            ),
         )
     )
 
@@ -463,7 +468,12 @@ def hvac_cabina_page():
             y=chart_df["Set Point"],
             mode="lines",
             name="Set Point",
+            customdata=chart_df[["Campione"]],
             line={"width": 2},
+            hovertemplate=(
+                "<b>%{x|%d/%m/%Y %H:%M:%S}</b><br>"
+                "Set Point: %{y:.2f} °C<extra></extra>"
+            ),
         )
     )
 
@@ -471,14 +481,44 @@ def hvac_cabina_page():
 
     fig.add_vline(
         x=current_time,
-        line_width=2,
+        line_width=3,
         line_dash="dash",
     )
 
+    # Mostra anche il punto corrente sul grafico
+    current_temp = pd.to_numeric(r[CABINA_ANALOG["Temperatura Cabina"]], errors="coerce")
+    current_set = pd.to_numeric(r[CABINA_ANALOG["Set Point"]], errors="coerce")
+
+    if pd.notna(current_temp):
+        fig.add_trace(
+            go.Scatter(
+                x=[current_time],
+                y=[current_temp],
+                mode="markers",
+                name="Campione attuale",
+                marker={"size": 10},
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
+
+    if pd.notna(current_set):
+        fig.add_trace(
+            go.Scatter(
+                x=[current_time],
+                y=[current_set],
+                mode="markers",
+                marker={"size": 9},
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
+
     fig.update_layout(
-        height=470,
-        margin=dict(l=10, r=10, t=20, b=10),
+        height=500,
+        margin=dict(l=10, r=10, t=25, b=10),
         hovermode="x unified",
+        clickmode="event+select",
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -488,23 +528,87 @@ def hvac_cabina_page():
         ),
         xaxis=dict(
             title="Tempo",
-            rangeslider=dict(visible=True),
+            rangeslider=dict(
+                visible=True,
+                thickness=0.10,
+            ),
             type="date",
         ),
         yaxis=dict(
-            title="Temperatura",
+            title="Temperatura °C",
         ),
     )
 
-    st.plotly_chart(
+    # Frecce per navigare rapidamente tra i campioni.
+    nav1, nav2, nav3, nav4 = st.columns([1, 1, 6, 1])
+
+    with nav1:
+        if st.button("⏮", use_container_width=True, key="hvac_graph_start"):
+            st.session_state[state_key] = 0
+            st.session_state[running_key] = False
+            st.rerun()
+
+    with nav2:
+        if st.button("⬅️", use_container_width=True, key="hvac_graph_left"):
+            st.session_state[state_key] = max(0, index - 1)
+            st.rerun()
+
+    with nav3:
+        st.markdown(
+            f"<div style='text-align:center;font-weight:700;padding:8px;'>Campione {index + 1} / {len(df)}</div>",
+            unsafe_allow_html=True,
+        )
+
+    with nav4:
+        if st.button("➡️", use_container_width=True, key="hvac_graph_right"):
+            st.session_state[state_key] = min(max_index, index + 1)
+            st.rerun()
+
+    event = st.plotly_chart(
         fig,
         use_container_width=True,
+        key="hvac_cabina_plot",
+        on_select="rerun",
+        selection_mode="points",
         config={
             "displaylogo": False,
             "scrollZoom": True,
             "responsive": True,
+            "displayModeBar": True,
         },
     )
+
+    # Se l'utente clicca una misura sul grafico, il campione diventa quello attivo.
+    try:
+        selected_points = event.selection.point_indices
+        if selected_points:
+            selected_index = int(selected_points[0])
+            if 0 <= selected_index <= max_index and selected_index != st.session_state[state_key]:
+                st.session_state[state_key] = selected_index
+                st.rerun()
+    except Exception:
+        pass
+
+    # Seconda riga di navigazione, più comoda anche su touchscreen.
+    nav5, nav6, nav7 = st.columns([1, 6, 1])
+
+    with nav5:
+        if st.button("◀️ Indietro campione", use_container_width=True, key="hvac_graph_prev_bottom"):
+            st.session_state[state_key] = max(0, index - 1)
+            st.rerun()
+
+    with nav6:
+        st.markdown(
+            f"<div style='text-align:center;color:#64748b;padding:7px;'>"
+            f"🕐 {current_time.strftime('%d/%m/%Y %H:%M:%S')}"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+    with nav7:
+        if st.button("Avanti campione ▶️", use_container_width=True, key="hvac_graph_next_bottom"):
+            st.session_state[state_key] = min(max_index, index + 1)
+            st.rerun()
 
     # =================================================
     # PLAYER AUTOMATICO
