@@ -1208,7 +1208,7 @@ with st.sidebar:
                 "",
                 [
                     "Carrelli",
-                    "HVAC",
+                    "HVAC Cabina",
                     "Misurazione Sensori",
                     "Analizza Log FDE"
                 ],
