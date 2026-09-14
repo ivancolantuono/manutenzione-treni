@@ -1209,6 +1209,7 @@ with st.sidebar:
                 [
                     "Carrelli",
                     "HVAC Cabina",
+                    "HVAC Comparto",
                     "Misurazione Sensori",
                     "Analizza Log FDE"
                 ],
@@ -1296,6 +1297,7 @@ with st.sidebar:
                 [
                     "Carrelli",
                     "HVAC Cabina",
+                    "HVAC Comparto",
                     "Misurazione Sensori",
                     "Analizza Log FDE"
                 ],
@@ -2936,6 +2938,10 @@ elif menu == "Treno":
 
     elif sistema == "HVAC Cabina":
         hvac_cabina_page()
+
+    elif sistema == "HVAC Comparto":
+        hvac_comparto_page()
+        
     elif sistema == "Misurazione Sensori":
 
         misurazione_sensori_page()
