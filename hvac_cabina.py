@@ -1,9 +1,11 @@
 
 from io import BytesIO
+import re
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from streamlit_plotly_events import plotly_events
 
 
 DATE_REGEX = re.compile(
@@ -391,43 +393,30 @@ def hvac_cabina_page():
         dragmode="zoom",
     )
 
-    chart_event = st.plotly_chart(
+    # CLICK SINGOLO REALE: il componente restituisce subito il punto cliccato.
+    clicked_points = plotly_events(
         fig,
-        use_container_width=True,
-        key="hvac_cabina_click_chart",
-        on_select="rerun",
-        selection_mode=["points"],
-        config={
-            "displaylogo": False,
-            "displayModeBar": False,
-            "responsive": True,
-            "scrollZoom": False,
-        },
+        click_event=True,
+        select_event=False,
+        hover_event=False,
+        override_height=470,
+        override_width="100%",
+        key="hvac_cabina_click_events",
     )
 
-    # Il click sul grafico aggiorna direttamente l'indice del campione.
-    selected_index = None
-    try:
-        selected_points = chart_event.selection.points
-    except Exception:
-        selected_points = []
-
-    for point in selected_points or []:
-        raw_index = point.get("customdata", point.get("point_number"))
-        if isinstance(raw_index, (list, tuple)) and raw_index:
-            raw_index = raw_index[0]
+    # Il click sul grafico aggiorna direttamente il campione.
+    if clicked_points:
+        point = clicked_points[0]
+        raw_index = point.get("pointIndex")
         try:
-            candidate = int(raw_index)
+            selected_index = int(raw_index)
         except (TypeError, ValueError):
-            candidate = None
-        if candidate is not None and 0 <= candidate <= max_index:
-            selected_index = candidate
-            break
+            selected_index = None
 
-    if selected_index is not None:
-        index = selected_index
-        st.session_state[index_key] = index
-        current_time = df.iloc[index]["Timestamp"]
+        if selected_index is not None and 0 <= selected_index <= max_index:
+            index = selected_index
+            st.session_state[index_key] = index
+            current_time = df.iloc[index]["Timestamp"]
 
     # Solo i due comandi richiesti.
     st.markdown(
