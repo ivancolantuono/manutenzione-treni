@@ -622,9 +622,9 @@ def importa_mnt(
         # PW4
         # --------------------------------------------------
         
-        if len(parti) > 9:
+        if len(parti) > 10:
         
-            record["PW4"] = parti[9]
+            record["PW4"] = parti[10]
 
     # ======================================================
     # DATAFRAME
