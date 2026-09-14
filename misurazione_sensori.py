@@ -1777,42 +1777,56 @@ def misurazione_sensori_page():
             )
 
         # ==================================================
-        # PW4
+        # PW4 < 790
         # ==================================================
-
+        
         st.divider()
-
+        
         st.markdown(
-            "### 📊 Valori PW4"
+            "### ⚠️ Sensori con PW4 < 790"
         )
-
+        
         pw4_tabella = grafico_df[
             [
                 "ADD",
                 "PW4"
             ]
         ].copy()
-
+        
         pw4_tabella["PW4"] = pd.to_numeric(
             pw4_tabella["PW4"],
             errors="coerce"
         )
-
+        
+        # SOLO VALORI PW4 SOTTO 790
         pw4_tabella = pw4_tabella[
-            pw4_tabella["PW4"].notna()
+            pw4_tabella["PW4"] < 790
         ].copy()
-
+        
         pw4_tabella = pw4_tabella.rename(
             columns={
                 "ADD": "Sensore"
             }
         )
-
-        st.dataframe(
-            pw4_tabella,
-            use_container_width=True,
-            hide_index=True
-        )
+        
+        if pw4_tabella.empty:
+        
+            st.success(
+                "✅ Nessun sensore con PW4 < 790."
+            )
+        
+        else:
+        
+            st.warning(
+                f"⚠️ Trovati {len(pw4_tabella)} "
+                "sensori con PW4 < 790."
+            )
+        
+            st.dataframe(
+                pw4_tabella,
+                use_container_width=True,
+                hide_index=True
+            )
 
   
     # ======================================================
