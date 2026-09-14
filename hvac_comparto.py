@@ -1,18 +1,15 @@
-from io import BytesIO
 import re
+from io import BytesIO
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from streamlit_plotly_events import plotly_events
+
 
 DATE_REGEX = re.compile(
     r"DATE:\s*(\d{4}/\d{1,2}/\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2})"
 )
 
-# =========================================================
-# SEGNALI HVAC COMPARTO
-# =========================================================
 HVAC1_ANALOG = {
     "Saloon Temp": "AN HVAC1 Saloon temperature",
     "Supply Temp": "AN HVAC1 Supply temperature",
@@ -73,9 +70,7 @@ HVAC2_DIGITAL = {
     "HP switch": "IN HVAC2 HP switch",
 }
 
-# =========================================================
-# UTILITY
-# =========================================================
+
 def safe_text(row, col):
     if col and col in row.index and pd.notna(row[col]):
         value = str(row[col]).strip()
@@ -86,7 +81,6 @@ def safe_text(row, col):
 def digital_state(value):
     if pd.isna(value):
         return "N/D", "unknown"
-
     text = str(value).strip().upper()
     if text in {"1", "ON", "TRUE", "YES"}:
         return "ON", "on"
@@ -97,30 +91,27 @@ def digital_state(value):
 
 def find_event_columns(df):
     result = {"description": None, "id": None, "state": None}
-
     normalized = {
-        c: " ".join(
-            str(c).strip().lower().replace("_", " ").replace("-", " ").split()
-        )
+        c: " ".join(str(c).strip().lower().replace("_", " ").replace("-", " ").split())
         for c in df.columns
     }
 
-    for col, name in normalized.items():
+    for c, compact in normalized.items():
         if result["description"] is None and (
-            "event description" in name
-            or name in {"event", "event name", "event text"}
+            "event description" in compact
+            or compact in {"event", "event name", "event text"}
         ):
-            result["description"] = col
+            result["description"] = c
         elif result["id"] is None and (
-            "event id" in name
-            or name in {"eventid", "event code", "event number"}
+            "event id" in compact
+            or compact in {"eventid", "event code", "event number"}
         ):
-            result["id"] = col
+            result["id"] = c
         elif result["state"] is None and (
-            "event state" in name
-            or name in {"eventstate", "state"}
+            "event state" in compact
+            or compact in {"eventstate", "state"}
         ):
-            result["state"] = col
+            result["state"] = c
 
     return result
 
@@ -131,27 +122,21 @@ def extract_event(row, event_cols):
     state = safe_text(row, event_cols.get("state"))
 
     if desc != "—":
-        m_id = re.search(
-            r"event\s*id\s*[:=]\s*([A-Za-z0-9_-]+)",
-            desc,
-            re.I,
+        match = re.search(
+            r"event\s*id\s*[:=]\s*([A-Za-z0-9_-]+)", desc, re.I
         )
-        m_state = re.search(
-            r"(?:event\s*)?state\s*[:=]\s*([A-Za-z0-9_-]+)",
-            desc,
-            re.I,
+        if match:
+            event_id = match.group(1)
+
+        match = re.search(
+            r"(?:event\s*)?state\s*[:=]\s*([A-Za-z0-9_-]+)", desc, re.I
         )
-        if m_id:
-            event_id = m_id.group(1)
-        if m_state:
-            state = m_state.group(1)
+        if match:
+            state = match.group(1)
 
     return desc, event_id, state
 
 
-# =========================================================
-# LETTURA FILE
-# =========================================================
 @st.cache_data(show_spinner=False)
 def load_comparto(file_bytes: bytes) -> pd.DataFrame:
     raw = pd.read_excel(BytesIO(file_bytes), header=None)
@@ -159,9 +144,17 @@ def load_comparto(file_bytes: bytes) -> pd.DataFrame:
     header_row = None
     for i in range(min(50, len(raw))):
         row_text = " ".join(str(x) for x in raw.iloc[i] if pd.notna(x))
-        if row_text.lower().count("hvac") > 5:
+        if "HVAC" in row_text.upper() and row_text.upper().count("HVAC") > 5:
             header_row = i
             break
+
+    if header_row is None:
+        # fallback: cerca una riga che contenga le colonne HVAC1/HVAC2
+        for i in range(min(50, len(raw))):
+            row_text = " ".join(str(x) for x in raw.iloc[i] if pd.notna(x)).upper()
+            if "HVAC1" in row_text and "HVAC2" in row_text:
+                header_row = i
+                break
 
     if header_row is None:
         raise ValueError("Intestazione HVAC COMPARTO non trovata nel file")
@@ -201,10 +194,7 @@ def load_comparto(file_bytes: bytes) -> pd.DataFrame:
     return df
 
 
-# =========================================================
-# STILE - COME HVAC CABINA
-# =========================================================
-def _page_style():
+def _card_style():
     st.markdown(
         """
         <style>
@@ -225,7 +215,7 @@ def _page_style():
         .stButton > button:focus {
             box-shadow: 0 0 0 2px rgba(100,116,139,.18) !important;
         }
-        .comparto-selected-bar {
+        .hvac-selected-bar {
             border: 1px solid #d7e2ef;
             background: #f7fbff;
             border-radius: 8px;
@@ -273,11 +263,6 @@ def _page_style():
         .digital-state.on { color: #15803d; }
         .digital-state.off { color: #64748b; }
         .digital-state.unknown { color: #a16207; }
-        .analog-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 9px;
-        }
         .analog-card {
             border: 1px solid #d8e0e8;
             border-radius: 8px;
@@ -297,22 +282,17 @@ def _page_style():
             font-weight: 800;
             margin-top: 3px;
         }
-        .hvac-section-title {
+        .hvac-panel-title {
             font-size: 18px;
             font-weight: 800;
-            margin: 8px 0 8px;
+            margin: 6px 0 8px;
         }
-        @media (max-width: 900px) {
-            .digital-grid,
-            .analog-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
+        @media (max-width: 1050px) {
+            .digital-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .analog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 560px) {
-            .digital-grid,
-            .analog-grid {
-                grid-template-columns: 1fr;
-            }
+            .digital-grid, .analog-grid { grid-template-columns: 1fr; }
         }
         </style>
         """,
@@ -325,10 +305,10 @@ def _render_analog(analog, row):
     for name, col in analog.items():
         value = safe_text(row, col)
         html.append(
-            '<div class="analog-card">'
+            f'<div class="analog-card">'
             f'<div class="analog-label">{name}</div>'
             f'<div class="analog-value">{value}</div>'
-            '</div>'
+            f'</div>'
         )
     html.append("</div>")
     st.markdown("".join(html), unsafe_allow_html=True)
@@ -337,26 +317,43 @@ def _render_analog(analog, row):
 def _render_digital(digital, row):
     html = ['<div class="digital-grid">']
     for name, col in digital.items():
-        raw_value = row[col] if col in row.index else pd.NA
-        status, css = digital_state(raw_value)
+        value = row[col] if col in row.index else pd.NA
+        status, css = digital_state(value)
         symbol = "●" if status == "ON" else "○"
         html.append(
             f'<div class="digital-card {css}">'
             f'<div class="digital-name">{name}</div>'
             f'<div class="digital-state {css}">{symbol} {status}</div>'
-            '</div>'
+            f'</div>'
         )
     html.append("</div>")
     st.markdown("".join(html), unsafe_allow_html=True)
 
 
-# =========================================================
-# PAGINA HVAC COMPARTO
-# =========================================================
+def _pick_chart_column(df, candidates, max_abs=100):
+    """Sceglie il primo candidato plausibile come temperatura/setpoint.
+    Evita automaticamente colonne raw che producono scale tipo 0-700.
+    """
+    for col in candidates:
+        if col not in df.columns:
+            continue
+        values = pd.to_numeric(df[col], errors="coerce").dropna()
+        if values.empty:
+            continue
+        med = float(values.abs().median())
+        if med <= max_abs:
+            return col
+    # fallback: primo candidato disponibile, senza inventare dati
+    for col in candidates:
+        if col in df.columns:
+            return col
+    return None
+
+
 def hvac_comparto_page():
     st.title("🚃 HVAC COMPARTO")
     st.caption("Clicca direttamente sul grafico nel punto che vuoi analizzare.")
-    _page_style()
+    _card_style()
 
     uploaded = st.file_uploader(
         "📥 Carica file HVAC COMPARTO",
@@ -379,27 +376,11 @@ def hvac_comparto_page():
         return
 
     required = list(HVAC1_ANALOG.values()) + list(HVAC2_ANALOG.values())
-    missing = [col for col in required if col not in df.columns]
-    if missing:
+    missing_analog = [c for c in required if c not in df.columns]
+    if missing_analog:
         st.error(
             "Colonne analogiche mancanti:\n\n"
-            + "\n".join(f"- {col}" for col in missing)
-        )
-        return
-
-    # Il grafico deve usare gli stessi segnali in °C già visualizzati
-    # nei valori analogici HVAC1/HVAC2, non i campi raw di regolazione.
-    graph_columns = {
-        "HVAC1_Temp": HVAC1_ANALOG["Saloon Temp"],
-        "HVAC1_SP": HVAC1_ANALOG["SetPoint"],
-        "HVAC2_Temp": HVAC2_ANALOG["Saloon Temp"],
-        "HVAC2_SP": HVAC2_ANALOG["SetPoint"],
-    }
-    missing_graph = [col for col in graph_columns.values() if col not in df.columns]
-    if missing_graph:
-        st.error(
-            "Nel file HVAC COMPARTO mancano le colonne del grafico:\n\n"
-            + "\n".join(f"- {col}" for col in missing_graph)
+            + "\n".join(f"- {c}" for c in missing_analog)
         )
         return
 
@@ -419,15 +400,39 @@ def hvac_comparto_page():
     event_cols = find_event_columns(df)
 
     # =========================================================
-    # GRAFICO - stesso impianto grafico della CABINA
+    # GRAFICO: STESSA STRUTTURA DELLA CABINA
     # =========================================================
+    temp_col = _pick_chart_column(
+        df,
+        [
+            HVAC1_ANALOG["Saloon Temp"],
+            HVAC2_ANALOG["Saloon Temp"],
+            "Saloon temperature for regulation",
+            "Saloon Temp",
+            "Temperature",
+        ],
+        max_abs=100,
+    )
+    setpoint_col = _pick_chart_column(
+        df,
+        [
+            HVAC1_ANALOG["SetPoint"],
+            HVAC2_ANALOG["SetPoint"],
+            "Set Point Temperature",
+            "SetPoint",
+        ],
+        max_abs=100,
+    )
+
+    if temp_col is None or setpoint_col is None:
+        st.error("Non trovo nel file i segnali di temperatura/set point del comparto.")
+        return
+
     chart_df = pd.DataFrame(
         {
             "Timestamp": df["Timestamp"],
-            "HVAC1_Temp": pd.to_numeric(df[graph_columns["HVAC1_Temp"]], errors="coerce"),
-            "HVAC1_SP": pd.to_numeric(df[graph_columns["HVAC1_SP"]], errors="coerce"),
-            "HVAC2_Temp": pd.to_numeric(df[graph_columns["HVAC2_Temp"]], errors="coerce"),
-            "HVAC2_SP": pd.to_numeric(df[graph_columns["HVAC2_SP"]], errors="coerce"),
+            "Temperatura": pd.to_numeric(df[temp_col], errors="coerce"),
+            "SetPoint": pd.to_numeric(df[setpoint_col], errors="coerce"),
         }
     )
 
@@ -435,31 +440,40 @@ def hvac_comparto_page():
     current_time = df.iloc[index]["Timestamp"]
 
     fig = go.Figure()
-    series = [
-        ("HVAC 1 - Saloon Temp", "HVAC1_Temp", None, 2),
-        ("HVAC 1 - Set Point", "HVAC1_SP", "dot", 1.5),
-        ("HVAC 2 - Saloon Temp", "HVAC2_Temp", None, 2),
-        ("HVAC 2 - Set Point", "HVAC2_SP", "dot", 1.5),
-    ]
 
-    for name, ycol, dash, width in series:
-        fig.add_trace(
-            go.Scatter(
-                x=chart_df["Timestamp"],
-                y=chart_df[ycol],
-                mode="lines+markers",
-                name=name,
-                line=dict(width=width, dash=dash) if dash else dict(width=width),
-                marker=dict(size=5),
-                customdata=points_index,
-                connectgaps=False,
-                hovertemplate=(
-                    f"<b>%{{x|%d/%m/%Y %H:%M:%S}}</b>"
-                    f"<br>{name}: %{{y:.2f}} °C"
-                    "<extra></extra>"
-                ),
-            )
+    fig.add_trace(
+        go.Scatter(
+            x=chart_df["Timestamp"],
+            y=chart_df["Temperatura"],
+            mode="lines+markers",
+            name="Temperatura Salone",
+            line=dict(width=2),
+            marker=dict(size=6),
+            customdata=points_index,
+            hovertemplate=(
+                "<b>%{x|%d/%m/%Y %H:%M:%S}</b>"
+                "<br>Temperatura: %{y:.2f} °C"
+                "<extra></extra>"
+            ),
         )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=chart_df["Timestamp"],
+            y=chart_df["SetPoint"],
+            mode="lines+markers",
+            name="Set Point",
+            line=dict(width=2, dash="dot"),
+            marker=dict(size=5),
+            customdata=points_index,
+            hovertemplate=(
+                "<b>%{x|%d/%m/%Y %H:%M:%S}</b>"
+                "<br>Set Point: %{y:.2f} °C"
+                "<extra></extra>"
+            ),
+        )
+    )
 
     fig.add_vline(
         x=current_time,
@@ -469,20 +483,40 @@ def hvac_comparto_page():
         annotation_position="top left",
     )
 
-    # Evidenzia i quattro valori del campione selezionato.
-    for ycol in ("HVAC1_Temp", "HVAC1_SP", "HVAC2_Temp", "HVAC2_SP"):
-        value = chart_df.iloc[index][ycol]
-        if pd.notna(value):
-            fig.add_trace(
-                go.Scatter(
-                    x=[current_time],
-                    y=[value],
-                    mode="markers",
-                    marker=dict(size=13, symbol="circle-open", line=dict(width=3)),
-                    showlegend=False,
-                    hoverinfo="skip",
-                )
+    temp = chart_df.iloc[index]["Temperatura"]
+    setpoint = chart_df.iloc[index]["SetPoint"]
+
+    if pd.notna(temp):
+        fig.add_trace(
+            go.Scatter(
+                x=[current_time],
+                y=[temp],
+                mode="markers",
+                marker=dict(
+                    size=15,
+                    symbol="circle-open",
+                    line=dict(width=3),
+                ),
+                showlegend=False,
+                hoverinfo="skip",
             )
+        )
+
+    if pd.notna(setpoint):
+        fig.add_trace(
+            go.Scatter(
+                x=[current_time],
+                y=[setpoint],
+                mode="markers",
+                marker=dict(
+                    size=13,
+                    symbol="circle-open",
+                    line=dict(width=3),
+                ),
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
 
     fig.update_layout(
         height=470,
@@ -504,41 +538,62 @@ def hvac_comparto_page():
         dragmode="zoom",
     )
 
-    clicked_points = plotly_events(
+    # =========================================================
+    # CLICK SINGOLO: STESSA LOGICA DELLA CABINA
+    # =========================================================
+    chart_event = st.plotly_chart(
         fig,
-        click_event=True,
-        select_event=False,
-        hover_event=False,
-        override_height=470,
-        override_width="100%",
-        key=f"hvac_comparto_chart_{signature}",
+        use_container_width=True,
+        key="hvac_comparto_chart",
+        on_select="rerun",
+        selection_mode=["points"],
+        config={
+            "displaylogo": False,
+            "displayModeBar": False,
+            "responsive": True,
+            "scrollZoom": False,
+        },
     )
 
-    if clicked_points:
-        raw_index = clicked_points[0].get("pointIndex")
-        try:
-            selected_index = int(raw_index)
-        except (TypeError, ValueError):
-            selected_index = None
+    selected_index = None
+    try:
+        selected_points = chart_event.selection.points
+    except Exception:
+        selected_points = []
 
-        if selected_index is not None and 0 <= selected_index <= max_index:
-            index = selected_index
-            st.session_state[index_key] = index
-            current_time = df.iloc[index]["Timestamp"]
-            st.rerun()
+    for point in selected_points or []:
+        raw_index = point.get("customdata", point.get("point_number"))
+
+        if isinstance(raw_index, (list, tuple)) and raw_index:
+            raw_index = raw_index[0]
+
+        try:
+            candidate = int(raw_index)
+        except (TypeError, ValueError):
+            candidate = None
+
+        if candidate is not None and 0 <= candidate <= max_index:
+            selected_index = candidate
+            break
+
+    if selected_index is not None:
+        index = selected_index
+        st.session_state[index_key] = index
+        current_time = df.iloc[index]["Timestamp"]
 
     # =========================================================
-    # BARRA CAMPIONE + SOLI DUE PULSANTI
+    # BARRA CAMPIONE + I DUE SOLI PULSANTI
     # =========================================================
     st.markdown(
-        f'<div class="comparto-selected-bar">'
-        f'🕐 {current_time.strftime("%d/%m/%Y %H:%M:%S")} '
-        f'&nbsp;·&nbsp; Campione {index + 1} / {len(df)}'
+        f'<div class="hvac-selected-bar">'
+        f'🕐 {current_time.strftime("%d/%m/%Y %H:%M:%S")}'
+        f' &nbsp;·&nbsp; Campione {index + 1} / {len(df)}'
         f'</div>',
         unsafe_allow_html=True,
     )
 
     _, prev_col, next_col, _ = st.columns([1.8, 1, 1, 1.8])
+
     with prev_col:
         if st.button(
             "◀  INDIETRO",
@@ -565,9 +620,12 @@ def hvac_comparto_page():
     st.markdown("### 🚨 Evento Cabina/Comparto")
 
     event_id_series = (
-        pd.to_numeric(df[event_cols["id"]], errors="coerce")
+        pd.to_numeric(
+            df[event_cols["id"]],
+            errors="coerce",
+        )
         if event_cols.get("id") and event_cols["id"] in df.columns
-        else pd.Series(pd.NA, index=df.index)
+        else pd.Series(0, index=df.index, dtype="float64")
     )
 
     significant_mask = event_id_series.fillna(0).ne(0)
@@ -576,13 +634,24 @@ def hvac_comparto_page():
     if len(prior_events):
         event_index = int(prior_events[-1])
         event_row = df.iloc[event_index]
-        desc, event_id, event_state = extract_event(event_row, event_cols)
-        event_time = event_row["Timestamp"].strftime("%d/%m/%Y %H:%M:%S")
-        event_text = desc if desc != "—" else "Evento rilevato"
+
+        desc, event_id, event_state = extract_event(
+            event_row,
+            event_cols,
+        )
+
+        event_time = event_row["Timestamp"].strftime(
+            "%d/%m/%Y %H:%M:%S"
+        )
+
+        event_text = (
+            desc if desc != "—" else "Evento rilevato"
+        )
 
         st.warning(
-            f"{event_text}  ·  Event ID: {event_id}  ·  "
-            f"State: {event_state}  ·  Evento: {event_time}"
+            f"{event_text}  ·  Event ID: {event_id}"
+            f"  ·  State: {event_state}"
+            f"  ·  Evento: {event_time}"
         )
 
         if event_index != index:
@@ -590,27 +659,45 @@ def hvac_comparto_page():
                 f"Ultimo evento significativo: campione {event_index + 1}."
             )
     else:
-        desc, event_id, event_state = extract_event(row, event_cols)
-        if desc != "—" or event_id != "—" or event_state != "—":
-            event_text = desc if desc != "—" else "Evento rilevato"
+        desc, event_id, event_state = extract_event(
+            row,
+            event_cols,
+        )
+
+        if (
+            desc != "—"
+            or event_id != "—"
+            or event_state != "—"
+        ):
+            event_text = (
+                desc if desc != "—" else "Evento rilevato"
+            )
             st.info(
-                f"{event_text}  ·  Event ID: {event_id}  · "
-                f"State: {event_state}"
+                f"{event_text}  ·  Event ID: {event_id}"
+                f"  ·  State: {event_state}"
             )
         else:
             st.success("Nessun evento HVAC")
 
     # =========================================================
-    # HVAC 1 / HVAC 2
+    # HVAC 1 + HVAC 2
     # =========================================================
-    st.markdown('<div class="hvac-section-title">💡 Stati Digitali HVAC 1</div>', unsafe_allow_html=True)
-    _render_digital(HVAC1_DIGITAL, row)
+    col1, col2 = st.columns(2)
 
-    st.markdown('<div class="hvac-section-title">📊 Valori Analogici HVAC 1</div>', unsafe_allow_html=True)
-    _render_analog(HVAC1_ANALOG, row)
+    with col1:
+        st.markdown(
+            '<div class="hvac-panel-title">❄️ HVAC 1</div>',
+            unsafe_allow_html=True,
+        )
+        _render_analog(HVAC1_ANALOG, row)
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        _render_digital(HVAC1_DIGITAL, row)
 
-    st.markdown('<div class="hvac-section-title">💡 Stati Digitali HVAC 2</div>', unsafe_allow_html=True)
-    _render_digital(HVAC2_DIGITAL, row)
-
-    st.markdown('<div class="hvac-section-title">📊 Valori Analogici HVAC 2</div>', unsafe_allow_html=True)
-    _render_analog(HVAC2_ANALOG, row)
+    with col2:
+        st.markdown(
+            '<div class="hvac-panel-title">❄️ HVAC 2</div>',
+            unsafe_allow_html=True,
+        )
+        _render_analog(HVAC2_ANALOG, row)
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        _render_digital(HVAC2_DIGITAL, row)
