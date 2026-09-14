@@ -378,7 +378,8 @@ def hvac_comparto_page():
         annotation_position="top left",
     )
 
-    for ycol in ("HVAC1_Temp", "HVAC1_SP", "HVAC2_Temp", "HVAC2_SP"):
+    # Evidenzia il punto selezionato sulle due curve realmente presenti nel grafico.
+    for ycol in ("Temperature", "SetPoint"):
         value = chart_df.iloc[index][ycol]
         if pd.notna(value):
             fig.add_trace(
