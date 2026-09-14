@@ -327,22 +327,33 @@ def hvac_comparto_page():
 
     event_cols = find_event_columns(df)
 
+    # GRAFICO: nel codice originale del progetto i due segnali termici
+    # corretti erano quelli di regolazione comuni del comparto.
+    # I campi "AN HVACx ..." sono segnali analogici e non vanno usati
+    # come temperatura ambiente del grafico: portano a scale non in °C.
+    GRAPH_TEMP_COL = "Saloon temperature for regulation"
+    GRAPH_SP_COL = "Set Point Temperature"
+
+    missing_graph = [c for c in (GRAPH_TEMP_COL, GRAPH_SP_COL) if c not in df.columns]
+    if missing_graph:
+        st.error(
+            "Nel file HVAC COMPARTO mancano le colonne corrette per il grafico:\n\n"
+            + "\n".join(f"- {c}" for c in missing_graph)
+        )
+        return
+
     chart_df = pd.DataFrame({
         "Timestamp": df["Timestamp"],
-        "HVAC1_Temp": pd.to_numeric(df[HVAC1_ANALOG["Saloon Temp"]], errors="coerce"),
-        "HVAC1_SP": pd.to_numeric(df[HVAC1_ANALOG["SetPoint"]], errors="coerce"),
-        "HVAC2_Temp": pd.to_numeric(df[HVAC2_ANALOG["Saloon Temp"]], errors="coerce"),
-        "HVAC2_SP": pd.to_numeric(df[HVAC2_ANALOG["SetPoint"]], errors="coerce"),
+        "Temperature": pd.to_numeric(df[GRAPH_TEMP_COL], errors="coerce"),
+        "SetPoint": pd.to_numeric(df[GRAPH_SP_COL], errors="coerce"),
     })
     points = list(range(len(df)))
     current_time = df.iloc[index]["Timestamp"]
 
     fig = go.Figure()
     series = [
-        ("HVAC 1 - Saloon Temp", "HVAC1_Temp", None, 2),
-        ("HVAC 1 - SetPoint", "HVAC1_SP", "dot", 1.5),
-        ("HVAC 2 - Saloon Temp", "HVAC2_Temp", None, 2),
-        ("HVAC 2 - SetPoint", "HVAC2_SP", "dot", 1.5),
+        ("Temperatura Salone", "Temperature", None, 2),
+        ("Set Point", "SetPoint", "dot", 1.5),
     ]
     for name, ycol, dash, width in series:
         fig.add_trace(
