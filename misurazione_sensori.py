@@ -1751,7 +1751,8 @@ def misurazione_sensori_page():
                 "ADD",
                 "STA",
                 "I",
-                "I_I"
+                "I_I",
+                "PW4"
             ]
 
             colonne_critici = [
