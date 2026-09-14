@@ -448,16 +448,43 @@ def hvac_cabina_page():
     row = df.iloc[index]
 
     st.markdown("### 🚨 Evento Cabina")
-    desc, event_id, event_state = extract_event(row, event_cols)
 
-    # Mostriamo l'evento del campione corrente. Se il file contiene solo
-    # un evento generico (es. Periodic Recording), non lo trasformiamo
-    # artificialmente in un altro evento.
-    if desc != "—" or event_id != "—" or event_state != "—":
+    # Nel file reale molti campioni sono "HVAC CAB Periodic Recording"
+    # con Event Id = 0. L'evento diagnostico vero è invece la riga
+    # con Event Id diverso da 0. Quando l'utente si sposta sul grafico,
+    # mostriamo quindi l'ultimo evento significativo raggiunto, compreso
+    # l'eventuale evento del campione selezionato.
+    event_id_series = pd.to_numeric(df[event_cols["id"]], errors="coerce") if event_cols.get("id") else pd.Series(pd.NA, index=df.index)
+    significant_mask = event_id_series.fillna(0).ne(0)
+
+    prior_events = df.index[(df.index <= index) & significant_mask]
+
+    if len(prior_events) > 0:
+        event_index = int(prior_events[-1])
+        event_row = df.iloc[event_index]
+        desc, event_id, event_state = extract_event(event_row, event_cols)
+        event_time = event_row["Timestamp"].strftime("%d/%m/%Y %H:%M:%S")
+
         event_text = desc if desc != "—" else "Evento rilevato"
-        st.warning(f"{event_text}  ·  Event ID: {event_id}  ·  State: {event_state}")
+        st.warning(
+            f"{event_text}  ·  Event ID: {event_id}  ·  State: {event_state}  ·  Evento: {event_time}"
+        )
+
+        # Se il campione selezionato non coincide con la riga evento,
+        # lo rendiamo esplicito per non confondere l'evento con il campione.
+        if event_index != index:
+            st.caption(
+                f"Ultimo evento significativo prima/durante il campione selezionato: campione {event_index + 1}."
+            )
     else:
-        st.success("Nessun evento cabina")
+        # Prima del primo evento significativo mostriamo il contenuto
+        # del campione selezionato, senza inventare un evento.
+        desc, event_id, event_state = extract_event(row, event_cols)
+        if desc != "—" or event_id != "—" or event_state != "—":
+            event_text = desc if desc != "—" else "Evento rilevato"
+            st.info(f"{event_text}  ·  Event ID: {event_id}  ·  State: {event_state}")
+        else:
+            st.success("Nessun evento cabina")
 
     st.markdown("### 💡 Stati Digitali")
     cards = []
