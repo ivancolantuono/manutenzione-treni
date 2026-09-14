@@ -53,6 +53,58 @@ def digital_state(value):
     return str(value), "unknown"
 
 
+def find_event_columns(df):
+    """Individua le colonne evento anche con piccole differenze di nome."""
+    result = {"description": None, "id": None, "state": None}
+    cols = list(df.columns)
+
+    normalized = {
+        c: str(c).strip().lower().replace("_", " ").replace("-", " ")
+        for c in cols
+    }
+
+    for c, n in normalized.items():
+        compact = " ".join(n.split())
+        if result["description"] is None and (
+            "event description" in compact
+            or compact in {"event", "event name", "event text"}
+            or ("event" in compact and "description" in compact)
+        ):
+            result["description"] = c
+        elif result["id"] is None and (
+            "event id" in compact
+            or compact in {"eventid", "event code", "event number"}
+        ):
+            result["id"] = c
+        elif result["state"] is None and (
+            "event state" in compact
+            or compact in {"eventstate", "state"}
+        ):
+            result["state"] = c
+
+    return result
+
+
+def extract_event(row, event_cols):
+    """Legge l'evento del campione selezionato senza dipendere da nomi rigidi."""
+    desc = safe_text(row, event_cols.get("description")) if event_cols.get("description") else "—"
+    event_id = safe_text(row, event_cols.get("id")) if event_cols.get("id") else "—"
+    state = safe_text(row, event_cols.get("state")) if event_cols.get("state") else "—"
+
+    # Alcuni export HVAC riportano tutto in una singola stringa, per esempio:
+    # "HVAC ... - Event ID: 12 - State: ON".
+    combined = desc if desc != "—" else ""
+    import re as _re
+    m_id = _re.search(r"event\s*id\s*[:=]\s*([A-Za-z0-9_-]+)", combined, _re.I)
+    m_state = _re.search(r"(?:event\s*)?state\s*[:=]\s*([A-Za-z0-9_-]+)", combined, _re.I)
+    if m_id:
+        event_id = m_id.group(1)
+    if m_state:
+        state = m_state.group(1)
+
+    return desc, event_id, state
+
+
 @st.cache_data(show_spinner=False)
 def load_cabina(file_bytes: bytes) -> pd.DataFrame:
     raw = pd.read_excel(BytesIO(file_bytes), header=None)
@@ -241,6 +293,9 @@ def hvac_cabina_page():
 
     max_index = len(df) - 1
     index = int(st.session_state.get(index_key, 0))
+
+    # Rilevazione robusta delle colonne evento del file reale.
+    event_cols = find_event_columns(df)
     index = max(0, min(index, max_index))
 
     chart_df = pd.DataFrame(
@@ -393,11 +448,14 @@ def hvac_cabina_page():
     row = df.iloc[index]
 
     st.markdown("### 🚨 Evento Cabina")
-    desc = safe_text(row, "Event Description")
-    event_id = safe_text(row, "Event Id")
-    event_state = safe_text(row, "Event State")
-    if desc != "—":
-        st.warning(f"{desc}  ·  Event ID: {event_id}  ·  State: {event_state}")
+    desc, event_id, event_state = extract_event(row, event_cols)
+
+    # Mostriamo l'evento del campione corrente. Se il file contiene solo
+    # un evento generico (es. Periodic Recording), non lo trasformiamo
+    # artificialmente in un altro evento.
+    if desc != "—" or event_id != "—" or event_state != "—":
+        event_text = desc if desc != "—" else "Evento rilevato"
+        st.warning(f"{event_text}  ·  Event ID: {event_id}  ·  State: {event_state}")
     else:
         st.success("Nessun evento cabina")
 
