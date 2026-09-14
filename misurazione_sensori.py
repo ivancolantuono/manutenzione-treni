@@ -569,7 +569,8 @@ def importa_mnt(
             "ADD": add,
             "I": None,
             "I_I": None,
-            "STA": None
+            "STA": None,
+            "PW4": None
         }
 
         # --------------------------------------------------
@@ -617,6 +618,13 @@ def importa_mnt(
         records.append(
             record
         )
+        # --------------------------------------------------
+        # PW4
+        # --------------------------------------------------
+        
+        if len(parti) > 9:
+        
+            record["PW4"] = parti[9]
 
     # ======================================================
     # DATAFRAME
@@ -640,7 +648,8 @@ def importa_mnt(
     for colonna in [
         "I",
         "I_I",
-        "STA"
+        "STA",
+        "PW4"
     ]:
 
         df[colonna] = pd.to_numeric(
@@ -1572,6 +1581,78 @@ def misurazione_sensori_page():
                 chart,
                 use_container_width=True
             )
+
+        st.divider()
+
+        st.subheader(
+            f"📊 PW4 — {cassa}"
+        )
+        
+        pw4_df = grafico_df[
+            [
+                "SENSORE",
+                "POSIZIONE",
+                "PW4"
+            ]
+        ].copy()
+        
+        pw4_df["PW4"] = pd.to_numeric(
+            pw4_df["PW4"],
+            errors="coerce"
+        )
+        
+        pw4_df = pw4_df[
+            pw4_df["PW4"].notna()
+        ].copy()
+        
+        grafico_pw4 = (
+            alt.Chart(pw4_df)
+            .mark_line(
+                point=True,
+                strokeWidth=2
+            )
+            .encode(
+        
+                x=alt.X(
+                    "SENSORE:N",
+                    sort=alt.SortField(
+                        field="POSIZIONE",
+                        order="ascending"
+                    ),
+                    axis=alt.Axis(
+                        title="Sensori",
+                        labelAngle=-90,
+                        labelOverlap=False
+                    )
+                ),
+        
+                y=alt.Y(
+                    "PW4:Q",
+                    title="PW4"
+                ),
+        
+                tooltip=[
+                    alt.Tooltip(
+                        "SENSORE:N",
+                        title="Sensore"
+                    ),
+        
+                    alt.Tooltip(
+                        "PW4:Q",
+                        title="PW4"
+                    )
+                ]
+            )
+            .properties(
+                height=500
+            )
+            .interactive()
+        )
+        
+        st.altair_chart(
+            grafico_pw4,
+            use_container_width=True
+        )
 
         st.caption(
             "⚠️ STA ≤ 45 = sensore sotto soglia | "
