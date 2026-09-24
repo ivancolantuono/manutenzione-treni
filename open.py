@@ -190,6 +190,8 @@ def openitem_page():
     filtro_impianto = col3.multiselect("⚙️ Impianto", lista_impianti)
     
     st.divider()
+
+    st.divider()
     
     def applica_filtri(d):
     
