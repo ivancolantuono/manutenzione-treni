@@ -189,6 +189,7 @@ def openitem_page():
     filtro_cassa = col2.multiselect("☑️ Cassa", lista_casse)
     filtro_impianto = col3.multiselect("⚙️ Impianto", lista_impianti)
     
+    st.divider()
     
     def applica_filtri(d):
     
