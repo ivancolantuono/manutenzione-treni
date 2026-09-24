@@ -624,30 +624,24 @@ def filter_summary(summary, search_text):
 
 def render_summary(summary):
 
-    st.subheader("📋 Summary")
-
     columns = (
         ["REC", "CODE", "DATE", "TIME"]
         + [f"F{i+1}" for i in range(MAX_FIELDS)]
         + ["DESCRIZIONE"]
     )
 
-    df = pd.DataFrame(
-        summary,
-        columns=columns
+    if not summary:
+        st.info("Nessun evento da visualizzare.")
+        return
+
+    df = pd.DataFrame(summary, columns=columns)
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
     )
 
-    # -----------------------------------------------------
-    # CERCA NELLA DESCRIZIONE
-    # -----------------------------------------------------
-
-
-    return filtered_df
-
-
-# =========================================================
-# ANALOGICI
-# =========================================================
 
 def show_analogicals(row):
     columns = st.columns(len(ANALOG_SIGNALS), gap="small")
@@ -714,31 +708,13 @@ def ccm_page():
     # RICERCA - UNA SOLA CASELLA
     # =====================================================
 
-    st.subheader("📋 Summary")
-
-
     search_text = st.text_input(
         "🔎 Cerca nella descrizione",
         placeholder="Inserisci una parola o parte della descrizione...",
         key="ccm_search_description"
     )
 
-    filtered_summary = filter_summary(
-        summary,
-        search_text
-    )
-
-    if search_text.strip():
-        st.caption(
-            f"Trovati {len(filtered_summary)} eventi su {len(summary)}"
-        )
-
-
-
-    filtered_summary = filter_summary(
-        summary,
-        search_text
-    )
+    filtered_summary = filter_summary(summary, search_text)
 
     if search_text.strip():
         st.caption(
