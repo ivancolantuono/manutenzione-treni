@@ -2954,5 +2954,5 @@ elif menu == "Treno":
     elif sistema == "Analizza Log FDE":
         analizza_page()
 
-    elif pagina == "CCM":
+    elif sistema == "CCM":
         ccm_page()
