@@ -624,7 +624,7 @@ def filter_summary(summary, search_text):
 
 def render_summary(summary):
 
-   
+    st.subheader("📋 Summary")
 
     columns = (
         ["REC", "CODE", "DATE", "TIME"]
@@ -637,7 +637,11 @@ def render_summary(summary):
         columns=columns
     )
 
-    
+    # -----------------------------------------------------
+    # CERCA NELLA DESCRIZIONE
+    # -----------------------------------------------------
+
+
     if search_text.strip():
 
         mask = df["DESCRIZIONE"].astype(str).str.contains(
@@ -738,11 +742,24 @@ def ccm_page():
 
     st.subheader("📋 Summary")
 
+
     search_text = st.text_input(
         "🔎 Cerca nella descrizione",
         placeholder="Inserisci una parola o parte della descrizione...",
         key="ccm_search_description"
     )
+
+    filtered_summary = filter_summary(
+        summary,
+        search_text
+    )
+
+    if search_text.strip():
+        st.caption(
+            f"Trovati {len(filtered_summary)} eventi su {len(summary)}"
+        )
+
+
 
     filtered_summary = filter_summary(
         summary,
