@@ -20,6 +20,7 @@ from carrelli import carrelli_page
 from analizza import analizza_page
 from hvac_cabina import hvac_cabina_page
 from hvac_comparto import hvac_comparto_page
+from ccm import ccm_page
 import urllib.parse
 import secrets
 
@@ -1212,6 +1213,7 @@ with st.sidebar:
                     "HVAC Cabina",
                     "HVAC Comparto",
                     "Misurazione Sensori",
+                    "CCM",
                     "Analizza Log FDE"
                 ],
                 key="sistema_treno",
@@ -1300,6 +1302,7 @@ with st.sidebar:
                     "HVAC Cabina",
                     "HVAC Comparto",
                     "Misurazione Sensori",
+                    "CCM",
                     "Analizza Log FDE"
                 ],
                 key="sistema_treno",
@@ -2950,3 +2953,6 @@ elif menu == "Treno":
 
     elif sistema == "Analizza Log FDE":
         analizza_page()
+
+    elif pagina == "CCM":
+        ccm_page()
