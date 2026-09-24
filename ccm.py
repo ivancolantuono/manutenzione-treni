@@ -767,40 +767,7 @@ def ccm_page():
         )
         return
 
-    # -----------------------------------------------------
-    # RICERCA NELLA DESCRIZIONE
-    # -----------------------------------------------------
-
-    st.subheader("📋 Summary")
-
-    search_text = st.text_input(
-        "🔎 Cerca nella descrizione",
-        placeholder="Inserisci una parola o parte della descrizione...",
-        key="ccm_search_description"
-    )
-
-    filtered_summary = filter_summary(
-        summary,
-        search_text
-    )
-
-    if search_text.strip():
-        st.caption(
-            f"Trovati {len(filtered_summary)} eventi "
-            f"su {len(summary)}"
-        )
-
-    # -----------------------------------------------------
-    # SUMMARY FILTRATO
-    # -----------------------------------------------------
-
-    render_summary(filtered_summary)
-
-    if not filtered_summary:
-        st.warning(
-            "Nessun evento trovato nella descrizione."
-        )
-        return
+   
 
     # -----------------------------------------------------
     # SELEZIONE REC
