@@ -48,10 +48,10 @@ BIT_MAP = {
 
     "PSWA": {
         0: "UNDERVOLTPRIM3K",
-        1: "dvfProtLed",
-        2: "dvlProtLed",
-        3: "dvfProtLed2",
-        4: "dvlProtLed2",
+        1: "CHPIND1_HOT",
+        2: "CHPIND2_HOT",
+        3: "INTAIR_HOT",
+        4: "HEATSINK_HOT",
         5: "koThCHPIND1",
         6: "koThCHPIND2",
         7: "koThINTAIR",
@@ -59,22 +59,22 @@ BIT_MAP = {
         9: "PcuKO",
         10: "pswCHPIND1_HOTMAX",
         11: "pswUNDERVOLTPRIM",
-        12: "pswOPENFAILBYS",
+        12: "pswTV1SUPERV",
         13: "pswCHPIND2_HOTMAX",
         14: "pswUNDERVOLTSEC",
-        15: "pswOPENFAILBY",
+        15: "pswTVISUPERV",
     },
 
     "PSWB": {
         0: "pswINTAIR_HOTMAX",
         1: "pswUNBASUPERV",
         2: "pswkoTA",
-        3: "-----",
+        3: "pswTA1SUPERV",
         4: "UNDERVOLTLINE3K",
-        5: "pswINCALTI",
+        5: "EARTHFAULT",
         6: "DISCHA_FAIL",
         7: "HEATSINK_HOTMAX",
-        8: "pswCLOSEFAILBY",
+        8: "COMPVTVIMCM1",
         9: "TASUPERV",
         10: "CCMESCL",
         11: "CHARGESUPERV",
@@ -104,22 +104,7 @@ BIT_MAP = {
     },
 
     "PHW2": {
-        0: "-----",
-        1: "-----",
-        2: "-----",
-        3: "-----",
-        4: "earthfault",
-        5: "-----",
-        6: "-----",
-        7: "-----",
-        8: "-----",
-        9: "-----",
-        10: "-----",
-        11: "-----",
-        12: "-----",
-        13: "-----",
-        14: "-----",
-        15: "-----",
+        0: "earthfault",
     },
 
     "PHW3": {
@@ -130,9 +115,9 @@ BIT_MAP = {
         4: "DiaUp5",
         5: "DiaDown1",
         6: "DiaDown2",
-        7: "-----",
-        8: "-----",
-        9: "-----",
+        7: "DiaDown3",
+        8: "DiaDown4",
+        9: "DiaDown5",
         10: "-----",
         11: "-----",
         12: "-----",
@@ -598,36 +583,13 @@ def render_word(word, states):
     st.markdown("\n".join(html_parts), unsafe_allow_html=True)
 
 
+def show_summary(summary):
+    return render_summary(summary)
+
+
 # =========================================================
 # RICERCA NEL SUMMARY
 # =========================================================
-
-def filter_summary(summary, search_text):
-    """
-    Filtra gli eventi del Summary cercando il testo
-    nella DESCRIZIONE.
-    La ricerca non distingue maiuscole/minuscole.
-    """
-
-    if not search_text:
-        return summary
-
-    search_text = search_text.strip().lower()
-
-    if not search_text:
-        return summary
-
-    filtered = []
-
-    for row in summary:
-        description = str(row[-1]).lower()
-
-        if search_text in description:
-            filtered.append(row)
-
-    return filtered
-
-
 
 def show_all_digitals(states):
     columns = st.columns(5, gap="small")
@@ -635,6 +597,25 @@ def show_all_digitals(states):
     for index, word in enumerate(DIGITAL_WORDS):
         with columns[index % 5]:
             render_word(word, states)
+
+
+# =========================================================
+# RICERCA NEL SUMMARY
+# =========================================================
+
+def filter_summary(summary, search_text):
+    if not search_text:
+        return summary
+
+    text = str(search_text).strip().lower()
+
+    if not text:
+        return summary
+
+    return [
+        row for row in summary
+        if text in str(row[-1]).lower()
+    ]
 
 
 # =========================================================
@@ -732,9 +713,9 @@ def ccm_page():
 
     st.title("CCM")
 
-    # -----------------------------------------------------
+    # =====================================================
     # CARICAMENTO FILE
-    # -----------------------------------------------------
+    # =====================================================
 
     uploaded_file = st.file_uploader(
         "Carica file CCM",
@@ -743,35 +724,58 @@ def ccm_page():
     )
 
     if uploaded_file is None:
-        st.info(
-            "Carica un file .CAP per iniziare l'analisi."
-        )
+        st.info("Carica un file .CAP per iniziare l'analisi.")
         return
 
-    # -----------------------------------------------------
+    # =====================================================
     # PARSING
-    # -----------------------------------------------------
+    # =====================================================
 
     try:
         summary, ll_blocks = parse_file(uploaded_file)
-
     except Exception as error:
-        st.error(
-            f"Errore nella lettura del file CCM: {error}"
-        )
+        st.error(f"Errore nella lettura del file CCM: {error}")
         return
 
     if not summary:
-        st.warning(
-            "Nessun evento Summary trovato nel file."
-        )
+        st.warning("Nessun evento Summary trovato nel file.")
         return
 
-   
+    # =====================================================
+    # RICERCA - UNA SOLA CASELLA
+    # =====================================================
 
-    # -----------------------------------------------------
+    st.subheader("📋 Summary")
+
+    search_text = st.text_input(
+        "🔎 Cerca nella descrizione",
+        placeholder="Inserisci una parola o parte della descrizione...",
+        key="ccm_search_description"
+    )
+
+    filtered_summary = filter_summary(
+        summary,
+        search_text
+    )
+
+    if search_text.strip():
+        st.caption(
+            f"Trovati {len(filtered_summary)} eventi su {len(summary)}"
+        )
+
+    # =====================================================
+    # SUMMARY
+    # =====================================================
+
+    render_summary(filtered_summary)
+
+    if not filtered_summary:
+        st.warning("Nessun evento trovato nella descrizione.")
+        return
+
+    # =====================================================
     # SELEZIONE REC
-    # -----------------------------------------------------
+    # =====================================================
 
     st.markdown("---")
 
@@ -780,13 +784,10 @@ def ccm_page():
     for row in filtered_summary:
 
         rec = int(row[0])
-        description = row[-1]
+        description = str(row[-1]).strip()
 
         if description:
-            label = (
-                f"REC {rec} — "
-                f"{description}"
-            )
+            label = f"REC {rec} — {description}"
         else:
             label = f"REC {rec}"
 
@@ -800,42 +801,36 @@ def ccm_page():
 
     selected_rec = options[selected_label]
 
-    ll_rows = ll_blocks.get(
-        selected_rec,
-        []
-    )
+    ll_rows = ll_blocks.get(selected_rec, [])
 
     if not ll_rows:
         st.warning(
-            f"Nessun campione LL disponibile "
-            f"per REC {selected_rec}."
+            f"Nessun campione LL disponibile per REC {selected_rec}."
         )
         return
 
-    # -----------------------------------------------------
-    # DESCRIZIONE REC
-    # -----------------------------------------------------
+    # =====================================================
+    # DESCRIZIONE
+    # =====================================================
 
-    selected_summary = None
-
-    for row in filtered_summary:
-
-        if int(row[0]) == selected_rec:
-            selected_summary = row
-            break
+    selected_summary = next(
+        (
+            row
+            for row in filtered_summary
+            if int(row[0]) == selected_rec
+        ),
+        None
+    )
 
     if selected_summary:
-
-        description = selected_summary[-1]
+        description = str(selected_summary[-1]).strip()
 
         if description:
-            st.caption(
-                f"Descrizione: {description}"
-            )
+            st.caption(f"Descrizione: {description}")
 
-    # -----------------------------------------------------
+    # =====================================================
     # TIMELINE
-    # -----------------------------------------------------
+    # =====================================================
 
     max_index = len(ll_rows) - 1
 
@@ -855,19 +850,15 @@ def ccm_page():
         key=f"ccm_timeline_{selected_rec}"
     )
 
-    st.session_state[
-        "ccm_current_index"
-    ] = current_index
+    st.session_state["ccm_current_index"] = current_index
 
-    # -----------------------------------------------------
+    # =====================================================
     # CAMPIONE CORRENTE
-    # -----------------------------------------------------
+    # =====================================================
 
     current_row = ll_rows[current_index]
 
-    states = decode_rec(
-        current_row
-    )
+    states = decode_rec(current_row)
 
     st.markdown(
         f"""
@@ -882,30 +873,26 @@ def ccm_page():
         unsafe_allow_html=True
     )
 
-    # -----------------------------------------------------
-    # DIGITALI
-    # -----------------------------------------------------
+    # =====================================================
+    # DIGITALI - 5 COLONNE
+    # =====================================================
 
     st.subheader("🔌 Segnali digitali")
 
-    # 5 colonne
     columns = st.columns(5, gap="small")
 
     for index, word in enumerate(DIGITAL_WORDS):
 
-        column = columns[index % 5]
-
-        with column:
+        with columns[index % 5]:
             render_word(word, states)
 
-    # -----------------------------------------------------
+    # =====================================================
     # ANALOGICI
-    # -----------------------------------------------------
+    # =====================================================
 
     st.markdown("---")
 
     st.subheader("📈 Segnali analogici")
 
-    show_analogicals(
-        current_row
-    )
+    show_analogicals(current_row)
+
