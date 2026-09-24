@@ -1,10 +1,4 @@
-# =========================================================
-# CCM.PY
-# ANALIZZATORE CCM - STREAMLIT
-# =========================================================
-
 import streamlit as st
-import pandas as pd
 import re
 
 
@@ -25,31 +19,14 @@ ANALOG_SIGNALS = [
 
 
 # =========================================================
-# ORDINE PAROLE DIGITALI
-# =========================================================
-
-DIGITAL_GROUPS = [
-    "sCCa",
-    "PSWA",
-    "PSWB",
-    "PHW1",
-    "PHW2",
-    "flcom",
-    "PHW3",
-    "stdi",
-    "stdo",
-    "PCUc",
-    "PCUs",
-    "msf",
-]
-
-
-# =========================================================
-# BIT MAP
+# DECODIFICA BIT
 # =========================================================
 
 BIT_MAP = {
 
+    # -----------------------------------------------------
+    # sCCa
+    # -----------------------------------------------------
     "sCCa": {
         0: "Test",
         1: "c2qok",
@@ -69,12 +46,15 @@ BIT_MAP = {
         15: "parzCCon",
     },
 
+    # -----------------------------------------------------
+    # PSWA
+    # -----------------------------------------------------
     "PSWA": {
         0: "UNDERVOLTPRIM3K",
-        1: "dvfProtLed",
-        2: "dvlProtLed",
-        3: "dvfProtLed2",
-        4: "dvlProtLed2",
+        1: "CHPIND1_HOT",
+        2: "CHPIND2_HOT",
+        3: "INTAIR_HOT",
+        4: "HEATSINK_HOT",
         5: "koThCHPIND1",
         6: "koThCHPIND2",
         7: "koThINTAIR",
@@ -82,22 +62,25 @@ BIT_MAP = {
         9: "PcuKO",
         10: "pswCHPIND1_HOTMAX",
         11: "pswUNDERVOLTPRIM",
-        12: "pswOPENFAILBYS",
+        12: "pswTV1SUPERV",
         13: "pswCHPIND2_HOTMAX",
         14: "pswUNDERVOLTSEC",
-        15: "pswOPENFAILBY",
+        15: "pswTVISUPERV",
     },
 
+    # -----------------------------------------------------
+    # PSWB
+    # -----------------------------------------------------
     "PSWB": {
         0: "pswINTAIR_HOTMAX",
         1: "pswUNBASUPERV",
-        2: "pswkoTA",
+        2: "pswTA1SUPERV",
         3: "pswTA2SUPERV",
         4: "UNDERVOLTLINE3K",
-        5: "pswINCALTI",
+        5: "EARTHFAULT",
         6: "DISCHA_FAIL",
         7: "HEATSINK_HOTMAX",
-        8: "pswCLOSEFAILBY",
+        8: "COMPVTVIMCM1",
         9: "TASUPERV",
         10: "CCMESCL",
         11: "CHARGESUPERV",
@@ -107,11 +90,14 @@ BIT_MAP = {
         15: "CIDko",
     },
 
+    # -----------------------------------------------------
+    # PHW1
+    # -----------------------------------------------------
     "PHW1": {
         0: "-----",
-        1: "-----",
-        2: "-----",
-        3: "TVI",
+        1: "VLDC",
+        2: "TVI",
+        3: "-----",
         4: "-----",
         5: "-----",
         6: "-----",
@@ -126,25 +112,21 @@ BIT_MAP = {
         15: "-----",
     },
 
+    # -----------------------------------------------------
+    # PHW2
+    # -----------------------------------------------------
+    # Nel codice originale che mi avevi mandato PHW2
+    # non aveva una BIT_MAP completa.
+    # Manteniamo almeno il segnale che compare nella
+    # visualizzazione che hai mostrato.
+    # -----------------------------------------------------
     "PHW2": {
-        0: "-----",
-        1: "-----",
-        2: "-----",
-        3: "-----",
-        4: "earthfault",
-        5: "-----",
-        6: "-----",
-        7: "-----",
-        8: "-----",
-        9: "-----",
-        10: "-----",
-        11: "-----",
-        12: "-----",
-        13: "-----",
-        14: "-----",
-        15: "-----",
+        0: "earthfault",
     },
 
+    # -----------------------------------------------------
+    # flcom
+    # -----------------------------------------------------
     "flcom": {
         0: "euroDC",
         1: "euroAC",
@@ -164,6 +146,9 @@ BIT_MAP = {
         15: "trNeutro",
     },
 
+    # -----------------------------------------------------
+    # PHW3
+    # -----------------------------------------------------
     "PHW3": {
         0: "DiaUp1",
         1: "DiaUp2",
@@ -183,6 +168,9 @@ BIT_MAP = {
         15: "-----",
     },
 
+    # -----------------------------------------------------
+    # stdi
+    # -----------------------------------------------------
     "stdi": {
         0: "copenfb",
         1: "cclosefb",
@@ -202,6 +190,9 @@ BIT_MAP = {
         15: "-----",
     },
 
+    # -----------------------------------------------------
+    # stdo
+    # -----------------------------------------------------
     "stdo": {
         0: "closeby",
         1: "cidactive",
@@ -221,6 +212,9 @@ BIT_MAP = {
         15: "-----",
     },
 
+    # -----------------------------------------------------
+    # PCUc
+    # -----------------------------------------------------
     "PCUc": {
         0: "Bianco",
         1: "AcLCBclosed",
@@ -240,6 +234,9 @@ BIT_MAP = {
         15: "-----",
     },
 
+    # -----------------------------------------------------
+    # PCUs
+    # -----------------------------------------------------
     "PCUs": {
         0: "Dc1_5kV_SEL",
         1: "Dc1_5kV_CONF",
@@ -259,6 +256,9 @@ BIT_MAP = {
         15: "-----",
     },
 
+    # -----------------------------------------------------
+    # msf
+    # -----------------------------------------------------
     "msf": {
         0: "NOCGF",
         1: "2QOFF",
@@ -281,27 +281,160 @@ BIT_MAP = {
 
 
 # =========================================================
-# REGEX
+# ORDINE VISUALIZZAZIONE
+# =========================================================
+
+DIGITAL_WORDS = [
+    "sCCa",
+    "PSWA",
+    "PSWB",
+    "PHW1",
+    "PHW2",
+    "PHW3",
+    "PHW4",
+    "flcom",
+    "stdi",
+    "stdo",
+    "PCUc",
+    "PCUs",
+    "msf",
+]
+
+
+# =========================================================
+# PARSER
 # =========================================================
 
 SM_RE = re.compile(
-    r"^Rec:\s+(\d+)\s+"
-    r"Code:\s+([0-9A-Fa-f]+)\s+"
-    r"Date:(\d{2}/\d{2}/\d{4})\s+"
-    r"(\d{2}:\d{2}:\d{2}\.\d{2})\s+-\s+(.*)$"
+    r"^Rec:\s+(\d+)\s+Code:\s+([0-9A-Fa-f]+)"
+    r"\s+Date:(\d{2}/\d{2}/\d{4})"
+    r"\s+(\d{2}:\d{2}:\d{2}\.\d{2})"
+    r"\s+-\s+(.*)$"
 )
 
-LL_HEADER_RE = re.compile(
-    r"^\s*N\.\s+"
-)
-
-LL_ROW_RE = re.compile(
-    r"^\s*(-?\d+)\s+(.*)$"
-)
+LL_HEADER_RE = re.compile(r"^\s*N\.\s+")
+LL_ROW_RE = re.compile(r"^\s*(-?\d+)\s+(.*)$")
 
 
 # =========================================================
-# DECODIFICA WORD
+# DESCRIZIONE
+# =========================================================
+
+def split_description(desc):
+
+    descrizione = ""
+
+    if " - " in desc:
+        left, descrizione = desc.split(" - ", 1)
+    else:
+        left = desc
+
+    fields = [
+        p.strip()
+        for p in left.split(";")
+        if p.strip()
+    ]
+
+    fields = fields[:MAX_FIELDS]
+
+    while len(fields) < MAX_FIELDS:
+        fields.append("")
+
+    return fields, descrizione.strip()
+
+
+# =========================================================
+# PARSE FILE
+# =========================================================
+
+def parse_file(uploaded_file):
+
+    summary = []
+    ll_blocks = {}
+
+    current_rec = None
+    in_ll = False
+    columns = []
+
+    text = uploaded_file.getvalue().decode(
+        "utf-8",
+        errors="ignore"
+    )
+
+    for line in text.splitlines():
+
+        # -------------------------------------------------
+        # SUMMARY
+        # -------------------------------------------------
+
+        m = SM_RE.match(line)
+
+        if m:
+
+            rec = int(m.group(1))
+            code = m.group(2)
+            date = m.group(3)
+            time = m.group(4)
+            desc = m.group(5)
+
+            fields, descrizione = split_description(desc)
+
+            summary.append(
+                [rec, code, date, time]
+                + fields
+                + [descrizione]
+            )
+
+            ll_blocks[rec] = []
+
+            current_rec = rec
+            in_ll = False
+
+            continue
+
+        # -------------------------------------------------
+        # HEADER LL
+        # -------------------------------------------------
+
+        if LL_HEADER_RE.match(line):
+
+            columns = line.split()
+
+            in_ll = True
+
+            continue
+
+        # -------------------------------------------------
+        # RIGHE LL
+        # -------------------------------------------------
+
+        if in_ll and current_rec is not None:
+
+            m = LL_ROW_RE.match(line)
+
+            if not m:
+                continue
+
+            values = m.group(2).split()
+
+            if len(values) < len(columns) - 1:
+                continue
+
+            row = {
+                "N": int(m.group(1))
+            }
+
+            for i, col in enumerate(columns[1:]):
+
+                row[col] = values[i]
+
+            ll_blocks[current_rec].append(row)
+
+    return summary, ll_blocks
+
+
+# =========================================================
+# DECODE WORD
 # =========================================================
 
 def decode_word(hex_value, bit_map):
@@ -314,26 +447,26 @@ def decode_word(hex_value, bit_map):
     except Exception:
         value = 0
 
-    result = {}
+    states = {}
 
     for bit, name in bit_map.items():
 
-        result[name] = (
+        states[name] = (
             value >> bit
         ) & 1
 
-    return result
+    return states
 
 
 # =========================================================
-# DECODIFICA RECORD
+# DECODE RECORD
 # =========================================================
 
 def decode_rec(rec_row):
 
     states = {}
 
-    for word in DIGITAL_GROUPS:
+    for word in DIGITAL_WORDS:
 
         if word not in BIT_MAP:
             continue
@@ -346,180 +479,13 @@ def decode_rec(rec_row):
             BIT_MAP[word]
         )
 
-        states.update(
-            decoded
-        )
+        states.update(decoded)
 
     return states
 
 
 # =========================================================
-# DESCRIZIONE SUMMARY
-# =========================================================
-
-def split_description(desc):
-
-    descrizione = ""
-
-    if " - " in desc:
-
-        left, descrizione = desc.split(
-            " - ",
-            1
-        )
-
-    else:
-
-        left = desc
-
-    fields = [
-        p.strip()
-        for p in left.split(";")
-        if p.strip()
-    ]
-
-    fields = fields[:MAX_FIELDS]
-
-    while len(fields) < MAX_FIELDS:
-
-        fields.append("")
-
-    return (
-        fields,
-        descrizione.strip()
-    )
-
-
-# =========================================================
-# PARSER CAP
-# =========================================================
-
-def parse_file(uploaded_file):
-
-    summary = []
-    ll_blocks = {}
-
-    current_rec = None
-    in_ll = False
-    columns = []
-
-    content = uploaded_file.getvalue()
-
-    if isinstance(content, bytes):
-
-        content = content.decode(
-            "utf-8",
-            errors="ignore"
-        )
-
-    for line in content.splitlines():
-
-        # =================================================
-        # SUMMARY
-        # =================================================
-
-        match = SM_RE.match(line)
-
-        if match:
-
-            rec = int(
-                match.group(1)
-            )
-
-            code = match.group(2)
-            date = match.group(3)
-            time_value = match.group(4)
-            desc = match.group(5)
-
-            fields, descrizione = (
-                split_description(desc)
-            )
-
-            summary.append(
-                [
-                    rec,
-                    code,
-                    date,
-                    time_value
-                ]
-                + fields
-                + [
-                    descrizione
-                ]
-            )
-
-            ll_blocks[rec] = []
-
-            current_rec = rec
-            in_ll = False
-            columns = []
-
-            continue
-
-        # =================================================
-        # HEADER LL
-        # =================================================
-
-        if LL_HEADER_RE.match(line):
-
-            columns = line.split()
-
-            in_ll = True
-
-            continue
-
-        # =================================================
-        # RIGA LL
-        # =================================================
-
-        if (
-            in_ll
-            and current_rec is not None
-        ):
-
-            match = LL_ROW_RE.match(
-                line
-            )
-
-            if not match:
-                continue
-
-            values = (
-                match.group(2)
-                .split()
-            )
-
-            if len(values) < (
-                len(columns) - 1
-            ):
-                continue
-
-            row = {
-                "N": int(
-                    match.group(1)
-                )
-            }
-
-            for i, col in enumerate(
-                columns[1:]
-            ):
-
-                if i < len(values):
-
-                    row[col] = values[i]
-
-            ll_blocks[
-                current_rec
-            ].append(row)
-
-    return (
-        summary,
-        ll_blocks
-    )
-
-
-# =========================================================
-# CSS CCM
+# CSS
 # =========================================================
 
 def load_css():
@@ -528,39 +494,140 @@ def load_css():
         """
         <style>
 
-        .ccm-digital {
-            padding: 3px 8px;
-            margin: 2px 0;
-            border-radius: 5px;
+        /* ---------------------------------------------
+           DIGITALI
+        --------------------------------------------- */
+
+        .ccm-box {
+
+            border: 1px solid #d9d9d9;
+
+            border-radius: 6px;
+
+            background: #ffffff;
+
+            padding: 5px;
+
+            margin-bottom: 6px;
+
+        }
+
+        .ccm-title {
+
             font-size: 13px;
-            line-height: 1.3;
+
+            font-weight: 700;
+
+            color: #222;
+
+            padding: 4px 5px;
+
+            border-bottom: 1px solid #eeeeee;
+
+            margin-bottom: 4px;
+
+        }
+
+        .ccm-signal {
+
+            height: 20px;
+
+            line-height: 20px;
+
+            font-size: 11px;
+
+            padding: 0px 5px;
+
+            margin: 1px 0px;
+
+            border-radius: 3px;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
         }
 
         .ccm-on {
-            background-color: #ffe5e5;
-            border-left: 5px solid #d60000;
-            color: #900000;
-            font-weight: 700;
+
+            background: #ffdede;
+
+            color: #b00000;
+
+            font-weight: 600;
+
+            border-left: 4px solid #e30613;
+
         }
 
         .ccm-off {
-            background-color: #f5f5f5;
-            border-left: 5px solid #c7c7c7;
-            color: #555555;
+
+            background: #f2f2f2;
+
+            color: #555;
+
+            border-left: 4px solid #d0d0d0;
+
         }
 
-        .ccm-word {
-            border: 1px solid #dddddd;
-            border-radius: 8px;
-            padding: 8px;
-            margin-bottom: 10px;
-            background-color: #ffffff;
+
+        /* ---------------------------------------------
+           ANALOGICI
+        --------------------------------------------- */
+
+        .ccm-analog-box {
+
+            border: 1px solid #d9d9d9;
+
+            border-radius: 6px;
+
+            padding: 10px;
+
+            background: white;
+
+            text-align: center;
+
         }
 
-        .ccm-word-title {
-            font-size: 16px;
+        .ccm-analog-name {
+
+            font-size: 12px;
+
+            color: #555;
+
+        }
+
+        .ccm-analog-value {
+
+            font-size: 18px;
+
             font-weight: 700;
-            margin-bottom: 6px;
+
+            margin-top: 4px;
+
+        }
+
+
+        /* ---------------------------------------------
+           INFO TIMELINE
+        --------------------------------------------- */
+
+        .ccm-info {
+
+            border: 1px solid #d9e2f3;
+
+            background: #f7faff;
+
+            border-radius: 6px;
+
+            padding: 8px 12px;
+
+            margin-bottom: 10px;
+
+            font-size: 13px;
+
         }
 
         </style>
@@ -570,63 +637,28 @@ def load_css():
 
 
 # =========================================================
-# VISUALIZZAZIONE DIGITALE
+# BLOCCO DIGITALE
 # =========================================================
 
-def show_digital_signal(
-    signal,
-    value
-):
-
-    if value == 1:
-
-        st.markdown(
-            f"""
-            <div class="ccm-digital ccm-on">
-                🔴 {signal}
-                <span style="float:right;">1</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    else:
-
-        st.markdown(
-            f"""
-            <div class="ccm-digital ccm-off">
-                ⚪ {signal}
-                <span style="float:right;">0</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-
-# =========================================================
-# VISUALIZZAZIONE WORD
-# =========================================================
-
-def show_word(
-    word,
-    states
-):
+def render_digital_block(word, states):
 
     if word not in BIT_MAP:
         return
 
     st.markdown(
         f"""
-        <div class="ccm-word">
-            <div class="ccm-word-title">
+        <div class="ccm-box">
+
+            <div class="ccm-title">
                 {word}
             </div>
         """,
         unsafe_allow_html=True
     )
 
-    for signal in BIT_MAP[word].values():
+    for bit, signal in BIT_MAP[word].items():
 
+        # Non visualizziamo i bit -----
         if signal == "-----":
             continue
 
@@ -635,13 +667,61 @@ def show_word(
             0
         )
 
-        show_digital_signal(
-            signal,
-            value
+        if value:
+
+            html = f"""
+            <div class="ccm-signal ccm-on">
+                🔴 {signal}
+            </div>
+            """
+
+        else:
+
+            html = f"""
+            <div class="ccm-signal ccm-off">
+                ⚪ {signal}
+            </div>
+            """
+
+        st.markdown(
+            html,
+            unsafe_allow_html=True
         )
 
     st.markdown(
         "</div>",
+        unsafe_allow_html=True
+    )
+
+
+# =========================================================
+# BLOCCO ANALOGICO
+# =========================================================
+
+def render_analog_signal(signal, row):
+
+    value = row.get(
+        signal,
+        ""
+    )
+
+    if value == "":
+        value = "—"
+
+    st.markdown(
+        f"""
+        <div class="ccm-analog-box">
+
+            <div class="ccm-analog-name">
+                {signal}
+            </div>
+
+            <div class="ccm-analog-value">
+                {value}
+            </div>
+
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
@@ -654,24 +734,16 @@ def ccm_page():
 
     load_css()
 
-    st.title(
-        "⚡ Analisi CCM"
-    )
-
-    st.caption(
-        "Analisi Summary e segnali LL del file CCM"
-    )
-
-    st.divider()
+    st.title("⚡ Analisi CCM")
 
     # =====================================================
     # UPLOAD
     # =====================================================
 
     uploaded_file = st.file_uploader(
-        "📂 Carica file CCM (.CAP)",
+        "📤 Carica file CCM",
         type=["CAP", "cap"],
-        key="ccm_upload"
+        key="ccm_file"
     )
 
     if uploaded_file is None:
@@ -702,254 +774,180 @@ def ccm_page():
 
     if not summary:
 
-        st.error(
-            "Nel file non è stato trovato nessun Summary CCM."
+        st.warning(
+            "Nessun Summary trovato nel file CCM."
         )
 
         return
-
-    # =====================================================
-    # SUMMARY DATAFRAME
-    # =====================================================
-
-    columns = (
-        [
-            "REC",
-            "CODE",
-            "DATE",
-            "TIME"
-        ]
-        +
-        [
-            f"F{i+1}"
-            for i in range(MAX_FIELDS)
-        ]
-        +
-        [
-            "DESCRIZIONE"
-        ]
-    )
-
-    summary_df = pd.DataFrame(
-        summary,
-        columns=columns
-    )
-
-    # =====================================================
-    # SUMMARY
-    # =====================================================
-
-    st.subheader(
-        "📋 Summary"
-    )
-
-    st.dataframe(
-        summary_df,
-        use_container_width=True,
-        hide_index=True
-    )
 
     # =====================================================
     # SELEZIONE REC
     # =====================================================
 
-    st.divider()
-
-    st.subheader(
-        "🔎 Analisi REC"
-    )
-
-    rec_list = (
-        summary_df[
-            "REC"
-        ]
-        .tolist()
-    )
-
-    selected_rec = st.selectbox(
-        "Seleziona REC",
-        rec_list,
-        key="ccm_selected_rec"
-    )
-
-    selected_summary = summary_df[
-        summary_df["REC"]
-        == selected_rec
-    ]
-
-    if selected_summary.empty:
-
-        st.warning(
-            "REC non trovato."
-        )
-
-        return
-
-    selected_summary = (
-        selected_summary.iloc[0]
+    rec_options = list(
+        range(len(summary))
     )
 
     # =====================================================
-    # INFORMAZIONI REC
+    # DEFAULT
     # =====================================================
 
-    info1, info2, info3, info4 = st.columns(4)
+    if "ccm_index" not in st.session_state:
 
-    with info1:
+        st.session_state.ccm_index = 0
 
-        st.metric(
-            "REC",
-            selected_summary["REC"]
+    # Evita indice fuori limite
+    if st.session_state.ccm_index >= len(summary):
+
+        st.session_state.ccm_index = (
+            len(summary) - 1
         )
 
-    with info2:
+    # =====================================================
+    # TIMELINE
+    # =====================================================
 
-        st.metric(
-            "CODE",
-            selected_summary["CODE"]
-        )
-
-    with info3:
-
-        st.metric(
-            "DATE",
-            selected_summary["DATE"]
-        )
-
-    with info4:
-
-        st.metric(
-            "TIME",
-            selected_summary["TIME"]
-        )
-
-    descrizione = str(
-        selected_summary[
-            "DESCRIZIONE"
-        ]
+    st.markdown(
+        "### ⏱️ Timeline"
     )
 
-    if descrizione.strip():
+    index = st.slider(
+        "Campione",
+        min_value=0,
+        max_value=len(summary) - 1,
+        value=st.session_state.ccm_index,
+        key="ccm_timeline",
+        label_visibility="collapsed"
+    )
 
-        st.info(
-            f"**Descrizione:** {descrizione}"
-        )
+    st.session_state.ccm_index = index
+
+    # =====================================================
+    # DATI CAMPIONE
+    # =====================================================
+
+    selected_summary = summary[index]
+
+    rec = int(
+        selected_summary[0]
+    )
+
+    code = selected_summary[1]
+    date = selected_summary[2]
+    time = selected_summary[3]
+
+    descrizione = selected_summary[-1]
+
+    # =====================================================
+    # REC INFO
+    # =====================================================
+
+    st.markdown(
+        f"""
+        <div class="ccm-info">
+
+        <b>Campione:</b>
+        {index + 1} / {len(summary)}
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        <b>REC:</b>
+        {rec}
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        <b>Data:</b>
+        {date}
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        <b>Ora:</b>
+        {time}
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # =====================================================
     # LL
     # =====================================================
 
     ll = ll_blocks.get(
-        selected_rec,
+        rec,
         []
     )
 
     if not ll:
 
         st.warning(
-            f"Nessuna LL disponibile per REC {selected_rec}."
+            f"Nessuna LL disponibile per REC {rec}."
         )
 
         return
 
     # =====================================================
-    # INDICE TIMELINE
+    # SELEZIONE RIGA LL
     # =====================================================
 
-    state_key = (
-        f"ccm_index_{selected_rec}"
-    )
+    # Per la visualizzazione utilizziamo la prima riga
+    # LL come riferimento iniziale.
+    #
+    # Se il file contiene più campioni LL, viene
+    # utilizzato l'indice della timeline quando possibile.
 
-    if state_key not in st.session_state:
+    ll_index = index
 
-        st.session_state[
-            state_key
-        ] = 0
+    if ll_index >= len(ll):
 
-    index = st.session_state[
-        state_key
-    ]
+        ll_index = len(ll) - 1
 
-    # sicurezza
-
-    if index < 0:
-        index = 0
-
-    if index >= len(ll):
-        index = len(ll) - 1
+    row = ll[ll_index]
 
     # =====================================================
-    # TIMELINE
+    # DECODIFICA
     # =====================================================
 
-    st.divider()
-
-    st.subheader(
-        "⏱️ Timeline"
-    )
-
-    new_index = st.slider(
-        "Campione",
-        min_value=0,
-        max_value=len(ll) - 1,
-        value=index,
-        key=f"ccm_timeline_{selected_rec}",
-        label_visibility="collapsed"
-    )
-
-    if new_index != index:
-
-        st.session_state[
-            state_key
-        ] = new_index
-
-        index = new_index
+    states = decode_rec(row)
 
     # =====================================================
-    # INFORMAZIONI CAMPIONE
+    # DESCRIZIONE
     # =====================================================
 
-    row = ll[index]
+    if descrizione:
 
-    states = decode_rec(
-        row
-    )
-
-    st.markdown(
-        f"""
-        **Campione:** {index + 1} / {len(ll)}
-        
-        **N:** {row.get("N", "---")}
-        """
-    )
+        st.caption(
+            descrizione
+        )
 
     # =====================================================
     # DIGITALI
     # =====================================================
 
-    st.divider()
-
-    st.subheader(
-        "🔌 Segnali digitali"
+    st.markdown(
+        "### 🔌 Segnali digitali"
     )
 
     # -----------------------------------------------------
-    # 3 colonne
+    # 4 COLONNE
     # -----------------------------------------------------
 
-    digital_columns = st.columns(3)
+    columns = st.columns(
+        4,
+        gap="small"
+    )
 
     for i, word in enumerate(
-        DIGITAL_GROUPS
+        DIGITAL_WORDS
     ):
 
-        column = digital_columns[
-            i % 3
+        col = columns[
+            i % 4
         ]
 
-        with column:
+        with col:
 
-            show_word(
+            render_digital_block(
                 word,
                 states
             )
@@ -958,52 +956,43 @@ def ccm_page():
     # ANALOGICI
     # =====================================================
 
-    st.divider()
+    st.markdown(
+        "---"
+    )
 
-    st.subheader(
-        "📈 Segnali analogici"
+    st.markdown(
+        "### 📊 Segnali analogici"
     )
 
     analog_columns = st.columns(
-        len(ANALOG_SIGNALS)
+        6,
+        gap="small"
     )
 
-    for column, signal in zip(
-        analog_columns,
+    for i, signal in enumerate(
         ANALOG_SIGNALS
     ):
 
-        value = row.get(
-            signal,
-            "---"
-        )
+        with analog_columns[i]:
 
-        with column:
-
-            if value == "":
-                value = "---"
-
-            st.metric(
-                label=signal,
-                value=str(value)
+            render_analog_signal(
+                signal,
+                row
             )
 
     # =====================================================
-    # DATI RAW LL
+    # DEBUG FACOLTATIVO
     # =====================================================
 
-    st.divider()
+    # Non visualizziamo i valori 0/1 all'utente.
+    # I valori vengono usati solamente internamente
+    # per determinare il colore del segnale.
 
-    with st.expander(
-        "📄 Dati LL completi"
-    ):
 
-        ll_df = pd.DataFrame(
-            ll
-        )
+# =========================================================
+# AVVIO DIRETTO
+# =========================================================
 
-        st.dataframe(
-            ll_df,
-            use_container_width=True,
-            hide_index=True
-        )
+if __name__ == "__main__":
+
+    ccm_page()
