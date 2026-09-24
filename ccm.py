@@ -584,6 +584,36 @@ def render_word(word, states):
 
 
 # =========================================================
+# RICERCA NEL SUMMARY
+# =========================================================
+
+def filter_summary(summary, search_text):
+    """
+    Filtra gli eventi del Summary cercando il testo
+    nella DESCRIZIONE.
+    La ricerca non distingue maiuscole/minuscole.
+    """
+
+    if not search_text:
+        return summary
+
+    search_text = search_text.strip().lower()
+
+    if not search_text:
+        return summary
+
+    filtered = []
+
+    for row in summary:
+        description = str(row[-1]).lower()
+
+        if search_text in description:
+            filtered.append(row)
+
+    return filtered
+
+
+# =========================================================
 # SUMMARY
 # =========================================================
 
@@ -602,12 +632,43 @@ def render_summary(summary):
         columns=columns
     )
 
+    # -----------------------------------------------------
+    # CERCA NELLA DESCRIZIONE
+    # -----------------------------------------------------
+
+    search_text = st.text_input(
+        "🔎 Cerca nella descrizione",
+        placeholder="Scrivi una parola, un codice o una parte della descrizione...",
+        key="ccm_summary_search"
+    )
+
+    if search_text.strip():
+
+        mask = df["DESCRIZIONE"].astype(str).str.contains(
+            search_text.strip(),
+            case=False,
+            na=False,
+            regex=False
+        )
+
+        filtered_df = df[mask].copy()
+
+        st.caption(
+            f"Trovati {len(filtered_df)} eventi su {len(df)}"
+        )
+
+    else:
+
+        filtered_df = df
+
     st.dataframe(
-        df,
+        filtered_df,
         use_container_width=True,
         hide_index=True,
         height=280
     )
+
+    return filtered_df
 
 
 # =========================================================
@@ -616,9 +677,13 @@ def render_summary(summary):
 
 def ccm_page():
 
-    inject_css()
+    load_css()
 
-    st.title("⚡ Analisi CCM")
+    st.title("CCM")
+
+    # -----------------------------------------------------
+    # CARICAMENTO FILE
+    # -----------------------------------------------------
 
     uploaded_file = st.file_uploader(
         "Carica file CCM",
@@ -627,190 +692,202 @@ def ccm_page():
     )
 
     if uploaded_file is None:
-
         st.info(
-            "Carica un file .CAP per iniziare l'analisi CCM."
+            "Carica un file .CAP per iniziare l'analisi."
         )
-
         return
 
+    # -----------------------------------------------------
+    # PARSING
+    # -----------------------------------------------------
+
     try:
+        summary, ll_blocks = parse_file(uploaded_file)
 
-        summary, ll_blocks = parse_file(
-            uploaded_file
-        )
-
-    except Exception as e:
-
+    except Exception as error:
         st.error(
-            f"Errore durante la lettura del file CCM: {e}"
+            f"Errore nella lettura del file CCM: {error}"
         )
-
         return
 
     if not summary:
-
         st.warning(
-            "Nessun Summary trovato nel file."
+            "Nessun evento Summary trovato nel file."
         )
-
         return
 
     # -----------------------------------------------------
-    # SUMMARY
+    # RICERCA NELLA DESCRIZIONE
     # -----------------------------------------------------
 
-    render_summary(summary)
+    st.subheader("📋 Summary")
 
-    st.divider()
+    search_text = st.text_input(
+        "🔎 Cerca nella descrizione",
+        placeholder="Inserisci una parola o parte della descrizione...",
+        key="ccm_search_description"
+    )
+
+    filtered_summary = filter_summary(
+        summary,
+        search_text
+    )
+
+    if search_text.strip():
+        st.caption(
+            f"Trovati {len(filtered_summary)} eventi "
+            f"su {len(summary)}"
+        )
+
+    # -----------------------------------------------------
+    # SUMMARY FILTRATO
+    # -----------------------------------------------------
+
+    show_summary(filtered_summary)
+
+    if not filtered_summary:
+        st.warning(
+            "Nessun evento trovato nella descrizione."
+        )
+        return
 
     # -----------------------------------------------------
     # SELEZIONE REC
     # -----------------------------------------------------
 
-    rec_options = [
-        row[0]
-        for row in summary
-        if row[0] in ll_blocks
-        and ll_blocks[row[0]]
-    ]
+    st.markdown("---")
 
-    if not rec_options:
+    options = {}
 
-        st.warning(
-            "Nel file non sono presenti blocchi LL analizzabili."
-        )
+    for row in filtered_summary:
 
-        return
+        rec = int(row[0])
+        description = row[-1]
 
-    selected_rec = st.selectbox(
-        "Seleziona REC",
-        rec_options,
-        format_func=lambda x: f"REC {x}"
-    )
-
-    # -----------------------------------------------------
-    # DESCRIZIONE
-    # -----------------------------------------------------
-
-    selected_summary = next(
-        (
-            row
-            for row in summary
-            if row[0] == selected_rec
-        ),
-        None
-    )
-
-    if selected_summary:
-
-        descrizione = selected_summary[-1]
-
-        if descrizione:
-
-            st.info(
-                f"Evento: {descrizione}"
+        if description:
+            label = (
+                f"REC {rec} — "
+                f"{description}"
             )
+        else:
+            label = f"REC {rec}"
 
-    # -----------------------------------------------------
-    # LL
-    # -----------------------------------------------------
+        options[label] = rec
 
-    ll = ll_blocks.get(
+    selected_label = st.selectbox(
+        "Seleziona REC",
+        list(options.keys()),
+        key="ccm_selected_rec"
+    )
+
+    selected_rec = options[selected_label]
+
+    ll_rows = ll_blocks.get(
         selected_rec,
         []
     )
 
-    if not ll:
-
+    if not ll_rows:
         st.warning(
-            f"Nessuna LL per REC {selected_rec}"
+            f"Nessun campione LL disponibile "
+            f"per REC {selected_rec}."
         )
-
         return
+
+    # -----------------------------------------------------
+    # DESCRIZIONE REC
+    # -----------------------------------------------------
+
+    selected_summary = None
+
+    for row in filtered_summary:
+
+        if int(row[0]) == selected_rec:
+            selected_summary = row
+            break
+
+    if selected_summary:
+
+        description = selected_summary[-1]
+
+        if description:
+            st.caption(
+                f"Descrizione: {description}"
+            )
 
     # -----------------------------------------------------
     # TIMELINE
     # -----------------------------------------------------
 
-    st.subheader("⏱️ Timeline")
+    max_index = len(ll_rows) - 1
 
-    idx = st.slider(
-        "Campione",
+    current_index = st.session_state.get(
+        "ccm_current_index",
+        0
+    )
+
+    if current_index > max_index:
+        current_index = max_index
+
+    current_index = st.slider(
+        "⏱️ Timeline",
         min_value=0,
-        max_value=len(ll) - 1,
-        value=0,
-        key=f"ccm_slider_{selected_rec}"
+        max_value=max_index,
+        value=current_index,
+        key=f"ccm_timeline_{selected_rec}"
     )
 
-    row = ll[idx]
+    st.session_state[
+        "ccm_current_index"
+    ] = current_index
 
-    states = decode_rec(row)
+    # -----------------------------------------------------
+    # CAMPIONE CORRENTE
+    # -----------------------------------------------------
 
-    st.caption(
-        f"Campione: {idx + 1} / {len(ll)}"
+    current_row = ll_rows[current_index]
+
+    states = decode_rec(
+        current_row
     )
 
-    st.caption(
-        f"N: {row.get('N', '-')}"
+    st.markdown(
+        f"""
+        <div class="ccm-info">
+            Campione:
+            <b>{current_index + 1} / {len(ll_rows)}</b>
+            &nbsp;&nbsp;&nbsp;
+            N:
+            <b>{current_row.get("N", "—")}</b>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
     # -----------------------------------------------------
-    # SEGNALI DIGITALI
+    # DIGITALI
     # -----------------------------------------------------
-
-    st.divider()
 
     st.subheader("🔌 Segnali digitali")
 
-    # 4 colonne ravvicinate
-    cols = st.columns(
-        4,
-        gap="small"
-    )
+    # 5 colonne
+    columns = st.columns(5, gap="small")
 
-    for i, word in enumerate(DIGITAL_WORDS):
+    for index, word in enumerate(DIGITAL_WORDS):
 
-        with cols[i % 4]:
+        column = columns[index % 5]
 
-            render_word(
-                word,
-                states
-            )
+        with column:
+            render_word(word, states)
 
     # -----------------------------------------------------
     # ANALOGICI
     # -----------------------------------------------------
 
-    st.divider()
+    st.markdown("---")
 
     st.subheader("📈 Segnali analogici")
 
-    analog_cols = st.columns(
-        len(ANALOG_SIGNALS),
-        gap="small"
+    show_analogicals(
+        current_row
     )
-
-    for col, signal in zip(
-        analog_cols,
-        ANALOG_SIGNALS
-    ):
-
-        value = row.get(
-            signal,
-            "—"
-        )
-
-        with col:
-
-            analog_html = (
-                '<div class="ccm-analog">'
-                f'<div class="ccm-analog-name">{html.escape(signal)}</div>'
-                f'<div class="ccm-analog-value">{html.escape(str(value))}</div>'
-                '</div>'
-            )
-
-            st.markdown(
-                analog_html,
-                unsafe_allow_html=True
-            )
