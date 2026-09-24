@@ -613,6 +613,15 @@ def filter_summary(summary, search_text):
     return filtered
 
 
+
+def show_all_digitals(states):
+    columns = st.columns(5, gap="small")
+
+    for index, word in enumerate(DIGITAL_WORDS):
+        with columns[index % 5]:
+            render_word(word, states)
+
+
 # =========================================================
 # SUMMARY
 # =========================================================
@@ -672,12 +681,39 @@ def render_summary(summary):
 
 
 # =========================================================
+# ANALOGICI
+# =========================================================
+
+def show_analogicals(row):
+    columns = st.columns(len(ANALOG_SIGNALS), gap="small")
+
+    for column, signal in zip(columns, ANALOG_SIGNALS):
+        value = row.get(signal, "—")
+
+        if value in ("", None):
+            value = "—"
+
+        analog_html = (
+            '<div class="ccm-analog">'
+            f'<div class="ccm-analog-name">{html.escape(signal)}</div>'
+            f'<div class="ccm-analog-value">{html.escape(str(value))}</div>'
+            '</div>'
+        )
+
+        with column:
+            st.markdown(
+                analog_html,
+                unsafe_allow_html=True
+            )
+
+
+# =========================================================
 # CCM PAGE
 # =========================================================
 
 def ccm_page():
 
-    load_css()
+    inject_css()
 
     st.title("CCM")
 
@@ -743,7 +779,7 @@ def ccm_page():
     # SUMMARY FILTRATO
     # -----------------------------------------------------
 
-    show_summary(filtered_summary)
+    render_summary(filtered_summary)
 
     if not filtered_summary:
         st.warning(
