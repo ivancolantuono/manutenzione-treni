@@ -33,6 +33,7 @@ DIGITAL_GROUPS = [
     "PSWA",
     "PSWB",
     "PHW1",
+    "PHW2",
     "flcom",
     "PHW3",
     "stdi",
