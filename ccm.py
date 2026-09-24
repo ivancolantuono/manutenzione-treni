@@ -637,16 +637,7 @@ def render_summary(summary):
         columns=columns
     )
 
-    # -----------------------------------------------------
-    # CERCA NELLA DESCRIZIONE
-    # -----------------------------------------------------
-
-    search_text = st.text_input(
-        "🔎 Cerca nella descrizione",
-        placeholder="Scrivi una parola, un codice o una parte della descrizione...",
-        key="ccm_summary_search"
-    )
-
+    
     if search_text.strip():
 
         mask = df["DESCRIZIONE"].astype(str).str.contains(
