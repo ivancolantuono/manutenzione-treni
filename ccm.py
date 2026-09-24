@@ -642,32 +642,6 @@ def render_summary(summary):
     # -----------------------------------------------------
 
 
-    if search_text.strip():
-
-        mask = df["DESCRIZIONE"].astype(str).str.contains(
-            search_text.strip(),
-            case=False,
-            na=False,
-            regex=False
-        )
-
-        filtered_df = df[mask].copy()
-
-        st.caption(
-            f"Trovati {len(filtered_df)} eventi su {len(df)}"
-        )
-
-    else:
-
-        filtered_df = df
-
-    st.dataframe(
-        filtered_df,
-        use_container_width=True,
-        hide_index=True,
-        height=280
-    )
-
     return filtered_df
 
 
