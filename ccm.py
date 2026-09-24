@@ -624,7 +624,7 @@ def filter_summary(summary, search_text):
 
 def render_summary(summary):
 
-    st.subheader("📋 Summary")
+   
 
     columns = (
         ["REC", "CODE", "DATE", "TIME"]
