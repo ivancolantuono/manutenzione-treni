@@ -1,17 +1,12 @@
-# ============================================================
-# CCM - ANALISI FILE .CAP
-# Versione Streamlit
-# ============================================================
-
 import streamlit as st
 import pandas as pd
 import re
-from io import BytesIO
+import time
 
 
-# ============================================================
+# =========================================================
 # CONFIGURAZIONE
-# ============================================================
+# =========================================================
 
 MAX_FIELDS = 6
 
@@ -25,30 +20,9 @@ ANALOG_SIGNALS = [
 ]
 
 
-# ============================================================
-# WORD LIST
-# ============================================================
-
-WORD_LIST = [
-    "sCCa",
-    "PSWA",
-    "PSWB",
-    "flcom",
-    "stdi",
-    "PCUc",
-    "msf",
-    "PHW1",
-    "PHW2",
-    "PHW3",
-    "PHW4",
-    "stdo",
-    "PCUs",
-]
-
-
-# ============================================================
-# DECODIFICA BIT
-# ============================================================
+# =========================================================
+# BIT MAP
+# =========================================================
 
 BIT_MAP = {
 
@@ -263,9 +237,28 @@ BIT_MAP = {
 }
 
 
-# ============================================================
-# PARSER
-# ============================================================
+# =========================================================
+# ORDINE VISUALIZZAZIONE
+# =========================================================
+
+DIGITAL_GROUPS = [
+    "sCCa",
+    "PSWA",
+    "PSWB",
+    "PHW1",
+    "flcom",
+    "PHW3",
+    "stdi",
+    "stdo",
+    "PCUc",
+    "PCUs",
+    "msf",
+]
+
+
+# =========================================================
+# REGEX PARSER
+# =========================================================
 
 SM_RE = re.compile(
     r"^Rec:\s+(\d+)\s+Code:\s+([0-9A-Fa-f]+)\s+"
@@ -274,115 +267,15 @@ SM_RE = re.compile(
 )
 
 LL_HEADER_RE = re.compile(r"^\s*N\.\s+")
-LL_ROW_RE = re.compile(r"^\s*(-?\d+)\s+(.*)$")
+
+LL_ROW_RE = re.compile(
+    r"^\s*(-?\d+)\s+(.*)$"
+)
 
 
-# ============================================================
-# SPLIT DESCRIPTION
-# ============================================================
-
-def split_description(desc):
-
-    descrizione = ""
-
-    if " - " in desc:
-        left, descrizione = desc.split(" - ", 1)
-    else:
-        left = desc
-
-    fields = [
-        p.strip()
-        for p in left.split(";")
-        if p.strip()
-    ]
-
-    fields = fields[:MAX_FIELDS]
-
-    while len(fields) < MAX_FIELDS:
-        fields.append("")
-
-    return fields, descrizione.strip()
-
-
-# ============================================================
-# PARSE FILE
-# ============================================================
-
-def parse_file(file_bytes):
-
-    summary = []
-    ll_blocks = {}
-
-    current_rec = None
-    in_ll = False
-    columns = []
-
-    text = file_bytes.decode(
-        "utf-8",
-        errors="ignore"
-    )
-
-    for line in text.splitlines():
-
-        m = SM_RE.match(line)
-
-        if m:
-
-            rec = int(m.group(1))
-            code = m.group(2)
-            date = m.group(3)
-            time = m.group(4)
-            desc = m.group(5)
-
-            fields, descrizione = split_description(desc)
-
-            summary.append(
-                [rec, code, date, time]
-                + fields
-                + [descrizione]
-            )
-
-            ll_blocks[rec] = []
-
-            current_rec = rec
-            in_ll = False
-
-            continue
-
-        if LL_HEADER_RE.match(line):
-
-            columns = line.split()
-            in_ll = True
-
-            continue
-
-        if in_ll and current_rec is not None:
-
-            m = LL_ROW_RE.match(line)
-
-            if not m:
-                continue
-
-            values = m.group(2).split()
-
-            if len(values) < len(columns) - 1:
-                continue
-
-            row = {
-                "N": int(m.group(1))
-            }
-
-            for i, col in enumerate(columns[1:]):
-                row[col] = values[i]
-
-            ll_blocks[current_rec].append(row)
-
-    return summary, ll_blocks
-
-
-# ============================================================
+# =========================================================
 # DECODIFICA WORD
-# ============================================================
+# =========================================================
 
 def decode_word(hex_value, bit_map):
 
@@ -400,20 +293,13 @@ def decode_word(hex_value, bit_map):
     }
 
 
-# ============================================================
-# DECODIFICA REC
-# ============================================================
-
 def decode_rec(rec_row):
 
     states = {}
 
-    for word in WORD_LIST:
+    for word in BIT_MAP:
 
-        if (
-            word in BIT_MAP
-            and word in rec_row
-        ):
+        if word in rec_row:
 
             states.update(
                 decode_word(
@@ -425,9 +311,151 @@ def decode_rec(rec_row):
     return states
 
 
-# ============================================================
-# FUNZIONE DISPLAY DIGITALE
-# ============================================================
+# =========================================================
+# DESCRIZIONE
+# =========================================================
+
+def split_description(desc):
+
+    descrizione = ""
+
+    if " - " in desc:
+
+        left, descrizione = desc.split(
+            " - ",
+            1
+        )
+
+    else:
+
+        left = desc
+
+    fields = [
+        p.strip()
+        for p in left.split(";")
+        if p.strip()
+    ]
+
+    fields = fields[:MAX_FIELDS]
+
+    while len(fields) < MAX_FIELDS:
+
+        fields.append("")
+
+    return (
+        fields,
+        descrizione.strip()
+    )
+
+
+# =========================================================
+# PARSER CAP
+# =========================================================
+
+def parse_file(uploaded_file):
+
+    summary = []
+    ll_blocks = {}
+
+    current_rec = None
+    in_ll = False
+    columns = []
+
+    content = uploaded_file.read()
+
+    if isinstance(content, bytes):
+
+        content = content.decode(
+            "utf-8",
+            errors="ignore"
+        )
+
+    for line in content.splitlines():
+
+        # -----------------------------------------------
+        # SUMMARY
+        # -----------------------------------------------
+
+        m = SM_RE.match(line)
+
+        if m:
+
+            rec = int(m.group(1))
+            code = m.group(2)
+            date = m.group(3)
+            time_value = m.group(4)
+            desc = m.group(5)
+
+            fields, descrizione = (
+                split_description(desc)
+            )
+
+            summary.append(
+                [
+                    rec,
+                    code,
+                    date,
+                    time_value
+                ]
+                + fields
+                + [descrizione]
+            )
+
+            ll_blocks[rec] = []
+
+            current_rec = rec
+            in_ll = False
+
+            continue
+
+        # -----------------------------------------------
+        # HEADER LL
+        # -----------------------------------------------
+
+        if LL_HEADER_RE.match(line):
+
+            columns = line.split()
+
+            in_ll = True
+
+            continue
+
+        # -----------------------------------------------
+        # RIGA LL
+        # -----------------------------------------------
+
+        if in_ll and current_rec is not None:
+
+            m = LL_ROW_RE.match(line)
+
+            if not m:
+                continue
+
+            values = m.group(2).split()
+
+            if len(values) < len(columns) - 1:
+                continue
+
+            row = {
+                "N": int(m.group(1))
+            }
+
+            for i, col in enumerate(
+                columns[1:]
+            ):
+
+                row[col] = values[i]
+
+            ll_blocks[current_rec].append(
+                row
+            )
+
+    return summary, ll_blocks
+
+
+# =========================================================
+# DIGITAL SIGNAL
+# =========================================================
 
 def digital_signal(name, value):
 
@@ -438,16 +466,34 @@ def digital_signal(name, value):
             <div style="
                 display:flex;
                 align-items:center;
-                margin-bottom:4px;
+                padding:3px 6px;
+                margin-bottom:2px;
+                border-radius:5px;
+                background-color:#ffe5e5;
+                border-left:5px solid #d32f2f;
             ">
-                <div style="
-                    width:14px;
-                    height:14px;
-                    background:#00c853;
+                <span style="
+                    width:12px;
+                    height:12px;
+                    background:#d32f2f;
                     border-radius:50%;
+                    display:inline-block;
                     margin-right:8px;
-                "></div>
-                <span>{name}</span>
+                "></span>
+
+                <span style="
+                    font-weight:600;
+                ">
+                    {name}
+                </span>
+
+                <span style="
+                    margin-left:auto;
+                    font-weight:bold;
+                    color:#d32f2f;
+                ">
+                    1
+                </span>
             </div>
             """,
             unsafe_allow_html=True
@@ -460,42 +506,57 @@ def digital_signal(name, value):
             <div style="
                 display:flex;
                 align-items:center;
-                margin-bottom:4px;
+                padding:3px 6px;
+                margin-bottom:2px;
+                border-radius:5px;
+                background-color:#f5f5f5;
+                border-left:5px solid #bdbdbd;
             ">
-                <div style="
-                    width:14px;
-                    height:14px;
-                    background:#d0d0d0;
+                <span style="
+                    width:12px;
+                    height:12px;
+                    background:#bdbdbd;
                     border-radius:50%;
+                    display:inline-block;
                     margin-right:8px;
-                "></div>
-                <span>{name}</span>
+                "></span>
+
+                <span>
+                    {name}
+                </span>
+
+                <span style="
+                    margin-left:auto;
+                    color:#777;
+                ">
+                    0
+                </span>
             </div>
             """,
             unsafe_allow_html=True
         )
 
 
-# ============================================================
-# PAGINA CCM
-# ============================================================
+# =========================================================
+# PAGINA STREAMLIT
+# =========================================================
 
 def ccm_page():
 
-    st.title("⚡ Analisi Log CCM")
+    st.title("⚡ CCM")
 
-    st.markdown(
-        "Carica un file **.CAP** per analizzare il log CCM."
+    st.caption(
+        "Analisi file CCM / MCM – Summary e segnali LL"
     )
 
-    # ========================================================
+    # =====================================================
     # UPLOAD
-    # ========================================================
+    # =====================================================
 
     uploaded_file = st.file_uploader(
-        "📂 Seleziona file CCM",
+        "Seleziona file CCM",
         type=["CAP", "cap"],
-        key="ccm_uploader"
+        key="ccm_file"
     )
 
     if uploaded_file is None:
@@ -506,16 +567,14 @@ def ccm_page():
 
         return
 
-    # ========================================================
+    # =====================================================
     # PARSE
-    # ========================================================
+    # =====================================================
 
     try:
 
-        file_bytes = uploaded_file.getvalue()
-
         summary, ll_blocks = parse_file(
-            file_bytes
+            uploaded_file
         )
 
     except Exception as e:
@@ -534,14 +593,19 @@ def ccm_page():
 
         return
 
-    # ========================================================
-    # DATAFRAME SUMMARY
-    # ========================================================
+    # =====================================================
+    # SUMMARY DATAFRAME
+    # =====================================================
 
     columns = (
         ["REC", "CODE", "DATE", "TIME"]
-        + [f"F{i+1}" for i in range(MAX_FIELDS)]
-        + ["DESCRIZIONE"]
+        +
+        [
+            f"F{i+1}"
+            for i in range(MAX_FIELDS)
+        ]
+        +
+        ["DESCRIZIONE"]
     )
 
     summary_df = pd.DataFrame(
@@ -549,135 +613,49 @@ def ccm_page():
         columns=columns
     )
 
-    # ========================================================
-    # INFO FILE
-    # ========================================================
+    # =====================================================
+    # SUMMARY
+    # =====================================================
 
-    col1, col2, col3 = st.columns(3)
+    st.subheader(
+        "📋 Summary"
+    )
 
-    with col1:
-        st.metric(
-            "REC",
-            len(summary_df)
-        )
+    st.dataframe(
+        summary_df,
+        use_container_width=True,
+        hide_index=True
+    )
 
-    with col2:
-        st.metric(
-            "LL disponibili",
-            sum(
-                1
-                for rec in ll_blocks
-                if ll_blocks[rec]
-            )
-        )
-
-    with col3:
-        st.metric(
-            "Campioni LL",
-            sum(
-                len(v)
-                for v in ll_blocks.values()
-            )
-        )
+    # =====================================================
+    # SELEZIONE REC
+    # =====================================================
 
     st.divider()
 
-    # ========================================================
-    # RICERCA
-    # ========================================================
-
-    ricerca = st.text_input(
-        "🔎 Cerca nel Summary",
-        placeholder=(
-            "REC, CODE, descrizione, F1, F2..."
-        ),
-        key="ccm_search"
+    st.subheader(
+        "🔎 Analisi REC"
     )
 
-    filtered_df = summary_df.copy()
-
-    if ricerca:
-
-        mask = filtered_df.astype(str).apply(
-            lambda col:
-                col.str.contains(
-                    ricerca,
-                    case=False,
-                    na=False
-                )
-        ).any(axis=1)
-
-        filtered_df = filtered_df[mask]
-
-    st.markdown("### 📋 SUMMARY")
-
-    st.dataframe(
-        filtered_df,
-        use_container_width=True,
-        hide_index=True,
-        height=350
-    )
-
-    if filtered_df.empty:
-
-        st.warning(
-            "Nessun REC corrisponde alla ricerca."
-        )
-
-        return
-
-    # ========================================================
-    # SELEZIONE REC
-    # ========================================================
-
-    rec_options = filtered_df["REC"].tolist()
+    rec_values = summary_df[
+        "REC"
+    ].tolist()
 
     selected_rec = st.selectbox(
-        "Seleziona REC da analizzare",
-        rec_options,
-        key="ccm_selected_rec"
+        "Seleziona REC",
+        rec_values,
+        format_func=lambda x: (
+            f"REC {x}"
+        )
     )
-
-    # ========================================================
-    # DATI REC
-    # ========================================================
 
     selected_row = summary_df[
         summary_df["REC"] == selected_rec
     ].iloc[0]
 
-    st.divider()
-
-    st.markdown(
-        f"### 🔍 Analisi REC {selected_rec}"
-    )
-
-    info1, info2, info3, info4 = st.columns(4)
-
-    with info1:
-        st.write("**CODE**")
-        st.write(selected_row["CODE"])
-
-    with info2:
-        st.write("**DATA**")
-        st.write(selected_row["DATE"])
-
-    with info3:
-        st.write("**ORA**")
-        st.write(selected_row["TIME"])
-
-    with info4:
-        st.write("**LL**")
-        st.write(
-            len(
-                ll_blocks.get(
-                    selected_rec,
-                    []
-                )
-            )
-        )
-
-    descrizione = selected_row["DESCRIZIONE"]
+    descrizione = selected_row[
+        "DESCRIZIONE"
+    ]
 
     if descrizione:
 
@@ -685,9 +663,9 @@ def ccm_page():
             f"**Descrizione:** {descrizione}"
         )
 
-    # ========================================================
+    # =====================================================
     # LL
-    # ========================================================
+    # =====================================================
 
     ll = ll_blocks.get(
         selected_rec,
@@ -697,28 +675,28 @@ def ccm_page():
     if not ll:
 
         st.warning(
-            f"Nessuna LL disponibile per REC {selected_rec}."
+            "Nessuna LL disponibile per questo REC."
         )
 
         return
 
-    st.divider()
+    # =====================================================
+    # SESSION STATE
+    # =====================================================
 
-    st.markdown(
-        f"### 📊 Analisi LL — REC {selected_rec}"
+    state_key = (
+        f"ccm_idx_{selected_rec}"
     )
-
-    # ========================================================
-    # SESSION STATE INDICE
-    # ========================================================
-
-    state_key = f"ccm_idx_{selected_rec}"
 
     if state_key not in st.session_state:
 
-        st.session_state[state_key] = 0
+        st.session_state[
+            state_key
+        ] = 0
 
-    index = st.session_state[state_key]
+    index = st.session_state[
+        state_key
+    ]
 
     index = max(
         0,
@@ -728,216 +706,187 @@ def ccm_page():
         )
     )
 
-    # ========================================================
-    # PULSANTI NAVIGAZIONE
-    # ========================================================
+    # =====================================================
+    # CONTROLLI
+    # =====================================================
 
-    col_prev, col_info, col_next = st.columns(
-        [1, 3, 1]
+    st.markdown(
+        "### 🎛️ Navigazione"
     )
 
-    with col_prev:
+    col1, col2, col3, col4 = st.columns(
+        [1, 1, 3, 1]
+    )
+
+    with col1:
 
         if st.button(
-            "⬅️ Indietro",
-            use_container_width=True,
-            key=f"ccm_prev_{selected_rec}"
+            "◀ Indietro",
+            use_container_width=True
         ):
 
-            st.session_state[state_key] = max(
+            index = max(
                 0,
                 index - 1
             )
 
+            st.session_state[
+                state_key
+            ] = index
+
             st.rerun()
 
-    with col_info:
-
-        st.markdown(
-            f"""
-            <div style="
-                text-align:center;
-                font-size:20px;
-                font-weight:bold;
-                padding-top:5px;
-            ">
-                Campione {index + 1} / {len(ll)}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    with col_next:
+    with col2:
 
         if st.button(
-            "Avanti ➡️",
-            use_container_width=True,
-            key=f"ccm_next_{selected_rec}"
+            "Avanti ▶",
+            use_container_width=True
         ):
 
-            st.session_state[state_key] = min(
+            index = min(
                 len(ll) - 1,
                 index + 1
             )
 
+            st.session_state[
+                state_key
+            ] = index
+
             st.rerun()
 
-    # ========================================================
-    # SLIDER
-    # ========================================================
+    with col3:
 
-    index = st.slider(
-        "Timeline LL",
-        min_value=0,
-        max_value=len(ll) - 1,
-        value=index,
-        key=f"ccm_slider_{selected_rec}"
-    )
+        new_index = st.slider(
+            "Campione",
+            min_value=0,
+            max_value=len(ll) - 1,
+            value=index,
+            key=f"ccm_slider_{selected_rec}"
+        )
 
-    st.session_state[state_key] = index
+        if new_index != index:
+
+            st.session_state[
+                state_key
+            ] = new_index
+
+            index = new_index
+
+    with col4:
+
+        st.metric(
+            "N",
+            ll[index].get(
+                "N",
+                "---"
+            )
+        )
+
+    # =====================================================
+    # RECORD CORRENTE
+    # =====================================================
 
     row = ll[index]
 
-    # ========================================================
-    # NUMERO CAMPIONE
-    # ========================================================
-
-    st.markdown(
-        f"""
-        **N = {row.get("N", "---")}**
-        """
-    )
-
-    # ========================================================
-    # DECODIFICA
-    # ========================================================
-
     states = decode_rec(row)
 
-    # ========================================================
-    # LAYOUT DIGITALE / ANALOGICO
-    # ========================================================
-
-    col_digital, col_analog = st.columns(
-        [2.5, 1]
+    st.caption(
+        f"Campione {index + 1} di {len(ll)}"
     )
 
-    # ========================================================
+    # =====================================================
     # DIGITALI
-    # ========================================================
+    # =====================================================
 
-    with col_digital:
+    st.divider()
 
-        st.markdown(
-            "### 🔌 Segnali digitali"
-        )
+    st.subheader(
+        "🔌 Segnali digitali"
+    )
 
-        digital_cols = st.columns(3)
+    # 3 colonne
+    digital_cols = st.columns(3)
 
-        groups = [
-            "sCCa",
-            "PSWA",
-            "PSWB",
-            "PHW1",
-            "flcom",
-            "PHW3",
-            "stdi",
-            "stdo",
-            "PCUc",
-            "PCUs",
-            "msf",
-        ]
+    for i, word in enumerate(
+        DIGITAL_GROUPS
+    ):
 
-        for i, word in enumerate(groups):
+        if word not in BIT_MAP:
+            continue
 
-            if word not in BIT_MAP:
-                continue
+        with digital_cols[
+            i % 3
+        ]:
 
-            with digital_cols[i % 3]:
+            st.markdown(
+                f"#### {word}"
+            )
 
-                st.markdown(
-                    f"**{word}**"
+            for signal in BIT_MAP[
+                word
+            ].values():
+
+                # salta bit inutilizzati
+                if signal == "-----":
+                    continue
+
+                value = states.get(
+                    signal,
+                    0
                 )
 
-                for signal in BIT_MAP[word].values():
+                digital_signal(
+                    signal,
+                    value
+                )
 
-                    if signal == "-----":
-                        continue
-
-                    value = states.get(
-                        signal,
-                        0
-                    )
-
-                    digital_signal(
-                        signal,
-                        value
-                    )
-
-    # ========================================================
+    # =====================================================
     # ANALOGICI
-    # ========================================================
+    # =====================================================
 
-    with col_analog:
+    st.divider()
 
-        st.markdown(
-            "### 📈 Segnali analogici"
+    st.subheader(
+        "📈 Segnali analogici"
+    )
+
+    analog_cols = st.columns(
+        len(ANALOG_SIGNALS)
+    )
+
+    for col, signal in zip(
+        analog_cols,
+        ANALOG_SIGNALS
+    ):
+
+        value = row.get(
+            signal,
+            "---"
         )
 
-        for signal in ANALOG_SIGNALS:
-
-            value = row.get(
-                signal,
-                "---"
-            )
+        with col:
 
             st.metric(
                 signal,
                 str(value)
             )
 
-    # ========================================================
-    # VALORI RAW
-    # ========================================================
+    # =====================================================
+    # TABELLA LL
+    # =====================================================
+
+    st.divider()
 
     with st.expander(
-        "🔧 Visualizza valori RAW della LL"
+        "📄 Visualizza dati LL completi"
     ):
 
-        raw_df = pd.DataFrame(
-            [row]
+        ll_df = pd.DataFrame(
+            ll
         )
 
         st.dataframe(
-            raw_df,
+            ll_df,
             use_container_width=True,
             hide_index=True
         )
-
-    # ========================================================
-    # BIT ATTIVI
-    # ========================================================
-
-    active_signals = [
-        name
-        for name, value in states.items()
-        if value == 1
-    ]
-
-    with st.expander(
-        f"🟢 Segnali attivi ({len(active_signals)})"
-    ):
-
-        if active_signals:
-
-            st.write(
-                ", ".join(
-                    active_signals
-                )
-            )
-
-        else:
-
-            st.info(
-                "Nessun segnale digitale attivo."
-            )
