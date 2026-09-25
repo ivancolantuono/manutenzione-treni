@@ -692,27 +692,189 @@ def render_summary(summary):
 
 
 def show_analogicals(row):
-    columns = st.columns(len(ANALOG_SIGNALS), gap="small")
 
-    for column, signal in zip(columns, ANALOG_SIGNALS):
-        value = row.get(signal, "—")
+    # =====================================================
+    # SCALE GRAFICHE
+    # =====================================================
+    # Sono SOLO scale per la barra visuale.
+    # Non rappresentano soglie tecniche del CCM.
+
+    ANALOG_MAX = {
+        "vTVL": 5000,
+        "vTV1": 5000,
+        "iTA1M": 100,
+        "iTA2M": 100,
+        "iTA": 100,
+        "vTVI": 5000,
+
+        "da1": 100,
+        "db1": 100,
+
+        "ta1": 100,
+        "tb1": 100,
+
+        "dfr": 100,
+
+        "tcha": 100,
+        "tchb": 100,
+
+        "vref": 100,
+        "Vref": 100,
+
+        "OVPD": 5000,
+        "TOVPD": 100,
+
+        "vF": 5000,
+        "dvF": 5000,
+
+        "vL": 5000,
+        "dvL": 5000,
+
+        "vFdvf": 5000,
+        "vLdvl": 5000,
+    }
+
+    # =====================================================
+    # CSS
+    # =====================================================
+
+    st.markdown(
+        """
+        <style>
+
+        .analog-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin: 6px 0;
+            gap: 10px;
+        }
+
+        .analog-name {
+            width: 75px;
+            min-width: 75px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .analog-value {
+            width: 80px;
+            min-width: 80px;
+            text-align: right;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .analog-track {
+            flex: 1;
+            height: 14px;
+            background: #eeeeee;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .analog-fill {
+            height: 100%;
+            background: #7b61a8;
+            border-radius: 8px;
+        }
+
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # =====================================================
+    # SEGNALI
+    # =====================================================
+
+    for signal in ANALOG_SIGNALS:
+
+        value = row.get(signal, "")
+
+        # -----------------------------
+        # Valore vuoto
+        # -----------------------------
 
         if value in ("", None):
-            value = "—"
+            value_text = "—"
+            numeric_value = None
 
-        analog_html = (
-            '<div class="ccm-analog">'
-            f'<div class="ccm-analog-name">{html.escape(signal)}</div>'
-            f'<div class="ccm-analog-value">{html.escape(str(value))}</div>'
-            '</div>'
+        else:
+            value_text = str(value)
+
+            try:
+                numeric_value = float(
+                    str(value).replace(",", ".")
+                )
+            except Exception:
+                numeric_value = None
+
+        # -----------------------------
+        # Fondo scala grafico
+        # -----------------------------
+
+        max_value = ANALOG_MAX.get(
+            signal,
+            100
         )
 
-        with column:
-            st.markdown(
-                analog_html,
-                unsafe_allow_html=True
+        # -----------------------------
+        # Percentuale barra
+        # -----------------------------
+
+        if (
+            numeric_value is not None
+            and max_value > 0
+        ):
+
+            percentage = (
+                abs(numeric_value)
+                / max_value
+                * 100
             )
 
+            percentage = min(
+                max(percentage, 0),
+                100
+            )
+
+        else:
+            percentage = 0
+
+        # -----------------------------
+        # Visualizzazione
+        # -----------------------------
+
+        analog_html = f"""
+        <div class="analog-row">
+
+            <div class="analog-name">
+                {html.escape(signal)}
+            </div>
+
+            <div class="analog-value">
+                {html.escape(value_text)}
+            </div>
+
+            <div class="analog-track">
+
+                <div
+                    class="analog-fill"
+                    style="width:{percentage:.1f}%;">
+                </div>
+
+            </div>
+
+        </div>
+        """
+
+        st.markdown(
+            analog_html,
+            unsafe_allow_html=True
+        )
 
 # =========================================================
 # CCM PAGE
