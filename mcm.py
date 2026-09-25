@@ -384,7 +384,7 @@ def render_analogicals(row):
 
 def mcm_page():
     _css()
-    st.title("⚙️ Analisi MCM")
+    st.title("MCM")
 
     uploaded = st.file_uploader("Carica file MCM (.CAP)", type=["CAP","cap"], key="mcm_file")
     if uploaded is None:
