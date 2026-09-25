@@ -592,10 +592,10 @@ def show_summary(summary):
 # =========================================================
 
 def show_all_digitals(states):
-    columns = st.columns(5, gap="small")
+    columns = st.columns(6, gap="small")
 
     for index, word in enumerate(DIGITAL_WORDS):
-        with columns[index % 5]:
+        with columns[index % 6]:
             render_word(word, states)
 
 
@@ -832,16 +832,16 @@ def ccm_page():
     )
 
     # =====================================================
-    # DIGITALI - 5 COLONNE
+    # DIGITALI - 6 COLONNE
     # =====================================================
 
     st.subheader("🔌 Segnali digitali")
 
-    # 5 colonne per riga: i gruppi vengono riempiti da sinistra a destra.
+    # 6 colonne per riga: i gruppi vengono riempiti da sinistra a destra.
     # In questo modo non si creano colonne verticali con grandi spazi vuoti.
-    for row_start in range(0, len(DIGITAL_WORDS), 5):
-        row_words = DIGITAL_WORDS[row_start:row_start + 5]
-        columns = st.columns(5, gap="small")
+    for row_start in range(0, len(DIGITAL_WORDS), 6):
+        row_words = DIGITAL_WORDS[row_start:row_start + 6]
+        columns = st.columns(6, gap="small")
 
         for column, word in zip(columns, row_words):
             with column:
