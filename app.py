@@ -21,6 +21,7 @@ from analizza import analizza_page
 from hvac_cabina import hvac_cabina_page
 from hvac_comparto import hvac_comparto_page
 from ccm import ccm_page
+from mcm import mcm_page
 import urllib.parse
 import secrets
 
