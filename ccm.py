@@ -287,6 +287,7 @@ DIGITAL_WORDS = [
     "PHW1",
     "PHW2",
     "PHW3",
+    "PHW4",
     "flcom",
     "stdi",
     "stdo",
