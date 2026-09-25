@@ -6,7 +6,7 @@ import html
 
 MAX_FIELDS = 6
 
-ANALOG_SIGNALS = ["vLIN", "vFIL", "Vel", "fmRef", "fm1", "fm1s", "Imot"]
+ANALOG_SIGNALS = ["vLIN", "vFIL", "Vel", "Vref", "fmRef", "fm1", "fm1s", "Imot", "Irif", "iLIN", "Paps", "RifM", "RifF", "RifH", "CpAsk", "Reo",]
 
 WORD_LIST = [
     "sTCa", "sTCb", "sTCc", "sTCd",
