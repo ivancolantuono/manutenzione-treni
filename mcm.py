@@ -29,32 +29,32 @@ BIT_MAP = {
         0:"venton_A",1:"venton_B",2:"dvf",3:"InParkingMode",4:"scaFil",5:"HILactive",6:"PotLin1",7:"PotLin2",
         8:"UseOptSSctrl",9:"WSPedbOff",10:"-----",11:"-----",12:"-----",13:"-----",14:"-----",15:"-----"},
     "cWa": {
-        0:"errcom",1:"LineOverCurrent",2:"CCUEthKo",3:"VUOTO",4:"freqVentMotSlow",5:"freqVentExtSlow",6:"GEWko",7:"pwGood",
-        8:"svfProl",9:"errTIO",10:"avAIPk1",11:"VUOTO",12:"erSeqFas",13:"erDirPK",14:"VUOTO",15:"errHW"},
+        0:"errcom",1:"LineOverCurrent",2:"PCUko",3:"-----",4:"-----",5:"-----",6:"GEWko",7:"pwGoodKo",
+        8:"svfProl",9:"-----",10:"avAIPk1",11:"-----",12:"erSeqFas",13:"erDirPK",14:"-----",15:"errHW"},
     "cWb": {
-        0:"VUOTO",1:"ccTripLine",2:"BCUDigFail",3:"slidErrLatch",4:"tcmsEsclTacu",5:"VFHIGHPerm",6:"FcOpenLoopLed",7:"DlerrCode",
-        8:"DOFailure",9:"TripLine",10:"VUOTO",11:"VUOTO",12:"ReoEDCutOff",13:"warmReo",14:"scanFilKO",15:"hotReo"},
+        0:"-----",1:"ccTripLine",2:"BCUDigFail",3:"slidErrLatch",4:"pcuEsclTcu",5:"VFHIGHPerm",6:"-----",7:"DlerrCode",
+        8:"DOFailure",9:"blkTripLine",10:"-----",11:"-----",12:"-----",13:"-----",14:"chReoKO",15:"hotReo"},
     "cWc": {
-        0:"VUOTO",1:"VUOTO",2:"VUOTO",3:"VUOTO",4:"VUOTO",5:"PhaseRFail",6:"PhaseSFail",7:"PhaseTFail",8:"koTVF",9:"fDSprot",
-        10:"VUOTO",11:"VUOTO",12:"MaxMotMechFreq",13:"Overspeed",14:"warmMot",15:"hotMot"},
+        0:"-----",1:"-----",2:"-----",3:"-----",4:"-----",5:"PhaseRFail",6:"PhaseSFail",7:"PhaseTFail",8:"koTVF",9:"-----",
+        10:"-----",11:"-----",12:"MaxMotMechFreq",13:"Overspeed",14:"-----",15:"hotMot"},
     "cWd": {
-        0:"dprbusKo",1:"koTAR",2:"koTAS",3:"koTAT",4:"pkFail1",5:"WSPedbOff",6:"PropCutOutKo",7:"PropCutOutErr1",
-        8:"VUOTO",9:"diagAtt",10:"VUOTO",11:"VUOTO",12:"diagPerm",13:"VUOTO",14:"hotHeatSink",15:"hotThAir"},
+        0:"dprbusKo",1:"koTAR",2:"koTAS",3:"koTAT",4:"pkFail1",5:"WSPedbOff",6:"PropCutOutKo",7:"-----",
+        8:"-----",9:"diagAtt",10:"-----",11:"-----",12:"diagPerm",13:"-----",14:"hotHeatSink",15:"hotThAir"},
     "cWe": {
-        0:"VUOTO",1:"koAllThlGbt",2:"koThAir",3:"koThHeatSink",4:"HotThHeatSinkLong",5:"VUOTO",6:"VUOTO",7:"VUOTO",
-        8:"VUOTO",9:"VUOTO",10:"VUOTO",11:"VUOTO",12:"diagPerm",13:"koThM1",14:"VUOTO",15:"VUOTO"},
+        0:"-----",1:"koAllThlGbt",2:"koThAir",3:"koThHeatSink",4:"HotThHeatSinkLong",5:"-----",6:"-----",7:"-----",
+        8:"-----",9:"-----",10:"-----",11:"-----",12:"-----",13:"koThM1",14:"-----",15:"-----"},
     "PH1": {
-        0:"VUOTO",1:"VUOTO",2:"VUOTO",3:"VUOTO",4:"VUOTO",5:"VUOTO",6:"VUOTO",7:"SCMiR",8:"SCMiT",
-        9:"VUOTO",10:"VUOTO",11:"VUOTO",12:"SCMiS",13:"VUOTO",14:"VUOTO",15:"VUOTO"},
+        0:"-----",1:"-----",2:"-----",3:"-----",4:"-----",5:"-----",6:"-----",7:"SCMiR",8:"SCMiT",
+        9:"-----",10:"-----",11:"-----",12:"SCMiS",13:"-----",14:"-----",15:"-----"},
     "PH2": {
-        0:"VUOTO",1:"VUOTO",2:"VUOTO",3:"VUOTO",4:"VUOTO",5:"VUOTO",6:"SVF2",7:"VUOTO",8:"VUOTO",
-        9:"VUOTO",10:"VUOTO",11:"VUOTO",12:"VUOTO",13:"VUOTO",14:"VUOTO",15:"VUOTO"},
+        0:"-----",1:"-----",2:"-----",3:"-----",4:"-----",5:"-----",6:"SVF2",7:"-----",8:"-----",
+        9:"-----",10:"-----",11:"-----",12:"-----",13:"-----",14:"-----",15:"-----"},
     "PH3": {
-        0:"R_UP",1:"S_UP",2:"T_UP",3:"CH_UP",4:"VUOTO",5:"R_DW",6:"S_DW",7:"T_DW",8:"CH_DW",
+        0:"DiaR_UP",1:"DiaS_UP",2:"DiaT_UP",3:"DiaCH_UP",4:"-----",5:"DiaR_DWN",6:"DiaS_DWN",7:"DiaT_DWN",8:"CH_DW",
         9:"VUOTO",10:"VUOTO",11:"VUOTO",12:"VUOTO",13:"VUOTO",14:"VUOTO",15:"VUOTO"},
     "PH4": {
-        0:"SBF_IV",1:"VUOTO",2:"VUOTO",3:"VUOTO",4:"VUOTO",5:"VUOTO",6:"VUOTO",7:"VUOTO",
-        8:"VUOTO",9:"VUOTO",10:"VUOTO",11:"VUOTO",12:"VUOTO",13:"VUOTO",14:"VUOTO",15:"VUOTO"},
+        0:"SBF",1:"-----",2:"-----",3:"PG1",4:"-----",5:"ALPK1KO",6:"-----",7:"-----",
+        8:"-----",9:"-----",10:"-----",11:"-----",12:"-----",13:"-----",14:"-----",15:"-----"},
     "cPCUa": {
         0:"PropCutOut",1:"startMCM",2:"trz",3:"frn",4:"av",5:"ind",6:"FremCCU",7:"VUOTO",8:"Stopping",
         9:"setHil",10:"ComDescarge",11:"CalWhDiam",12:"UseOptSSCtrl",13:"inibRecup",14:"PcuMisReoOK",15:"inibBraking"},
