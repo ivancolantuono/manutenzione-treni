@@ -291,7 +291,68 @@ BIT_MAP = {
     },
 }
 
+DIGITAL_DESCRIPTIONS = {
 
+    # PSWA
+    "UNDERVOLTPRIM3K": "Sottotensione primaria 3 kV",
+    "dvfProtLed": "Protezione dvF",
+    "dvlProtLed": "Protezione dvL",
+    "dvfProtLed2": "Protezione dvF 2",
+    "dvlProtLed2": "Protezione dvL 2",
+    "koThCHPIND1": "Anomalia temperatura CHPIND1",
+    "koThCHPIND2": "Anomalia temperatura CHPIND2",
+    "koThINTAIR": "Anomalia temperatura aria interna",
+    "koThHEATSINK": "Anomalia temperatura heatsink",
+    "PcuKO": "PCU non OK",
+    "pswCHPIND1_HOTMAX": "CHPIND1 temperatura massima",
+    "pswUNDERVOLTPRIM": "Sottotensione primaria",
+    "pswOPENFAILBYS": "Anomalia apertura BYS",
+    "pswCHPIND2_HOTMAX": "CHPIND2 temperatura massima",
+    "pswUNDERVOLTSEC": "Sottotensione secondaria",
+    "pswOPENFAILBY": "Anomalia apertura BY",
+
+    # PSWB
+    "pswINTAIR_HOTMAX": "Aria interna temperatura massima",
+    "pswUNBASUPERV": "Supervisione UNBA",
+    "pswkoTA": "Anomalia TA",
+    "UNDERVOLTLINE3K": "Sottotensione linea 3 kV",
+    "pswINCALTI": "Anomalia INCALTI",
+    "DISCHA_FAIL": "Guasto scarica",
+    "HEATSINK_HOTMAX": "Heatsink temperatura massima",
+    "pswCLOSEFAILBY": "Anomalia chiusura BY",
+    "TASUPERV": "Supervisione TA",
+    "CCMESCL": "CCM escluso",
+    "CHARGESUPERV": "Supervisione carica",
+    "OVPRESHOT": "Protezione sovratemperatura",
+    "TEMPSCHEDHOT": "Sovratemperatura scheda",
+    "UNDERVOLTLINE": "Sottotensione linea",
+    "CIDko": "CID non OK",
+
+    # PHW1
+    "TVI": "Tensione TVI",
+    "TA1": "Trasformatore di corrente TA1",
+    "TA2": "Trasformatore di corrente TA2",
+    "TA": "Trasformatore di corrente TA",
+    "TV1": "Tensione TV1",
+
+    # PHW2
+    "earthfault": "Guasto verso terra",
+
+    # PHW3
+    "DiaUp1": "Diagnostica UP 1",
+    "DiaUp2": "Diagnostica UP 2",
+    "DiaUp3": "Diagnostica UP 3",
+    "DiaUp4": "Diagnostica UP 4",
+    "DiaUp5": "Diagnostica UP 5",
+    "DiaDown1": "Diagnostica DOWN 1",
+    "DiaDown2": "Diagnostica DOWN 2",
+    "DiaDown3": "Diagnostica DOWN 3",
+    "DiaDown4": "Diagnostica DOWN 4",
+    "DiaDown5": "Diagnostica DOWN 5",
+
+    # PHW4
+    "powergood": "Power Good",
+}
 # =========================================================
 # ORDINE VISUALIZZAZIONE
 # =========================================================
@@ -619,8 +680,11 @@ def render_word(word, states):
             css_class = "ccm-off"
             led_class = "ccm-led-off"
 
+        description = DIGITAL_DESCRIPTIONS.get(signal, "")
+
         html_parts.append(
-            f'<div class="ccm-signal {css_class}">'
+            f'<div class="ccm-signal {css_class}" '
+            f'title="{html.escape(description)}">'
             f'<span class="ccm-led {led_class}"></span>'
             f'{html.escape(signal)}'
             f'</div>'
