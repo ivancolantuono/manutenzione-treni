@@ -35,7 +35,6 @@ ANALOG_SIGNALS = [
     "dvL",
     "vFdvf",
     "vLdvl",
-    
 ]
 
 
