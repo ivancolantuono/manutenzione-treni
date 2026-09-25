@@ -48,10 +48,10 @@ BIT_MAP = {
 
     "PSWA": {
         0: "UNDERVOLTPRIM3K",
-        1: "dvfProtLed",
-        2: "dvlProtLed",
-        3: "dvfProtLed2",
-        4: "dvlProtLed2",
+        1: "CHPIND1_HOT",
+        2: "CHPIND2_HOT",
+        3: "INTAIR_HOT",
+        4: "HEATSINK_HOT",
         5: "koThCHPIND1",
         6: "koThCHPIND2",
         7: "koThINTAIR",
@@ -59,22 +59,22 @@ BIT_MAP = {
         9: "PcuKO",
         10: "pswCHPIND1_HOTMAX",
         11: "pswUNDERVOLTPRIM",
-        12: "pswOPENFAILBYS",
+        12: "pswTV1SUPERV",
         13: "pswCHPIND2_HOTMAX",
         14: "pswUNDERVOLTSEC",
-        15: "pswOPENFAILBY",
+        15: "pswTVISUPERV",
     },
 
     "PSWB": {
         0: "pswINTAIR_HOTMAX",
         1: "pswUNBASUPERV",
         2: "pswkoTA",
-        3: "-----",
+        3: "pswTA1SUPERV",
         4: "UNDERVOLTLINE3K",
-        5: "pswINCALTI",
+        5: "EARTHFAULT",
         6: "DISCHA_FAIL",
         7: "HEATSINK_HOTMAX",
-        8: "pswCLOSEFAILBY",
+        8: "COMPVTVIMCM1",
         9: "TASUPERV",
         10: "CCMESCL",
         11: "CHARGESUPERV",
@@ -86,9 +86,9 @@ BIT_MAP = {
 
     "PHW1": {
         0: "-----",
-        1: "-----",
-        2: "-----",
-        3: "TVI",
+        1: "VLDC",
+        2: "TVI",
+        3: "-----",
         4: "-----",
         5: "-----",
         6: "-----",
@@ -104,22 +104,7 @@ BIT_MAP = {
     },
 
     "PHW2": {
-        0: "-----",
-        1: "-----",
-        2: "-----",
-        3: "-----",
-        4: "earthfault",
-        5: "-----",
-        6: "-----",
-        7: "-----",
-        8: "-----",
-        9: "-----",
-        10: "-----",
-        11: "-----",
-        12: "-----",
-        13: "-----",
-        14: "-----",
-        15: "-----",
+        0: "earthfault",
     },
 
     "PHW3": {
@@ -141,24 +126,7 @@ BIT_MAP = {
         15: "-----",
     },
 
-    "PHW4": {
-        0: "-----",
-        1: "-----",
-        2: "-----",
-        3: "powergood",
-        4: "-----",
-        5: "-----",
-        6: "-----",
-        7: "-----",
-        8: "-----",
-        9: "-----",
-        10: "-----",
-        11: "-----",
-        12: "-----",
-        13: "-----",
-        14: "-----",
-        15: "-----",
-    },
+    "PHW4": {},
 
     "flcom": {
         0: "euroDC",
@@ -287,7 +255,6 @@ DIGITAL_WORDS = [
     "PHW1",
     "PHW2",
     "PHW3",
-    "PHW4",
     "flcom",
     "stdi",
     "stdo",
@@ -624,10 +591,10 @@ def show_summary(summary):
 # =========================================================
 
 def show_all_digitals(states):
-    columns = st.columns(6, gap="small")
+    columns = st.columns(7, gap="small")
 
     for index, word in enumerate(DIGITAL_WORDS):
-        with columns[index % 6]:
+        with columns[index % 7]:
             render_word(word, states)
 
 
@@ -864,16 +831,15 @@ def ccm_page():
     )
 
     # =====================================================
-    # DIGITALI - 6 COLONNE
+    # DIGITALI - 7 COLONNE
     # =====================================================
 
     st.subheader("🔌 Segnali digitali")
 
-    # 6 colonne per riga: i gruppi vengono riempiti da sinistra a destra.
-    # In questo modo non si creano colonne verticali con grandi spazi vuoti.
-    for row_start in range(0, len(DIGITAL_WORDS), 6):
-        row_words = DIGITAL_WORDS[row_start:row_start + 6]
-        columns = st.columns(6, gap="small")
+    # 7 colonne per riga: i gruppi vengono riempiti da sinistra a destra.
+    for row_start in range(0, len(DIGITAL_WORDS), 7):
+        row_words = DIGITAL_WORDS[row_start:row_start + 7]
+        columns = st.columns(7, gap="small")
 
         for column, word in zip(columns, row_words):
             with column:
