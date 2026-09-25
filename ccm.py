@@ -18,6 +18,24 @@ ANALOG_SIGNALS = [
     "iTA2M",
     "iTA",
     "vTVI",
+    "da1",
+    "db1",
+    "ta1",
+    "tb1",
+    "dfr",
+    "tcha",
+    "tchb",
+    "vref",
+    "Vref",
+    "OVPD",
+    "TOVPD",
+    "vF",
+    "dvF",
+    "vL",
+    "dvL",
+    "vFdvf",
+    "vLdvl",
+    
 ]
 
 
