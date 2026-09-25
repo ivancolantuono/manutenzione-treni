@@ -848,29 +848,13 @@ def show_analogicals(row):
         # Visualizzazione
         # -----------------------------
 
-        analog_html = f"""
-        <div class="analog-row">
-
-            <div class="analog-name">
-                {html.escape(signal)}
-            </div>
-
-            <div class="analog-value">
-                {html.escape(value_text)}
-            </div>
-
-            <div class="analog-track">
-
-                <div
-                    class="analog-fill"
-                    style="width:{percentage:.1f}%;">
-                </div>
-
-            </div>
-
+        analog_html = f"""<div class="analog-row">
+        <div class="analog-name">{html.escape(signal)}</div>
+        <div class="analog-value">{html.escape(value_text)}</div>
+        <div class="analog-track">
+        <div class="analog-fill" style="width:{percentage:.1f}%;"></div>
         </div>
-        """
-
+        </div>"""
         st.markdown(
             analog_html,
             unsafe_allow_html=True
