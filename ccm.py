@@ -2,43 +2,48 @@ import streamlit as st
 import pandas as pd
 import re
 import html
+import textwrap
+
+
+# =========================================================
+# CONFIGURAZIONE
+# =========================================================
 
 MAX_FIELDS = 6
 
-# =========================================================
-# SEGNALI ANALOGICI
-# =========================================================
-# Aggiungi qui eventuali nuovi segnali analogici.
 ANALOG_SIGNALS = [
-    "vTVL", "vTV1", "iTA1M", "iTA2M", "iTA", "vTVI",
-    "da1", "db1", "ta1", "tb1", "dfr", "tcha", "tchb",
-    "vref", "Vref", "OVPD", "TOVPD", "vF", "dvF",
-    "vL", "dvL", "vFdvf", "vLdvL",
+    "vTVL",
+    "vTV1",
+    "iTA1M",
+    "iTA2M",
+    "iTA",
+    "vTVI",
+    "da1",
+    "db1",
+    "ta1",
+    "tb1",
+    "dfr",
+    "tcha",
+    "tchb",
+    "vref",
+    "Vref",
+    "OVPD",
+    "TOVPD",
+    "vF",
+    "dvF",
+    "vL",
+    "dvL",
+    "vFdvf",
+    "vLdvl",
 ]
 
-# =========================================================
-# PAROLE DIGITALI CCM
-# =========================================================
-DIGITAL_WORDS = [
-    "sCCa",
-    "PSWA",
-    "PSWB",
-    "PHW1",
-    "PHW2",
-    "PHW3",
-    "PHW4",
-    "flcom",
-    "stdi",
-    "stdo",
-    "PCUc",
-    "PCUs",
-    "msf",
-]
 
 # =========================================================
-# DECODIFICA BIT
+# BIT MAP
 # =========================================================
+
 BIT_MAP = {
+
     "sCCa": {
         0: "Test",
         1: "c2qok",
@@ -60,10 +65,10 @@ BIT_MAP = {
 
     "PSWA": {
         0: "UNDERVOLTPRIM3K",
-        1: "CHPIND1_HOT",
-        2: "CHPIND2_HOT",
-        3: "INTAIR_HOT",
-        4: "HEATSINK_HOT",
+        1: "dvfProtLed",
+        2: "dvlProtLed",
+        3: "dvfProtLed2",
+        4: "dvlProtLed2",
         5: "koThCHPIND1",
         6: "koThCHPIND2",
         7: "koThINTAIR",
@@ -71,22 +76,22 @@ BIT_MAP = {
         9: "PcuKO",
         10: "pswCHPIND1_HOTMAX",
         11: "pswUNDERVOLTPRIM",
-        12: "pswTV1SUPERV",
+        12: "pswOPENFAILBYS",
         13: "pswCHPIND2_HOTMAX",
         14: "pswUNDERVOLTSEC",
-        15: "pswTVISUPERV",
+        15: "pswOPENFAILBY",
     },
 
     "PSWB": {
         0: "pswINTAIR_HOTMAX",
         1: "pswUNBASUPERV",
-        2: "pswTA1SUPERV",
-        3: "pswTA2SUPERV",
+        2: "pswkoTA",
+        3: "-----",
         4: "UNDERVOLTLINE3K",
-        5: "EARTHFAULT",
+        5: "pswINCALTI",
         6: "DISCHA_FAIL",
         7: "HEATSINK_HOTMAX",
-        8: "COMPVTVIMCM1",
+        8: "pswCLOSEFAILBY",
         9: "TASUPERV",
         10: "CCMESCL",
         11: "CHARGESUPERV",
@@ -98,9 +103,9 @@ BIT_MAP = {
 
     "PHW1": {
         0: "-----",
-        1: "VLDC",
-        2: "TVI",
-        3: "-----",
+        1: "-----",
+        2: "-----",
+        3: "TVI",
         4: "-----",
         5: "-----",
         6: "-----",
@@ -116,7 +121,22 @@ BIT_MAP = {
     },
 
     "PHW2": {
-        0: "earthfault",
+        0: "-----",
+        1: "-----",
+        2: "-----",
+        3: "-----",
+        4: "earthfault",
+        5: "-----",
+        6: "-----",
+        7: "-----",
+        8: "-----",
+        9: "-----",
+        10: "-----",
+        11: "-----",
+        12: "-----",
+        13: "-----",
+        14: "-----",
+        15: "-----",
     },
 
     "PHW3": {
@@ -139,9 +159,22 @@ BIT_MAP = {
     },
 
     "PHW4": {
-        # Lasciato predisposto per i segnali PHW4.
-        # Inserisci qui la decodifica quando disponibile.
-    },
+        0: "-----",
+        1: "-----",
+        2: "-----",
+        3: "powergood",
+        4: "-----",
+        5: "-----",
+        6: "-----",
+        7: "-----",
+        8: "-----",
+        9: "-----",
+        10: "-----",
+        11: "-----",
+        12: "-----",
+        13: "-----",
+        14: "-----",
+        15: "-----",},
 
     "flcom": {
         0: "euroDC",
@@ -258,29 +291,102 @@ BIT_MAP = {
     },
 }
 
+
 # =========================================================
-# REGEX PARSER CCM
+# ORDINE VISUALIZZAZIONE
 # =========================================================
+
+DIGITAL_WORDS = [
+    "sCCa",
+    "PSWA",
+    "PSWB",
+    "PHW1",
+    "PHW2",
+    "PHW3",
+    "PHW4",
+    "flcom",
+    "stdi",
+    "stdo",
+    "PCUc",
+    "PCUs",
+    "msf",
+]
+
+
+# =========================================================
+# DECODIFICA
+# =========================================================
+
+def decode_word(hex_value, bit_map):
+
+    try:
+        value = int(str(hex_value), 16)
+    except Exception:
+        value = 0
+
+    result = {}
+
+    for bit, name in bit_map.items():
+
+        if name == "-----":
+            continue
+
+        result[name] = (value >> bit) & 1
+
+    return result
+
+
+def decode_rec(rec_row):
+
+    states = {}
+
+    for word in DIGITAL_WORDS:
+
+        if word in BIT_MAP and word in rec_row:
+
+            states.update(
+                decode_word(
+                    rec_row[word],
+                    BIT_MAP[word]
+                )
+            )
+
+    return states
+
+
+# =========================================================
+# REGEX
+# =========================================================
+
 SM_RE = re.compile(
-    r"^Rec:\s+(\d+)\s+Code:\s+([0-9A-Fa-f]+)"
-    r"\s+Date:(\d{2}/\d{2}/\d{4})"
-    r"\s+(\d{2}:\d{2}:\d{2}\.\d{2})"
-    r"\s+-\s+(.*)$"
+    r"^Rec:\s+(\d+)\s+Code:\s+([0-9A-Fa-f]+)\s+"
+    r"Date:(\d{2}/\d{2}/\d{4})\s+"
+    r"(\d{2}:\d{2}:\d{2}\.\d{2})\s+-\s+(.*)$"
 )
 
 LL_HEADER_RE = re.compile(r"^\s*N\.\s+")
+
 LL_ROW_RE = re.compile(r"^\s*(-?\d+)\s+(.*)$")
 
 
 # =========================================================
-# DESCRIZIONE SUMMARY
+# DESCRIZIONE
 # =========================================================
+
 def split_description(desc):
+
+    descrizione = ""
+
     if " - " in desc:
-        left, descrizione = desc.split(" - ", 1)
+
+        left, descrizione = desc.split(
+            " - ",
+            1
+        )
+
     else:
+
         left = desc
-        descrizione = ""
 
     fields = [
         p.strip()
@@ -291,37 +397,51 @@ def split_description(desc):
     fields = fields[:MAX_FIELDS]
 
     while len(fields) < MAX_FIELDS:
+
         fields.append("")
 
     return fields, descrizione.strip()
 
 
 # =========================================================
-# PARSER FILE
+# PARSER CAP
 # =========================================================
+
 def parse_file(uploaded_file):
+
     summary = []
+
     ll_blocks = {}
 
     current_rec = None
+
     in_ll = False
+
     columns = []
 
-    raw = uploaded_file.getvalue()
-    text = raw.decode("utf-8", errors="ignore")
+    text = uploaded_file.read()
+
+    if isinstance(text, bytes):
+
+        text = text.decode(
+            "utf-8",
+            errors="ignore"
+        )
 
     for line in text.splitlines():
 
-        # -----------------------------
-        # SUMMARY / REC
-        # -----------------------------
         m = SM_RE.match(line)
 
         if m:
+
             rec = int(m.group(1))
+
             code = m.group(2)
+
             date = m.group(3)
+
             time = m.group(4)
+
             desc = m.group(5)
 
             fields, descrizione = split_description(desc)
@@ -335,22 +455,19 @@ def parse_file(uploaded_file):
             ll_blocks[rec] = []
 
             current_rec = rec
+
             in_ll = False
-            columns = []
 
             continue
 
-        # -----------------------------
-        # HEADER LL
-        # -----------------------------
         if LL_HEADER_RE.match(line):
+
             columns = line.split()
+
             in_ll = True
+
             continue
 
-        # -----------------------------
-        # RIGA LL
-        # -----------------------------
         if in_ll and current_rec is not None:
 
             m = LL_ROW_RE.match(line)
@@ -368,6 +485,7 @@ def parse_file(uploaded_file):
             }
 
             for i, col in enumerate(columns[1:]):
+
                 row[col] = values[i]
 
             ll_blocks[current_rec].append(row)
@@ -376,678 +494,412 @@ def parse_file(uploaded_file):
 
 
 # =========================================================
-# DECODIFICA WORD
-# =========================================================
-def decode_word(hex_value, bit_map):
-
-    try:
-        value = int(str(hex_value), 16)
-    except Exception:
-        value = 0
-
-    states = {}
-
-    for bit, name in bit_map.items():
-
-        if name == "-----":
-            continue
-
-        states[name] = (
-            value >> bit
-        ) & 1
-
-    return states
-
-
-# =========================================================
 # CSS
 # =========================================================
-def load_css():
+
+def inject_css():
 
     st.markdown(
         """
         <style>
 
-        /* ================================
-           DIGITALI
-           ================================ */
+        .ccm-container {
+            width: 100%;
+        }
 
-        .digital-title {
-            font-size: 22px;
+        .ccm-title {
+            font-size: 13px;
             font-weight: 700;
-            margin-top: 10px;
-            margin-bottom: 12px;
-        }
-
-        .digital-card {
-            border: 1px solid #d7dce2;
-            border-radius: 6px;
-            background: white;
-            overflow: hidden;
-            margin-bottom: 7px;
-        }
-
-        .digital-card-title {
-            background: #f4f6f8;
-            border-bottom: 1px solid #d7dce2;
             padding: 6px 8px;
-            font-size: 12px;
-            font-weight: 700;
+            background: #f7f8fa;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 3px;
         }
 
-        .digital-signal {
+        .ccm-word {
+            border: 1px solid #d8dce2;
+            border-radius: 5px;
+            overflow: hidden;
+            background: white;
+            margin-bottom: 6px;
+        }
+
+        .ccm-signal {
             height: 18px;
             line-height: 18px;
-            padding: 0 7px;
             margin: 1px 2px;
-            border-radius: 2px;
-            background: #f0f0f0;
-            color: #4d4d4d;
-            font-size: 10px;
+            padding: 0 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: Arial, sans-serif;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .digital-signal.on {
-            background: #ffdfe2;
-            color: #b40018;
+        .ccm-off {
+            background: #f1f1f1;
+            color: #555;
+        }
+
+        .ccm-on {
+            background: #ffdede;
+            color: #b00020;
             font-weight: 700;
-            border-left: 3px solid #e0001b;
+            border-left: 4px solid #e00020;
         }
 
-        .digital-signal.on:before {
-            content: "";
+        .ccm-led {
             display: inline-block;
-            width: 7px;
-            height: 7px;
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
-            background: #e0001b;
-            margin-right: 5px;
+            margin-right: 6px;
+            vertical-align: middle;
         }
 
-        .digital-signal.off:before {
-            content: "";
-            display: inline-block;
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #d9c8eb;
-            margin-right: 5px;
+        .ccm-led-off {
+            background: #d8cce9;
         }
 
-        /* ================================
-           ANALOGICI
-           ================================ */
-
-        .analog-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-top: 18px;
-            margin-bottom: 12px;
+        .ccm-led-on {
+            background: #e00020;
         }
 
-        .analog-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            margin: 6px 0;
+        .ccm-analog {
+            background: #f7f8fa;
+            border: 1px solid #d8dce2;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
         }
 
-        .analog-name {
-            width: 75px;
-            min-width: 75px;
+        .ccm-analog-name {
             font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
+            color: #555;
         }
 
-        .analog-value {
-            width: 80px;
-            min-width: 80px;
-            font-family: Consolas, monospace;
-            font-size: 13px;
-            font-weight: bold;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .analog-track {
-            flex: 1;
-            height: 14px;
-            background: #eeeeee;
-            border: 1px solid #d0d0d0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .analog-fill {
-            height: 100%;
-            background: #7b61a8;
-            border-radius: 8px;
+        .ccm-analog-value {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 5px;
         }
 
         </style>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
+
+
+# =========================================================
+# DIGITAL CARD
+# =========================================================
+
+def render_word(word, states):
+    signals = BIT_MAP.get(word, {})
+
+    if not signals:
+        return
+
+    html_parts = [
+        '<div class="ccm-word">',
+        f'<div class="ccm-title">{html.escape(word)}</div>'
+    ]
+
+    for bit, signal in signals.items():
+        if signal == "-----":
+            continue
+
+        value = states.get(signal, 0)
+
+        if value:
+            css_class = "ccm-on"
+            led_class = "ccm-led-on"
+        else:
+            css_class = "ccm-off"
+            led_class = "ccm-led-off"
+
+        html_parts.append(
+            f'<div class="ccm-signal {css_class}">'
+            f'<span class="ccm-led {led_class}"></span>'
+            f'{html.escape(signal)}'
+            f'</div>'
+        )
+
+    html_parts.append("</div>")
+
+    st.markdown("\n".join(html_parts), unsafe_allow_html=True)
+
+
+def show_summary(summary):
+    return render_summary(summary)
+
+
+# =========================================================
+# RICERCA NEL SUMMARY
+# =========================================================
+
+def show_all_digitals(states):
+    columns = st.columns(7, gap="small")
+
+    for index, word in enumerate(DIGITAL_WORDS):
+        with columns[index % 7]:
+            render_word(word, states)
+
+
+# =========================================================
+# RICERCA NEL SUMMARY
+# =========================================================
+
+def filter_summary(summary, search_text):
+    if not search_text:
+        return summary
+
+    text = str(search_text).strip().lower()
+
+    if not text:
+        return summary
+
+    return [
+        row for row in summary
+        if text in str(row[-1]).lower()
+    ]
 
 
 # =========================================================
 # SUMMARY
 # =========================================================
-def render_summary(df):
 
-    st.markdown("### 📋 Summary")
+def render_summary(summary):
 
-    # UNA SOLA RICERCA
-    search_text = st.text_input(
-        "🔎 Cerca nella descrizione",
-        placeholder="Parola o parte della descrizione...",
-        key="ccm_search",
-    )
-
-    filtered = df.copy()
-
-    if search_text.strip():
-
-        filtered = filtered[
-            filtered["DESCRIZIONE"]
-            .fillna("")
-            .astype(str)
-            .str.contains(
-                search_text.strip(),
-                case=False,
-                regex=False,
-            )
-        ].copy()
-
-    st.dataframe(
-        filtered,
-        use_container_width=True,
-        hide_index=True,
-        height=300,
-    )
-
-    return filtered
-
-
-# =========================================================
-# CARD DIGITALE
-# =========================================================
-def render_digital_card(word, row):
-
-    if word not in BIT_MAP:
-        return
-
-    st.markdown(
-        '<div class="digital-card">',
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        f'<div class="digital-card-title">'
-        f'{html.escape(word)}'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
-
-    states = decode_word(
-        row.get(word, "0"),
-        BIT_MAP[word],
-    )
-
-    for signal in BIT_MAP[word].values():
-
-        if signal == "-----":
-            continue
-
-        active = states.get(signal, 0)
-
-        cls = (
-            "on"
-            if active
-            else "off"
-        )
-
-        st.markdown(
-            f'<div class="digital-signal {cls}">'
-            f'{html.escape(signal)}'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-
-    st.markdown(
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-
-# =========================================================
-# SEGNALI DIGITALI
-# =========================================================
-def render_digital_signals(row):
-
-    st.markdown(
-        '<div class="digital-title">'
-        '🔌 Segnali digitali'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
-    # 7 colonne
-    cols = st.columns(
-        7,
-        gap="small",
-    )
-
-    for i, word in enumerate(DIGITAL_WORDS):
-
-        with cols[i % 7]:
-            render_digital_card(
-                word,
-                row,
-            )
-
-
-# =========================================================
-# SEGNALI ANALOGICI - BARRA
-# =========================================================
-def render_analog_signals(row):
-
-    st.markdown(
-        '<div class="analog-title">'
-        '📈 Segnali analogici'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
-    # -----------------------------------------------------
-    # Fondo scala grafico
-    # -----------------------------------------------------
-    # Questi valori servono SOLTANTO a dimensionare
-    # graficamente la barra.
-    # Non sono soglie tecniche del CCM.
-    ANALOG_MAX = {
-
-        "vTVL": 5000,
-        "vTV1": 5000,
-        "iTA1M": 100,
-        "iTA2M": 100,
-        "iTA": 100,
-        "vTVI": 5000,
-
-        "da1": 100,
-        "db1": 100,
-
-        "ta1": 100,
-        "tb1": 100,
-
-        "dfr": 100,
-
-        "tcha": 100,
-        "tchb": 100,
-
-        "vref": 100,
-        "Vref": 100,
-
-        "OVPD": 5000,
-        "TOVPD": 100,
-
-        "vF": 5000,
-        "dvF": 5000,
-
-        "vL": 5000,
-        "dvL": 5000,
-
-        "vFdvf": 5000,
-        "vLdvL": 5000,
-    }
-
-    # -----------------------------------------------------
-    # Rendering
-    # -----------------------------------------------------
-    for sig in ANALOG_SIGNALS:
-
-        raw_value = row.get(
-            sig,
-            "",
-        )
-
-        # -----------------------------
-        # Valore
-        # -----------------------------
-        if (
-            raw_value is None
-            or str(raw_value).strip() == ""
-        ):
-            value_text = "—"
-            numeric_value = None
-
-        else:
-
-            value_text = str(
-                raw_value
-            )
-
-            try:
-                numeric_value = float(
-                    str(raw_value)
-                    .replace(",", ".")
-                )
-
-            except Exception:
-                numeric_value = None
-
-        # -----------------------------
-        # Percentuale barra
-        # -----------------------------
-        max_value = ANALOG_MAX.get(
-            sig,
-            100,
-        )
-
-        if (
-            numeric_value is not None
-            and max_value > 0
-        ):
-
-            percentage = (
-                abs(numeric_value)
-                / max_value
-                * 100
-            )
-
-            percentage = min(
-                max(
-                    percentage,
-                    0,
-                ),
-                100,
-            )
-
-        else:
-            percentage = 0
-
-        # -----------------------------
-        # HTML
-        # -----------------------------
-        st.markdown(
-            f"""
-            <div class="analog-row">
-
-                <div class="analog-name">
-                    {html.escape(str(sig))}
-                </div>
-
-                <div class="analog-value">
-                    {html.escape(value_text)}
-                </div>
-
-                <div class="analog-track">
-
-                    <div
-                        class="analog-fill"
-                        style="width:{percentage:.1f}%;">
-                    </div>
-
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-
-# =========================================================
-# PAGINA CCM
-# =========================================================
-def ccm_page():
-
-    load_css()
-
-    st.title(
-        "⚡ Analisi CCM"
-    )
-
-    # =====================================================
-    # UPLOAD
-    # =====================================================
-    uploaded_file = st.file_uploader(
-        "Apri file CCM",
-        type=["CAP", "cap"],
-        key="ccm_file",
-    )
-
-    if uploaded_file is None:
-
-        st.info(
-            "Carica un file .CAP per iniziare."
-        )
-
-        return
-
-    # =====================================================
-    # IDENTIFICAZIONE FILE
-    # =====================================================
-    signature = (
-        uploaded_file.name,
-        uploaded_file.size,
-    )
-
-    if (
-        st.session_state.get(
-            "ccm_signature"
-        )
-        != signature
-    ):
-
-        try:
-
-            summary, ll_blocks = parse_file(
-                uploaded_file
-            )
-
-        except Exception as exc:
-
-            st.error(
-                f"Errore nella lettura del CCM: {exc}"
-            )
-
-            return
-
-        st.session_state.ccm_signature = signature
-        st.session_state.ccm_summary = summary
-        st.session_state.ccm_ll_blocks = ll_blocks
-        st.session_state.ccm_selected_rec = None
-
-    summary = st.session_state.get(
-        "ccm_summary",
-        [],
-    )
-
-    ll_blocks = st.session_state.get(
-        "ccm_ll_blocks",
-        {},
-    )
-
-    # =====================================================
-    # CONTROLLO SUMMARY
-    # =====================================================
-    if not summary:
-
-        st.error(
-            "Nessun Summary trovato nel file."
-        )
-
-        return
-
-    # =====================================================
-    # DATAFRAME SUMMARY
-    # =====================================================
     columns = (
         ["REC", "CODE", "DATE", "TIME"]
-        + [
-            f"F{i+1}"
-            for i in range(MAX_FIELDS)
-        ]
+        + [f"F{i+1}" for i in range(MAX_FIELDS)]
         + ["DESCRIZIONE"]
     )
 
-    df = pd.DataFrame(
-        summary,
-        columns=columns,
-    )
-
-    # =====================================================
-    # SUMMARY + RICERCA
-    # =====================================================
-    filtered = render_summary(df)
-
-    if filtered.empty:
-
-        st.warning(
-            "Nessun REC corrisponde alla ricerca."
-        )
-
+    if not summary:
+        st.info("Nessun evento da visualizzare.")
         return
 
-    st.divider()
+    df = pd.DataFrame(summary, columns=columns)
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+
+def show_analogicals(row):
+    columns = st.columns(len(ANALOG_SIGNALS), gap="small")
+
+    for column, signal in zip(columns, ANALOG_SIGNALS):
+        value = row.get(signal, "—")
+
+        if value in ("", None):
+            value = "—"
+
+        analog_html = (
+            '<div class="ccm-analog">'
+            f'<div class="ccm-analog-name">{html.escape(signal)}</div>'
+            f'<div class="ccm-analog-value">{html.escape(str(value))}</div>'
+            '</div>'
+        )
+
+        with column:
+            st.markdown(
+                analog_html,
+                unsafe_allow_html=True
+            )
+
+
+# =========================================================
+# CCM PAGE
+# =========================================================
+
+def ccm_page():
+
+    inject_css()
+
+    st.title("CCM")
+
+    # =====================================================
+    # CARICAMENTO FILE
+    # =====================================================
+
+    uploaded_file = st.file_uploader(
+        "Carica file CCM",
+        type=["CAP", "cap"],
+        key="ccm_upload"
+    )
+
+    if uploaded_file is None:
+        st.info("Carica un file .CAP per iniziare l'analisi.")
+        return
+
+    # =====================================================
+    # PARSING
+    # =====================================================
+
+    try:
+        summary, ll_blocks = parse_file(uploaded_file)
+    except Exception as error:
+        st.error(f"Errore nella lettura del file CCM: {error}")
+        return
+
+    if not summary:
+        st.warning("Nessun evento Summary trovato nel file.")
+        return
+
+    # =====================================================
+    # RICERCA - UNA SOLA CASELLA
+    # =====================================================
+
+    search_text = st.text_input(
+        "🔎 Cerca nella descrizione",
+        placeholder="Inserisci una parola o parte della descrizione...",
+        key="ccm_search_description"
+    )
+
+    filtered_summary = filter_summary(summary, search_text)
+
+    if search_text.strip():
+        st.caption(
+            f"Trovati {len(filtered_summary)} eventi su {len(summary)}"
+        )
+
+    # =====================================================
+    # SUMMARY
+    # =====================================================
+
+    render_summary(filtered_summary)
+
+    if not filtered_summary:
+        st.warning("Nessun evento trovato nella descrizione.")
+        return
 
     # =====================================================
     # SELEZIONE REC
     # =====================================================
-    recs = filtered["REC"].tolist()
 
-    old_rec = st.session_state.get(
-        "ccm_selected_rec"
+    st.markdown("---")
+
+    options = {}
+
+    for row in filtered_summary:
+
+        rec = int(row[0])
+        description = str(row[-1]).strip()
+
+        if description:
+            label = f"REC {rec} — {description}"
+        else:
+            label = f"REC {rec}"
+
+        options[label] = rec
+
+    selected_label = st.selectbox(
+        "Seleziona REC",
+        list(options.keys()),
+        key="ccm_selected_rec"
     )
 
-    if old_rec in recs:
-        default_index = recs.index(
-            old_rec
+    selected_rec = options[selected_label]
+
+    ll_rows = ll_blocks.get(selected_rec, [])
+
+    if not ll_rows:
+        st.warning(
+            f"Nessun campione LL disponibile per REC {selected_rec}."
         )
-    else:
-        default_index = 0
-
-    selected_rec = st.selectbox(
-        "REC da analizzare",
-        recs,
-        index=default_index,
-        format_func=lambda x:
-            f"REC {x}",
-        key="ccm_rec",
-    )
-
-    st.session_state.ccm_selected_rec = (
-        selected_rec
-    )
+        return
 
     # =====================================================
     # DESCRIZIONE
     # =====================================================
-    selected_summary = filtered[
-        filtered["REC"] == selected_rec
-    ].iloc[0]
 
-    descrizione = str(
-        selected_summary.get(
-            "DESCRIZIONE",
-            "",
-        )
+    selected_summary = next(
+        (
+            row
+            for row in filtered_summary
+            if int(row[0]) == selected_rec
+        ),
+        None
     )
 
-    st.markdown(
-        f"**REC {selected_rec} — "
-        f"{html.escape(descrizione)}**"
-    )
+    if selected_summary:
+        description = str(selected_summary[-1]).strip()
 
-    # =====================================================
-    # LL
-    # =====================================================
-    ll = ll_blocks.get(
-        int(selected_rec),
-        [],
-    )
-
-    if not ll:
-
-        st.warning(
-            f"Nessuna LL disponibile per REC "
-            f"{selected_rec}."
-        )
-
-        return
-
-    total = len(ll)
+        if description:
+            st.caption(f"Descrizione: {description}")
 
     # =====================================================
     # TIMELINE
     # =====================================================
-    index_key = (
-        f"ccm_index_{selected_rec}"
+
+    max_index = len(ll_rows) - 1
+
+    current_index = st.session_state.get(
+        "ccm_current_index",
+        0
     )
 
-    current = int(
-        st.session_state.get(
-            index_key,
-            0,
-        )
-    )
+    if current_index > max_index:
+        current_index = max_index
 
-    current = min(
-        max(
-            current,
-            0,
-        ),
-        total - 1,
-    )
-
-    new_index = st.slider(
-        "Timeline",
+    current_index = st.slider(
+        "⏱️ Timeline",
         min_value=0,
-        max_value=max(
-            0,
-            total - 1,
-        ),
-        value=current,
-        key=f"ccm_timeline_{selected_rec}",
+        max_value=max_index,
+        value=current_index,
+        key=f"ccm_timeline_{selected_rec}"
     )
 
-    st.session_state[index_key] = (
-        new_index
+    st.session_state["ccm_current_index"] = current_index
+
+    # =====================================================
+    # CAMPIONE CORRENTE
+    # =====================================================
+
+    current_row = ll_rows[current_index]
+
+    states = decode_rec(current_row)
+
+    st.markdown(
+        f"""
+        <div class="ccm-info">
+            Campione:
+            <b>{current_index + 1} / {len(ll_rows)}</b>
+            &nbsp;&nbsp;&nbsp;
+            N:
+            <b>{current_row.get("N", "—")}</b>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
     # =====================================================
-    # RIGA ATTUALE
+    # DIGITALI - 7 COLONNE
     # =====================================================
-    row = ll[new_index]
 
-    st.caption(
-        f"Campione: {new_index + 1} / {total}"
-        f"   |   N: {row.get('N', '—')}"
-    )
+    st.subheader("🔌 Segnali digitali")
 
-    # =====================================================
-    # DIGITALI
-    # =====================================================
-    render_digital_signals(
-        row
-    )
+    # 7 colonne per riga: i gruppi vengono riempiti da sinistra a destra.
+    for row_start in range(0, len(DIGITAL_WORDS), 7):
+        row_words = DIGITAL_WORDS[row_start:row_start + 7]
+        columns = st.columns(7, gap="small")
 
-    st.divider()
+        for column, word in zip(columns, row_words):
+            with column:
+                render_word(word, states)
 
     # =====================================================
     # ANALOGICI
     # =====================================================
-    render_analog_signals(
-        row
-    )
 
+    st.markdown("---")
 
-# =========================================================
-# AVVIO DIRETTO
-# =========================================================
-if __name__ == "__main__":
-    ccm_page()
+    st.subheader("📈 Segnali analogici")
+
+    show_analogicals(current_row)
