@@ -1214,6 +1214,7 @@ with st.sidebar:
                     "HVAC Comparto",
                     "Misurazione Sensori",
                     "CCM",
+                    "MCM",
                     "Analizza Log FDE"
                 ],
                 key="sistema_treno",
@@ -1303,6 +1304,7 @@ with st.sidebar:
                     "HVAC Comparto",
                     "Misurazione Sensori",
                     "CCM",
+                    "MCM",
                     "Analizza Log FDE"
                 ],
                 key="sistema_treno",
@@ -2956,3 +2958,6 @@ elif menu == "Treno":
 
     elif sistema == "CCM":
         ccm_page()
+
+    elif sistema == "MCM":
+        mcm_page()
