@@ -197,38 +197,162 @@ ANALOG_MAX = {
 def _css():
     st.markdown("""
     <style>
-    .mcm-word-title{font-weight:700;font-size:13px;margin:0 0 5px 0}
-    .mcm-signal-box{border:1px solid #ddd;border-radius:5px;padding:4px 5px;margin:0 0 3px 0;background:#fff}
-    .mcm-signal{display:flex;align-items:center;gap:6px;font-size:11px;line-height:15px;white-space:nowrap}
-    .mcm-led{width:10px;height:10px;min-width:10px;border-radius:50%;display:inline-block;border:1px solid #aaa}
-    .mcm-led-on{background:#e53935;border-color:#c62828}
-    .mcm-led-off{background:#d6d6d6;border-color:#aaa}
-    .analog-row{display:flex;align-items:center;width:100%;margin:5px 0;gap:10px}
-    .analog-name{width:60px;min-width:60px;font-size:12px;font-weight:600}
-    .analog-value{width:85px;min-width:85px;text-align:right;font-family:Consolas,monospace;font-size:12px;font-weight:bold}
-    .analog-track{flex:1;height:13px;background:#eee;border:1px solid #d0d0d0;border-radius:7px;overflow:hidden}
-    .analog-fill{height:100%;background:#7b61a8;border-radius:7px}
+
+    /* =====================================================
+       CARD MCM - stesso stile grafico del CCM
+       ===================================================== */
+
+    .ccm-word {
+        border: 1px solid #d8dce2;
+        border-radius: 5px;
+        overflow: hidden;
+        background: white;
+        margin-bottom: 6px;
+    }
+
+    .ccm-title {
+        font-size: 13px;
+        font-weight: 700;
+        padding: 6px 8px;
+        background: #f7f8fa;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 3px;
+    }
+
+    .ccm-signal {
+        height: 18px;
+        line-height: 18px;
+        margin: 1px 2px;
+        padding: 0 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-family: Arial, sans-serif;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ccm-off {
+        background: #f1f1f1;
+        color: #555;
+    }
+
+    .ccm-on {
+        background: #ffdede;
+        color: #b00020;
+        font-weight: 700;
+        border-left: 4px solid #e00020;
+    }
+
+    .ccm-led {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+
+    .ccm-led-off {
+        background: #d8cce9;
+    }
+
+    .ccm-led-on {
+        background: #e00020;
+    }
+
+    /* =====================================================
+       ANALOGICI
+       ===================================================== */
+
+    .analog-row {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        margin: 5px 0;
+        gap: 10px;
+    }
+
+    .analog-name {
+        width: 60px;
+        min-width: 60px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .analog-value {
+        width: 85px;
+        min-width: 85px;
+        text-align: right;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .analog-track {
+        flex: 1;
+        height: 13px;
+        background: #eee;
+        border: 1px solid #d0d0d0;
+        border-radius: 7px;
+        overflow: hidden;
+    }
+
+    .analog-fill {
+        height: 100%;
+        background: #7b61a8;
+        border-radius: 7px;
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
+
 def render_word(word, states):
-    if word not in BIT_MAP:
+    """
+    Visualizzazione MCM identica al renderer grafico CCM.
+    La decodifica BIT_MAP e gli stati non vengono modificati.
+    """
+
+    signals = BIT_MAP.get(word, {})
+
+    if not signals:
         return
-    st.markdown(f'<div class="mcm-word-title">{html.escape(word)}</div>', unsafe_allow_html=True)
-    out = []
-    for signal in BIT_MAP[word].values():
-        value = states.get(signal, 0)
-        # I bit "VUOTO" / placeholder non vengono mostrati come segnali utili.
-        if signal in {"VUOTO", "VUOTO", "-------", "-----"}:
+
+    html_parts = [
+        '<div class="ccm-word">',
+        f'<div class="ccm-title">{html.escape(word)}</div>'
+    ]
+
+    for bit, signal in signals.items():
+
+        # Non mostrare placeholder / bit vuoti
+        if signal in {"VUOTO", "-------", "-----"}:
             continue
-        led = "mcm-led-on" if value else "mcm-led-off"
-        desc = html.escape(DIGITAL_DESCRIPTIONS.get(signal, ""))
-        out.append(
-            f'<div class="mcm-signal-box" title="{desc}">'
-            f'<div class="mcm-signal"><span class="mcm-led {led}"></span>'
-            f'{html.escape(signal)}</div></div>'
+
+        value = states.get(signal, 0)
+
+        if value:
+            css_class = "ccm-on"
+            led_class = "ccm-led-on"
+        else:
+            css_class = "ccm-off"
+            led_class = "ccm-led-off"
+
+        description = DIGITAL_DESCRIPTIONS.get(signal, "")
+
+        html_parts.append(
+            f'<div class="ccm-signal {css_class}" '
+            f'title="{html.escape(description)}">'
+            f'<span class="ccm-led {led_class}"></span>'
+            f'{html.escape(signal)}'
+            f'</div>'
         )
-    st.markdown("".join(out), unsafe_allow_html=True)
+
+    html_parts.append("</div>")
+
+    st.markdown("\n".join(html_parts), unsafe_allow_html=True)
+
 
 def render_digitals(states):
     st.subheader("🔌 Segnali digitali")
