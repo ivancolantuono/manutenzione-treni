@@ -36,7 +36,14 @@ ANALOG_SIGNALS = [
     "vFdvf",
     "vLdvl",
 ]
-
+ANALOG_DESCRIPTIONS = {
+    "vTVL": "Tensione TVL",
+    "vTV1": "Tensione TV1",
+    "iTA1M": "Corrente TA1M",
+    "iTA2M": "Corrente TA2M",
+    "iTA": "Corrente TA",
+    "vTVI": "Tensione TVI",
+}
 
 # =========================================================
 # BIT MAP
@@ -912,13 +919,13 @@ def show_analogicals(row):
         # Visualizzazione
         # -----------------------------
 
-        analog_html = f"""<div class="analog-row">
-        <div class="analog-name">{html.escape(signal)}</div>
-        <div class="analog-value">{html.escape(value_text)}</div>
-        <div class="analog-track">
-        <div class="analog-fill" style="width:{percentage:.1f}%;"></div>
-        </div>
-        </div>"""
+        analog_html = (
+            f'<div class="ccm-analog" '
+            f'title="{html.escape(ANALOG_DESCRIPTIONS.get(signal, ""))}">'
+            f'<div class="ccm-analog-name">{html.escape(signal)}</div>'
+            f'<div class="ccm-analog-value">{html.escape(str(value))}</div>'
+            '</div>'
+        )
         st.markdown(
             analog_html,
             unsafe_allow_html=True
