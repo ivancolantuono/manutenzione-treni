@@ -935,7 +935,6 @@ def show_analogicals(row):
             f'</div>'
             '</div>'
         )
-        </div>"""
         st.markdown(
             analog_html,
             unsafe_allow_html=True
