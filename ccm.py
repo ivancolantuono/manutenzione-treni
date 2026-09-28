@@ -39,10 +39,10 @@ ANALOG_SIGNALS = [
 
 ANALOG_DESCRIPTIONS = {
     "vTVL": "Tensione TVL",
-    "vTV1": "Tensione TV1",
+    "vTV1": "Tensione DC-link Primario",
     "iTA1M": "Corrente TA1M",
     "iTA2M": "Corrente TA2M",
-    "iTA": "Corrente TA",
+    "iTA": "Corrente di linea",
     "vTVI": "Tensione TVI",
     "da1": "Descrizione da1",
     "db1": "Descrizione db1",
