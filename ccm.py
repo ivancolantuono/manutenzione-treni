@@ -294,7 +294,7 @@ BIT_MAP = {
 
 DIGITAL_DESCRIPTIONS = {
 
-PSWA
+#PSWA
 
 "UNDERVOLTPRIM3K": "Spegnimento CCM: bassa tensione DC-Link primario",
 "dvfProtLed": "Elevato gradiente di tensione di filtro",
@@ -331,7 +331,7 @@ PSWB
 "UNDERVOLTLINE": "Spegnimento CCM: tensione di linea DC è fuori range (conf. 1.5 kV)",
 "CIDko": "Spegnimento CCM: anomalia attuazione Fast Open LCB (CID)",
 
-PHW1
+#PHW1
 
 "TVI": "Spegnimento CCM: sovra-tensione DC-Link secondario",
 "TA1": "Spegnimento CCM: sovra-corrente della fase 1",
@@ -343,7 +343,7 @@ PHW2
 
 "earthfault": "Guasto verso terra",
 
-PHW3
+#PHW3
 
 "DiaUp1": "Spegnimento CCM: diagnostica di fase 1 IGBT ALTO",
 "DiaUp2": "Spegnimento CCM: diagnostica di fase 2 IGBT ALTO",
