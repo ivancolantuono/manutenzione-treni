@@ -2966,5 +2966,5 @@ elif menu == "Treno":
     elif sistema == "MCM":
         mcm_page()
 
-     elif sistema == "LCM":
+    elif sistema == "LCM":
         lcm_page()
