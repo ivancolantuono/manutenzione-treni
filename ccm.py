@@ -937,7 +937,7 @@ def show_analogicals(row):
         # -----------------------------
 
         analog_html = f"""<div class="analog-row">
-        f'<div class="analog-name" title="{html.escape(ANALOG_DESCRIPTIONS.get(signal, ""))}">{html.escape(signal)}</div>'
+        <div class="analog-name" title="{html.escape(ANALOG_DESCRIPTIONS.get(signal, ""))}">{html.escape(signal)}</div>'
         <div class="analog-value">{html.escape(value_text)}</div>
         <div class="analog-track">
         <div class="analog-fill" style="width:{percentage:.1f}%;"></div>
