@@ -392,25 +392,25 @@ DIGITAL_WORDS = [
 
 def decode_word(hex_value, bit_map):
 
-try:
-value = int(str(hex_value), 16)
-except Exception:
-value = 0
-
-result = {}
-
-for bit, name in bit_map.items():
-
-if name == "-----":
-    continue
-
-result[name] = (value >> bit) & 1
-
-return result
-
-def decode_rec(rec_row):
-
-states = {}
+    try:
+    value = int(str(hex_value), 16)
+    except Exception:
+    value = 0
+    
+    result = {}
+    
+    for bit, name in bit_map.items():
+    
+    if name == "-----":
+        continue
+    
+    result[name] = (value >> bit) & 1
+    
+    return result
+    
+    def decode_rec(rec_row):
+    
+    states = {}
 
 for word in DIGITAL_WORDS:
 
