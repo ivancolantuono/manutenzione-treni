@@ -37,7 +37,31 @@ ANALOG_SIGNALS = [
     "vLdvl",
 ]
 
-
+ANALOG_DESCRIPTIONS = {
+    "vTVL": "Tensione TVL",
+    "vTV1": "Tensione TV1",
+    "iTA1M": "Corrente TA1M",
+    "iTA2M": "Corrente TA2M",
+    "iTA": "Corrente TA",
+    "vTVI": "Tensione TVI",
+    "da1": "Descrizione da1",
+    "db1": "Descrizione db1",
+    "ta1": "Descrizione ta1",
+    "tb1": "Descrizione tb1",
+    "dfr": "Descrizione dfr",
+    "tcha": "Descrizione tcha",
+    "tchb": "Descrizione tchb",
+    "vref": "Tensione di riferimento",
+    "Vref": "Tensione di riferimento",
+    "OVPD": "Descrizione OVPD",
+    "TOVPD": "Descrizione TOVPD",
+    "vF": "Tensione vF",
+    "dvF": "Variazione tensione vF",
+    "vL": "Tensione linea",
+    "dvL": "Variazione tensione linea",
+    "vFdvf": "Descrizione vFdvf",
+    "vLdvl": "Descrizione vLdvl",
+}
 # =========================================================
 # BIT MAP
 # =========================================================
@@ -913,7 +937,7 @@ def show_analogicals(row):
         # -----------------------------
 
         analog_html = f"""<div class="analog-row">
-        <div class="analog-name">{html.escape(signal)}</div>
+        f'<div class="analog-name" title="{html.escape(ANALOG_DESCRIPTIONS.get(signal, ""))}">{html.escape(signal)}</div>'
         <div class="analog-value">{html.escape(value_text)}</div>
         <div class="analog-track">
         <div class="analog-fill" style="width:{percentage:.1f}%;"></div>
