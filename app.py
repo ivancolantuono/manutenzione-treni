@@ -22,6 +22,7 @@ from hvac_cabina import hvac_cabina_page
 from hvac_comparto import hvac_comparto_page
 from ccm import ccm_page
 from mcm import mcm_page
+from lcm import lcm_page
 import urllib.parse
 import secrets
 
@@ -1216,6 +1217,7 @@ with st.sidebar:
                     "Misurazione Sensori",
                     "CCM",
                     "MCM",
+                    "LCM",
                     "Analizza Log FDE"
                 ],
                 key="sistema_treno",
@@ -1306,6 +1308,7 @@ with st.sidebar:
                     "Misurazione Sensori",
                     "CCM",
                     "MCM",
+                    "LCM",
                     "Analizza Log FDE"
                 ],
                 key="sistema_treno",
@@ -2962,3 +2965,6 @@ elif menu == "Treno":
 
     elif sistema == "MCM":
         mcm_page()
+
+     elif sistema == "LCM":
+        lcm_page()
