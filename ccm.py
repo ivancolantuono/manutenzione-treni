@@ -920,8 +920,7 @@ def show_analogicals(row):
         # -----------------------------
 
         analog_html = (
-            f'<div class="ccm-analog" '
-            f'title="{html.escape(ANALOG_DESCRIPTIONS.get(signal, ""))}">'
+            '<div class="ccm-analog">'
             f'<div class="ccm-analog-name">{html.escape(signal)}</div>'
             f'<div class="ccm-analog-value">{html.escape(str(value))}</div>'
             '</div>'
