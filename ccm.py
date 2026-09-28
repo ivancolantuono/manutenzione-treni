@@ -16,7 +16,7 @@ ANALOG_SIGNALS = [
     "vTV1",
     "iTA1M",
     "iTA2M",
-    "iTA",
+    "iTA (CORRENTE DI LINEA)",
     "vTVI",
     "da1",
     "db1",
