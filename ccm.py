@@ -313,7 +313,7 @@ DIGITAL_DESCRIPTIONS = {
 "pswUNDERVOLTSEC": "Spegnimento CCM: bassa tensione DC-Link secondario",
 "pswOPENFAILBY": "Spegnimento CCM: mancata apertura del contattore di bypass",
 
-PSWB
+#PSWB
 
 "pswINTAIR_HOTMAX": "Spegnimento CCM: sovra-temperatura aria interna",
 "pswUNBASUPERV": "Spegnimento CCM: correnti di fase sbilanciate",
@@ -339,7 +339,7 @@ PSWB
 "TA": "Spegnimento CCM: sovracorrente della corrente di linea",
 "TV1": "Spegnimento CCM: sovra-tensione DC-Link primario",
 
-PHW2
+#PHW2
 
 "earthfault": "Guasto verso terra",
 
@@ -356,7 +356,7 @@ PHW2
 "DiaDown4": "Diagnostica DOWN 4",
 "DiaDown5": "Diagnostica DOWN 5",
 
-PHW4
+#PHW4
 
 "powergood": "Spegnimento CCM: anomalia alimentazione MOCU/C",
 
@@ -425,11 +425,11 @@ if word in BIT_MAP and word in rec_row:
 
 return states
 
-=========================================================
+#=========================================================
 
-REGEX
+#REGEX
 
-=========================================================
+#=========================================================
 
 SM_RE = re.compile(
 r"^Rec:\s+(\d+)\s+Code:\s+([0-9A-Fa-f]+)\s+"
