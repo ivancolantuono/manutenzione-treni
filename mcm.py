@@ -160,7 +160,7 @@ DIGITAL_DESCRIPTIONS = {
     "venton_B": "Ventilazione B ON",
     "LineOverCurrent": "Sovracorrente linea",
     "CCUEthKo": "Errore comunicazione CCU Ethernet",
-    "GEWko": "GEW non OK",
+    "GEWko": "Mancanza colloquio Ethernet",
     "pwGood": "Power Good",
     "PhaseRFail": "Guasto fase R",
     "PhaseSFail": "Guasto fase S",
@@ -189,7 +189,13 @@ DIGITAL_DESCRIPTIONS = {
     "HotThHeatSinkLong": "Sovratemperatura prolungata della piastra di raffreddamento",
     "diagAct": "Diagnostiche di fase attive",
     "diagPerm": "Diagnostica permanente",
-
+    "errcom": "Incongruenza comandi di direzione e/o di marcia",
+    "PCUko": "Mancanza colloquio con PCU via Eth",
+    "svfProl": "Sovratensione di filtro prolungata",
+    "avAlPk1": "Avaria alimentazione pick up",
+    "erSeqFas": "Errata sequenza fasi",
+    "erDirPK": "Rilevata errata direzione di marcia  dai PK",
+    "errHW": "Incongruenza segnali di TripLine",
     
 }
 
