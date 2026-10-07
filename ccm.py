@@ -376,6 +376,17 @@ DIGITAL_DESCRIPTIONS = {
 
     # PHW4
     "powergood": "Spegnimento CCM: anomalia alimentazione MOCU/C",
+
+    # sCCa
+    "Test": "Self test in corso",
+    "okThCHPIND1": "Diagnostica termosonda fase 1 ok",
+    "okThCHPIND2": "Diagnostica termosonda fase 2 ok",
+    "okThINTAIR": "Diagnostica termosonda aria ok",
+
+    # flcom
+    "euroDC": "Selezionata linea DC",
+    "euroAC": "Selezionata linea AC",
+    "Bianco": "Prova in bianco",
 }
 # =========================================================
 # ORDINE VISUALIZZAZIONE
