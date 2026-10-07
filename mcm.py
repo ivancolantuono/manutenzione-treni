@@ -142,7 +142,7 @@ DIGITAL_GROUPS = [
 # Descrizioni iniziali: volutamente conservative; i nomi ufficiali possono essere
 # aggiornati in seguito senza toccare la decodifica.
 DIGITAL_DESCRIPTIONS = {
-    "ivok": "IV OK",
+    "ivok": "Inverter OK",
     "Test": "Test",
     "chokLed": "CH OK",
     "afchLed": "AFCH",
