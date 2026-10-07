@@ -1215,10 +1215,10 @@ with st.sidebar:
                     "HVAC Cabina",
                     "HVAC Comparto",
                     "Misurazione Sensori",
+                    "Analizza Log FDE",
                     "CCM",
                     "MCM",
-                    "LCM",
-                    "Analizza Log FDE"
+                    "LCM"
                 ],
                 key="sistema_treno",
                 label_visibility="collapsed"
@@ -1306,10 +1306,10 @@ with st.sidebar:
                     "HVAC Cabina",
                     "HVAC Comparto",
                     "Misurazione Sensori",
+                    "Analizza Log FDE",
                     "CCM",
                     "MCM",
-                    "LCM",
-                    "Analizza Log FDE"
+                    "LCM"
                 ],
                 key="sistema_treno",
                 label_visibility="collapsed"
