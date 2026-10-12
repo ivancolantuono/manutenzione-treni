@@ -244,15 +244,24 @@ def normalizza_segnale(segnale):
     if segnale is None:
         return ""
 
-    segnale = str(segnale).strip()
+    segnale = str(segnale)
 
+    # Elimina caratteri di controllo e caratteri non stampabili
+    segnale = "".join(
+        c for c in segnale
+        if c.isprintable()
+    )
+
+    segnale = segnale.strip()
+
+    # Elimina eventuali parti dopo [ o _
     segnale = re.split(
         r"[\[_]",
-        segnale
+        segnale,
+        maxsplit=1
     )[0]
 
     return segnale.strip()
-
 
 # ==========================================================
 # PARSE TIMESTAMP
