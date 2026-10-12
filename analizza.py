@@ -263,6 +263,33 @@ def normalizza_segnale(segnale):
 
     return segnale.strip()
 
+def pulisci_valore_log(valore):
+
+    if valore is None:
+        return ""
+
+    valore = str(valore)
+
+    # Elimina caratteri di controllo
+    valore = "".join(
+        c for c in valore
+        if c.isprintable() or c in "\t"
+    )
+
+    # Elimina caratteri di sostituzione / quadratini
+    valore = valore.replace("\ufffd", "")
+    valore = valore.replace("□", "")
+    valore = valore.replace("�", "")
+
+    # Riduce eventuali spazi multipli
+    valore = re.sub(
+        r"\s+",
+        " ",
+        valore
+    )
+
+    return valore.strip()
+
 # ==========================================================
 # PARSE TIMESTAMP
 # ==========================================================
@@ -746,15 +773,16 @@ def importa_log(uploaded_file):
 
                 "timestamp":
                     timestamp,
-
+            
                 "dataset":
                     dataset_corrente,
-
+            
                 "segnale":
                     segnale_corrente,
-
+            
                 "valore":
-                    riga
+                    pulisci_valore_log(riga)
+            })
 
             })
 
