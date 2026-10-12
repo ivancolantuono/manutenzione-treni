@@ -784,8 +784,6 @@ def importa_log(uploaded_file):
                     pulisci_valore_log(riga)
             })
 
-            })
-
             dataset_corrente = None
 
             segnale_corrente = None
