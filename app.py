@@ -2830,6 +2830,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
         
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
@@ -2839,7 +2840,8 @@ elif menu == "Scadenze Temporali":
 
     st.title("📚 SCADENZE TEMPORALI")
 
-    # Mantieni gli URL Supabase reali già funzionanti
+    # URL dei PDF principali
+    # Inserisci gli URL reali dei piani F2, F3 e F4.
     piani = {
         "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
         "F2": "INSERISCI_URL_REALE_F2",
@@ -2847,18 +2849,19 @@ elif menu == "Scadenze Temporali":
         "F4": "INSERISCI_URL_REALE_F4",
     }
 
-    # Percorso del bucket Supabase Storage
-    # Il bucket indicato deve essere quello che contiene
-    # la cartella Scadenza F0 e i relativi PDF.
+    # Base corretta per scaricare i PDF dal bucket pubblico.
+    # NON usare il link della dashboard Supabase.
     SUPABASE_STORAGE_BASE = (
-        https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/Scadenza%20F0/MR1-01A-TC011%20-%20CONTROLLO%20VISIVO%20E%20FUNZIONALE,%20PULIZIA%20E%20LUBRIFICAZIONE%20ACCOPPIATORE%20AUTOMATICO.pdf
+        "https://nlsezrwjvhxvsbycxlxd.supabase.co"
+        "/storage/v1/object/public/manuali/"
     )
 
     if "pdf_piano" not in st.session_state:
         st.session_state["pdf_piano"] = piani["F0"]
         st.session_state["nome_piano"] = "F0"
 
-    colonne = st.columns(5)
+    # Pulsanti dei piani
+    colonne = st.columns(len(piani))
 
     for i, (nome, url) in enumerate(piani.items()):
         with colonne[i]:
@@ -2872,6 +2875,7 @@ elif menu == "Scadenze Temporali":
                 st.rerun()
 
     st.divider()
+
     st.subheader(
         f"📄 SCADENZA {st.session_state['nome_piano']}"
     )
@@ -2882,11 +2886,12 @@ elif menu == "Scadenze Temporali":
             timeout=30
         )
         response.raise_for_status()
-        contenuto_pdf = response.content
 
+        contenuto_pdf = response.content
         collegamenti = []
         visti = set()
 
+        # Estrae i collegamenti presenti nel PDF
         with fitz.open(
             stream=contenuto_pdf,
             filetype="pdf"
@@ -2903,45 +2908,45 @@ elif menu == "Scadenze Temporali":
                     if not percorso:
                         continue
 
-                    # Decodifica il percorso relativo del PDF
+                    # Normalizza il percorso relativo
                     percorso = unquote(percorso)
                     percorso = percorso.replace("\\", "/")
                     percorso = percorso.lstrip("./")
 
-                    # Evita di aggiungere due volte lo stesso file
+                    # Evita i duplicati
                     if percorso in visti:
                         continue
 
                     visti.add(percorso)
 
-                    # Rimuove l'eventuale cartella iniziale
-                    # se il percorso contiene già "Scadenza F0/"
-                    nome_relativo = percorso
+                    # Rimuove la cartella iniziale se già presente
+                    prefisso = "Scadenza F0/"
 
-                    if nome_relativo.startswith("Scadenza F0/"):
-                        nome_relativo = nome_relativo[
-                            len("Scadenza F0/"):
-                        ]
+                    if percorso.startswith(prefisso):
+                        nome_relativo = percorso[len(prefisso):]
+                    else:
+                        nome_relativo = percorso
 
-                    # Costruisce l'URL pubblico del PDF collegato
+                    # Ricostruisce il percorso nel bucket
+                    percorso_storage = (
+                        "Scadenza F0/" + nome_relativo
+                    )
+
                     url_scheda = (
                         SUPABASE_STORAGE_BASE
-                        + quote(
-                            "Scadenza F0/" + nome_relativo,
-                            safe="/-_.()'"
-                        )
+                        + quote(percorso_storage, safe="/-_.()'")
                     )
 
                     nome_file = nome_relativo.split("/")[-1]
 
                     collegamenti.append({
                         "nome": nome_file,
-                        "percorso": percorso,
+                        "percorso": percorso_storage,
                         "url": url_scheda,
                         "pagina": numero_pagina,
                     })
 
-        # Visualizzazione del PDF principale
+        # Visualizza il PDF principale
         pdf_viewer(
             input=contenuto_pdf,
             width="100%",
@@ -2951,14 +2956,16 @@ elif menu == "Scadenze Temporali":
         st.divider()
         st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
 
+        st.write(
+            f"Collegamenti trovati: {len(collegamenti)}"
+        )
+
         if collegamenti:
-            st.write(
-                f"Collegamenti trovati: {len(collegamenti)}"
-            )
 
             for i, link in enumerate(collegamenti):
 
                 with st.container(border=True):
+
                     col_nome, col_apri = st.columns([4, 1])
 
                     with col_nome:
@@ -2974,13 +2981,39 @@ elif menu == "Scadenze Temporali":
                             key=f"apri_scheda_{i}",
                             use_container_width=True
                         ):
-                            st.session_state["pdf_piano"] = (
-                                link["url"]
-                            )
-                            st.session_state["nome_piano"] = (
-                                link["nome"]
-                            )
-                            st.rerun()
+                            try:
+                                # Verifica che il documento esista
+                                verifica = requests.get(
+                                    link["url"],
+                                    timeout=20
+                                )
+
+                                verifica.raise_for_status()
+
+                                # Conserva il PDF principale per
+                                # permettere il ritorno alla lista
+                                st.session_state[
+                                    "pdf_principale"
+                                ] = st.session_state["pdf_piano"]
+
+                                st.session_state[
+                                    "pdf_piano"
+                                ] = link["url"]
+
+                                st.session_state[
+                                    "nome_piano"
+                                ] = link["nome"]
+
+                                st.rerun()
+
+                            except requests.RequestException as errore:
+                                st.error(
+                                    f"Non riesco a caricare "
+                                    f"{link['nome']}. "
+                                    f"Verifica che il file esista "
+                                    f"nel bucket manuali. Dettaglio: "
+                                    f"{errore}"
+                                )
 
         else:
             st.warning(
