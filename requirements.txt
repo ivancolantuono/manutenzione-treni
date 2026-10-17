@@ -9,3 +9,5 @@ streamlit-aggrid
 streamlit-option-menu
 extra-streamlit-components
 streamlit-plotly-events
+requests
+pymupdf
