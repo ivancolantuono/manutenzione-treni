@@ -2838,6 +2838,7 @@ elif menu == "Scadenze Temporali":
     import requests
     import fitz
     from urllib.parse import unquote, quote
+    from streamlit_pdf_viewer import pdf_viewer
 
     st.title("📚 SCADENZE TEMPORALI")
 
@@ -2889,7 +2890,7 @@ elif menu == "Scadenze Temporali":
 
         contenuto_pdf = response.content
 
-        # Estrae i collegamenti ai file presenti nel PDF
+        # Estrae i collegamenti al file presenti nel PDF
         collegamenti = []
         visti = set()
 
@@ -2946,17 +2947,21 @@ elif menu == "Scadenze Temporali":
                         "pagina": numero_pagina,
                     })
 
-        # Visualizzatore PDF integrato in Streamlit
-        st.pdf(contenuto_pdf, height=850)
+        # Visualizza il PDF principale
+        pdf_viewer(
+            input=contenuto_pdf,
+            width="100%",
+            height=900
+        )
 
-        # Apertura esterna per usare i controlli del browser
+        # Pulsante per aprire il PDF nel browser
         st.link_button(
             "🔎 Apri PDF nel browser per ingrandire",
             st.session_state["pdf_piano"],
             use_container_width=True
         )
 
-        # Mostra le schede soltanto se esistono collegamenti
+        # Mostra le schede solo se esistono collegamenti
         if collegamenti:
 
             st.divider()
@@ -2985,8 +2990,14 @@ elif menu == "Scadenze Temporali":
                             key=f"apri_scheda_{i}",
                             use_container_width=True
                         ):
-                            st.session_state["pdf_piano"] = link["url"]
-                            st.session_state["nome_piano"] = link["nome"]
+                            st.session_state[
+                                "pdf_piano"
+                            ] = link["url"]
+
+                            st.session_state[
+                                "nome_piano"
+                            ] = link["nome"]
+
                             st.rerun()
 
     except requests.RequestException as e:
