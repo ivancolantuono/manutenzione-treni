@@ -2831,29 +2831,31 @@ elif menu == "📊 CONTROLLO PERMESSI":
 
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
     import fitz
     from urllib.parse import urlparse, unquote
+    from streamlit_pdf_viewer import pdf_viewer
 
     st.title("📚 SCADENZE TEMPORALI")
 
-    # PDF principali
+    # PDF dei piani di scadenza
     piani = {
-        "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
-        "F1": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F1.pdf",
-        "F2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2.pdf",
-        "F3": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F3.pdf",
-        "F4": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F4.pdf",
+        "F0": "https://INSERISCI-QUI-URL-CORRETTO/F0_1_link.pdf",
+        "F1": "https://INSERISCI-QUI-URL-CORRETTO/F1.pdf",
+        "F2": "https://INSERISCI-QUI-URL-CORRETTO/F2.pdf",
+        "F3": "https://INSERISCI-QUI-URL-CORRETTO/F3.pdf",
+        "F4": "https://INSERISCI-QUI-URL-CORRETTO/F4.pdf",
     }
 
-    # Inizializzazione
+    # Inizializzazione del PDF selezionato
     if "pdf_piano" not in st.session_state:
         st.session_state["pdf_piano"] = piani["F0"]
         st.session_state["nome_piano"] = "F0"
 
-    # Pulsanti di selezione
+    # Pulsanti F0-F4
     cols = st.columns(5)
 
     for i, (nome, url) in enumerate(piani.items()):
@@ -2873,8 +2875,8 @@ elif menu == "Scadenze Temporali":
         f"📄 SCADENZA {st.session_state['nome_piano']}"
     )
 
-    # Caricamento PDF
     try:
+        # Scarica il PDF selezionato
         response = requests.get(
             st.session_state["pdf_piano"],
             timeout=30
@@ -2883,92 +2885,99 @@ elif menu == "Scadenze Temporali":
 
         contenuto_pdf = response.content
 
-        # Estrazione dei collegamenti presenti nel PDF
+        # Estrae i collegamenti incorporati nel PDF
         collegamenti = []
         visti = set()
 
-        documento = fitz.open(
+        with fitz.open(
             stream=contenuto_pdf,
             filetype="pdf"
-        )
+        ) as documento:
 
-        for numero_pagina, pagina in enumerate(documento, start=1):
-            for link in pagina.get_links():
-                url = link.get("uri")
+            for numero_pagina, pagina in enumerate(
+                documento, start=1
+            ):
+                links_pagina = pagina.get_links()
 
-                if url and url not in visti:
-                    visti.add(url)
+                st.caption(
+                    f"Pagina {numero_pagina}: "
+                    f"{len(links_pagina)} annotazioni "
+                    "di collegamento rilevate"
+                )
 
-                    percorso = urlparse(url).path
-                    nome_file = unquote(
-                        percorso.split("/")[-1]
-                    )
+                for link in links_pagina:
+                    url = link.get("uri")
 
-                    if not nome_file:
-                        nome_file = f"Collegamento pagina {numero_pagina}"
+                    if url and url not in visti:
+                        visti.add(url)
 
-                    collegamenti.append({
-                        "nome": nome_file,
-                        "url": url,
-                        "pagina": numero_pagina
-                    })
+                        percorso = urlparse(url).path
+                        nome_file = unquote(
+                            percorso.split("/")[-1]
+                        )
 
-        documento.close()
+                        collegamenti.append({
+                            "nome": nome_file or url,
+                            "url": url,
+                            "pagina": numero_pagina
+                        })
 
-        # Visualizzazione PDF nella pagina
-        from streamlit_pdf_viewer import pdf_viewer
-
+        # Visualizza il PDF dentro Streamlit
         pdf_viewer(
             input=contenuto_pdf,
             width="100%",
             height=900
         )
 
-        # Elenco dei collegamenti estratti
+        st.divider()
+        st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
+
+        st.caption(
+            f"Totale collegamenti web trovati: "
+            f"{len(collegamenti)}"
+        )
+
         if collegamenti:
-            
-            # Estrazione dei collegamenti dal PDF
-            collegamenti = []
-            visti = set()
-    
-            documento = fitz.open(
-                stream=contenuto_pdf,
-                filetype="pdf"
-            )
-    
-            for numero_pagina, pagina in enumerate(documento, start=1):
-    
-                links_pagina = pagina.get_links()
-    
-                # Mostra quante annotazioni sono presenti
-                st.write(
-                    f"Pagina {numero_pagina}: "
-                    f"{len(links_pagina)} collegamenti rilevati"
-                )
-    
-                for link in links_pagina:
-                    url = link.get("uri")
-    
-                    if url and url not in visti:
-                        visti.add(url)
-    
-                        percorso = urlparse(url).path
-                        nome_file = unquote(
-                            percorso.split("/")[-1]
+            for i, link in enumerate(collegamenti):
+
+                with st.container(border=True):
+                    col_nome, col_apri = st.columns([4, 1])
+
+                    with col_nome:
+                        st.write(f"📎 {link['nome']}")
+                        st.caption(
+                            f"Collegamento presente a pagina "
+                            f"{link['pagina']}"
                         )
-    
-                        collegamenti.append({
-                            "nome": nome_file or url,
-                            "url": url,
-                            "pagina": numero_pagina
-                        })
-    
-            documento.close()
-    
-            st.write(
-                "Totale collegamenti web trovati:",
-                len(collegamenti)
+
+                    with col_apri:
+                        if st.button(
+                            "Apri",
+                            key=f"apri_scheda_{i}",
+                            use_container_width=True
+                        ):
+                            st.session_state["pdf_piano"] = (
+                                link["url"]
+                            )
+                            st.session_state["nome_piano"] = (
+                                link["nome"]
+                            )
+                            st.rerun()
+
+        else:
+            st.warning(
+                "Nessun collegamento web è stato trovato "
+                "nelle annotazioni del PDF. Se i link sono "
+                "presenti visivamente nella colonna Note, "
+                "potrebbero essere stati salvati come testo "
+                "o in un formato diverso."
             )
+
+    except requests.RequestException as e:
+        st.error(f"Errore nel caricamento del PDF: {e}")
+
+    except Exception as e:
+        st.error(f"Errore nella lettura del PDF: {e}")
 
 
             
