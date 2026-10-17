@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import requests
+import fitz
+from urllib.parse import urlparse
 from streamlit_pdf_viewer import pdf_viewer
 import os
 from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
@@ -2828,48 +2830,150 @@ elif menu == "📊 CONTROLLO PERMESSI":
         
 
 
+
 elif menu == "Scadenze Temporali":
 
-    st.title("📚 SCADENZE")
+    import requests
+    import fitz
+    from urllib.parse import urlparse, unquote
 
+    st.title("📚 SCADENZE TEMPORALI")
+
+    # PDF principali
     piani = {
-        "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
+        "F0": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
         "F1": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F1.pdf",
         "F2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2.pdf",
         "F3": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F3.pdf",
         "F4": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F4.pdf",
     }
 
-    cols = st.columns(4)
+    # Inizializzazione
+    if "pdf_piano" not in st.session_state:
+        st.session_state["pdf_piano"] = piani["F0"]
+        st.session_state["nome_piano"] = "F0"
 
-    for i, nome in enumerate(piani):
-        with cols[i % 4]:
-            if st.button(nome, use_container_width=True):
-                st.session_state["pdf_piano"] = piani[nome]
+    # Pulsanti di selezione
+    cols = st.columns(5)
+
+    for i, (nome, url) in enumerate(piani.items()):
+        with cols[i]:
+            if st.button(
+                nome,
+                key=f"piano_{nome}",
+                use_container_width=True
+            ):
+                st.session_state["pdf_piano"] = url
                 st.session_state["nome_piano"] = nome
+                st.rerun()
 
-    if "pdf_piano" in st.session_state:
+    st.divider()
 
-        st.divider()
-        st.subheader(
-            f"📄 SCADENZA {st.session_state['nome_piano']}"
+    st.subheader(
+        f"📄 SCADENZA {st.session_state['nome_piano']}"
+    )
+
+    # Caricamento PDF
+    try:
+        response = requests.get(
+            st.session_state["pdf_piano"],
+            timeout=30
+        )
+        response.raise_for_status()
+
+        contenuto_pdf = response.content
+
+        # Estrazione dei collegamenti presenti nel PDF
+        collegamenti = []
+        visti = set()
+
+        documento = fitz.open(
+            stream=contenuto_pdf,
+            filetype="pdf"
         )
 
-        try:
-            response = requests.get(
-                st.session_state["pdf_piano"],
-                timeout=30
-            )
-            response.raise_for_status()
+        for numero_pagina, pagina in enumerate(documento, start=1):
+            for link in pagina.get_links():
+                url = link.get("uri")
 
-            pdf_viewer(
-                input=response.content,
-                width="100%",
-                height=900
+                if url and url not in visti:
+                    visti.add(url)
+
+                    percorso = urlparse(url).path
+                    nome_file = unquote(
+                        percorso.split("/")[-1]
+                    )
+
+                    if not nome_file:
+                        nome_file = f"Collegamento pagina {numero_pagina}"
+
+                    collegamenti.append({
+                        "nome": nome_file,
+                        "url": url,
+                        "pagina": numero_pagina
+                    })
+
+        documento.close()
+
+        # Visualizzazione PDF nella pagina
+        from streamlit_pdf_viewer import pdf_viewer
+
+        pdf_viewer(
+            input=contenuto_pdf,
+            width="100%",
+            height=900
+        )
+
+        # Elenco dei collegamenti estratti
+        if collegamenti:
+            st.divider()
+            st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
+            st.caption(
+                "Seleziona una scheda per visualizzarla "
+                "nella stessa area."
             )
 
-        except Exception as e:
-            st.error(f"Errore nel caricamento del PDF: {e}")
+            for i, link in enumerate(collegamenti):
+
+                nome_visualizzato = link["nome"]
+
+                with st.container(border=True):
+                    col_nome, col_pulsante = st.columns(
+                        [4, 1]
+                    )
+
+                    with col_nome:
+                        st.write(f"📎 {nome_visualizzato}")
+                        st.caption(
+                            f"Collegamento presente a pagina "
+                            f"{link['pagina']}"
+                        )
+
+                    with col_pulsante:
+                        if st.button(
+                            "Apri",
+                            key=f"apri_scheda_{i}",
+                            use_container_width=True
+                        ):
+                            st.session_state["pdf_piano"] = (
+                                link["url"]
+                            )
+                            st.session_state["nome_piano"] = (
+                                nome_visualizzato
+                            )
+                            st.rerun()
+
+        else:
+            st.info(
+                "Non sono stati trovati collegamenti web "
+                "nel PDF selezionato."
+            )
+
+    except requests.RequestException as e:
+        st.error(f"Errore nel caricamento del PDF: {e}")
+
+    except Exception as e:
+        st.error(f"Errore nella lettura del PDF: {e}")
 
             
 elif menu == "Software":
