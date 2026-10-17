@@ -2967,8 +2967,7 @@ elif menu == "Scadenze Temporali":
             st.divider()
             st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
 
-            st.write(
-                f"Collegamenti trovati: {len(collegamenti)}"
+            
             )
 
             for i, link in enumerate(collegamenti):
