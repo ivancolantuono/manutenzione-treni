@@ -2968,7 +2968,7 @@ elif menu == "Scadenze Temporali":
             st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
 
             
-            )
+            
 
             for i, link in enumerate(collegamenti):
 
