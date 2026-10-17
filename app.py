@@ -2830,21 +2830,16 @@ elif menu == "📊 CONTROLLO PERMESSI":
         
 
 
-
-
-
-
 elif menu == "Scadenze Temporali":
 
     import requests
     import fitz
-    import json
-    from urllib.parse import urlparse, unquote
+    from urllib.parse import unquote, quote
     from streamlit_pdf_viewer import pdf_viewer
 
     st.title("📚 SCADENZE TEMPORALI")
 
-    # Mantieni i tuoi URL Supabase reali e funzionanti
+    # Mantieni gli URL Supabase reali già funzionanti
     piani = {
         "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
         "F1": "INSERISCI_URL_REALE_F1",
@@ -2852,6 +2847,14 @@ elif menu == "Scadenze Temporali":
         "F3": "INSERISCI_URL_REALE_F3",
         "F4": "INSERISCI_URL_REALE_F4",
     }
+
+    # Percorso del bucket Supabase Storage
+    # Il bucket indicato deve essere quello che contiene
+    # la cartella Scadenza F0 e i relativi PDF.
+    SUPABASE_STORAGE_BASE = (
+        "https://TUO-PROGETTO.supabase.co"
+        "/storage/v1/object/public/manuali/"
+    )
 
     if "pdf_piano" not in st.session_state:
         st.session_state["pdf_piano"] = piani["F0"]
@@ -2871,7 +2874,6 @@ elif menu == "Scadenze Temporali":
                 st.rerun()
 
     st.divider()
-
     st.subheader(
         f"📄 SCADENZA {st.session_state['nome_piano']}"
     )
@@ -2882,8 +2884,8 @@ elif menu == "Scadenze Temporali":
             timeout=30
         )
         response.raise_for_status()
-
         contenuto_pdf = response.content
+
         collegamenti = []
         visti = set()
 
@@ -2896,59 +2898,52 @@ elif menu == "Scadenze Temporali":
                 documento,
                 start=1
             ):
-                links_pagina = pagina.get_links()
+                for link in pagina.get_links():
 
-                st.caption(
-                    f"Pagina {numero_pagina}: "
-                    f"{len(links_pagina)} annotazioni rilevate"
-                )
+                    percorso = link.get("file")
 
-                for indice, link in enumerate(links_pagina, start=1):
+                    if not percorso:
+                        continue
 
-                    tipo = link.get("kind")
-                    uri = link.get("uri")
-                    destinazione = link.get("page")
-                    nome_file = None
+                    # Decodifica il percorso relativo del PDF
+                    percorso = unquote(percorso)
+                    percorso = percorso.replace("\\", "/")
+                    percorso = percorso.lstrip("./")
 
-                    # Mostra tutti i dati dell'annotazione
-                    dati_link = {
-                        "pagina_pdf": numero_pagina,
-                        "indice": indice,
-                        "tipo": tipo,
-                        "uri": uri,
-                        "pagina_destinazione": destinazione,
-                        "file_destinazione": link.get("file"),
-                        "nome_destinazione": link.get("nameddest"),
-                        "coordinate": str(link.get("from")),
-                    }
+                    # Evita di aggiungere due volte lo stesso file
+                    if percorso in visti:
+                        continue
 
-                    st.code(
-                        json.dumps(
-                            dati_link,
-                            ensure_ascii=False,
-                            indent=2,
-                            default=str
-                        ),
-                        language="json"
+                    visti.add(percorso)
+
+                    # Rimuove l'eventuale cartella iniziale
+                    # se il percorso contiene già "Scadenza F0/"
+                    nome_relativo = percorso
+
+                    if nome_relativo.startswith("Scadenza F0/"):
+                        nome_relativo = nome_relativo[
+                            len("Scadenza F0/"):
+                        ]
+
+                    # Costruisce l'URL pubblico del PDF collegato
+                    url_scheda = (
+                        SUPABASE_STORAGE_BASE
+                        + quote(
+                            "Scadenza F0/" + nome_relativo,
+                            safe="/-_.()'"
+                        )
                     )
 
-                    # Raccoglie i collegamenti che contengono
-                    # un indirizzo web effettivo
-                    if uri and uri not in visti:
-                        visti.add(uri)
+                    nome_file = nome_relativo.split("/")[-1]
 
-                        percorso = urlparse(uri).path
-                        nome_file = unquote(
-                            percorso.split("/")[-1]
-                        )
+                    collegamenti.append({
+                        "nome": nome_file,
+                        "percorso": percorso,
+                        "url": url_scheda,
+                        "pagina": numero_pagina,
+                    })
 
-                        collegamenti.append({
-                            "nome": nome_file or uri,
-                            "url": uri,
-                            "pagina": numero_pagina,
-                        })
-
-        # Visualizza il PDF selezionato
+        # Visualizzazione del PDF principale
         pdf_viewer(
             input=contenuto_pdf,
             width="100%",
@@ -2958,11 +2953,11 @@ elif menu == "Scadenze Temporali":
         st.divider()
         st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
 
-        st.write(
-            f"Collegamenti web recuperati: {len(collegamenti)}"
-        )
-
         if collegamenti:
+            st.write(
+                f"Collegamenti trovati: {len(collegamenti)}"
+            )
+
             for i, link in enumerate(collegamenti):
 
                 with st.container(border=True):
@@ -2971,7 +2966,8 @@ elif menu == "Scadenze Temporali":
                     with col_nome:
                         st.write(f"📎 {link['nome']}")
                         st.caption(
-                            f"Rilevato a pagina {link['pagina']}"
+                            f"Pagina {link['pagina']} · "
+                            f"Percorso: {link['percorso']}"
                         )
 
                     with col_apri:
@@ -2980,15 +2976,18 @@ elif menu == "Scadenze Temporali":
                             key=f"apri_scheda_{i}",
                             use_container_width=True
                         ):
-                            st.session_state["pdf_piano"] = link["url"]
-                            st.session_state["nome_piano"] = link["nome"]
+                            st.session_state["pdf_piano"] = (
+                                link["url"]
+                            )
+                            st.session_state["nome_piano"] = (
+                                link["nome"]
+                            )
                             st.rerun()
 
         else:
             st.warning(
-                "Non sono stati recuperati URL web dalle annotazioni. "
-                "Controlla i dati JSON qui sopra per individuare "
-                "il tipo di destinazione dei collegamenti."
+                "Non sono stati trovati percorsi di file "
+                "nelle annotazioni del PDF."
             )
 
     except requests.RequestException as e:
