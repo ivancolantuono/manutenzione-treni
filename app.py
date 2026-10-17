@@ -2851,8 +2851,7 @@ elif menu == "Scadenze Temporali":
     # Il bucket indicato deve essere quello che contiene
     # la cartella Scadenza F0 e i relativi PDF.
     SUPABASE_STORAGE_BASE = (
-        https://supabase.com/dashboard/project/nlsezrwjvhxvsbycxlxd/storage/files/buckets/manuali?path=Scadenza+F0
-        
+        https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/Scadenza%20F0/MR1-01A-TC011%20-%20CONTROLLO%20VISIVO%20E%20FUNZIONALE,%20PULIZIA%20E%20LUBRIFICAZIONE%20ACCOPPIATORE%20AUTOMATICO.pdf
     )
 
     if "pdf_piano" not in st.session_state:
