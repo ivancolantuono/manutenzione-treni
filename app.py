@@ -2833,16 +2833,106 @@ elif menu == "📊 CONTROLLO PERMESSI":
 
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
     import fitz
+    import streamlit as st
     from urllib.parse import unquote, quote
     from streamlit_pdf_viewer import pdf_viewer
 
-    st.title("📚 SCADENZE TEMPORALI")
+    # --------------------------------------------------
+    # CONFIGURAZIONE
+    # --------------------------------------------------
 
-    # URL dei PDF principali
+    st.markdown("""
+    <style>
+    .scad-hero {
+        background: linear-gradient(120deg, #142b45, #24547a);
+        padding: 24px;
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 20px;
+    }
+
+    .scad-hero h2 {
+        color: white;
+        margin: 0;
+        font-size: 25px;
+    }
+
+    .scad-hero p {
+        color: #d7e6f5;
+        margin: 7px 0 0 0;
+        font-size: 14px;
+    }
+
+    .scad-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        letter-spacing: 1px;
+        margin: 12px 0 8px 0;
+    }
+
+    .scad-doc {
+        border: 1px solid rgba(120, 140, 160, 0.35);
+        border-radius: 14px;
+        padding: 16px;
+        margin: 8px 0;
+    }
+
+    .scad-doc-title {
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .scad-doc-sub {
+        font-size: 12px;
+        opacity: 0.75;
+        margin-top: 5px;
+    }
+
+    div.stButton > button {
+        border-radius: 10px;
+        font-weight: 600;
+        min-height: 43px;
+    }
+
+    div.stLinkButton > a {
+        border-radius: 10px;
+        font-weight: 600;
+        min-height: 43px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+        .scad-hero {
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        .scad-hero h2 {
+            font-size: 21px;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="scad-hero">
+        <h2>🚄 SCADENZE TEMPORALI</h2>
+        <p>Frecciarossa · Documentazione tecnica e schede di manutenzione</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --------------------------------------------------
+    # PDF PRINCIPALI
+    # --------------------------------------------------
+
     piani = {
         "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
         "F2": "INSERISCI_URL_REALE_F2",
@@ -2850,7 +2940,6 @@ elif menu == "Scadenze Temporali":
         "F4": "INSERISCI_URL_REALE_F4",
     }
 
-    # Base pubblica del bucket Supabase
     SUPABASE_STORAGE_BASE = (
         "https://nlsezrwjvhxvsbycxlxd.supabase.co"
         "/storage/v1/object/public/manuali/"
@@ -2860,28 +2949,62 @@ elif menu == "Scadenze Temporali":
         st.session_state["pdf_piano"] = piani["F0"]
         st.session_state["nome_piano"] = "F0"
 
-    # Selezione del piano
-    colonne = st.columns(len(piani))
+    # Recupera il piano selezionato
+    nome_corrente = st.session_state["nome_piano"]
+
+    # --------------------------------------------------
+    # SELEZIONE GRAFICA DEI PIANI
+    # --------------------------------------------------
+
+    st.markdown(
+        '<div class="scad-label">SELEZIONA IL PIANO</div>',
+        unsafe_allow_html=True
+    )
+
+    colonne = st.columns(4)
 
     for i, (nome, url) in enumerate(piani.items()):
+
         with colonne[i]:
+
+            selezionato = nome == nome_corrente
+
             if st.button(
-                nome,
+                f"{'🔵' if selezionato else '📄'}  {nome}",
                 key=f"piano_scadenze_{nome}",
-                use_container_width=True
+                use_container_width=True,
+                type="primary" if selezionato else "secondary"
             ):
                 st.session_state["pdf_piano"] = url
                 st.session_state["nome_piano"] = nome
                 st.rerun()
 
-    st.divider()
+    st.markdown("---")
 
-    st.subheader(
-        f"📄 SCADENZA {st.session_state['nome_piano']}"
+    # --------------------------------------------------
+    # INTESTAZIONE DOCUMENTO
+    # --------------------------------------------------
+
+    st.markdown(
+        f"""
+        <div class="scad-doc">
+            <div class="scad-doc-title">
+                📘 Piano {nome_corrente}
+            </div>
+            <div class="scad-doc-sub">
+                Documento tecnico selezionato
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
     try:
-        # Scarica il PDF selezionato
+
+        # --------------------------------------------------
+        # DOWNLOAD PDF
+        # --------------------------------------------------
+
         response = requests.get(
             st.session_state["pdf_piano"],
             timeout=30
@@ -2890,7 +3013,10 @@ elif menu == "Scadenze Temporali":
 
         contenuto_pdf = response.content
 
-        # Estrae i collegamenti al file presenti nel PDF
+        # --------------------------------------------------
+        # ESTRAZIONE COLLEGAMENTI
+        # --------------------------------------------------
+
         collegamenti = []
         visti = set()
 
@@ -2899,10 +3025,13 @@ elif menu == "Scadenze Temporali":
             filetype="pdf"
         ) as documento:
 
+            numero_pagine = len(documento)
+
             for numero_pagina, pagina in enumerate(
                 documento,
                 start=1
             ):
+
                 for link in pagina.get_links():
 
                     percorso = link.get("file")
@@ -2938,64 +3067,124 @@ elif menu == "Scadenze Temporali":
                         )
                     )
 
-                    nome_file = nome_relativo.split("/")[-1]
-
                     collegamenti.append({
-                        "nome": nome_file,
+                        "nome": nome_relativo.split("/")[-1],
                         "percorso": percorso_storage,
                         "url": url_scheda,
                         "pagina": numero_pagina,
                     })
 
-        # Visualizza il PDF principale
+        # --------------------------------------------------
+        # RIEPILOGO
+        # --------------------------------------------------
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+            st.metric(
+                label="Pagine documento",
+                value=numero_pagine
+            )
+
+        with c2:
+            st.metric(
+                label="Schede collegate",
+                value=len(collegamenti)
+            )
+
+        # --------------------------------------------------
+        # VISUALIZZATORE PDF
+        # --------------------------------------------------
+
+        st.markdown(
+            '<div class="scad-label">CONSULTA IL DOCUMENTO</div>',
+            unsafe_allow_html=True
+        )
+
         pdf_viewer(
             input=contenuto_pdf,
             width="100%",
-            height=900
+            height=850,
+            zoom_level="auto",
+            key=f"pdf_{st.session_state['nome_piano']}"
         )
 
-        # Pulsante per aprire il PDF nel browser
         st.link_button(
-            "🔎 Apri PDF nel browser per ingrandire",
+            "📱 Apri PDF nel browser · Zoom con due dita",
             st.session_state["pdf_piano"],
             use_container_width=True
         )
 
-        # Mostra le schede solo se esistono collegamenti
+        # --------------------------------------------------
+        # SCHEDE TECNICHE
+        # --------------------------------------------------
+
         if collegamenti:
 
-            st.divider()
-            st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
+            st.markdown("---")
 
+            st.markdown(
+                '<div class="scad-label">DOCUMENTAZIONE COLLEGATA</div>',
+                unsafe_allow_html=True
+            )
 
-            for i, link in enumerate(collegamenti):
+            st.subheader("📎 Schede tecniche")
+
+            # Ricerca tra le schede
+            ricerca = st.text_input(
+                "🔎 Cerca una scheda tecnica",
+                placeholder="Scrivi il nome della scheda...",
+                key="ricerca_schede_scadenze"
+            )
+
+            schede_filtrate = [
+                link for link in collegamenti
+                if ricerca.strip().lower() in link["nome"].lower()
+            ]
+
+            st.caption(
+                f"{len(schede_filtrate)} schede visualizzate "
+                f"su {len(collegamenti)} disponibili"
+            )
+
+            for i, link in enumerate(schede_filtrate):
 
                 with st.container(border=True):
 
-                    col_nome, col_apri = st.columns([4, 1])
+                    col_info, col_apri = st.columns([4, 1])
 
-                    with col_nome:
-                        st.write(f"📎 {link['nome']}")
+                    with col_info:
+                        st.markdown(f"**📄 {link['nome']}**")
                         st.caption(
-                            f"Pagina {link['pagina']} · "
-                            
+                            f"Riferimento: pagina {link['pagina']}"
                         )
 
                     with col_apri:
                         if st.button(
-                            "Apri",
-                            key=f"apri_scheda_{i}",
+                            "Apri ↗",
+                            key=f"apri_scheda_{i}_{link['nome']}",
                             use_container_width=True
                         ):
-                            st.session_state[
-                                "pdf_piano"
-                            ] = link["url"]
-
-                            st.session_state[
-                                "nome_piano"
-                            ] = link["nome"]
-
+                            st.session_state["pdf_piano"] = link["url"]
+                            st.session_state["nome_piano"] = link["nome"]
                             st.rerun()
+
+        else:
+            st.info(
+                "Non sono presenti collegamenti a schede tecniche "
+                "in questo documento."
+            )
+
+    except requests.RequestException as e:
+        st.error(
+            f"Errore nel caricamento del PDF: {e}"
+        )
+
+    except Exception as e:
+        st.error(
+            f"Errore durante la lettura del PDF: {e}"
+        )
+
 
     except requests.RequestException as e:
         st.error(
