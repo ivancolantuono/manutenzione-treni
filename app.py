@@ -2967,8 +2967,6 @@ elif menu == "Scadenze Temporali":
             st.divider()
             st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
 
-            
-            
 
             for i, link in enumerate(collegamenti):
 
@@ -2980,7 +2978,7 @@ elif menu == "Scadenze Temporali":
                         st.write(f"📎 {link['nome']}")
                         st.caption(
                             f"Pagina {link['pagina']} · "
-                            f"Percorso: {link['percorso']}"
+                            
                         )
 
                     with col_apri:
