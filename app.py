@@ -2831,6 +2831,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
 
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
@@ -2841,7 +2842,6 @@ elif menu == "Scadenze Temporali":
     st.title("📚 SCADENZE TEMPORALI")
 
     # URL dei PDF principali
-    # Inserisci gli URL reali dei piani F2, F3 e F4.
     piani = {
         "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
         "F2": "INSERISCI_URL_REALE_F2",
@@ -2849,8 +2849,7 @@ elif menu == "Scadenze Temporali":
         "F4": "INSERISCI_URL_REALE_F4",
     }
 
-    # Base corretta per scaricare i PDF dal bucket pubblico.
-    # NON usare il link della dashboard Supabase.
+    # Base pubblica del bucket Supabase
     SUPABASE_STORAGE_BASE = (
         "https://nlsezrwjvhxvsbycxlxd.supabase.co"
         "/storage/v1/object/public/manuali/"
@@ -2860,7 +2859,7 @@ elif menu == "Scadenze Temporali":
         st.session_state["pdf_piano"] = piani["F0"]
         st.session_state["nome_piano"] = "F0"
 
-    # Pulsanti dei piani
+    # Selezione del piano
     colonne = st.columns(len(piani))
 
     for i, (nome, url) in enumerate(piani.items()):
@@ -2881,6 +2880,7 @@ elif menu == "Scadenze Temporali":
     )
 
     try:
+        # Scarica il PDF selezionato
         response = requests.get(
             st.session_state["pdf_piano"],
             timeout=30
@@ -2888,10 +2888,11 @@ elif menu == "Scadenze Temporali":
         response.raise_for_status()
 
         contenuto_pdf = response.content
+
+        # Estrae i collegamenti al file presenti nel PDF
         collegamenti = []
         visti = set()
 
-        # Estrae i collegamenti presenti nel PDF
         with fitz.open(
             stream=contenuto_pdf,
             filetype="pdf"
@@ -2908,18 +2909,15 @@ elif menu == "Scadenze Temporali":
                     if not percorso:
                         continue
 
-                    # Normalizza il percorso relativo
                     percorso = unquote(percorso)
                     percorso = percorso.replace("\\", "/")
                     percorso = percorso.lstrip("./")
 
-                    # Evita i duplicati
                     if percorso in visti:
                         continue
 
                     visti.add(percorso)
 
-                    # Rimuove la cartella iniziale se già presente
                     prefisso = "Scadenza F0/"
 
                     if percorso.startswith(prefisso):
@@ -2927,14 +2925,16 @@ elif menu == "Scadenze Temporali":
                     else:
                         nome_relativo = percorso
 
-                    # Ricostruisce il percorso nel bucket
                     percorso_storage = (
                         "Scadenza F0/" + nome_relativo
                     )
 
                     url_scheda = (
                         SUPABASE_STORAGE_BASE
-                        + quote(percorso_storage, safe="/-_.()'")
+                        + quote(
+                            percorso_storage,
+                            safe="/-_.()'"
+                        )
                     )
 
                     nome_file = nome_relativo.split("/")[-1]
@@ -2953,14 +2953,22 @@ elif menu == "Scadenze Temporali":
             height=900
         )
 
-        st.divider()
-        st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
-
-        st.write(
-            f"Collegamenti trovati: {len(collegamenti)}"
+        # Pulsante per aprire il PDF nel browser
+        st.link_button(
+            "🔎 Apri PDF nel browser per ingrandire",
+            st.session_state["pdf_piano"],
+            use_container_width=True
         )
 
+        # Mostra le schede solo se esistono collegamenti
         if collegamenti:
+
+            st.divider()
+            st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
+
+            st.write(
+                f"Collegamenti trovati: {len(collegamenti)}"
+            )
 
             for i, link in enumerate(collegamenti):
 
@@ -2981,51 +2989,26 @@ elif menu == "Scadenze Temporali":
                             key=f"apri_scheda_{i}",
                             use_container_width=True
                         ):
-                            try:
-                                # Verifica che il documento esista
-                                verifica = requests.get(
-                                    link["url"],
-                                    timeout=20
-                                )
+                            st.session_state[
+                                "pdf_piano"
+                            ] = link["url"]
 
-                                verifica.raise_for_status()
+                            st.session_state[
+                                "nome_piano"
+                            ] = link["nome"]
 
-                                # Conserva il PDF principale per
-                                # permettere il ritorno alla lista
-                                st.session_state[
-                                    "pdf_principale"
-                                ] = st.session_state["pdf_piano"]
-
-                                st.session_state[
-                                    "pdf_piano"
-                                ] = link["url"]
-
-                                st.session_state[
-                                    "nome_piano"
-                                ] = link["nome"]
-
-                                st.rerun()
-
-                            except requests.RequestException as errore:
-                                st.error(
-                                    f"Non riesco a caricare "
-                                    f"{link['nome']}. "
-                                    f"Verifica che il file esista "
-                                    f"nel bucket manuali. Dettaglio: "
-                                    f"{errore}"
-                                )
-
-        else:
-            st.warning(
-                "Non sono stati trovati percorsi di file "
-                "nelle annotazioni del PDF."
-            )
+                            st.rerun()
 
     except requests.RequestException as e:
-        st.error(f"Errore nel caricamento del PDF: {e}")
+        st.error(
+            f"Errore nel caricamento del PDF: {e}"
+        )
 
     except Exception as e:
-        st.error(f"Errore durante la lettura del PDF: {e}")
+        st.error(
+            f"Errore durante la lettura del PDF: {e}"
+        )
+
 
 
 
