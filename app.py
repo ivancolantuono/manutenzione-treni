@@ -2826,6 +2826,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
+
 elif menu == "Scadenze Temporali":
 
     st.title("📚 SCADENZE")
@@ -2841,45 +2842,31 @@ elif menu == "Scadenze Temporali":
     cols = st.columns(4)
 
     for i, nome in enumerate(piani.keys()):
-
         with cols[i % 4]:
-
             if st.button(nome, use_container_width=True):
-
                 st.session_state["pdf_piano"] = piani[nome]
                 st.session_state["nome_piano"] = nome
 
     if "pdf_piano" in st.session_state:
 
         st.divider()
-
-        st.subheader(f"📄 SCADENZA {st.session_state['nome_piano']}")
-
-        st.link_button(
-            "🔗 Apri in una nuova scheda",
-            st.session_state["pdf_piano"]
+        st.subheader(
+            f"📄 SCADENZA {st.session_state['nome_piano']}"
         )
 
         try:
-
-            response = requests.get(
-                st.session_state["pdf_piano"]
+            st.components.v1.iframe(
+                src=(
+                    f"{st.session_state['pdf_piano']}"
+                    "#toolbar=1&navpanes=0&zoom=page-width"
+                ),
+                height=900,
+                scrolling=True
             )
 
-            if response.status_code == 200:
-
-                pdf_viewer(
-                    response.content,
-                    width="100%"
-                )
-
-            else:
-
-                st.error("Impossibile caricare il PDF.")
-
         except Exception as e:
+            st.error(f"Errore durante la visualizzazione del PDF: {e}")
 
-            st.error(e)
             
 elif menu == "Software":
 
