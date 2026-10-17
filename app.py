@@ -1137,6 +1137,7 @@ with st.sidebar:
                 "Passaggio Consegne",
                 "Schede SR",
                 "Schede SR VZI6",
+                "Scadenze Temporali",
                 "Planning",
                 "Dashboard",
                 "Storico",
@@ -1149,6 +1150,7 @@ with st.sidebar:
                 "search",
                 "tools",
                 "database",
+                "folder",
                 "folder",
                 "folder",
                 "journal-text",
@@ -1259,6 +1261,7 @@ with st.sidebar:
                 "Open Item",
                 "Schede SR",
                 "Schede SR VZI6",
+                "Scadenze Temporali",
                 "Manutenzione",
                 "Cerca Componente",
                 "Versioni Software",
@@ -1268,6 +1271,7 @@ with st.sidebar:
             icons=[
                 "pin-angle-fill",
                 "journal-text",
+                "journal-code",
                 "journal-code",
                 "train-front",
                 "search",
@@ -2827,7 +2831,7 @@ elif menu == "Scadenze Temporali":
     st.title("📚 SCADENZE")
 
     piani = {
-        "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_PdM_rev.05.pdf",
+        "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
         "F1": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F1.pdf",
         "F2": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2.pdf",
         "F3": "https://nloezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F3.pdf",
