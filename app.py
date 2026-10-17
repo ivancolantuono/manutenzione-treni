@@ -2842,7 +2842,6 @@ elif menu == "Scadenze Temporali":
     # Mantieni gli URL Supabase reali già funzionanti
     piani = {
         "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
-        "F1": "INSERISCI_URL_REALE_F1",
         "F2": "INSERISCI_URL_REALE_F2",
         "F3": "INSERISCI_URL_REALE_F3",
         "F4": "INSERISCI_URL_REALE_F4",
@@ -2852,7 +2851,7 @@ elif menu == "Scadenze Temporali":
     # Il bucket indicato deve essere quello che contiene
     # la cartella Scadenza F0 e i relativi PDF.
     SUPABASE_STORAGE_BASE = (
-        "https://TUO-PROGETTO.supabase.co"
+        "https://https://supabase.com/dashboard/project/nlsezrwjvhxvsbycxlxd/storage/files/buckets/manuali?path=Scadenza+F0"
         "/storage/v1/object/public/manuali/"
     )
 
