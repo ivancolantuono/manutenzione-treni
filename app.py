@@ -2852,7 +2852,7 @@ elif menu == "Scadenze Temporali":
     # la cartella Scadenza F0 e i relativi PDF.
     SUPABASE_STORAGE_BASE = (
         "https://https://supabase.com/dashboard/project/nlsezrwjvhxvsbycxlxd/storage/files/buckets/manuali?path=Scadenza+F0"
-        "/storage/v1/object/public/manuali/"
+        
     )
 
     if "pdf_piano" not in st.session_state:
