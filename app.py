@@ -2832,6 +2832,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
 
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
@@ -2841,28 +2842,27 @@ elif menu == "Scadenze Temporali":
 
     st.title("📚 SCADENZE TEMPORALI")
 
-    # PDF dei piani di scadenza
+    # Mantieni qui i tuoi URL Supabase corretti
     piani = {
-        "F0": "https://INSERISCI-QUI-URL-CORRETTO/F0_1_link.pdf",
-        "F1": "https://INSERISCI-QUI-URL-CORRETTO/F1.pdf",
-        "F2": "https://INSERISCI-QUI-URL-CORRETTO/F2.pdf",
-        "F3": "https://INSERISCI-QUI-URL-CORRETTO/F3.pdf",
-        "F4": "https://INSERISCI-QUI-URL-CORRETTO/F4.pdf",
+        "F0": "INSERISCI_URL_REALE_F0",
+        "F1": "INSERISCI_URL_REALE_F1",
+        "F2": "INSERISCI_URL_REALE_F2",
+        "F3": "INSERISCI_URL_REALE_F3",
+        "F4": "INSERISCI_URL_REALE_F4",
     }
 
-    # Inizializzazione del PDF selezionato
     if "pdf_piano" not in st.session_state:
         st.session_state["pdf_piano"] = piani["F0"]
         st.session_state["nome_piano"] = "F0"
 
-    # Pulsanti F0-F4
-    cols = st.columns(5)
+    # Pulsanti per scegliere il piano
+    colonne = st.columns(5)
 
     for i, (nome, url) in enumerate(piani.items()):
-        with cols[i]:
+        with colonne[i]:
             if st.button(
                 nome,
-                key=f"piano_{nome}",
+                key=f"piano_scadenze_{nome}",
                 use_container_width=True
             ):
                 st.session_state["pdf_piano"] = url
@@ -2885,27 +2885,37 @@ elif menu == "Scadenze Temporali":
 
         contenuto_pdf = response.content
 
-        # Estrae i collegamenti incorporati nel PDF
         collegamenti = []
         visti = set()
 
+        # Analizza le annotazioni presenti nel PDF
         with fitz.open(
             stream=contenuto_pdf,
             filetype="pdf"
         ) as documento:
 
             for numero_pagina, pagina in enumerate(
-                documento, start=1
+                documento,
+                start=1
             ):
                 links_pagina = pagina.get_links()
 
                 st.caption(
                     f"Pagina {numero_pagina}: "
-                    f"{len(links_pagina)} annotazioni "
-                    "di collegamento rilevate"
+                    f"{len(links_pagina)} annotazioni rilevate"
                 )
 
                 for link in links_pagina:
+
+                    # Diagnostica: mostra il tipo di collegamento
+                    st.write({
+                        "pagina": numero_pagina,
+                        "tipo": link.get("kind"),
+                        "uri": link.get("uri"),
+                        "pagina_destinazione": link.get("page"),
+                        "rettangolo": link.get("from"),
+                    })
+
                     url = link.get("uri")
 
                     if url and url not in visti:
@@ -2919,10 +2929,10 @@ elif menu == "Scadenze Temporali":
                         collegamenti.append({
                             "nome": nome_file or url,
                             "url": url,
-                            "pagina": numero_pagina
+                            "pagina": numero_pagina,
                         })
 
-        # Visualizza il PDF dentro Streamlit
+        # Visualizza il PDF
         pdf_viewer(
             input=contenuto_pdf,
             width="100%",
@@ -2932,21 +2942,22 @@ elif menu == "Scadenze Temporali":
         st.divider()
         st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
 
-        st.caption(
-            f"Totale collegamenti web trovati: "
-            f"{len(collegamenti)}"
+        st.write(
+            f"Collegamenti web individuati: {len(collegamenti)}"
         )
 
         if collegamenti:
+
             for i, link in enumerate(collegamenti):
 
                 with st.container(border=True):
+
                     col_nome, col_apri = st.columns([4, 1])
 
                     with col_nome:
                         st.write(f"📎 {link['nome']}")
                         st.caption(
-                            f"Collegamento presente a pagina "
+                            f"Collegamento rilevato a pagina "
                             f"{link['pagina']}"
                         )
 
@@ -2966,18 +2977,17 @@ elif menu == "Scadenze Temporali":
 
         else:
             st.warning(
-                "Nessun collegamento web è stato trovato "
-                "nelle annotazioni del PDF. Se i link sono "
-                "presenti visivamente nella colonna Note, "
-                "potrebbero essere stati salvati come testo "
-                "o in un formato diverso."
+                "Non sono stati trovati collegamenti web "
+                "con un indirizzo URI. Controlla i dati diagnostici "
+                "visualizzati sopra: servono per capire come sono "
+                "memorizzati i collegamenti nel PDF."
             )
 
     except requests.RequestException as e:
         st.error(f"Errore nel caricamento del PDF: {e}")
 
     except Exception as e:
-        st.error(f"Errore nella lettura del PDF: {e}")
+        st.error(f"Errore durante la lettura del PDF: {e}")
 
 
             
