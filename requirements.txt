@@ -11,3 +11,4 @@ extra-streamlit-components
 streamlit-plotly-events
 requests
 pymupdf
+streamlit[pdf]
