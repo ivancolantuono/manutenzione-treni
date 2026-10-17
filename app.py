@@ -2851,7 +2851,7 @@ elif menu == "Scadenze Temporali":
     # Il bucket indicato deve essere quello che contiene
     # la cartella Scadenza F0 e i relativi PDF.
     SUPABASE_STORAGE_BASE = (
-        "https://https://supabase.com/dashboard/project/nlsezrwjvhxvsbycxlxd/storage/files/buckets/manuali?path=Scadenza+F0"
+        https://supabase.com/dashboard/project/nlsezrwjvhxvsbycxlxd/storage/files/buckets/manuali?path=Scadenza+F0
         
     )
 
