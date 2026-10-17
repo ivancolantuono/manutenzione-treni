@@ -2927,48 +2927,48 @@ elif menu == "Scadenze Temporali":
         # Elenco dei collegamenti estratti
         if collegamenti:
             
-        # Estrazione dei collegamenti dal PDF
-        collegamenti = []
-        visti = set()
-
-        documento = fitz.open(
-            stream=contenuto_pdf,
-            filetype="pdf"
-        )
-
-        for numero_pagina, pagina in enumerate(documento, start=1):
-
-            links_pagina = pagina.get_links()
-
-            # Mostra quante annotazioni sono presenti
-            st.write(
-                f"Pagina {numero_pagina}: "
-                f"{len(links_pagina)} collegamenti rilevati"
+            # Estrazione dei collegamenti dal PDF
+            collegamenti = []
+            visti = set()
+    
+            documento = fitz.open(
+                stream=contenuto_pdf,
+                filetype="pdf"
             )
-
-            for link in links_pagina:
-                url = link.get("uri")
-
-                if url and url not in visti:
-                    visti.add(url)
-
-                    percorso = urlparse(url).path
-                    nome_file = unquote(
-                        percorso.split("/")[-1]
-                    )
-
-                    collegamenti.append({
-                        "nome": nome_file or url,
-                        "url": url,
-                        "pagina": numero_pagina
-                    })
-
-        documento.close()
-
-        st.write(
-            "Totale collegamenti web trovati:",
-            len(collegamenti)
-        )
+    
+            for numero_pagina, pagina in enumerate(documento, start=1):
+    
+                links_pagina = pagina.get_links()
+    
+                # Mostra quante annotazioni sono presenti
+                st.write(
+                    f"Pagina {numero_pagina}: "
+                    f"{len(links_pagina)} collegamenti rilevati"
+                )
+    
+                for link in links_pagina:
+                    url = link.get("uri")
+    
+                    if url and url not in visti:
+                        visti.add(url)
+    
+                        percorso = urlparse(url).path
+                        nome_file = unquote(
+                            percorso.split("/")[-1]
+                        )
+    
+                        collegamenti.append({
+                            "nome": nome_file or url,
+                            "url": url,
+                            "pagina": numero_pagina
+                        })
+    
+            documento.close()
+    
+            st.write(
+                "Totale collegamenti web trovati:",
+                len(collegamenti)
+            )
 
 
             
