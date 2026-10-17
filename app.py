@@ -2999,8 +2999,6 @@ elif menu == "Scadenze Temporali":
     except Exception as e:
         st.error(f"Errore nel caricamento delle scadenze: {e}")
 
-
-elif menu == "Software":
             
 elif menu == "Software":
 
