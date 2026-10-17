@@ -2926,54 +2926,50 @@ elif menu == "Scadenze Temporali":
 
         # Elenco dei collegamenti estratti
         if collegamenti:
-            st.divider()
-            st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
-            st.caption(
-                "Seleziona una scheda per visualizzarla "
-                "nella stessa area."
+            
+        # Estrazione dei collegamenti dal PDF
+        collegamenti = []
+        visti = set()
+
+        documento = fitz.open(
+            stream=contenuto_pdf,
+            filetype="pdf"
+        )
+
+        for numero_pagina, pagina in enumerate(documento, start=1):
+
+            links_pagina = pagina.get_links()
+
+            # Mostra quante annotazioni sono presenti
+            st.write(
+                f"Pagina {numero_pagina}: "
+                f"{len(links_pagina)} collegamenti rilevati"
             )
 
-            for i, link in enumerate(collegamenti):
+            for link in links_pagina:
+                url = link.get("uri")
 
-                nome_visualizzato = link["nome"]
+                if url and url not in visti:
+                    visti.add(url)
 
-                with st.container(border=True):
-                    col_nome, col_pulsante = st.columns(
-                        [4, 1]
+                    percorso = urlparse(url).path
+                    nome_file = unquote(
+                        percorso.split("/")[-1]
                     )
 
-                    with col_nome:
-                        st.write(f"📎 {nome_visualizzato}")
-                        st.caption(
-                            f"Collegamento presente a pagina "
-                            f"{link['pagina']}"
-                        )
+                    collegamenti.append({
+                        "nome": nome_file or url,
+                        "url": url,
+                        "pagina": numero_pagina
+                    })
 
-                    with col_pulsante:
-                        if st.button(
-                            "Apri",
-                            key=f"apri_scheda_{i}",
-                            use_container_width=True
-                        ):
-                            st.session_state["pdf_piano"] = (
-                                link["url"]
-                            )
-                            st.session_state["nome_piano"] = (
-                                nome_visualizzato
-                            )
-                            st.rerun()
+        documento.close()
 
-        else:
-            st.info(
-                "Non sono stati trovati collegamenti web "
-                "nel PDF selezionato."
-            )
+        st.write(
+            "Totale collegamenti web trovati:",
+            len(collegamenti)
+        )
 
-    except requests.RequestException as e:
-        st.error(f"Errore nel caricamento del PDF: {e}")
-
-    except Exception as e:
-        st.error(f"Errore nella lettura del PDF: {e}")
 
             
 elif menu == "Software":
