@@ -2994,7 +2994,13 @@ elif menu == "Scadenze Temporali":
 
                             st.rerun()
 
+                            st.rerun()
 
+    except Exception as e:
+        st.error(f"Errore nel caricamento delle scadenze: {e}")
+
+
+elif menu == "Software":
             
 elif menu == "Software":
 
