@@ -2827,6 +2827,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
         )
         
 
+
 elif menu == "Scadenze Temporali":
 
     st.title("📚 SCADENZE")
@@ -2841,7 +2842,7 @@ elif menu == "Scadenze Temporali":
 
     cols = st.columns(4)
 
-    for i, nome in enumerate(piani.keys()):
+    for i, nome in enumerate(piani):
         with cols[i % 4]:
             if st.button(nome, use_container_width=True):
                 st.session_state["pdf_piano"] = piani[nome]
@@ -2855,17 +2856,20 @@ elif menu == "Scadenze Temporali":
         )
 
         try:
-            st.components.v1.iframe(
-                src=(
-                    f"{st.session_state['pdf_piano']}"
-                    "#toolbar=1&navpanes=0&zoom=page-width"
-                ),
-                height=900,
-                scrolling=True
+            response = requests.get(
+                st.session_state["pdf_piano"],
+                timeout=30
+            )
+            response.raise_for_status()
+
+            pdf_viewer(
+                input=response.content,
+                width="100%",
+                height=900
             )
 
         except Exception as e:
-            st.error(f"Errore durante la visualizzazione del PDF: {e}")
+            st.error(f"Errore nel caricamento del PDF: {e}")
 
             
 elif menu == "Software":
