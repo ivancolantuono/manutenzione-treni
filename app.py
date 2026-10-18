@@ -2916,15 +2916,18 @@ elif menu == "Scadenze Temporali":
 
                     visti.add(percorso)
 
-                    prefisso = "Scadenza F0/"
-
+                    nome_piano_corrente = st.session_state["nome_piano"]
+                    
+                    cartella_corrente = cartelle_piani[nome_piano_corrente]
+                    prefisso = cartella_corrente + "/"
+                    
                     if percorso.startswith(prefisso):
                         nome_relativo = percorso[len(prefisso):]
                     else:
-                        nome_relativo = percorso
-
+                        nome_relativo = percorso.split("/")[-1]
+                    
                     percorso_storage = (
-                        "Scadenza F0/" + nome_relativo
+                        cartella_corrente + "/" + nome_relativo
                     )
 
                     url_scheda = (
