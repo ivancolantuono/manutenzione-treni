@@ -2830,6 +2830,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
     
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
@@ -2841,10 +2842,24 @@ elif menu == "Scadenze Temporali":
 
     # URL dei PDF principali
     piani = {
-        "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
-        "F2": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2_1_link.pdf",
+        "F0": (
+            "https://nlsezrwjvhxvsbycxlxd.supabase.co/"
+            "storage/v1/object/public/manuali/F0_1_link.pdf"
+        ),
+        "F2": (
+            "https://nlsezrwjvhxvsbycxlxd.supabase.co/"
+            "storage/v1/object/public/manuali/F2_1_link.pdf"
+        ),
         "F3": "INSERISCI_URL_REALE_F3",
         "F4": "INSERISCI_URL_REALE_F4",
+    }
+
+    # Cartelle contenenti le schede tecniche nel bucket manuali
+    cartelle_piani = {
+        "F0": "Scadenza F0",
+        "F2": "Scadenza F2",
+        "F3": "Scadenza F3",
+        "F4": "Scadenza F4",
     }
 
     # Base pubblica del bucket Supabase
@@ -2853,9 +2868,18 @@ elif menu == "Scadenze Temporali":
         "/storage/v1/object/public/manuali/"
     )
 
+    # Inizializzazione dello stato
+    if "nome_piano" not in st.session_state:
+        st.session_state["nome_piano"] = "F0"
+
     if "pdf_piano" not in st.session_state:
         st.session_state["pdf_piano"] = piani["F0"]
-        st.session_state["nome_piano"] = "F0"
+
+    if "pdf_scheda_aperta" not in st.session_state:
+        st.session_state["pdf_scheda_aperta"] = False
+
+    if "url_piano_principale" not in st.session_state:
+        st.session_state["url_piano_principale"] = piani["F0"]
 
     # Selezione del piano
     colonne = st.columns(len(piani))
@@ -2867,106 +2891,153 @@ elif menu == "Scadenze Temporali":
                 key=f"piano_scadenze_{nome}",
                 use_container_width=True
             ):
-                st.session_state["pdf_piano"] = url
                 st.session_state["nome_piano"] = nome
+                st.session_state["url_piano_principale"] = url
+                st.session_state["pdf_piano"] = url
+                st.session_state["pdf_scheda_aperta"] = False
                 st.rerun()
 
     st.divider()
 
+    nome_piano_corrente = st.session_state["nome_piano"]
+
     st.subheader(
-        f"📄 SCADENZA {st.session_state['nome_piano']}"
+        f"📄 SCADENZA {nome_piano_corrente}"
     )
 
+    # URL del documento da visualizzare
+    url_visualizzazione = st.session_state["pdf_piano"]
+
     try:
+        # Controlla che sia stato configurato l'URL del piano
+        if url_visualizzazione.startswith("INSERISCI_URL_REALE"):
+            st.warning(
+                f"L'URL del piano {nome_piano_corrente} "
+                "non è ancora stato configurato."
+            )
+            st.stop()
+
         # Scarica il PDF selezionato
         response = requests.get(
-            st.session_state["pdf_piano"],
+            url_visualizzazione,
             timeout=30
         )
         response.raise_for_status()
 
         contenuto_pdf = response.content
 
-        # Estrae i collegamenti al file presenti nel PDF
+        # Estrae i collegamenti alle schede dal PDF principale
         collegamenti = []
         visti = set()
 
-        with fitz.open(
-            stream=contenuto_pdf,
-            filetype="pdf"
-        ) as documento:
+        # Quando è aperta una scheda, non cercare collegamenti
+        # dentro la scheda come se fosse il piano principale
+        if not st.session_state["pdf_scheda_aperta"]:
 
-            for numero_pagina, pagina in enumerate(
-                documento,
-                start=1
-            ):
-                for link in pagina.get_links():
+            with fitz.open(
+                stream=contenuto_pdf,
+                filetype="pdf"
+            ) as documento:
 
-                    percorso = link.get("file")
+                for numero_pagina, pagina in enumerate(
+                    documento,
+                    start=1
+                ):
+                    for link in pagina.get_links():
 
-                    if not percorso:
-                        continue
+                        percorso = link.get("file")
 
-                    percorso = unquote(percorso)
-                    percorso = percorso.replace("\\", "/")
-                    percorso = percorso.lstrip("./")
+                        if not percorso:
+                            continue
 
-                    if percorso in visti:
-                        continue
+                        percorso = unquote(percorso)
+                        percorso = percorso.replace("\\", "/")
 
-                    visti.add(percorso)
+                        while percorso.startswith("./"):
+                            percorso = percorso[2:]
 
-                    nome_piano_corrente = st.session_state["nome_piano"]
-                    
-                    cartella_corrente = cartelle_piani[nome_piano_corrente]
-                    prefisso = cartella_corrente + "/"
-                    
-                    if percorso.startswith(prefisso):
-                        nome_relativo = percorso[len(prefisso):]
-                    else:
-                        nome_relativo = percorso.split("/")[-1]
-                    
-                    percorso_storage = (
-                        cartella_corrente + "/" + nome_relativo
-                    )
+                        percorso = percorso.lstrip("/")
 
-                    url_scheda = (
-                        SUPABASE_STORAGE_BASE
-                        + quote(
-                            percorso_storage,
-                            safe="/-_.()'"
+                        cartella_corrente = cartelle_piani[
+                            nome_piano_corrente
+                        ]
+                        prefisso = cartella_corrente + "/"
+
+                        # Gestisce i percorsi che contengono già
+                        # il nome della cartella del piano
+                        if percorso.startswith(prefisso):
+                            nome_relativo = percorso[len(prefisso):]
+                        else:
+                            nome_relativo = percorso.split("/")[-1]
+
+                        if not nome_relativo:
+                            continue
+
+                        percorso_storage = (
+                            cartella_corrente + "/" + nome_relativo
                         )
-                    )
 
-                    nome_file = nome_relativo.split("/")[-1]
+                        if percorso_storage in visti:
+                            continue
 
-                    collegamenti.append({
-                        "nome": nome_file,
-                        "percorso": percorso_storage,
-                        "url": url_scheda,
-                        "pagina": numero_pagina,
-                    })
+                        visti.add(percorso_storage)
 
-        # Visualizza il PDF principale
+                        url_scheda = (
+                            SUPABASE_STORAGE_BASE
+                            + quote(
+                                percorso_storage,
+                                safe="/-_.()'"
+                            )
+                        )
+
+                        nome_file = nome_relativo.split("/")[-1]
+
+                        collegamenti.append({
+                            "nome": nome_file,
+                            "percorso": percorso_storage,
+                            "url": url_scheda,
+                            "pagina": numero_pagina,
+                        })
+
+        # Visualizza il PDF
         pdf_viewer(
             input=contenuto_pdf,
             width="100%",
             height=900
         )
 
-        # Pulsante per aprire il PDF nel browser
-        st.link_button(
-            "🔎 Apri PDF nel browser per ingrandire",
-            st.session_state["pdf_piano"],
-            use_container_width=True
-        )
+        # Pulsanti di navigazione
+        col1, col2 = st.columns(2)
 
-        # Mostra le schede solo se esistono collegamenti
+        with col1:
+            st.link_button(
+                "🔎 Apri PDF nel browser",
+                url_visualizzazione,
+                use_container_width=True
+            )
+
+        with col2:
+            if st.session_state["pdf_scheda_aperta"]:
+                if st.button(
+                    "⬅️ Torna al piano",
+                    use_container_width=True
+                ):
+                    st.session_state["pdf_piano"] = (
+                        st.session_state["url_piano_principale"]
+                    )
+                    st.session_state["pdf_scheda_aperta"] = False
+                    st.rerun()
+
+        # Elenco delle schede tecniche
         if collegamenti:
 
             st.divider()
             st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
 
+            st.caption(
+                f"Schede individuate nel piano "
+                f"{nome_piano_corrente}: {len(collegamenti)}"
+            )
 
             for i, link in enumerate(collegamenti):
 
@@ -2977,30 +3048,48 @@ elif menu == "Scadenze Temporali":
                     with col_nome:
                         st.write(f"📎 {link['nome']}")
                         st.caption(
-                            f"Pagina {link['pagina']} · "
-                            
+                            f"Pagina del piano: {link['pagina']}"
                         )
 
                     with col_apri:
                         if st.button(
                             "Apri",
-                            key=f"apri_scheda_{i}",
+                            key=(
+                                f"apri_scheda_"
+                                f"{nome_piano_corrente}_{i}"
+                            ),
                             use_container_width=True
                         ):
-                            st.session_state[
-                                "pdf_piano"
-                            ] = link["url"]
-
-                            st.session_state[
-                                "nome_piano"
-                            ] = link["nome"]
-
+                            st.session_state["pdf_piano"] = link["url"]
+                            st.session_state["pdf_scheda_aperta"] = True
                             st.rerun()
 
-                            st.rerun()
+        elif not st.session_state["pdf_scheda_aperta"]:
+
+            st.info(
+                "Non sono stati trovati collegamenti alle schede "
+                "tecniche nel PDF selezionato."
+            )
+
+    except requests.exceptions.HTTPError as e:
+        st.error(
+            "Errore HTTP durante il caricamento del PDF. "
+            "Controlla che il file esista nel bucket Supabase "
+            "e che il percorso sia corretto."
+        )
+        st.caption(str(e))
+
+    except requests.exceptions.RequestException as e:
+        st.error(
+            "Errore di connessione durante il caricamento "
+            "del PDF."
+        )
+        st.caption(str(e))
 
     except Exception as e:
-        st.error(f"Errore nel caricamento delle scadenze: {e}")
+        st.error(
+            f"Errore nel caricamento delle scadenze: {e}"
+        )
 
             
 elif menu == "Software":
