@@ -2842,7 +2842,7 @@ elif menu == "Scadenze Temporali":
     # URL dei PDF principali
     piani = {
         "F0": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F0_1_link.pdf",
-        "F2": "INSERISCI_URL_REALE_F2",
+        "F2": "https://nlsezrwjvhxvsbycxlxd.supabase.co/storage/v1/object/public/manuali/F2_1_link.pdf",
         "F3": "INSERISCI_URL_REALE_F3",
         "F4": "INSERISCI_URL_REALE_F4",
     }
