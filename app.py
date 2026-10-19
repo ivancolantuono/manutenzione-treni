@@ -2832,6 +2832,7 @@ elif menu == "📊 CONTROLLO PERMESSI":
 
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
@@ -2902,10 +2903,22 @@ elif menu == "Scadenze Temporali":
                 key=f"piano_scadenze_{nome}",
                 use_container_width=True
             ):
+
                 st.session_state["nome_piano"] = nome
                 st.session_state["url_piano_principale"] = url
                 st.session_state["pdf_piano"] = url
                 st.session_state["pdf_scheda_aperta"] = False
+
+                # Elimina eventuali vecchi link WhatsApp
+                st.session_state.pop(
+                    "url_whatsapp_scadenze",
+                    None
+                )
+                st.session_state.pop(
+                    "scheda_whatsapp_selezionata",
+                    None
+                )
+
                 st.rerun()
 
     st.divider()
@@ -2943,7 +2956,7 @@ elif menu == "Scadenze Temporali":
             contenuto_pdf = response.content
 
             # =================================================
-            # ESTRAZIONE SCHEDE COLLEGATE
+            # ESTRAZIONE SCHEDE TECNICHE COLLEGATE
             # =================================================
 
             collegamenti = []
@@ -3043,15 +3056,29 @@ elif menu == "Scadenze Temporali":
                         key="torna_piano_scadenze",
                         use_container_width=True
                     ):
+
                         st.session_state["pdf_piano"] = (
                             st.session_state["url_piano_principale"]
                         )
+
                         st.session_state["pdf_scheda_aperta"] = False
+
+                        st.session_state.pop(
+                            "url_whatsapp_scadenze",
+                            None
+                        )
+                        st.session_state.pop(
+                            "scheda_whatsapp_selezionata",
+                            None
+                        )
+
                         st.rerun()
 
             # =================================================
-            # ELENCO SCHEDE E INVIO WHATSAPP
+            # CARICAMENTO OPERATORI DA SUPABASE
             # =================================================
+
+            tecnici = []
 
             if collegamenti:
 
@@ -3063,7 +3090,6 @@ elif menu == "Scadenze Temporali":
                     f"{nome_piano_corrente}: {len(collegamenti)}"
                 )
 
-                # Carica i tecnici dalla tabella operatori
                 try:
 
                     risposta_operatori = (
@@ -3075,8 +3101,7 @@ elif menu == "Scadenze Temporali":
 
                     operatori = risposta_operatori.data or []
 
-                    # Considera soltanto operatori con nominativo
-                    tecnici = []
+                    tecnici_unici = {}
 
                     for op in operatori:
 
@@ -3092,28 +3117,21 @@ elif menu == "Scadenze Temporali":
                             op.get("Telefono") or ""
                         ).strip()
 
-                        if nominativo:
-                            tecnici.append({
-                                "nominativo": nominativo,
-                                "matricola": matricola,
-                                "telefono": telefono,
-                                "etichetta": (
-                                    f"{nominativo} "
-                                    f"(Matricola: {matricola})"
-                                    if matricola
-                                    else nominativo
-                                )
-                            })
+                        if not nominativo:
+                            continue
 
-                    # Elimina eventuali duplicati nella tendina
-                    tecnici_unici = {}
+                        chiave = matricola or nominativo
 
-                    for tecnico in tecnici:
-                        chiave = (
-                            tecnico["matricola"]
-                            or tecnico["nominativo"]
-                        )
-                        tecnici_unici[chiave] = tecnico
+                        tecnici_unici[chiave] = {
+                            "nominativo": nominativo,
+                            "matricola": matricola,
+                            "telefono": telefono,
+                            "etichetta": (
+                                f"{nominativo} - {matricola}"
+                                if matricola
+                                else nominativo
+                            )
+                        }
 
                     tecnici = sorted(
                         tecnici_unici.values(),
@@ -3122,68 +3140,70 @@ elif menu == "Scadenze Temporali":
 
                 except Exception as e:
 
-                    tecnici = []
-
                     st.error(
-                        "Non riesco a leggere la tabella operatori "
+                        "Errore nel caricamento degli operatori "
                         "da Supabase."
                     )
                     st.caption(str(e))
 
-                # Selezione del tecnico una sola volta
-                tecnico_selezionato = None
+            # =================================================
+            # SINGOLA SELEZIONE TECNICO PER OGNI SCHEDA
+            # =================================================
 
-                if tecnici:
+            if collegamenti:
 
-                    opzioni_tecnici = {
-                        tecnico["etichetta"]: tecnico
-                        for tecnico in tecnici
-                    }
-
-                    scelta_tecnico = st.selectbox(
-                        "👷 Seleziona il tecnico destinatario",
-                        options=list(opzioni_tecnici.keys()),
-                        index=None,
-                        placeholder="Scegli un tecnico...",
-                        key=f"tecnico_scadenze_{nome_piano_corrente}"
-                    )
-
-                    if scelta_tecnico:
-                        tecnico_selezionato = (
-                            opzioni_tecnici[scelta_tecnico]
-                        )
-
-                else:
+                if not tecnici:
 
                     st.warning(
-                        "Nessun tecnico disponibile. "
-                        "Controlla la tabella operatori e il campo "
-                        "Nominativo."
+                        "Non ci sono tecnici disponibili. "
+                        "Controlla la tabella operatori."
                     )
 
-                st.info(
-                    "Seleziona il tecnico e poi premi "
-                    "'📲 Invia a tecnico' sulla scheda desiderata."
-                )
+                opzioni_tecnici = {
+                    tecnico["etichetta"]: tecnico
+                    for tecnico in tecnici
+                }
 
-                # Visualizzazione delle singole schede
                 for i, link in enumerate(collegamenti):
 
                     with st.container(border=True):
 
-                        col_nome, col_apri, col_invia = st.columns(
+                        st.write(f"📎 **{link['nome']}**")
+
+                        st.caption(
+                            f"Pagina del piano: {link['pagina']}"
+                        )
+
+                        col_tecnico, col_apri, col_invia = st.columns(
                             [4, 1, 1]
                         )
 
-                        with col_nome:
+                        # -------------------------------------
+                        # TECNICO ASSEGNATO A QUESTA SOLA SCHEDA
+                        # -------------------------------------
 
-                            st.write(f"📎 {link['nome']}")
+                        with col_tecnico:
 
-                            st.caption(
-                                f"Pagina del piano: {link['pagina']}"
+                            chiave_tecnico = (
+                                f"tecnico_scheda_"
+                                f"{nome_piano_corrente}_{i}"
                             )
 
+                            scelta = st.selectbox(
+                                "👷 Seleziona il tecnico",
+                                options=list(opzioni_tecnici.keys()),
+                                index=None,
+                                placeholder="Scegli un tecnico...",
+                                key=chiave_tecnico
+                            )
+
+                        # -------------------------------------
+                        # APRI SCHEDA
+                        # -------------------------------------
+
                         with col_apri:
+
+                            st.write("")
 
                             if st.button(
                                 "Apri",
@@ -3193,53 +3213,57 @@ elif menu == "Scadenze Temporali":
                                 ),
                                 use_container_width=True
                             ):
+
                                 st.session_state["pdf_piano"] = link["url"]
                                 st.session_state["pdf_scheda_aperta"] = True
                                 st.rerun()
 
+                        # -------------------------------------
+                        # PREPARA INVIO WHATSAPP
+                        # -------------------------------------
+
                         with col_invia:
 
-                            # Il pulsante prepara il messaggio WhatsApp
-                            # per la scheda selezionata.
+                            st.write("")
+
                             if st.button(
-                                "📲 Invia a tecnico",
+                                "📲 Invia",
                                 key=(
                                     f"invia_tecnico_"
                                     f"{nome_piano_corrente}_{i}"
                                 ),
                                 use_container_width=True,
-                                disabled=tecnico_selezionato is None
+                                disabled=not bool(scelta)
                             ):
 
-                                telefono = tecnico_selezionato["telefono"]
+                                tecnico = opzioni_tecnici[scelta]
 
-                                # WhatsApp richiede il numero in formato
-                                # internazionale, senza +, spazi o simboli.
                                 numero_whatsapp = re.sub(
                                     r"\D",
                                     "",
-                                    telefono
+                                    tecnico["telefono"]
                                 )
 
                                 if not numero_whatsapp:
 
-                                    st.warning(
-                                        "Il tecnico selezionato non ha "
-                                        "un numero telefonico registrato."
+                                    st.error(
+                                        f"Il tecnico "
+                                        f"{tecnico['nominativo']} "
+                                        "non ha un numero telefonico "
+                                        "registrato nella tabella operatori."
                                     )
 
                                 else:
 
                                     messaggio = (
-                                        "Ciao "
-                                        f"{tecnico_selezionato['nominativo']},\n\n"
+                                        f"Ciao {tecnico['nominativo']},\n\n"
                                         "ti invio una scheda tecnica "
                                         "relativa alle scadenze temporali "
                                         "del Frecciarossa.\n\n"
                                         f"Piano: {nome_piano_corrente}\n"
                                         f"Scheda: {link['nome']}\n"
                                         f"Pagina del piano: {link['pagina']}\n\n"
-                                        "Apri la scheda PDF da questo link:\n"
+                                        "Link alla scheda PDF:\n"
                                         f"{link['url']}"
                                     )
 
@@ -3250,6 +3274,8 @@ elif menu == "Scadenze Temporali":
                                         f"{quote(messaggio)}"
                                     )
 
+                                    # Salva il collegamento per questa
+                                    # specifica scheda e questo tecnico
                                     st.session_state[
                                         "url_whatsapp_scadenze"
                                     ] = url_whatsapp
@@ -3258,33 +3284,43 @@ elif menu == "Scadenze Temporali":
                                         "scheda_whatsapp_selezionata"
                                     ] = link["nome"]
 
+                                    st.session_state[
+                                        "tecnico_whatsapp_selezionato"
+                                    ] = tecnico["nominativo"]
+
                                     st.rerun()
 
-                # Mostra il collegamento WhatsApp dopo la scelta
-                if st.session_state.get("url_whatsapp_scadenze"):
+            # =================================================
+            # LINK WHATSAPP DELLA SCHEDA SELEZIONATA
+            # =================================================
 
-                    st.divider()
-                    st.subheader("📲 Invio scheda tramite WhatsApp")
+            if st.session_state.get("url_whatsapp_scadenze"):
 
-                    st.write(
-                        "Scheda selezionata: **"
-                        f"{st.session_state.get('scheda_whatsapp_selezionata', '')}"
-                        "**"
-                    )
+                st.divider()
+                st.subheader("📲 INVIO TRAMITE WHATSAPP")
 
-                    st.link_button(
-                        "Apri WhatsApp con messaggio precompilato",
-                        st.session_state["url_whatsapp_scadenze"],
-                        use_container_width=True
-                    )
+                st.write(
+                    "**Scheda:** "
+                    f"{st.session_state.get('scheda_whatsapp_selezionata', '')}"
+                )
 
-                    st.caption(
-                        "WhatsApp si aprirà con il testo già compilato. "
-                        "Controlla il destinatario e premi Invia. "
-                        "Il PDF viene condiviso tramite link."
-                    )
+                st.write(
+                    "**Destinatario:** "
+                    f"{st.session_state.get('tecnico_whatsapp_selezionato', '')}"
+                )
 
-            elif not st.session_state["pdf_scheda_aperta"]:
+                st.link_button(
+                    "Apri WhatsApp con messaggio precompilato",
+                    st.session_state["url_whatsapp_scadenze"],
+                    use_container_width=True
+                )
+
+                st.caption(
+                    "Controlla il destinatario e premi Invia in WhatsApp. "
+                    "Il messaggio contiene il link alla scheda PDF."
+                )
+
+            elif not st.session_state["pdf_scheda_aperta"] and not collegamenti:
 
                 st.info(
                     "Non sono stati trovati collegamenti alle schede "
@@ -3303,8 +3339,7 @@ elif menu == "Scadenze Temporali":
         except requests.exceptions.RequestException as e:
 
             st.error(
-                "Errore di connessione durante il caricamento "
-                "del PDF."
+                "Errore di connessione durante il caricamento del PDF."
             )
             st.caption(str(e))
 
