@@ -2831,16 +2831,21 @@ elif menu == "📊 CONTROLLO PERMESSI":
 
 
 
+
 elif menu == "Scadenze Temporali":
 
     import requests
     import fitz
+    import re
     from urllib.parse import unquote, quote
     from streamlit_pdf_viewer import pdf_viewer
 
     st.title("📚 SCADENZE TEMPORALI")
 
-    # URL dei PDF principali
+    # =====================================================
+    # CONFIGURAZIONE PDF PRINCIPALI
+    # =====================================================
+
     piani = {
         "F0": (
             "https://nlsezrwjvhxvsbycxlxd.supabase.co/"
@@ -2854,7 +2859,6 @@ elif menu == "Scadenze Temporali":
         "F4": "INSERISCI_URL_REALE_F4",
     }
 
-    # Cartelle contenenti le schede tecniche nel bucket manuali
     cartelle_piani = {
         "F0": "Scadenza F0",
         "F2": "Scadenza F2",
@@ -2862,13 +2866,15 @@ elif menu == "Scadenze Temporali":
         "F4": "Scadenza F4",
     }
 
-    # Base pubblica del bucket Supabase
     SUPABASE_STORAGE_BASE = (
         "https://nlsezrwjvhxvsbycxlxd.supabase.co"
         "/storage/v1/object/public/manuali/"
     )
 
-    # Inizializzazione dello stato
+    # =====================================================
+    # INIZIALIZZAZIONE SESSION STATE
+    # =====================================================
+
     if "nome_piano" not in st.session_state:
         st.session_state["nome_piano"] = "F0"
 
@@ -2881,13 +2887,18 @@ elif menu == "Scadenze Temporali":
     if "url_piano_principale" not in st.session_state:
         st.session_state["url_piano_principale"] = piani["F0"]
 
-    # Selezione del piano
+    # =====================================================
+    # SELEZIONE DEL PIANO
+    # =====================================================
+
     colonne = st.columns(len(piani))
 
     for i, (nome, url) in enumerate(piani.items()):
+
         with colonne[i]:
+
             if st.button(
-                nome,
+                f"📁 {nome}",
                 key=f"piano_scadenze_{nome}",
                 use_container_width=True
             ):
@@ -2900,196 +2911,409 @@ elif menu == "Scadenze Temporali":
     st.divider()
 
     nome_piano_corrente = st.session_state["nome_piano"]
-
-    st.subheader(
-        f"📄 SCADENZA {nome_piano_corrente}"
-    )
-
-    # URL del documento da visualizzare
     url_visualizzazione = st.session_state["pdf_piano"]
 
-    try:
-        # Controlla che sia stato configurato l'URL del piano
-        if url_visualizzazione.startswith("INSERISCI_URL_REALE"):
-            st.warning(
-                f"L'URL del piano {nome_piano_corrente} "
-                "non è ancora stato configurato."
-            )
-            st.stop()
+    st.subheader(f"📄 SCADENZA {nome_piano_corrente}")
 
-        # Scarica il PDF selezionato
-        response = requests.get(
-            url_visualizzazione,
-            timeout=30
-        )
-        response.raise_for_status()
+    # =====================================================
+    # CONTROLLO URL DEL PDF
+    # =====================================================
 
-        contenuto_pdf = response.content
+    if url_visualizzazione.startswith("INSERISCI_URL_REALE"):
 
-        # Estrae i collegamenti alle schede dal PDF principale
-        collegamenti = []
-        visti = set()
-
-        # Quando è aperta una scheda, non cercare collegamenti
-        # dentro la scheda come se fosse il piano principale
-        if not st.session_state["pdf_scheda_aperta"]:
-
-            with fitz.open(
-                stream=contenuto_pdf,
-                filetype="pdf"
-            ) as documento:
-
-                for numero_pagina, pagina in enumerate(
-                    documento,
-                    start=1
-                ):
-                    for link in pagina.get_links():
-
-                        percorso = link.get("file")
-
-                        if not percorso:
-                            continue
-
-                        percorso = unquote(percorso)
-                        percorso = percorso.replace("\\", "/")
-
-                        while percorso.startswith("./"):
-                            percorso = percorso[2:]
-
-                        percorso = percorso.lstrip("/")
-
-                        cartella_corrente = cartelle_piani[
-                            nome_piano_corrente
-                        ]
-                        prefisso = cartella_corrente + "/"
-
-                        # Gestisce i percorsi che contengono già
-                        # il nome della cartella del piano
-                        if percorso.startswith(prefisso):
-                            nome_relativo = percorso[len(prefisso):]
-                        else:
-                            nome_relativo = percorso.split("/")[-1]
-
-                        if not nome_relativo:
-                            continue
-
-                        percorso_storage = (
-                            cartella_corrente + "/" + nome_relativo
-                        )
-
-                        if percorso_storage in visti:
-                            continue
-
-                        visti.add(percorso_storage)
-
-                        url_scheda = (
-                            SUPABASE_STORAGE_BASE
-                            + quote(
-                                percorso_storage,
-                                safe="/-_.()'"
-                            )
-                        )
-
-                        nome_file = nome_relativo.split("/")[-1]
-
-                        collegamenti.append({
-                            "nome": nome_file,
-                            "percorso": percorso_storage,
-                            "url": url_scheda,
-                            "pagina": numero_pagina,
-                        })
-
-        # Visualizza il PDF
-        pdf_viewer(
-            input=contenuto_pdf,
-            width="100%",
-            height=900
+        st.warning(
+            f"Il PDF del piano {nome_piano_corrente} "
+            "non è ancora configurato."
         )
 
-        # Pulsanti di navigazione
-        col1, col2 = st.columns(2)
+    else:
 
-        with col1:
-            st.link_button(
-                "🔎 Apri PDF nel browser",
+        try:
+
+            # =================================================
+            # DOWNLOAD DEL PDF
+            # =================================================
+
+            response = requests.get(
                 url_visualizzazione,
-                use_container_width=True
+                timeout=30
+            )
+            response.raise_for_status()
+
+            contenuto_pdf = response.content
+
+            # =================================================
+            # ESTRAZIONE SCHEDE COLLEGATE
+            # =================================================
+
+            collegamenti = []
+            visti = set()
+
+            if not st.session_state["pdf_scheda_aperta"]:
+
+                with fitz.open(
+                    stream=contenuto_pdf,
+                    filetype="pdf"
+                ) as documento:
+
+                    for numero_pagina, pagina in enumerate(
+                        documento,
+                        start=1
+                    ):
+
+                        for link in pagina.get_links():
+
+                            percorso = link.get("file")
+
+                            if not percorso:
+                                continue
+
+                            percorso = unquote(percorso)
+                            percorso = percorso.replace("\\", "/")
+
+                            while percorso.startswith("./"):
+                                percorso = percorso[2:]
+
+                            percorso = percorso.lstrip("/")
+
+                            cartella_corrente = cartelle_piani[
+                                nome_piano_corrente
+                            ]
+
+                            prefisso = cartella_corrente + "/"
+
+                            if percorso.startswith(prefisso):
+                                nome_relativo = percorso[len(prefisso):]
+                            else:
+                                nome_relativo = percorso.split("/")[-1]
+
+                            if not nome_relativo:
+                                continue
+
+                            percorso_storage = (
+                                cartella_corrente + "/" + nome_relativo
+                            )
+
+                            if percorso_storage in visti:
+                                continue
+
+                            visti.add(percorso_storage)
+
+                            url_scheda = (
+                                SUPABASE_STORAGE_BASE
+                                + quote(
+                                    percorso_storage,
+                                    safe="/-_.()'"
+                                )
+                            )
+
+                            collegamenti.append({
+                                "nome": nome_relativo.split("/")[-1],
+                                "percorso": percorso_storage,
+                                "url": url_scheda,
+                                "pagina": numero_pagina,
+                            })
+
+            # =================================================
+            # VISUALIZZAZIONE PDF
+            # =================================================
+
+            pdf_viewer(
+                input=contenuto_pdf,
+                width="100%",
+                height=900
             )
 
-        with col2:
-            if st.session_state["pdf_scheda_aperta"]:
-                if st.button(
-                    "⬅️ Torna al piano",
+            col_pdf, col_indietro = st.columns(2)
+
+            with col_pdf:
+
+                st.link_button(
+                    "🔎 Apri PDF nel browser",
+                    url_visualizzazione,
                     use_container_width=True
-                ):
-                    st.session_state["pdf_piano"] = (
-                        st.session_state["url_piano_principale"]
+                )
+
+            with col_indietro:
+
+                if st.session_state["pdf_scheda_aperta"]:
+
+                    if st.button(
+                        "⬅️ Torna al piano",
+                        key="torna_piano_scadenze",
+                        use_container_width=True
+                    ):
+                        st.session_state["pdf_piano"] = (
+                            st.session_state["url_piano_principale"]
+                        )
+                        st.session_state["pdf_scheda_aperta"] = False
+                        st.rerun()
+
+            # =================================================
+            # ELENCO SCHEDE E INVIO WHATSAPP
+            # =================================================
+
+            if collegamenti:
+
+                st.divider()
+                st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
+
+                st.caption(
+                    f"Schede individuate nel piano "
+                    f"{nome_piano_corrente}: {len(collegamenti)}"
+                )
+
+                # Carica i tecnici dalla tabella operatori
+                try:
+
+                    risposta_operatori = (
+                        supabase
+                        .table("operatori")
+                        .select("*")
+                        .execute()
                     )
-                    st.session_state["pdf_scheda_aperta"] = False
-                    st.rerun()
 
-        # Elenco delle schede tecniche
-        if collegamenti:
+                    operatori = risposta_operatori.data or []
 
-            st.divider()
-            st.subheader("🔗 SCHEDE TECNICHE COLLEGATE")
+                    # Considera soltanto operatori con nominativo
+                    tecnici = []
 
-            st.caption(
-                f"Schede individuate nel piano "
-                f"{nome_piano_corrente}: {len(collegamenti)}"
-            )
+                    for op in operatori:
 
-            for i, link in enumerate(collegamenti):
+                        nominativo = str(
+                            op.get("Nominativo") or ""
+                        ).strip()
 
-                with st.container(border=True):
+                        matricola = str(
+                            op.get("Matricola") or ""
+                        ).strip()
 
-                    col_nome, col_apri = st.columns([4, 1])
+                        telefono = str(
+                            op.get("Telefono") or ""
+                        ).strip()
 
-                    with col_nome:
-                        st.write(f"📎 {link['nome']}")
-                        st.caption(
-                            f"Pagina del piano: {link['pagina']}"
+                        if nominativo:
+                            tecnici.append({
+                                "nominativo": nominativo,
+                                "matricola": matricola,
+                                "telefono": telefono,
+                                "etichetta": (
+                                    f"{nominativo} "
+                                    f"(Matricola: {matricola})"
+                                    if matricola
+                                    else nominativo
+                                )
+                            })
+
+                    # Elimina eventuali duplicati nella tendina
+                    tecnici_unici = {}
+
+                    for tecnico in tecnici:
+                        chiave = (
+                            tecnico["matricola"]
+                            or tecnico["nominativo"]
+                        )
+                        tecnici_unici[chiave] = tecnico
+
+                    tecnici = sorted(
+                        tecnici_unici.values(),
+                        key=lambda x: x["nominativo"].lower()
+                    )
+
+                except Exception as e:
+
+                    tecnici = []
+
+                    st.error(
+                        "Non riesco a leggere la tabella operatori "
+                        "da Supabase."
+                    )
+                    st.caption(str(e))
+
+                # Selezione del tecnico una sola volta
+                tecnico_selezionato = None
+
+                if tecnici:
+
+                    opzioni_tecnici = {
+                        tecnico["etichetta"]: tecnico
+                        for tecnico in tecnici
+                    }
+
+                    scelta_tecnico = st.selectbox(
+                        "👷 Seleziona il tecnico destinatario",
+                        options=list(opzioni_tecnici.keys()),
+                        index=None,
+                        placeholder="Scegli un tecnico...",
+                        key=f"tecnico_scadenze_{nome_piano_corrente}"
+                    )
+
+                    if scelta_tecnico:
+                        tecnico_selezionato = (
+                            opzioni_tecnici[scelta_tecnico]
                         )
 
-                    with col_apri:
-                        if st.button(
-                            "Apri",
-                            key=(
-                                f"apri_scheda_"
-                                f"{nome_piano_corrente}_{i}"
-                            ),
-                            use_container_width=True
-                        ):
-                            st.session_state["pdf_piano"] = link["url"]
-                            st.session_state["pdf_scheda_aperta"] = True
-                            st.rerun()
+                else:
 
-        elif not st.session_state["pdf_scheda_aperta"]:
+                    st.warning(
+                        "Nessun tecnico disponibile. "
+                        "Controlla la tabella operatori e il campo "
+                        "Nominativo."
+                    )
 
-            st.info(
-                "Non sono stati trovati collegamenti alle schede "
-                "tecniche nel PDF selezionato."
+                st.info(
+                    "Seleziona il tecnico e poi premi "
+                    "'📲 Invia a tecnico' sulla scheda desiderata."
+                )
+
+                # Visualizzazione delle singole schede
+                for i, link in enumerate(collegamenti):
+
+                    with st.container(border=True):
+
+                        col_nome, col_apri, col_invia = st.columns(
+                            [4, 1, 1]
+                        )
+
+                        with col_nome:
+
+                            st.write(f"📎 {link['nome']}")
+
+                            st.caption(
+                                f"Pagina del piano: {link['pagina']}"
+                            )
+
+                        with col_apri:
+
+                            if st.button(
+                                "Apri",
+                                key=(
+                                    f"apri_scheda_"
+                                    f"{nome_piano_corrente}_{i}"
+                                ),
+                                use_container_width=True
+                            ):
+                                st.session_state["pdf_piano"] = link["url"]
+                                st.session_state["pdf_scheda_aperta"] = True
+                                st.rerun()
+
+                        with col_invia:
+
+                            # Il pulsante prepara il messaggio WhatsApp
+                            # per la scheda selezionata.
+                            if st.button(
+                                "📲 Invia a tecnico",
+                                key=(
+                                    f"invia_tecnico_"
+                                    f"{nome_piano_corrente}_{i}"
+                                ),
+                                use_container_width=True,
+                                disabled=tecnico_selezionato is None
+                            ):
+
+                                telefono = tecnico_selezionato["telefono"]
+
+                                # WhatsApp richiede il numero in formato
+                                # internazionale, senza +, spazi o simboli.
+                                numero_whatsapp = re.sub(
+                                    r"\D",
+                                    "",
+                                    telefono
+                                )
+
+                                if not numero_whatsapp:
+
+                                    st.warning(
+                                        "Il tecnico selezionato non ha "
+                                        "un numero telefonico registrato."
+                                    )
+
+                                else:
+
+                                    messaggio = (
+                                        "Ciao "
+                                        f"{tecnico_selezionato['nominativo']},\n\n"
+                                        "ti invio una scheda tecnica "
+                                        "relativa alle scadenze temporali "
+                                        "del Frecciarossa.\n\n"
+                                        f"Piano: {nome_piano_corrente}\n"
+                                        f"Scheda: {link['nome']}\n"
+                                        f"Pagina del piano: {link['pagina']}\n\n"
+                                        "Apri la scheda PDF da questo link:\n"
+                                        f"{link['url']}"
+                                    )
+
+                                    url_whatsapp = (
+                                        "https://wa.me/"
+                                        f"{numero_whatsapp}"
+                                        "?text="
+                                        f"{quote(messaggio)}"
+                                    )
+
+                                    st.session_state[
+                                        "url_whatsapp_scadenze"
+                                    ] = url_whatsapp
+
+                                    st.session_state[
+                                        "scheda_whatsapp_selezionata"
+                                    ] = link["nome"]
+
+                                    st.rerun()
+
+                # Mostra il collegamento WhatsApp dopo la scelta
+                if st.session_state.get("url_whatsapp_scadenze"):
+
+                    st.divider()
+                    st.subheader("📲 Invio scheda tramite WhatsApp")
+
+                    st.write(
+                        "Scheda selezionata: **"
+                        f"{st.session_state.get('scheda_whatsapp_selezionata', '')}"
+                        "**"
+                    )
+
+                    st.link_button(
+                        "Apri WhatsApp con messaggio precompilato",
+                        st.session_state["url_whatsapp_scadenze"],
+                        use_container_width=True
+                    )
+
+                    st.caption(
+                        "WhatsApp si aprirà con il testo già compilato. "
+                        "Controlla il destinatario e premi Invia. "
+                        "Il PDF viene condiviso tramite link."
+                    )
+
+            elif not st.session_state["pdf_scheda_aperta"]:
+
+                st.info(
+                    "Non sono stati trovati collegamenti alle schede "
+                    "tecniche nel PDF selezionato."
+                )
+
+        except requests.exceptions.HTTPError as e:
+
+            st.error(
+                "Errore HTTP durante il caricamento del PDF. "
+                "Controlla che il file esista nel bucket Supabase "
+                "e che il percorso sia corretto."
+            )
+            st.caption(str(e))
+
+        except requests.exceptions.RequestException as e:
+
+            st.error(
+                "Errore di connessione durante il caricamento "
+                "del PDF."
+            )
+            st.caption(str(e))
+
+        except Exception as e:
+
+            st.error(
+                f"Errore nel caricamento delle scadenze: {e}"
             )
 
-    except requests.exceptions.HTTPError as e:
-        st.error(
-            "Errore HTTP durante il caricamento del PDF. "
-            "Controlla che il file esista nel bucket Supabase "
-            "e che il percorso sia corretto."
-        )
-        st.caption(str(e))
-
-    except requests.exceptions.RequestException as e:
-        st.error(
-            "Errore di connessione durante il caricamento "
-            "del PDF."
-        )
-        st.caption(str(e))
-
-    except Exception as e:
-        st.error(
-            f"Errore nel caricamento delle scadenze: {e}"
-        )
 
             
 elif menu == "Software":
